@@ -1,0 +1,24 @@
+---
+description: Ensure all UI supports light and dark mode
+globs: frontend/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Light and dark mode
+
+The app uses **Tailwind class-based dark mode** (`darkMode: ["class"]`). The `<html>` element gets a `dark` or `light` class; theme is controlled by `ThemeProvider` and persisted in `localStorage`.
+
+## Rules
+
+1. **Prefer semantic tokens** so both themes work automatically:
+   - Backgrounds: `bg-background`, `bg-card`, `bg-muted`, `bg-primary`, `bg-secondary`, `bg-accent`
+   - Text: `text-foreground`, `text-muted-foreground`, `text-primary`, `text-destructive`
+   - Borders: `border-border`, `border-input`
+   - Use these instead of raw colors like `bg-white`, `text-slate-900`, `border-slate-200`.
+
+2. **When using fixed colors** (e.g. status, danger, brand), always add a `dark:` variant:
+   - Example: `bg-red-50/50 dark:bg-red-950/20`, `text-red-600 dark:text-red-400`, `border-red-200 dark:border-red-900`.
+
+3. **Theme API**: Use `useTheme()` from `@/theme/ThemeProvider` to read or change theme (`theme`, `setTheme`, `toggleTheme`). Do not maintain separate theme state in components.
+
+4. **New components**: When adding UI, use semantic tokens first; if you need a specific color, add both base and `dark:` classes so the UI looks correct in both modes.

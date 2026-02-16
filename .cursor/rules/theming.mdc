@@ -1,0 +1,49 @@
+---
+description: Maintain themes and light/dark mode for all new frontend development
+globs: frontend/src/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Theming and light/dark mode
+
+All new UI must respect the app theme and work in both light and dark mode.
+
+## 1. Source of truth for colors
+
+- **Global tokens** live in `frontend/src/index.css`:
+  - `:root` = light mode values (`--background`, `--foreground`, `--primary`, `--card`, `--muted`, `--border`, etc.)
+  - `.dark` = dark mode overrides for the same variables.
+- Tailwind uses these via `tailwind.config.cjs` (e.g. `background: "hsl(var(--background))"`). Light/dark is controlled by the `light` or `dark` class on `<html>`.
+
+## 2. Route/feature themes (ThemeRegistry)
+
+- **File:** `frontend/src/theme/ThemeRegistry.ts`
+- **Rule:** Route themes (e.g. `profile-theme`, `auth-theme`) may **only** override **accent** variables such as `--primary`. They must **not** set `--background` or `--foreground`.
+- **Reason:** Overriding `--background`/`--foreground` breaks dark mode for that route (page stays light).
+- **OK:** `'profile-theme': { '--primary': '262.1 83.3% 57.8%' }`
+- **Not OK:** `'profile-theme': { '--background': '210 40% 98%' }`
+
+## 3. Styling new components
+
+- **Prefer semantic Tailwind classes** so light/dark is automatic:
+  - Backgrounds: `bg-background`, `bg-card`, `bg-muted`, `bg-primary`, `bg-secondary`, `bg-accent`
+  - Text: `text-foreground`, `text-muted-foreground`, `text-primary`, `text-card-foreground`
+  - Borders: `border-border`, `border-input`
+- **Avoid** raw palette classes for page/chrome UI: no `bg-white`, `bg-slate-100`, `text-slate-900`, `border-slate-200` unless you also add `dark:` variants.
+- **When you need a fixed color** (e.g. danger, success), always add a `dark:` variant:
+  - `bg-red-50/50 dark:bg-red-950/20`, `text-red-600 dark:text-red-400`, `border-red-200 dark:border-red-900`
+
+## 4. Theme API (light/dark toggle)
+
+- **Provider:** `ThemeProvider` in `frontend/src/theme/ThemeProvider.tsx` wraps the app and applies `light`/`dark` to `<html>`.
+- **Usage:** Use `useTheme()` from `@/theme/ThemeProvider` to read or change mode (`theme`, `setTheme`, `toggleTheme`). Do not keep separate theme state in components.
+
+## 5. Page and layout backgrounds
+
+- Page-level wrappers and main content areas should use `bg-background` so they follow light/dark. Ensure at least one of `html`, `body`, or the root layout div has `bg-background` (already set in `index.css` and `App.tsx`).
+
+## Checklist for new work
+
+- [ ] New UI uses semantic tokens (`bg-background`, `text-foreground`, `border-border`, etc.) or has explicit `dark:` variants.
+- [ ] Any new or changed entry in `ThemeRegistry` does not set `--background` or `--foreground`.
+- [ ] New pages/sections use `bg-background` for their main container where appropriate.

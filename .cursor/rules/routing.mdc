@@ -1,0 +1,30 @@
+---
+description: Frontend routing — root vs feature-level routes
+globs: frontend/src/routes/**/*.{ts,tsx},frontend/src/pages/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Routing conventions
+
+## Root vs feature-level routes
+
+- **Root** (`AppRoutes.tsx` + `routes.config.ts`): Register only top-level pages (e.g. `/signin`, `/signup`, `/profile`, `/website`). One route entry per page/layout; no tab or section paths at the root.
+- **Feature/section routes**: Tabs, sections, or nested flows that belong to a single page are registered **inside that feature**, not in the root.
+
+## Pattern
+
+1. **Root** defines the layout route and a single component (e.g. `Profile` → `ProfilePage`). The layout component renders `<Outlet />` for nested content.
+2. **Feature module** (e.g. `pages/profile/`) owns a routes file (e.g. `ProfileRoutes.tsx`) that:
+   - Lazy-loads only the section/tab components used by that page
+   - Exports a component that renders `<Route>` elements for index and child paths
+3. **AppRoutes** renders the layout route and uses the feature’s route component as that route’s children (e.g. `<ProfileRoutes />` for `/profile`).
+
+## Examples
+
+- **OK:** Profile tabs (`user-info`, `settings`) are defined and lazy-loaded in `ProfileRoutes.tsx`; root only has `/profile` → `ProfilePage`.
+- **Not OK:** `UserInfoSection` and `AccountSettingsSection` in the root `PageComponentRegistry` and `routes.config` children at the root.
+
+## Checklist for new nested UI
+
+- [ ] New tabs/sections for an existing page are added in that page’s feature (e.g. `ProfileRoutes.tsx`), not in `AppRoutes` or `routes.config`.
+- [ ] Root `routes.config` has no `children` for that page; the feature module owns all nested paths and components.

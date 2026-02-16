@@ -1,0 +1,19 @@
+[MASTER]
+# Ignore migrations globally
+ignore=migrations
+ignore-paths=^backend/apps/.*/migrations/.*,^backend/config/settings/.*
+
+[MESSAGES CONTROL]
+# Disable some DRF/Django specific false positives
+disable=
+    C0103, # invalid-name
+    R0903, # too-few-public-methods
+    W0223, # abstract-method
+    E1101, # no-member
+    R0801, # duplicate-code
+    E0402, # relative-beyond-top-level
+
+[REPORTS]
+output-format=text
+reports=no
+score=yes
