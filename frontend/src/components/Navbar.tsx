@@ -33,9 +33,14 @@ export function Navbar() {
             </Button>
 
             {isAuthenticated ? (
-              <Button onClick={logout} variant="outline">
-                Logout
-              </Button>
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/profile">Profile</Link>
+                </Button>
+                <Button onClick={logout} variant="outline">
+                  Logout
+                </Button>
+              </>
             ) : (
               <div className="flex gap-2">
                 <Button variant="ghost" asChild>

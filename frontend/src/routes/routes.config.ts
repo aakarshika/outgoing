@@ -11,6 +11,11 @@ export interface RouteDefinition {
 
 export const routesConfig: RouteDefinition[] = [
     {
+        path: '/',
+        componentName: 'Home',
+        roles: [UserRole.USER, UserRole.ADMIN],
+    },
+    {
         path: '/signup',
         componentName: 'SignUp',
         isPublic: true,

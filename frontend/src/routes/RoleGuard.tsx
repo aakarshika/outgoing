@@ -22,7 +22,7 @@ export const RoleGuard = ({ allowedRoles, isPublic, children }: RoleGuardProps) 
 
     if (isPublic) {
         if (isAuthenticated) {
-            return <Navigate to="/profile" replace />;
+            return <Navigate to="/" replace />;
         }
         return <>{children || <Outlet />}</>;
     }

@@ -8,11 +8,13 @@ import { ThemeWrapper } from '@/theme/ThemeWrapper';
 const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
+const HomePage = lazy(() => import('@/pages/home/HomePage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
     SignUp: SignUpPage,
     SignIn: SignInPage,
     Profile: ProfilePage,
+    Home: HomePage,
 };
 
 import { useAuth } from '@/features/auth/AuthContext';
@@ -42,8 +44,8 @@ export const AppRoutes = () => {
             </RoleGuard>
         );
 
-        return (
-            <Route key={route.path} path={route.path} element={content}>
+return (
+        <Route key={route.path} path={route.path} element={content}>
                 {route.path === '/profile' ? profileRouteElements : route.children?.map(renderRoute)}
             </Route>
         );
@@ -72,11 +74,10 @@ export const AppRoutes = () => {
     return (
         <Routes>
             {filteredRoutes.map(renderRoute)}
-            <Route path="/" element={<Navigate to={isAuthenticated ? "/profile" : "/signin"} replace />} />
             <Route path="/unauthorized" element={<div className="p-8 text-center">403 - Unauthorized Access</div>} />
             <Route path="*" element={
                 isAuthenticated ? (
-                    <Navigate to="/profile" replace />
+                    <Navigate to="/" replace />
                 ) : (
                     <Navigate to="/signin" replace />
                 )
