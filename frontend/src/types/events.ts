@@ -1,0 +1,80 @@
+/** Shared types for the events domain. */
+
+export interface EventCategory {
+    id: number;
+    name: string;
+    slug: string;
+    icon: string;
+}
+
+export interface EventHost {
+    username: string;
+    first_name: string;
+    avatar: string | null;
+}
+
+export interface EventListItem {
+    id: number;
+    host: EventHost;
+    title: string;
+    slug: string;
+    category: EventCategory | null;
+    location_name: string;
+    start_time: string;
+    end_time: string;
+    ticket_price_standard: string | null;
+    ticket_price_flexible: string | null;
+    cover_image: string | null;
+    status: string;
+    capacity: number | null;
+    interest_count: number;
+    ticket_count: number;
+    user_is_interested: boolean;
+    user_has_ticket: boolean;
+}
+
+export interface EventDetail extends EventListItem {
+    description: string;
+    location_address: string;
+    latitude: number | null;
+    longitude: number | null;
+    refund_window_hours: number;
+    tags: string[];
+    tickets_remaining: number | null;
+    created_at: string;
+}
+
+export interface TicketInfo {
+    id: number;
+    event_summary: {
+        id: number;
+        title: string;
+        start_time: string;
+        location_name: string;
+    };
+    ticket_type: 'standard' | 'flexible';
+    is_refundable: boolean;
+    refund_deadline: string | null;
+    price_paid: string;
+    status: string;
+    purchased_at: string;
+}
+
+export interface EventAttendee {
+    id: number;
+    user: EventHost;
+    ticket_type: 'standard' | 'flexible';
+    status: string;
+    purchased_at: string;
+}
+
+export interface ApiResponse<T> {
+    success: boolean;
+    message: string;
+    data: T;
+    meta: {
+        page?: number;
+        page_size?: number;
+        total_count?: number;
+    };
+}

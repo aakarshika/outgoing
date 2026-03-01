@@ -14,7 +14,12 @@ def success_response(data=None, message="Success", meta=None, status=200):
     }
     """
     return Response(
-        {"success": True, "message": message, "data": data or {}, "meta": meta or {}},
+        {
+            "success": True,
+            "message": message,
+            "data": data if data is not None else {},
+            "meta": meta if meta is not None else {}
+        },
         status=status,
     )
 
@@ -33,7 +38,7 @@ def error_response(message="Error", errors=None, error_code="ERROR", status=400)
         {
             "success": False,
             "message": message,
-            "errors": errors or {},
+            "errors": errors if errors is not None else {},
             "error_code": error_code,
         },
         status=status,

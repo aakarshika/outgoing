@@ -5,4 +5,10 @@ from django.urls import include, path
 urlpatterns = [
     path("auth/", include("api.v1.auth.urls")),
     path("profiles/", include("api.v1.profiles.urls")),
+    path("events/", include("api.v1.events.urls")),
+    path("tickets/", include("api.v1.tickets.urls")),
+    path("feed/", include("api.v1.feed.urls")),
+    path("vendors/", include("api.v1.vendors.urls")),
+    path("needs/", include("api.v1.needs.urls")),
+    path("requests/", include("api.v1.requests.urls")),
 ]

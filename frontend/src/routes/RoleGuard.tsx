@@ -6,10 +6,11 @@ import { UserRole } from '@/types/roles';
 interface RoleGuardProps {
     allowedRoles?: UserRole[];
     isPublic?: boolean;
+    isGuestOnly?: boolean;
     children?: ReactNode;
 }
 
-export const RoleGuard = ({ allowedRoles, isPublic, children }: RoleGuardProps) => {
+export const RoleGuard = ({ allowedRoles, isPublic, isGuestOnly, children }: RoleGuardProps) => {
     const { user, isAuthenticated, loading } = useAuth();
 
     if (loading) {
@@ -20,10 +21,14 @@ export const RoleGuard = ({ allowedRoles, isPublic, children }: RoleGuardProps) 
         );
     }
 
-    if (isPublic) {
+    if (isGuestOnly) {
         if (isAuthenticated) {
             return <Navigate to="/" replace />;
         }
+        return <>{children || <Outlet />}</>;
+    }
+
+    if (isPublic) {
         return <>{children || <Outlet />}</>;
     }
 

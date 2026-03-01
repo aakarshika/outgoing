@@ -12,6 +12,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         """Meta configuration for UserProfileSerializer."""
 
         model = UserProfile
-        fields = ["phone_number", "bio", "created_at", "updated_at"]
+        fields = [
+            "phone_number", "bio", "headline", "showcase_bio",
+            "avatar", "cover_photo", "is_vendor", "location_city",
+            "created_at", "updated_at",
+        ]
         read_only_fields = ["created_at", "updated_at"]
 

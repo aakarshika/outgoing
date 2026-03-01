@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+import client from '@/api/client';
 import { authApi, User } from './api';
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (shouldRemoveToken) {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
+      delete client.defaults.headers.common['Authorization'];
     }
     setUser(null);
   };

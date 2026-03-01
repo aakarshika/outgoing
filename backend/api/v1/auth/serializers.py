@@ -8,11 +8,13 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for the standard Django User model."""
 
     role = serializers.SerializerMethodField()
+    is_vendor = serializers.BooleanField(source="profile.is_vendor", read_only=True)
+
     class Meta:
         """Meta options for UserSerializer."""
 
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "role"]
+        fields = ["id", "username", "email", "first_name", "last_name", "role", "is_vendor"]
 
     def get_role(self, obj):
         """Return the user role, defaulting to USER."""

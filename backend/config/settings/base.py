@@ -36,6 +36,11 @@ INSTALLED_APPS = [
     "core",
     "api",
     "apps.profiles",
+    "apps.events",
+    "apps.tickets",
+    "apps.vendors",
+    "apps.needs",
+    "apps.requests",
     "apps.content_generator",
     "silk",
 ]
@@ -95,6 +100,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Media files (user uploads: avatars, cover photos, event images, portfolios)
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "core.pagination.StandardPagination",

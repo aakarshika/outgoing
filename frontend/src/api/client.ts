@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: '/api/v1',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,7 +30,7 @@ client.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post('/api/v1/auth/refresh/', {
+          const response = await axios.post('/api/auth/refresh/', {
             refresh: refreshToken,
           });
 

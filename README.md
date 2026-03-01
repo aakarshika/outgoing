@@ -235,7 +235,7 @@ This project uses a **Simplified Authentication Flow** optimized for rapid devel
 3. **Pre-filled Defaults**: The `SignUpPage` is pre-filled with credentials to reduce friction.
 
 **Before going to Production:**
-- Enable Email Confirmation strategies in `backend/v1/auth`.
+- Enable Email Confirmation strategies in `backend/auth`.
 - Remove default `useState` values in `frontend/src/features/auth/SignUpPage.tsx`.
 - Configure an SMTP provider (SendGrid/Amazon SES).
 
@@ -256,7 +256,7 @@ The project comes with a pre-built Auth feature.
 3. **Profile**:
    - Visit `/profile` (Protected Route).
    - Displays a friendly **Welcome Dashboard** with the user's name and an animated waving avatar (Hand icon).
-   - Fetches user info from `/api/v1/auth/me/` via the global `AuthContext`.
+   - Fetches user info from `/api/auth/me/` via the global `AuthContext`.
 
 ---
 

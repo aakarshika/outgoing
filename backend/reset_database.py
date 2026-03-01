@@ -24,9 +24,12 @@ BASE_DIR = Path(settings.BASE_DIR)
 
 
 def clean_migrations():
-    """Delete all migration files."""
+    """Delete all migration files (only in our project apps, not venv)."""
     print("Cleaning migration files...")
+    skip_dirs = {'.venv', 'venv', 'node_modules', '.git', '__pycache__'}
     for root, dirs, files in os.walk(BASE_DIR):
+        # Skip virtual environments and other non-project dirs
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
         if 'migrations' in dirs:
             migrations_dir = os.path.join(root, 'migrations')
             for filename in os.listdir(migrations_dir):
@@ -44,8 +47,9 @@ def clean_migrations():
                 shutil.rmtree(pycache_dir)
                 print(f"  Removed: {pycache_dir}")
     
-    # Ensure __init__.py exists in all migrations directories
+    # Ensure __init__.py exists in all migrations directories (project only)
     for root, dirs, files in os.walk(BASE_DIR):
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
         if 'migrations' in dirs:
             migrations_dir = os.path.join(root, 'migrations')
             init_file = os.path.join(migrations_dir, '__init__.py')
@@ -125,6 +129,42 @@ def create_superuser():
         traceback.print_exc()
 
 
+def seed_categories():
+    """Seed the EventCategory table with initial data."""
+    print("\nSeeding event categories...")
+    try:
+        from apps.events.models import EventCategory
+        categories = [
+            ("Music", "music", "music"),
+            ("Food & Drink", "food-drink", "utensils"),
+            ("Nightlife", "nightlife", "moon"),
+            ("Sports & Fitness", "sports-fitness", "dumbbell"),
+            ("Arts & Culture", "arts-culture", "palette"),
+            ("Tech & Innovation", "tech-innovation", "cpu"),
+            ("Workshops & Classes", "workshops-classes", "book-open"),
+            ("Outdoors & Adventure", "outdoors-adventure", "mountain"),
+            ("Comedy", "comedy", "laugh"),
+            ("Networking & Social", "networking-social", "users"),
+            ("Festivals", "festivals", "party-popper"),
+            ("Community", "community", "heart-handshake"),
+        ]
+        
+        count = 0
+        for name, slug, icon in categories:
+            _, created = EventCategory.objects.get_or_create(
+                slug=slug,
+                defaults={"name": name, "icon": icon}
+            )
+            if created:
+                count += 1
+                
+        print(f"✓ Seeded {count} event categories")
+    except Exception as e:
+        print(f"✗ Error seeding categories: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def main():
     print("="*60)
     print("DATABASE RESET SCRIPT (NO MIGRATIONS)")
@@ -134,6 +174,7 @@ def main():
     drop_database()
     create_tables()
     create_superuser()
+    seed_categories()
     
     print("\n" + "="*60)
     print("RESET COMPLETE")

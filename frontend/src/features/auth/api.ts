@@ -11,6 +11,7 @@ export interface User {
   last_name: string;
   role: UserRole;
   phone_number?: string;
+  is_vendor?: boolean;
 }
 
 export interface AuthResponse {

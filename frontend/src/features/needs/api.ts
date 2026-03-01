@@ -1,0 +1,32 @@
+/** API functions for the needs domain. */
+
+import client from '@/api/client';
+import type { EventNeedListResponse, NeedApplicationDetailResponse, EventNeed, NeedApplication } from '@/types/needs';
+
+export async function fetchEventNeeds(eventId: number) {
+    const { data } = await client.get<EventNeedListResponse>(`/needs/events/${eventId}/`);
+    return data;
+}
+
+export async function fetchMyApplications() {
+    const { data } = await client.get<{ success: boolean; data: NeedApplication[] }>('/needs/applications/my/');
+    return data;
+}
+
+export async function createEventNeed(eventId: number, payload: any) {
+    const { data } = await client.post<{ success: boolean; data: EventNeed; message: string }>(
+        `/needs/events/${eventId}/`,
+        payload
+    );
+    return data;
+}
+
+export async function applyToNeed(needId: number, payload: { service_id?: number | null; message?: string; proposed_price?: number | null }) {
+    const { data } = await client.post<NeedApplicationDetailResponse>(`/needs/${needId}/apply/`, payload);
+    return data;
+}
+
+export async function reviewNeedApplication(applicationId: number, status: 'accepted' | 'rejected') {
+    const { data } = await client.patch<NeedApplicationDetailResponse>(`/needs/applications/${applicationId}/review/`, { status });
+    return data;
+}
