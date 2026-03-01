@@ -1,13 +1,42 @@
 """Base settings for the monolith project."""
 
 import os
+import sys
 from pathlib import Path
+
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-in-prod")
-DEBUG = False
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+
+# Allow hosts to be defined via environment variables
+env_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
+if env_hosts:
+    ALLOWED_HOSTS = [h.strip() for h in env_hosts.split(",") if h.strip()]
+else:
+    # Default to allow all vercel domains and local if no env vars are explicitly set
+    ALLOWED_HOSTS = ["*"] if DEBUG else [".vercel.app", "outgoing-backend.vercel.app"]
+
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
+env_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+if env_cors_origins:
+    CORS_ALLOWED_ORIGINS = [h.strip() for h in env_cors_origins.split(",") if h.strip()]
+elif not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://localhost:5151",
+    ]
+    
+# In production, default to allowing all origins so the frontend can hit it
+# You can override this by setting CORS_ALLOW_ALL_ORIGINS=False and defining CORS_ALLOWED_ORIGINS
+if not DEBUG and not env_cors_origins and not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 # AI / LLM provider configuration
 # The API key is intentionally read from the environment so that it can be
@@ -77,12 +106,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if dj_database_url:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+            conn_max_age=0,  # Must be 0 for Supabase transaction mode pooler (port 6543)
+            conn_health_checks=False,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

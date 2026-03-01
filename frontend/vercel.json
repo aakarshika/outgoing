@@ -1,0 +1,16 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "https://outgoing-backend.vercel.app/api/$1"
+        },
+        {
+            "source": "/media/(.*)",
+            "destination": "https://outgoing-backend.vercel.app/media/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

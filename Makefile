@@ -10,24 +10,24 @@ dev: ## Run both backend and frontend development servers
 
 backend-dev: ## Run Django development server
 	@echo "Starting Django server..."
-	@cd backend && python manage.py runserver 8998
+	@cd backend && .venv/bin/python manage.py runserver 8998
 
 frontend-dev: ## Run Vite development server
 	@echo "Starting Vite server..."
 	@cd frontend && npm run dev
 
 reset-db: ## Reset database (ephemeral - no migrations)
-	@cd backend && python reset_database.py
+	@cd backend && .venv/bin/python reset_database.py
 
 shell: ## Open Django shell
-	@cd backend && python manage.py shell
+	@cd backend && .venv/bin/python manage.py shell
 
 # --- Testing ---
 
 test: backend-test frontend-test ## Run all tests
 
 backend-test: ## Run backend tests
-	@cd backend && python manage.py test
+	@cd backend && .venv/bin/python manage.py test
 
 frontend-test: ## Run frontend tests
 	@cd frontend && npm test

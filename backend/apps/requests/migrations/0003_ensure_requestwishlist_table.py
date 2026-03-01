@@ -3,14 +3,11 @@
 from django.db import migrations
 
 
-class Migration(migrations.Migration):
-    dependencies = [
-        ("requests", "0002_eventrequest_wishlist_as"),
-    ]
-
-    operations = [
-        migrations.RunSQL(
-            sql="""
+def create_wishlist_table(apps, schema_editor):
+    """Create the wishlist table using DB-agnostic SQL."""
+    vendor = schema_editor.connection.vendor
+    if vendor == 'sqlite':
+        schema_editor.execute("""
             CREATE TABLE IF NOT EXISTS requests_requestwishlist (
                 id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
                 wishlist_as varchar(20) NOT NULL,
@@ -18,9 +15,26 @@ class Migration(migrations.Migration):
                 request_id bigint NOT NULL REFERENCES requests_eventrequest(id) DEFERRABLE INITIALLY DEFERRED,
                 user_id integer NOT NULL REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED
             );
-            """,
-            reverse_sql="DROP TABLE IF EXISTS requests_requestwishlist;",
-        ),
+        """)
+    else:
+        schema_editor.execute("""
+            CREATE TABLE IF NOT EXISTS requests_requestwishlist (
+                id SERIAL PRIMARY KEY,
+                wishlist_as varchar(20) NOT NULL,
+                created_at timestamptz NOT NULL,
+                request_id bigint NOT NULL REFERENCES requests_eventrequest(id) DEFERRABLE INITIALLY DEFERRED,
+                user_id integer NOT NULL REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED
+            );
+        """)
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("requests", "0002_eventrequest_wishlist_as"),
+    ]
+
+    operations = [
+        migrations.RunPython(create_wishlist_table, migrations.RunPython.noop),
         migrations.RunSQL(
             sql="""
             CREATE UNIQUE INDEX IF NOT EXISTS requests_requestwishlist_request_id_user_id_uniq
@@ -43,3 +57,4 @@ class Migration(migrations.Migration):
             reverse_sql="DROP INDEX IF EXISTS requests_requestwishlist_user_id_idx;",
         ),
     ]
+
