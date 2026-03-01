@@ -12,6 +12,7 @@ export interface EventRequest {
     upvote_count: number;
     status: string;
     user_has_upvoted: boolean;
+    user_wishlist_as: 'goer' | 'host' | 'vendor' | null;
     created_at: string;
 }
 

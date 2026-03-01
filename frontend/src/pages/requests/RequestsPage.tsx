@@ -41,6 +41,25 @@ export default function RequestsPage() {
             toast.success('Request posted!');
         },
     });
+    const wishlistMutation = useMutation({
+        mutationFn: async ({
+            id,
+            wishlistAs,
+        }: {
+            id: number;
+            wishlistAs: 'goer' | 'host' | 'vendor';
+        }) => {
+            const { data } = await client.post(`/requests/${id}/wishlist/`, {
+                wishlist_as: wishlistAs,
+            });
+            return data;
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['requests'] }),
+    });
+    const removeWishlistMutation = useMutation({
+        mutationFn: async (id: number) => client.delete(`/requests/${id}/wishlist/`),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['requests'] }),
+    });
 
     const requests: EventRequest[] = response?.data || [];
 
@@ -152,6 +171,55 @@ export default function RequestsPage() {
                                     )}
                                     {req.location_city && <span>📍 {req.location_city}</span>}
                                 </div>
+                                {isAuthenticated && (
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">
+                                            Add to wishlist as:
+                                        </span>
+                                        {(['goer', 'host', 'vendor'] as const).map((option) => (
+                                            <Button
+                                                key={option}
+                                                type="button"
+                                                size="sm"
+                                                variant={
+                                                    req.user_wishlist_as === option
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                onClick={() =>
+                                                    wishlistMutation.mutate({
+                                                        id: req.id,
+                                                        wishlistAs: option,
+                                                    })
+                                                }
+                                                disabled={
+                                                    wishlistMutation.isPending ||
+                                                    removeWishlistMutation.isPending
+                                                }
+                                            >
+                                                {option === 'goer'
+                                                    ? 'Goer'
+                                                    : option === 'host'
+                                                      ? 'Host'
+                                                      : 'Vendor'}
+                                            </Button>
+                                        ))}
+                                        {req.user_wishlist_as && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => removeWishlistMutation.mutate(req.id)}
+                                                disabled={
+                                                    wishlistMutation.isPending ||
+                                                    removeWishlistMutation.isPending
+                                                }
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))

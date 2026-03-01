@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import EventRequest, RequestUpvote
+from .models import EventRequest, RequestUpvote, RequestWishlist
 
 
 @admin.register(EventRequest)
@@ -19,3 +19,11 @@ class RequestUpvoteAdmin(admin.ModelAdmin):
     """Admin for RequestUpvote."""
 
     list_display = ["user", "request", "created_at"]
+
+
+@admin.register(RequestWishlist)
+class RequestWishlistAdmin(admin.ModelAdmin):
+    """Admin for RequestWishlist."""
+
+    list_display = ["user", "request", "wishlist_as", "created_at"]
+    list_filter = ["wishlist_as"]

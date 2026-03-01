@@ -14,7 +14,6 @@ class EventRequest(models.Model):
         ("fulfilled", "Fulfilled"),
         ("closed", "Closed"),
     ]
-
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -72,3 +71,33 @@ class RequestUpvote(models.Model):
     def __str__(self):
         """String representation of the RequestUpvote."""
         return f"{self.user.username} upvoted {self.request.title}"
+
+
+class RequestWishlist(models.Model):
+    """A user's personal wishlist entry for a request."""
+
+    WISHLIST_AS_CHOICES = [
+        ("goer", "Goer"),
+        ("host", "Host"),
+        ("vendor", "Vendor"),
+    ]
+
+    request = models.ForeignKey(
+        EventRequest, on_delete=models.CASCADE, related_name="wishlists"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="request_wishlists",
+    )
+    wishlist_as = models.CharField(max_length=20, choices=WISHLIST_AS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for RequestWishlist."""
+
+        unique_together = ["request", "user"]
+
+    def __str__(self):
+        """String representation of the RequestWishlist."""
+        return f"{self.user.username} wishlisted {self.request.title} as {self.wishlist_as}"

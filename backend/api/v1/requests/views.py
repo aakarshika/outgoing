@@ -4,7 +4,7 @@ from django.db.models import F
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.requests.models import EventRequest, RequestUpvote
+from apps.requests.models import EventRequest, RequestUpvote, RequestWishlist
 from core.responses import error_response, success_response
 
 from .serializers import EventRequestCreateSerializer, EventRequestSerializer
@@ -107,3 +107,48 @@ class RequestUpvoteView(APIView):
         )
         event_request.refresh_from_db()
         return success_response(data={"upvote_count": event_request.upvote_count})
+
+
+class RequestWishlistView(APIView):
+    """Create, update, or remove the current user's wishlist entry for a request."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, request_id):
+        """Add request to current user's wishlist, or update wishlist intent."""
+        try:
+            event_request = EventRequest.objects.get(pk=request_id)
+        except EventRequest.DoesNotExist:
+            return error_response(message="Request not found", status=404)
+
+        wishlist_as = request.data.get("wishlist_as")
+        allowed_values = {choice[0] for choice in RequestWishlist.WISHLIST_AS_CHOICES}
+        if wishlist_as not in allowed_values:
+            return error_response(
+                message="Validation Error",
+                errors={
+                    "wishlist_as": [
+                        "Must be one of: goer, host, vendor."
+                    ]
+                },
+            )
+
+        wishlist, _ = RequestWishlist.objects.update_or_create(
+            request=event_request,
+            user=request.user,
+            defaults={"wishlist_as": wishlist_as},
+        )
+        return success_response(
+            data={"wishlist_as": wishlist.wishlist_as},
+            message="Wishlist updated",
+            status=201,
+        )
+
+    def delete(self, request, request_id):
+        """Remove request from current user's wishlist."""
+        deleted, _ = RequestWishlist.objects.filter(
+            request_id=request_id, user=request.user
+        ).delete()
+        if not deleted:
+            return error_response(message="Request not in wishlist", status=404)
+        return success_response(message="Removed from wishlist")
