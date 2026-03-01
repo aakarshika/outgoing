@@ -49,7 +49,8 @@ Planned additions:
 | `/signin` | Sign In | [DONE] Username + password login |
 | `/signup` | Sign Up | [DONE] Registration form |
 | `/events` | Browse Events | Grid/list of published events. Filter by category, date, location. Search. |
-| `/events/:id` | Event Detail | Full event info, vendor lineup (customer-facing only), ticket purchase, needs list. |
+| `/events/:id` | Event Operations Detail | Transaction page: full event info, vendor signup/application, ticket purchase, and operational details. |
+| `/events/:id/story` | Event Story Page | Experience page: upcoming narrative, live moments, highlights, host history, vendor spotlight, reviews. |
 | `/requests` | Browse Requests | List of event requests sorted by popularity. Upvote button. |
 | `/vendors` | Browse Vendors | Grid of vendor services by category. |
 | `/u/:username` | User Showcase | Public profile page — bio, hosted events, vendor services, activity. |
@@ -451,3 +452,4 @@ These questions should be resolved as UI design matures:
 | 2026-02-28 | Added abstract UI module mapping per actor, operations pages, event manage tabs expanded, key UI questions |
 | 2026-02-28 | Full home page design (hero, category chips, event feed). Detailed Event Card component spec. Ticket Selection Sheet. UI polish section (animations, dark mode, new components). |
 | 2026-02-28 | Event creation: Quick Create vs Detailed Create modes. Trending algorithm for hero selection. Concrete category list with Lucide icons. |
+| 2026-03-01 | Split event surfaces in page inventory: transactional Event Operations page (`/events/:id`) and experiential Event Story page (`/events/:id/story`). |

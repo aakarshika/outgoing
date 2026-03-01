@@ -1,6 +1,7 @@
 """Models for the vendors application."""
 
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from core.validators import validate_image_upload
@@ -48,3 +49,24 @@ class VendorService(models.Model):
     def __str__(self):
         """String representation of the VendorService."""
         return f"{self.title} by {self.vendor.username}"
+
+
+class VendorReview(models.Model):
+    """A rating and review left by an organizer or attendee for a vendor service."""
+
+    vendor_service = models.ForeignKey(VendorService, on_delete=models.CASCADE, related_name="reviews")
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="vendor_reviews")
+    event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True, related_name="vendor_reviews", help_text="The event where this service was provided")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    text = models.TextField(blank=True)
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for VendorReview."""
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the VendorReview."""
+        return f"{self.rating}-star review for {self.vendor_service.title} by {self.reviewer.username}"
+

@@ -32,6 +32,38 @@ export interface EventListItem {
     ticket_count: number;
     user_is_interested: boolean;
     user_has_ticket: boolean;
+    series?: { id: number; name: string } | null;
+    occurrence_index?: number | null;
+}
+
+export interface EventSeriesNeedTemplate {
+    id: number;
+    title: string;
+    description: string;
+    category: string;
+    criticality: string;
+    budget_min: string | null;
+    budget_max: string | null;
+    created_at: string;
+}
+
+export interface EventSeries {
+    id: number;
+    host: EventHost;
+    name: string;
+    description: string;
+    recurrence_rule: string;
+    timezone: string;
+    default_location_name: string;
+    default_location_address: string;
+    default_capacity: number | null;
+    default_ticket_price_standard: string | null;
+    default_ticket_price_flexible: string | null;
+    created_at: string;
+}
+
+export interface EventSeriesDetail extends EventSeries {
+    need_templates: EventSeriesNeedTemplate[];
 }
 
 export interface EventDetail extends EventListItem {

@@ -1,6 +1,7 @@
 """Models for the events application."""
 
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.text import slugify
 
@@ -23,6 +24,72 @@ class EventCategory(models.Model):
     def __str__(self):
         """String representation of the EventCategory."""
         return str(self.name)
+
+
+class EventSeries(models.Model):
+    """Groups recurring events together."""
+
+    host = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="event_series",
+    )
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    recurrence_rule = models.CharField(max_length=1000, blank=True, help_text="e.g. FREQ=WEEKLY;BYDAY=SU")
+    timezone = models.CharField(max_length=100, default='UTC')
+    default_location_name = models.CharField(max_length=200, blank=True)
+    default_location_address = models.CharField(max_length=300, blank=True)
+    default_capacity = models.PositiveIntegerField(null=True, blank=True)
+    default_ticket_price_standard = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    default_ticket_price_flexible = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for EventSeries."""
+        verbose_name_plural = "Event Series"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the EventSeries."""
+        return str(self.name)
+
+
+class EventSeriesNeedTemplate(models.Model):
+    """Reusable needs template for recurring series. Cloned into each occurrence as draft needs."""
+
+    CRITICALITY_CHOICES = [
+        ("essential", "Essential"),
+        ("replaceable", "Replaceable"),
+        ("non_substitutable", "Non-Substitutable"),
+    ]
+
+    series = models.ForeignKey(EventSeries, on_delete=models.CASCADE, related_name="need_templates")
+    title = models.CharField(max_length=200, help_text="e.g. DJ, Photographer")
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=100, default="other")
+    criticality = models.CharField(
+        max_length=20, choices=CRITICALITY_CHOICES, default="replaceable"
+    )
+    budget_min = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    budget_max = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for EventSeriesNeedTemplate."""
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the EventSeriesNeedTemplate."""
+        return f"{self.title} for {self.series.name}"
 
 
 class Event(models.Model):
@@ -76,6 +143,14 @@ class Event(models.Model):
         null=True,
         related_name="events",
     )
+    series = models.ForeignKey(
+        EventSeries,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="events",
+    )
+    occurrence_index = models.PositiveIntegerField(null=True, blank=True, help_text="1-based sequence inside a series")
     location_name = models.CharField(max_length=200)
     location_address = models.CharField(max_length=300, blank=True)
     check_in_instructions = models.TextField(blank=True, default="")
@@ -243,3 +318,54 @@ class EventLifecycleTransition(models.Model):
     def __str__(self):
         """String representation of the transition."""
         return f"{self.event_id}: {self.from_state} -> {self.to_state}"
+
+
+class EventHighlight(models.Model):
+    """A photo/video highlight attached to an event by the host or a goer."""
+
+    ROLE_CHOICES = [
+        ("host", "Host"),
+        ("goer", "Goer"),
+    ]
+    MODERATION_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="highlights")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_highlights")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="goer")
+    text = models.TextField(blank=True)
+    media_file = models.ImageField(upload_to="highlights/", null=True, blank=True, validators=[validate_image_upload])
+    moderation_status = models.CharField(max_length=20, choices=MODERATION_CHOICES, default="approved")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for EventHighlight."""
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the EventHighlight."""
+        return f"Highlight for {self.event.title} by {self.author.username}"
+
+
+class EventReview(models.Model):
+    """A rating and review left by an attendee for an event."""
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reviews")
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_reviews")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    text = models.TextField(blank=True)
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for EventReview."""
+        unique_together = ["event", "reviewer"]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the EventReview."""
+        return f"{self.rating}-star review for {self.event.title} by {self.reviewer.username}"
+

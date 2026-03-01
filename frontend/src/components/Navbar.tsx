@@ -109,9 +109,8 @@ export function Navbar() {
             />
           )}
           <aside
-            className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l bg-background p-4 transition-transform duration-200 ${
-              isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+            className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l bg-background p-4 transition-transform duration-200 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+              }`}
           >
             {isAuthenticated && (
               <div className="mb-4 border-b pb-4 sm:hidden">

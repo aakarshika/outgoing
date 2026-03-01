@@ -5,10 +5,10 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.vendors.models import VendorService
+from apps.vendors.models import VendorService, VendorReview
 from core.responses import error_response, success_response
 
-from .serializers import VendorServiceCreateSerializer, VendorServiceSerializer
+from .serializers import VendorServiceCreateSerializer, VendorServiceSerializer, VendorReviewSerializer
 
 
 class VendorServiceListCreateView(APIView):
@@ -127,3 +127,38 @@ class MyServicesView(APIView):
             services, many=True, context={"request": request}
         )
         return success_response(data=serializer.data)
+
+
+class VendorReviewCreateView(APIView):
+    """Create a review for a vendor service."""
+    
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, service_id):
+        """Post a review."""
+        try:
+            service = VendorService.objects.get(pk=service_id)
+        except VendorService.DoesNotExist:
+            return error_response(message="Service not found", status=404)
+        
+        if service.vendor == request.user:
+            return error_response(message="Vendor cannot review their own service", status=403)
+            
+        if VendorReview.objects.filter(vendor_service=service, reviewer=request.user).exists():
+            return error_response(message="You have already reviewed this service", status=409)
+
+        event_id = request.data.get("event")
+        event_obj = None
+        if event_id:
+            from apps.events.models import Event
+            try:
+                event_obj = Event.objects.get(pk=event_id)
+            except Event.DoesNotExist:
+                return error_response(message="Event not found", status=404)
+
+        serializer = VendorReviewSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            review = serializer.save(vendor_service=service, reviewer=request.user, event=event_obj)
+            return success_response(data=VendorReviewSerializer(review, context={"request": request}).data, status=201)
+        return error_response(message="Validation Error", errors=serializer.errors)
+

@@ -7,12 +7,12 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
-import { useEvent, usePurchaseTicket, useToggleInterest } from '@/features/events/hooks';
+import { useEvent, usePurchaseTicket, useToggleInterest, useEventSeriesOccurrences } from '@/features/events/hooks';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import type { EventNeed } from '@/types/needs';
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
-import type { EventLifecycleState } from '@/types/events';
+import type { EventLifecycleState, EventListItem } from '@/types/events';
 
 const LIFECYCLE_LABELS: Record<EventLifecycleState, string> = {
     draft: 'Draft',
@@ -65,8 +65,13 @@ export default function EventDetailPage() {
     const [selectedNeed, setSelectedNeed] = useState<{ id: number; title: string } | null>(null);
 
     const event = eventResponse?.data;
+    const { data: occurrencesResponse } = useEventSeriesOccurrences(event?.series?.id || 0, {
+        enabled: !!event?.series?.id
+    });
+
     const needs = needsResponse?.data || [];
     const myServices = myServicesResponse?.data || [];
+    const occurrences = occurrencesResponse?.data || [];
 
     if (isLoading) {
         return (
@@ -162,6 +167,15 @@ export default function EventDetailPage() {
                         {LIFECYCLE_LABELS[event.lifecycle_state]}
                     </span>
                     <h1 className="text-3xl font-bold text-foreground">{event.title}</h1>
+                    <div className="mt-2 mb-6">
+                        <Link to={`/events/${event.id}/story`} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors bg-primary/10 px-3 py-1.5 rounded-lg">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                            </span>
+                            View Visual Showcase <ChevronRight className="h-4 w-4" />
+                        </Link>
+                    </div>
 
                     {/* Host */}
                     <div className="flex items-center gap-3">
@@ -233,6 +247,44 @@ export default function EventDetailPage() {
                             {event.description}
                         </p>
                     </div>
+
+                    {/* Series Timeline */}
+                    {event.series && occurrences.length > 0 && (
+                        <div className="border-t pt-6">
+                            <h2 className="text-lg font-semibold mb-3">Recurring Schedule</h2>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                This event is part of a recurring schedule. View past and upcoming dates below.
+                            </p>
+                            <div className="space-y-3">
+                                {occurrences.map((occ: EventListItem) => {
+                                    const isCurrent = occ.id === event.id;
+                                    const isPast = new Date(occ.start_time) < new Date();
+                                    return (
+                                        <div key={occ.id} className={`flex items-center justify-between p-3 rounded-xl border ${isCurrent ? 'bg-primary/5 border-primary/20' : 'bg-card'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <Calendar className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className={`text-sm font-medium ${isCurrent ? 'text-primary' : (isPast ? 'text-muted-foreground' : 'text-foreground')}`}>
+                                                        {formatDate(occ.start_time)} · {formatTime(occ.start_time)}
+                                                    </p>
+                                                    {isCurrent && <p className="text-xs text-primary font-medium">Currently viewing</p>}
+                                                </div>
+                                            </div>
+                                            {!isCurrent && (
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link to={`/events/${occ.id}`}>
+                                                        View <ChevronRight className="w-4 h-4 ml-1" />
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Needs */}
                     {displayNeeds.length > 0 && (

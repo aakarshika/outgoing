@@ -125,6 +125,65 @@
 - [x] "Near you" and "This weekend" quick filters
 - [x] Unified calendar route (`/calendar`) with month grid + timeline for hosting/attending/vendor request activity
 
+### Phase 4.5 — Goer Experience Layer
+> Build the emotional and social loop around events (before/during/after)
+
+**Product goals**:
+- Convert "I have no weekend plan" users into confident attendees faster.
+- Improve repeat attendance, especially for recurring workshops/hobbies.
+- Make vendors and host credibility visible, not hidden in operational flows.
+
+**Backend**:
+- [ ] EventStory model (separate from operational Event detail payload)
+- [ ] EventHighlight model (media type: image/video/text, author role, moderation status)
+- [ ] Recurring series model links (series_id + occurrence ordering + recap links)
+- [ ] EventReview + VendorReview models (verified attendee constraints)
+- [ ] Highlight/review permissions + anti-spam constraints
+- [ ] Story aggregation endpoint (`/api/events/:id/story`) with highlights, host history, vendor snapshot
+
+**Frontend**:
+- [ ] Story page route (`/events/:id/story`) with upcoming/live/highlights sections
+- [ ] Host credibility module (past events, completion rate, review summary)
+- [ ] Vendor spotlight module (participating vendor cards + service links)
+- [ ] Post-event highlight composer for host and verified goers
+- [ ] Event and vendor rating/review composer for verified goers
+- [ ] Recurring workshop timeline component (past sessions + next session CTA)
+
+**Success metrics (target to define in analytics spec)**:
+- [ ] Story page view-to-ticket conversion uplift vs transactional page only
+- [ ] Repeat attendance rate for recurring events
+- [ ] % of completed events with at least one highlight
+- [ ] % of completed events with event/vendor reviews
+
+### Phase 4.6 — Recurring Events Execution Layer
+> Ship recurring events as series + occurrences with strict per-occurrence participation
+
+**Product goals**:
+- Support workshops/classes that happen repeatedly without mixing operational data.
+- Ensure each occurrence has fresh goers and explicit vendor reconfirmation.
+- Keep series storytelling continuity while preserving occurrence-level accountability.
+
+**Backend**:
+- [ ] Add `EventSeries` model and series-to-occurrence linkage on Event
+- [ ] Add occurrence generation service (rule-based, idempotent)
+- [ ] Add series need templates + clone-to-occurrence workflow
+- [ ] Enforce per-occurrence vendor assignment confirmation (no carry-over confirmations)
+- [ ] Enforce per-occurrence ticketing and interest isolation
+- [ ] Add occurrence-scoped cancellation/postponement commands (series unaffected by default)
+
+**Frontend**:
+- [ ] Series creation/edit flow (rule + defaults)
+- [ ] Occurrence management table (upcoming/past statuses, quick actions)
+- [ ] "Re-invite prior vendors" flow for each occurrence
+- [ ] Occurrence-level attendee, vendor, and status dashboards
+- [ ] Series page that aggregates highlights/reviews while linking to each occurrence ops page
+
+**Success metrics (target to define in analytics spec)**:
+- [ ] % of generated occurrences with complete vendor reconfirmation before publish
+- [ ] Vendor reconfirmation turnaround time per occurrence
+- [ ] No cross-occurrence ticket or assignment leakage incidents
+- [ ] Repeat booking rate within recurring series
+
 ### Phase 5 — Event Lifecycle Engine
 > The decision and coordination layer that handles non-happy paths
 
@@ -233,20 +292,22 @@
 | 2 | Vendor Marketplace | Services, event needs, vendor applications, classification |
 | 3 | Demand Side | Event requests, upvotes, fulfillment |
 | 4 | Advanced Discovery | Location-based, recommendations, search improvements |
+| 4.5 | Goer Experience Layer | Story pages, highlights, reviews, recurring-event momentum |
+| 4.6 | Recurring Events Execution Layer | Series templates, occurrence generation, per-occurrence attendee/vendor enforcement |
 | 5 | Event Lifecycle Engine | State machine, substitution logic, notifications, audit trail |
 | 6 | Operations & Admin | Internal dashboards, overrides, dispute resolution |
 | 7 | Polish & Production | Payments, email, S3 storage, deployment |
 
 ## Priorities
 
-Phase 1-4 core delivery is mostly complete. The immediate priorities are finishing personalized recommendations (remaining Phase 4 item) and beginning Phase 5 lifecycle/operational logic.
+Phase 1-4 core delivery is mostly complete. The immediate priorities are finishing personalized recommendations, then shipping the goer experience layer before deeper lifecycle automation.
 
 Priority order moving forward:
 1. [NEXT] Personalized event recommendations (user-signal ranking + For You feed mode)
-2. [NEXT] Event lifecycle state machine foundation (Phase 5 backend)
-3. [NEXT] Decision audit trail model + event transition logging
-4. [NEXT] Organizer lifecycle controls UI (postpone/cancel/at-risk markers)
-5. [NEXT] Notification dispatch rules for material event changes
+2. [NEXT] Dual page architecture for events (transactional page + story page)
+3. [NEXT] Highlights + reviews foundation (event-level + vendor-level)
+4. [NEXT] Recurring events execution model (series + occurrence operations with per-occurrence goer/vendor flows)
+5. [NEXT] Event lifecycle state machine foundation (Phase 5 backend)
 
 ## Timeline
 
@@ -268,3 +329,5 @@ Priority order moving forward:
 | 2026-02-28 | Updated roadmap to reflect completion of Showcase features, request linking, and dashboard updates. |
 | 2026-03-01 | Phase 4 discovery improvements shipped: geolocation-based filters, trending requests on home, broader search matching, autocomplete suggestions. |
 | 2026-03-01 | Added host-to-vendor invite flow, vendor opportunities feed, vendor portfolio route, and unified calendar route with month grid + timeline. |
+| 2026-03-01 | Added Phase 4.5 Goer Experience Layer for story pages, highlights, reviews, and recurring workshop momentum. Reordered near-term priorities accordingly. |
+| 2026-03-01 | Added Phase 4.6 Recurring Events Execution Layer with series/occurrence model, per-occurrence goer/vendor enforcement, and recurring operations metrics. |

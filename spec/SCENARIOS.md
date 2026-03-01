@@ -211,6 +211,54 @@ An attendee or vendor raises a dispute after the event.
 - **Outcome**: Dispute resolution flow. Admin/operations involvement.
 - **System responsibility**: Provide audit trail of what was promised, what changed, and what was communicated.
 
+### 7.4 — Highlights Published by Host and Goers
+
+After event completion, host and verified attendees publish recap content (images, short videos, text).
+
+- **Trigger**: Event transitions to `Completed` (or enters post-event window).
+- **Outcome**: Highlights appear on Event Story page and optionally in discovery surfaces.
+- **System responsibility**: Enforce permissions, moderate content, preserve media attribution, and prevent off-topic spam.
+
+### 7.5 — Recurring Workshop Builds Momentum Across Sessions
+
+A recurring event (workshop/class) should not reset to zero social proof each time.
+
+- **Trigger**: New occurrence created within a series.
+- **Outcome**: Story page shows prior session highlights, reviews, and progression context.
+- **System responsibility**: Link occurrences into a series timeline and surface prior proof ("what this is like") to reduce goer uncertainty.
+
+### 7.5A — New Goers Per Occurrence
+
+Each recurring occurrence receives a different attendee mix.
+
+- **Trigger**: A new occurrence opens for booking.
+- **Outcome**: Ticketing and interest begin from zero for that occurrence; no automatic attendee carry-over.
+- **System responsibility**: Keep attendee records occurrence-scoped and avoid cross-occurrence enrollment.
+
+### 7.5B — Vendors Re-Apply/Re-Confirm Per Occurrence
+
+Recurring events may reuse vendor relationships, but each occurrence requires explicit reconfirmation.
+
+- **Trigger**: A new occurrence is generated from series template.
+- **Outcome**: Prior vendors can be invited quickly, but assignments remain unconfirmed until acceptance.
+- **System responsibility**: Clone needs as draft/open and require occurrence-level vendor acceptance.
+
+### 7.5C — Single Occurrence Canceled While Series Continues
+
+One date in a recurring series fails (e.g. venue unavailable) but the series remains active.
+
+- **Trigger**: Organiser cancels a specific occurrence.
+- **Outcome**: Refund flow and notifications apply only to that occurrence; future occurrences stay scheduled.
+- **System responsibility**: Isolate cancellation effects to the affected occurrence and preserve series continuity.
+
+### 7.6 — Event and Vendor Reviews
+
+Verified attendees submit event-level and vendor-level ratings after completion.
+
+- **Trigger**: Event is completed and attendee verification conditions are met.
+- **Outcome**: Aggregated ratings appear on event story surfaces and vendor profiles.
+- **System responsibility**: Prevent duplicate/inauthentic reviews, support moderation/reporting, and separate event quality from vendor service quality.
+
 ---
 
 ## Responsibility Matrix (Conceptual)

@@ -80,6 +80,42 @@ Outgoing sits at the intersection of **event discovery**, **service marketplace*
 5. **Customer-visible vs operational** — Not all changes are equal. The system knows which ones affect goers and which are internal adjustments.
 6. **Low friction first** — Creating an event or listing a service should take under 2 minutes for the simple case.
 
+## Goer Experience Model (Discovery to Memory)
+
+For goers, the product should behave like a loop, not a one-time transaction:
+
+1. **Discover** — "I don't know what to do this weekend."
+2. **Evaluate** — "Is this exciting, trustworthy, and right for me?"
+3. **Attend** — "Can I easily buy/join and follow updates?"
+4. **Relive** — "What were the best moments? Would I go again?"
+5. **Return** — "What similar events/workshops should I try next?"
+
+This loop is especially important for workshops and hobby-based recurring events where progress, social proof, and highlights directly increase repeat attendance.
+
+## Dual Event Surface Strategy
+
+Outgoing should support two distinct event surfaces:
+
+1. **Event Operations Page (transactional)**
+- Primary job: sign-up, ticket purchase, vendor signup/application, operational details.
+- Existing `/events/:id` route remains this page.
+
+2. **Event Story Page (experiential)**
+- Primary job: excite goers with context, host credibility, vendor charm, highlights, and community voice.
+- Includes upcoming details, live updates, and post-event highlights in one narrative page.
+- Intended route: `/events/:id/story` (name can be changed later).
+
+The Operations page answers "How do I join?" while the Story page answers "Why should I care?"
+
+## Recurring Event Positioning
+
+Recurring workshops/classes should be treated as ongoing journeys, not isolated events:
+
+- Show a **series timeline** (past sessions, current session, upcoming session).
+- Surface **session highlights** (images, short videos, text recaps) to prove momentum.
+- Show **returning goer signals** and progression themes ("Beginner to Intermediate", "Week 1 to Week 4").
+- Preserve each occurrence's operational details, but unify storytelling at the series level.
+
 ---
 
 ### Changelog
@@ -89,3 +125,4 @@ Outgoing sits at the intersection of **event discovery**, **service marketplace*
 | 2026-02-28 | Initial draft created from README and codebase analysis |
 | 2026-02-28 | Rewrote with social marketplace positioning, three-sided model, Goer naming |
 | 2026-02-28 | Evolved to decision engine framing. Richer actor model (Organiser/Host split, vendor classification, Admin/Ops). References to DOMAIN.md and SCENARIOS.md. |
+| 2026-03-01 | Added goer experience loop, dual event surface strategy (operations vs story page), and recurring workshop positioning. |

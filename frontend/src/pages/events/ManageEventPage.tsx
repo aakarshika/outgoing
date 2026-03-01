@@ -13,6 +13,7 @@ import {
     useCategories,
     useEventLifecycleHistory,
     useTransitionEventLifecycle,
+    useGenerateEventSeriesOccurrences,
 } from '@/features/events/hooks';
 import { updateEvent } from '@/features/events/api';
 import { ManageNeedsTab } from '@/components/events/ManageNeedsTab';
@@ -45,6 +46,7 @@ export default function ManageEventPage() {
         useEventLifecycleHistory(Number(id));
     const { data: catResponse } = useCategories();
     const transitionLifecycle = useTransitionEventLifecycle();
+    const generateOccurrences = useGenerateEventSeriesOccurrences();
 
     const event = eventResponse?.data;
     const attendees = attendeesResponse?.data || [];
@@ -57,10 +59,10 @@ export default function ManageEventPage() {
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
     const [latitude, setLatitude] = useState<string>(event?.latitude?.toString() || '');
     const [longitude, setLongitude] = useState<string>(event?.longitude?.toString() || '');
-    const [nextLifecycleState, setNextLifecycleState] =
-        useState<EventLifecycleState>('published');
+    const [nextLifecycleState, setNextLifecycleState] = useState<EventLifecycleState>('published');
     const [transitionReason, setTransitionReason] = useState('');
     const [eventReadyMessage, setEventReadyMessage] = useState('');
+    const [generateCount, setGenerateCount] = useState<number>(3);
     const locationNameRef = useRef<HTMLInputElement>(null);
     const locationAddressRef = useRef<HTMLInputElement>(null);
 
@@ -215,6 +217,19 @@ export default function ManageEventPage() {
             toast.success('Lifecycle state updated');
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to update lifecycle state');
+        }
+    };
+
+    const handleGenerateOccurrences = async () => {
+        if (!event?.series?.id) return;
+        try {
+            await generateOccurrences.mutateAsync({
+                seriesId: event.series.id,
+                payload: { generate_count: generateCount },
+            });
+            toast.success(`Successfully generated ${generateCount} more event(s)`);
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to generate dates');
         }
     };
 
@@ -404,6 +419,37 @@ export default function ManageEventPage() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Series Generation (only if recurring) */}
+                            {event?.series && (
+                                <div className="md:col-span-2 rounded-lg border bg-primary/5 p-4 border-primary/20">
+                                    <h3 className="text-sm font-semibold text-primary">Recurring Event Controls</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+                                        This event is part of a recurring schedule. You can quickly generate more dates based on its recurrence rule.
+                                    </p>
+                                    <div className="flex items-end gap-3 max-w-sm">
+                                        <div className="flex-1">
+                                            <label className="block text-xs font-medium mb-1">Instances to generate</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="10"
+                                                value={generateCount}
+                                                onChange={(e) => setGenerateCount(parseInt(e.target.value) || 1)}
+                                                className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            onClick={handleGenerateOccurrences}
+                                            disabled={generateOccurrences.isPending}
+                                            className="whitespace-nowrap"
+                                        >
+                                            {generateOccurrences.isPending ? 'Generating...' : 'Generate Dates'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
 
                             <div>
                                 <label htmlFor="start_time" className="block text-sm font-medium mb-1">Start Time *</label>

@@ -268,6 +268,40 @@ Examples:
 
 ---
 
+## Recurring Event Domain Model
+
+Recurring events (workshops/classes/weekly sessions) are modeled as **one series with many occurrences**.
+
+### Core Rule: Per-Occurrence Participation
+
+Even when series branding is stable, attendance and staffing are occurrence-specific:
+
+- **Goers are per occurrence**: tickets, interest, check-in, and reviews belong to a single occurrence.
+- **Vendors are per occurrence**: vendors must apply/confirm for each occurrence; no automatic carry-over.
+- **Operational decisions are per occurrence**: substitution, postponement, cancellation, and refunds are decided at occurrence level.
+
+### Series vs Occurrence Responsibilities
+
+| Level | What Lives Here | What Does NOT Live Here |
+| :--- | :--- | :--- |
+| **Series** | Name, brand story, long description, recurrence rule, default needs template, host identity | Actual attendee list, actual vendor assignments, live status |
+| **Occurrence** | Date/time, venue, ticketing, needs, applications, assignments, lifecycle status, highlights/reviews | Global recurring rule definition |
+
+### Carry-Forward Policy (Template, Not Commitments)
+
+Recurring events need speed, but not accidental commitments:
+
+- Previous occurrence vendors can be **invited quickly** to the next occurrence.
+- Need definitions can be **cloned as draft**.
+- Nothing is considered confirmed until vendors explicitly accept for that occurrence.
+- Goers are never auto-enrolled into future occurrences.
+
+### Story Continuity Without Operational Coupling
+
+Series pages can aggregate highlights/reviews across occurrences to build excitement, while operations remain isolated per occurrence. This prevents cross-contamination of refunds, tickets, or vendor obligations.
+
+---
+
 ## Business Rule Themes
 
 These themes must be preserved in all future design decisions. They are the principles that should guide schema design, API behavior, UI logic, and operational tooling.
@@ -304,3 +338,4 @@ Decisions should eventually be **explainable and auditable**. If an event was ca
 | :--- | :--- |
 | 2026-02-28 | Initial conceptual domain model — actors, vendor classification, event lifecycle, business rule themes |
 | 2026-02-28 | Added co-host pattern: additional hosts modeled as zero-fee vendors through the existing vendor assignment system. |
+| 2026-03-01 | Added recurring event domain model: series vs occurrence split, per-occurrence goer/vendor participation, and carry-forward policy. |

@@ -199,6 +199,8 @@ List/search events. Enriched with social proof, vendor lineup, and open needs fo
     {
       "id": 1,
       "host": { "username": "string", "avatar": "url" },
+      "series": { "id": 10, "title": "Sunday Pottery Basics" },
+      "occurrence_index": 4,
       "title": "string",
       "slug": "string",
       "category": { "id": 1, "name": "string", "slug": "string", "icon": "string" },
@@ -267,6 +269,8 @@ Event detail. Includes needs summary and ticket availability.
   "data": {
     "id": 1,
     "host": { "username": "string", "first_name": "string", "avatar": "url" },
+    "series": { "id": 10, "title": "Sunday Pottery Basics", "slug": "sunday-pottery-basics" },
+    "occurrence_index": 4,
     "title": "string",
     "slug": "string",
     "description": "string",
@@ -333,6 +337,70 @@ List events the authenticated user is hosting.
 **Query params**: `?status=`
 
 **Response** `200`: Array of event summary objects.
+
+---
+
+## Recurring Series Endpoints
+
+### `POST /api/event-series/`
+
+Create a recurring series template. Host only.
+
+**Request**:
+```json
+{
+  "title": "Sunday Pottery Basics",
+  "description": "Beginner-friendly weekly workshop series",
+  "category_id": 7,
+  "recurrence_rule": "FREQ=WEEKLY;BYDAY=SU;BYHOUR=11;BYMINUTE=0",
+  "timezone": "America/New_York",
+  "default_location_name": "Clay House Studio",
+  "default_location_address": "123 Main St, Brooklyn, NY",
+  "default_capacity": 25,
+  "default_ticket_price_standard": "40.00",
+  "default_ticket_price_flexible": "50.00"
+}
+```
+
+**Response** `201`: Series object.
+
+### `GET /api/event-series/:id/` [Public]
+
+Get series summary plus upcoming/past occurrences and aggregate review/highlight stats.
+
+### `PATCH /api/event-series/:id/`
+
+Update series template defaults. Already-created occurrences are not retroactively mutated.
+
+### `GET /api/event-series/:id/occurrences/` [Public]
+
+List all occurrences in the series with pagination.
+
+### `POST /api/event-series/:id/generate-occurrences/`
+
+Generate future occurrences from the recurrence rule.
+
+**Request**:
+```json
+{
+  "generate_until": "2026-06-30T23:59:59Z",
+  "clone_need_templates": true
+}
+```
+
+**Behavior notes**:
+- Idempotent by series + start_time (no duplicate occurrence rows).
+- Generated occurrences contain draft/open needs only.
+- Tickets and vendor assignments are never auto-created.
+
+---
+
+## Recurring Operations Rules (API-Level)
+
+1. Tickets are always bought per occurrence (`/api/events/:id/tickets/`).
+2. Event interest is per occurrence and never auto-copied across the series.
+3. Vendor applications always target an occurrence need (`/api/events/:id/needs/:need_id/apply/`).
+4. Prior vendors may be invited, but every occurrence requires explicit vendor re-confirmation.
 
 ---
 
@@ -756,3 +824,4 @@ Each item in `data` is a fully enriched event object suitable for rendering an E
 | 2026-02-28 | Full API surface: events, needs, tickets, vendors, requests, feed |
 | 2026-02-28 | Added interest endpoints. Enriched event listing with social proof, vendors, needs. Updated ticket purchase with ticket_type. Dual pricing on events. Event-centric feed endpoint. |
 | 2026-02-28 | File upload convention (multipart/form-data). Profile and event creation accept image uploads. Vendor portfolio image upload/delete endpoints. Trending algorithm defined. Feed accepts lat/lng. |
+| 2026-03-01 | Added recurring-series API planning: series template endpoints, occurrence generation, and explicit per-occurrence goer/vendor participation rules. |

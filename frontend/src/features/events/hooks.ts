@@ -14,6 +14,15 @@ import {
     fetchMyTickets,
     transitionEventLifecycle,
     fetchEventAttendees,
+    fetchEventStory,
+    addEventHighlight,
+    addEventReview,
+    fetchEventSeriesList,
+    createEventSeries,
+    fetchEventSeriesDetail,
+    updateEventSeries,
+    fetchEventSeriesOccurrences,
+    generateEventSeriesOccurrences,
 } from './api';
 import type { EventLifecycleState } from '@/types/events';
 
@@ -146,5 +155,96 @@ export function useMyTickets() {
     return useQuery({
         queryKey: ['myTickets'],
         queryFn: fetchMyTickets,
+    });
+}
+
+export function useEventStory(eventId: number) {
+    return useQuery({
+        queryKey: ['eventStory', eventId],
+        queryFn: () => fetchEventStory(eventId),
+        enabled: !!eventId,
+    });
+}
+
+export function useAddEventHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, formData }: { eventId: number; formData: FormData }) =>
+            addEventHighlight(eventId, formData),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
+        },
+    });
+}
+
+export function useAddEventReview() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, payload }: { eventId: number; payload: { rating: number; text: string } }) =>
+            addEventReview(eventId, payload),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
+        },
+    });
+}
+
+// --- Event Series ---
+
+export function useEventSeriesList() {
+    return useQuery({
+        queryKey: ['eventSeriesList'],
+        queryFn: fetchEventSeriesList,
+    });
+}
+
+export function useEventSeriesDetail(seriesId: number) {
+    return useQuery({
+        queryKey: ['eventSeriesDetail', seriesId],
+        queryFn: () => fetchEventSeriesDetail(seriesId),
+        enabled: !!seriesId,
+    });
+}
+
+export function useEventSeriesOccurrences(seriesId: number, params?: any) {
+    return useQuery({
+        queryKey: ['eventSeriesOccurrences', seriesId, params],
+        queryFn: () => fetchEventSeriesOccurrences(seriesId, params),
+        enabled: !!seriesId,
+    });
+}
+
+export function useCreateEventSeries() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: createEventSeries,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['eventSeriesList'] });
+            queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+        },
+    });
+}
+
+export function useUpdateEventSeries() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ seriesId, payload }: { seriesId: number; payload: any }) =>
+            updateEventSeries(seriesId, payload),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['eventSeriesDetail', variables.seriesId] });
+            queryClient.invalidateQueries({ queryKey: ['eventSeriesList'] });
+        },
+    });
+}
+
+export function useGenerateEventSeriesOccurrences() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ seriesId, payload }: { seriesId: number; payload: any }) =>
+            generateEventSeriesOccurrences(seriesId, payload),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['eventSeriesOccurrences', variables.seriesId] });
+            queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+            queryClient.invalidateQueries({ queryKey: ['feed'] });
+        },
     });
 }

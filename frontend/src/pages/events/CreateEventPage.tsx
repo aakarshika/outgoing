@@ -1,6 +1,6 @@
 /** Create Event page — form for creating a new event. */
 
-import { ArrowLeft, ImagePlus, LocateFixed } from 'lucide-react';
+import { ArrowLeft, ImagePlus, LocateFixed, Repeat } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -26,6 +26,36 @@ export default function CreateEventPage() {
     const locationNameRef = useRef<HTMLInputElement>(null);
     const locationAddressRef = useRef<HTMLInputElement>(null);
 
+    // Recurrence logic
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [freq, setFreq] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
+    const [days, setDays] = useState<string[]>(['MO']);
+    const [generateCount, setGenerateCount] = useState('4');
+
+    const dayOptions = [
+        { value: 'MO', label: 'Mon' },
+        { value: 'TU', label: 'Tue' },
+        { value: 'WE', label: 'Wed' },
+        { value: 'TH', label: 'Thu' },
+        { value: 'FR', label: 'Fri' },
+        { value: 'SA', label: 'Sat' },
+        { value: 'SU', label: 'Sun' },
+    ];
+
+    const handleDayToggle = (day: string) => {
+        setDays(prev =>
+            prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+        );
+    };
+
+    const buildRrule = () => {
+        if (freq === 'WEEKLY') {
+            const dayStr = days.length > 0 ? days.join(',') : 'MO';
+            return `FREQ=WEEKLY;BYDAY=${dayStr}`;
+        }
+        return `FREQ=${freq}`;
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -46,6 +76,17 @@ export default function CreateEventPage() {
         const coverInput = form.querySelector<HTMLInputElement>('#cover_image');
         if (coverInput?.files?.[0]) {
             formData.set('cover_image', coverInput.files[0]);
+        }
+
+        if (isRecurring) {
+            if (freq === 'WEEKLY' && days.length === 0) {
+                toast.error('Please select at least one day for weekly recurrence.');
+                setIsSubmitting(false);
+                return;
+            }
+            formData.set('is_recurring', 'true');
+            formData.set('recurrence_rule', buildRrule());
+            formData.set('generate_count', generateCount);
         }
 
         try {
@@ -302,6 +343,88 @@ export default function CreateEventPage() {
                         <option value="draft">Draft (save without publishing)</option>
                         <option value="published">Published (visible to everyone)</option>
                     </select>
+                </div>
+
+                <hr className="border-border my-8" />
+
+                {/* Recurring Output */}
+                <div className="space-y-4 rounded-xl border p-4 bg-muted/50">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Repeat className="w-5 h-5 text-muted-foreground" />
+                            <h3 className="font-semibold">Recurring Event</h3>
+                        </div>
+                        <label className="flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={isRecurring}
+                                onChange={(e) => setIsRecurring(e.target.checked)}
+                            />
+                            <div className="relative w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    {isRecurring && (
+                        <div className="pt-4 space-y-4 animate-in fade-in slide-in-from-top-2 border-t border-border">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium">Frequency</label>
+                                <div className="flex gap-4">
+                                    {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map(type => (
+                                        <label key={type} className="flex items-center gap-2 cursor-pointer text-sm">
+                                            <input
+                                                type="radio"
+                                                name="freq"
+                                                value={type}
+                                                checked={freq === type}
+                                                onChange={() => setFreq(type)}
+                                                className="text-primary focus:ring-primary"
+                                            />
+                                            <span className="capitalize">{type.toLowerCase()}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {freq === 'WEEKLY' && (
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium">Repeats On</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {dayOptions.map(day => (
+                                            <Button
+                                                key={day.value}
+                                                type="button"
+                                                variant={days.includes(day.value) ? 'default' : 'outline'}
+                                                size="sm"
+                                                className="h-8 text-xs px-3"
+                                                onClick={() => handleDayToggle(day.value)}
+                                            >
+                                                {day.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium">Generate Occurrences</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="52"
+                                        value={generateCount}
+                                        onChange={(e) => setGenerateCount(e.target.value)}
+                                        className="w-20 rounded-lg border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                                    />
+                                    <span className="text-sm text-muted-foreground">sessions</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    This dictates how many upcoming sessions are generated to start. The rule: <strong className="text-foreground">{buildRrule().replace('FREQ=', 'Repeats ').replace(';BYDAY=', ' on ')}</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Submit */}

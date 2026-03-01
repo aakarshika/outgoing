@@ -47,6 +47,8 @@ The core entity. Represents something happening at a place and time.
 | :--- | :--- | :--- |
 | id | int (PK) | Auto |
 | host | FK → User | The user who created the event |
+| series | FK → EventSeries | Nullable. If set, this event is an occurrence in a recurring series. |
+| occurrence_index | int | Nullable. 1-based sequence inside a series (1,2,3...). |
 | title | varchar(200) | |
 | slug | SlugField | Auto-generated from title, unique |
 | description | text | |
@@ -66,6 +68,29 @@ The core entity. Represents something happening at a place and time.
 | tags | JSONField | Array of strings |
 | interest_count | int | Default 0. Denormalized count of EventInterest records. |
 | ticket_count | int | Default 0. Denormalized count of active Ticket records. |
+| created_at | datetime | Auto |
+| updated_at | datetime | Auto |
+
+### EventSeries (`apps.events`)
+
+Template-level recurring container. Holds recurring identity and defaults, not transactional participation.
+
+| Field | Type | Notes |
+| :--- | :--- | :--- |
+| id | int (PK) | Auto |
+| host | FK → User | Series owner |
+| title | varchar(200) | Series name (e.g. "Sunday Pottery Basics") |
+| slug | SlugField | Unique |
+| description | text | Long-form series narrative |
+| category | FK → EventCategory | Default category |
+| recurrence_rule | varchar(255) | Human-safe recurrence expression / RRULE string |
+| timezone | varchar(64) | e.g. `America/New_York` |
+| default_location_name | varchar(200) | Nullable |
+| default_location_address | varchar(300) | Nullable |
+| default_capacity | int | Nullable |
+| default_ticket_price_standard | Decimal(10,2) | Nullable |
+| default_ticket_price_flexible | Decimal(10,2) | Nullable |
+| is_active | boolean | Default `True` |
 | created_at | datetime | Auto |
 | updated_at | datetime | Auto |
 
@@ -109,6 +134,22 @@ Something a host needs for their event. Vendors can apply to fulfill it.
 | budget_min | Decimal(10,2) | Nullable |
 | budget_max | Decimal(10,2) | Nullable |
 | status | varchar(20) | `open` / `fulfilled` / `closed` |
+| created_at | datetime | Auto |
+
+### EventSeriesNeedTemplate (`apps.needs`)
+
+Reusable needs template for recurring series. Cloned into each occurrence as draft needs.
+
+| Field | Type | Notes |
+| :--- | :--- | :--- |
+| id | int (PK) | Auto |
+| series | FK → EventSeries | Cascade delete |
+| title | varchar(200) | |
+| description | text | |
+| category | varchar(100) | |
+| budget_min | Decimal(10,2) | Nullable |
+| budget_max | Decimal(10,2) | Nullable |
+| is_active | boolean | Default `True` |
 | created_at | datetime | Auto |
 
 ### NeedApplication (`apps.needs`)
@@ -220,6 +261,7 @@ This avoids a separate co-host model while reusing the vendor assignment infrast
 ```
 User ──1:1──▶ UserProfile
 User ──1:N──▶ Event (as host)
+User ──1:N──▶ EventSeries (as host)
 User ──1:N──▶ VendorService (as vendor)
 User ──1:N──▶ Ticket (as goer)
 User ──1:N──▶ EventRequest (as requester)
@@ -228,9 +270,14 @@ User ──1:N──▶ RequestUpvote
 User ──1:N──▶ EventInterest
 
 Event ──N:1──▶ EventCategory
+Event ──N:1──▶ EventSeries (optional)
 Event ──1:N──▶ EventNeed
 Event ──1:N──▶ Ticket
 Event ──1:N──▶ EventInterest
+
+EventSeries ──N:1──▶ EventCategory
+EventSeries ──1:N──▶ Event
+EventSeries ──1:N──▶ EventSeriesNeedTemplate
 
 EventNeed ──1:N──▶ NeedApplication
 NeedApplication ──N:1──▶ VendorService (optional)
@@ -244,8 +291,8 @@ EventRequest ──1:N──▶ RequestUpvote
 | App | Models | Location |
 | :--- | :--- | :--- |
 | profiles | UserProfile | `apps/profiles/` (existing, enhanced) |
-| events | Event, EventCategory, EventInterest | `apps/events/` (new) |
-| needs | EventNeed, NeedApplication | `apps/needs/` (new) |
+| events | Event, EventSeries, EventCategory, EventInterest | `apps/events/` (new) |
+| needs | EventNeed, EventSeriesNeedTemplate, NeedApplication | `apps/needs/` (new) |
 | vendors | VendorService | `apps/vendors/` (new) |
 | tickets | Ticket | `apps/tickets/` (new) |
 | requests | EventRequest, RequestUpvote | `apps/requests/` (new) |
@@ -265,3 +312,4 @@ EventRequest ──1:N──▶ RequestUpvote
 | 2026-02-28 | Full model definitions for all entities, enhanced UserProfile, ER diagram |
 | 2026-02-28 | Added EventInterest model. Ticket gains ticket_type, is_refundable, refund_deadline. Event gains dual pricing (standard/flexible), interest_count, ticket_count, refund_window_hours. |
 | 2026-02-28 | File fields → ImageField (avatar, cover_photo, cover_image). EventCategory seed data (12 categories). Co-host-as-vendor pattern. VendorService portfolio upload note. |
+| 2026-03-01 | Added recurring data model extensions: EventSeries, Event.series linkage, occurrence index, and EventSeriesNeedTemplate for per-occurrence vendor signup. |

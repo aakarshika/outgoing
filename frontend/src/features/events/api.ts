@@ -10,6 +10,8 @@ import type {
     EventLifecycleTransition,
     EventListItem,
     EventSearchSuggestion,
+    EventSeries,
+    EventSeriesDetail,
 } from '@/types/events';
 
 // --- Feed ---
@@ -63,6 +65,23 @@ export async function fetchEvents(params: {
 
 export async function fetchEventAttendees(eventId: number) {
     const { data } = await client.get<ApiResponse<EventAttendee[]>>(`/events/${eventId}/attendees/`);
+    return data;
+}
+
+export async function fetchEventStory(eventId: number) {
+    const { data } = await client.get<ApiResponse<any>>(`/events/${eventId}/story/`);
+    return data;
+}
+
+export async function addEventHighlight(eventId: number, formData: FormData) {
+    const { data } = await client.post<ApiResponse<any>>(`/events/${eventId}/highlights/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+}
+
+export async function addEventReview(eventId: number, payload: { rating: number; text: string }) {
+    const { data } = await client.post<ApiResponse<any>>(`/events/${eventId}/reviews/`, payload);
     return data;
 }
 
@@ -135,5 +154,37 @@ export async function fetchMyTickets() {
 
 export async function fetchMyEvents() {
     const { data } = await client.get('/events/my/');
+    return data;
+}
+
+// --- Event Series ---
+
+export async function fetchEventSeriesList() {
+    const { data } = await client.get<ApiResponse<EventSeries[]>>('/event-series/');
+    return data;
+}
+
+export async function createEventSeries(payload: any) {
+    const { data } = await client.post<ApiResponse<EventSeries>>('/event-series/', payload);
+    return data;
+}
+
+export async function fetchEventSeriesDetail(seriesId: number) {
+    const { data } = await client.get<ApiResponse<EventSeriesDetail>>(`/event-series/${seriesId}/`);
+    return data;
+}
+
+export async function updateEventSeries(seriesId: number, payload: any) {
+    const { data } = await client.patch<ApiResponse<EventSeriesDetail>>(`/event-series/${seriesId}/`, payload);
+    return data;
+}
+
+export async function fetchEventSeriesOccurrences(seriesId: number, params?: any) {
+    const { data } = await client.get<ApiResponse<EventListItem[]>>(`/event-series/${seriesId}/occurrences/`, { params });
+    return data;
+}
+
+export async function generateEventSeriesOccurrences(seriesId: number, payload: any) {
+    const { data } = await client.post<ApiResponse<EventListItem[]>>(`/event-series/${seriesId}/generate-occurrences/`, payload);
     return data;
 }

@@ -6,7 +6,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.events.models import Event, EventCategory, EventInterest
+from apps.events.models import Event, EventCategory, EventInterest, EventReview
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
 
@@ -18,6 +18,9 @@ from .serializers import (
     EventAttendeeSerializer,
     EventTransitionRequestSerializer,
     EventLifecycleTransitionSerializer,
+    EventStorySerializer,
+    EventHighlightSerializer,
+    EventReviewSerializer,
 )
 
 
@@ -346,4 +349,82 @@ class EventLifecycleHistoryView(APIView):
         transitions = event.lifecycle_transitions.select_related("actor").all()
         serializer = EventLifecycleTransitionSerializer(transitions, many=True)
         return success_response(data=serializer.data)
+
+
+class EventStoryView(APIView):
+    """Retrieve the event showcase/story data."""
+    
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses={200: EventStorySerializer})
+    def get(self, request, event_id):
+        """Get the full story/showcase data for an event."""
+        try:
+            event = Event.objects.select_related(
+                "host", "host__profile", "category"
+            ).prefetch_related(
+                "highlights", "highlights__author", "highlights__author__profile",
+                "reviews", "reviews__reviewer", "reviews__reviewer__profile"
+            ).get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        serializer = EventStorySerializer(event, context={"request": request})
+        return success_response(data=serializer.data)
+
+
+class EventHighlightListCreateView(APIView):
+    """Create a highlight for an event."""
+    
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get_permissions(self):
+        """Public for GET, auth for POST."""
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def post(self, request, event_id):
+        """Post a highlight."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+        
+        role = "host" if event.host == request.user else "goer"
+        
+        serializer = EventHighlightSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            highlight = serializer.save(event=event, author=request.user, role=role)
+            return success_response(data=EventHighlightSerializer(highlight, context={"request": request}).data, status=201)
+        return error_response(message="Validation Error", errors=serializer.errors)
+
+
+class EventReviewCreateView(APIView):
+    """Create a review for an event."""
+    
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        """Post a review."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+        
+        if event.host == request.user:
+            return error_response(message="Host cannot review their own event", status=403)
+            
+        if not event.tickets.filter(goer=request.user, status__in=["active", "used"]).exists():
+            return error_response(message="You must attend the event to leave a review", status=403)
+
+        if EventReview.objects.filter(event=event, reviewer=request.user).exists():
+            return error_response(message="You have already reviewed this event", status=409)
+
+        serializer = EventReviewSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            review = serializer.save(event=event, reviewer=request.user)
+            return success_response(data=EventReviewSerializer(review, context={"request": request}).data, status=201)
+        return error_response(message="Validation Error", errors=serializer.errors)
+
 

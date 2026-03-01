@@ -60,7 +60,7 @@ export function EventCard({ event }: EventCardProps) {
                 )}
                 {/* Category badge */}
                 {event.category && (
-                    <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-medium text-foreground">
+                    <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-medium text-foreground shadow-sm">
                         {event.category.name}
                     </span>
                 )}

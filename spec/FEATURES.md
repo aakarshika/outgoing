@@ -79,6 +79,24 @@ Status legend: `[DONE]` `[IN PROGRESS]` `[PLANNED]` `[IDEA]`
 
 ---
 
+### Recurring Event Operations
+
+*How recurring events are executed safely when each occurrence has new goers and vendor commitments.*
+
+| Feature | Status | Notes |
+| :--- | :--- | :--- |
+| Event series template | [DONE] | Series-level identity + recurrence rule + defaults |
+| Occurrence generation | [DONE] | Auto-create upcoming event occurrences from a series |
+| Per-occurrence ticketing enforcement | [DONE] | Tickets always scoped to one occurrence only |
+| Per-occurrence vendor application enforcement | [DONE] | Vendors must apply/confirm each occurrence |
+| Need template cloning (draft only) | [DONE] | Clone recurring needs without auto-confirming vendors |
+| Prior-vendor re-invite flow | [PLANNED] | One-click invites to prior vendors to reapply |
+| Occurrence-level cancellation/postponement | [PLANNED] | One occurrence can change without cancelling full series |
+| Series pause/resume | [PLANNED] | Temporarily stop future occurrence generation |
+| Series-level highlights/review aggregate | [DONE] | Aggregate proof while keeping operations per occurrence |
+
+---
+
 ### Vendor Capabilities
 
 *User must opt into vendor features via `is_vendor` on their profile. Vendor classification is per-event-assignment, not on the profile.*
@@ -119,6 +137,27 @@ Status legend: `[DONE]` `[IN PROGRESS]` `[PLANNED]` `[IDEA]`
 | Browse vendor services | [PLANNED] | `/vendors` page |
 | Notifications for material event changes | [PLANNED] | When customer-facing vendors change, event postponed/cancelled |
 | Refund/credit option on material changes | [PLANNED] | Presented when event is materially altered |
+
+---
+
+### Goer Experience & Event Storytelling
+
+*Experience features that make events feel alive before, during, and after attendance.*
+
+| Feature | Status | Notes |
+| :--- | :--- | :--- |
+| Dual event pages (Operations + Story) | [PLANNED] | Keep `/events/:id` transactional; add Story page for inspiration and context |
+| Event Story page (`/events/:id/story`) | [PLANNED] | Upcoming details + live moments + post-event highlights |
+| Event highlight feed (image/text/video) | [PLANNED] | Mixed media posts tied to event and timestamp |
+| Host and goer highlight posting | [PLANNED] | Role-based permissions after event (and optional during live window) |
+| Highlight moderation queue | [PLANNED] | Safety/quality checks for media and text |
+| Recurring event series page | [PLANNED] | Past session highlights + next session CTA + progression narrative |
+| Live event timeline updates | [IDEA] | Lightweight live updates during the event window |
+| Event reviews (overall) | [PLANNED] | Post-event star rating + short written review |
+| Vendor reviews (per event) | [PLANNED] | Rate specific participating vendors on service quality |
+| Review credibility indicators | [IDEA] | Verified attendee badge, repeat attendee marker, helpful votes |
+| Vendor spotlight blocks on Story page | [PLANNED] | Show vendor profiles/services as part of event charm |
+| Similar next experiences rail | [PLANNED] | "If you liked this, try these this weekend" recommendations |
 
 ---
 
@@ -258,6 +297,36 @@ Acceptance Criteria:
 - [ ] When an organiser creates a matching event, they can link it to the request
 ```
 
+### As a Goer (Highlights + Trust)
+
+```
+As a Goer,
+I want to see highlights, reviews, and vendor credibility on a rich event story page,
+so that I can decide quickly whether this event is worth my weekend.
+
+Acceptance Criteria:
+- [ ] Can view event highlights in mixed media format (image/text/video)
+- [ ] Can view host history and participating vendor summaries from the same page
+- [ ] Can read event-level and vendor-level reviews from prior occurrences
+- [ ] Can post highlights after attending
+- [ ] Can rate/review the event and vendors after completion
+```
+
+### As an Organiser (Recurring Series)
+
+```
+As an Organiser,
+I want recurring events to be easy to run without auto-committing attendees or vendors,
+so that each occurrence remains accurate and manageable.
+
+Acceptance Criteria:
+- [ ] Can define a recurring series template and generate occurrences
+- [ ] Each occurrence has its own ticket list and attendee counts
+- [ ] Vendor needs can be cloned from template, but vendors must re-confirm each occurrence
+- [ ] Cancelling one occurrence does not automatically cancel the full series
+- [ ] Can pause or resume future occurrence generation
+```
+
 ---
 
 ### Changelog
@@ -269,3 +338,5 @@ Acceptance Criteria:
 | 2026-02-28 | Added Event Lifecycle & Operations section, Admin & Operations section, business rule themes. Updated terminology (Host → Organiser where appropriate). Expanded vendor and goer features for lifecycle handling. |
 | 2026-02-28 | Added Interested feature, ticket types (standard/flexible), social proof, home page and Event Card features. Renamed Discovery & Feed to Home Page & Discovery. |
 | 2026-02-28 | Event creation: Quick Create vs Detailed Create modes. File uploads via ImageField. Trending algorithm: proximity + interest match + interest_count. Location-based discovery promoted to PLANNED. |
+| 2026-03-01 | Added Goer Experience & Event Storytelling section: dual event surfaces, highlights, recurring series narrative, event/vendor reviews, and vendor spotlighting. |
+| 2026-03-01 | Added Recurring Event Operations: series template, occurrence generation, per-occurrence goer/vendor enforcement, and organiser recurring user story. |
