@@ -2,31 +2,31 @@
 
 import { MapPin, Search } from 'lucide-react';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Link, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
-import client from '@/api/client';
-
-interface VendorService {
-    id: number;
-    vendor_name: string;
-    vendor_avatar: string | null;
-    title: string;
-    description: string;
-    category: string;
-    base_price: string | null;
-    portfolio_image: string | null;
-    location_city: string;
-}
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth/hooks';
+import { useInviteVendorToNeed } from '@/features/needs/hooks';
+import { useVendorServices } from '@/features/vendors/hooks';
+import type { VendorService } from '@/types/vendors';
 
 export default function BrowseVendorsPage() {
+    const { isAuthenticated } = useAuth();
     const [search, setSearch] = useState('');
+    const [invitingVendorId, setInvitingVendorId] = useState<number | null>(null);
+    const [invitedVendorIds, setInvitedVendorIds] = useState<Set<number>>(new Set());
+    const [searchParams] = useSearchParams();
+    const inviteNeedId = Number(searchParams.get('needId') || 0);
+    const inviteEventId = Number(searchParams.get('eventId') || 0);
+    const inviteCategory = searchParams.get('category') || '';
+    const inviteNeedTitle = searchParams.get('needTitle') || '';
+    const inviteFlowEnabled = isAuthenticated && inviteNeedId > 0 && inviteEventId > 0;
+    const inviteVendorMutation = useInviteVendorToNeed();
 
-    const { data: response, isLoading } = useQuery({
-        queryKey: ['vendors'],
-        queryFn: async () => {
-            const { data } = await client.get('/vendors/');
-            return data;
-        },
+    const { data: response, isLoading } = useVendorServices({
+        category: inviteCategory || undefined,
+        page_size: 100,
     });
 
     const services: VendorService[] = response?.data || [];
@@ -53,6 +53,12 @@ export default function BrowseVendorsPage() {
                     />
                 </div>
             </div>
+            {inviteFlowEnabled && (
+                <div className="mb-6 rounded-xl border bg-primary/5 px-4 py-3 text-sm">
+                    <span className="font-medium">Invite mode:</span>{' '}
+                    Sending invites for <span className="font-medium">{inviteNeedTitle || 'selected need'}</span>.
+                </div>
+            )}
 
             {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -130,6 +136,44 @@ export default function BrowseVendorsPage() {
                                             </span>
                                         )}
                                     </div>
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                    <Button variant="outline" size="sm" asChild className="flex-1">
+                                        <Link to={`/vendors/portfolio/${service.vendor_id}`}>View Portfolio</Link>
+                                    </Button>
+                                    {inviteFlowEnabled && (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1"
+                                            onClick={async () => {
+                                                try {
+                                                    setInvitingVendorId(service.vendor_id);
+                                                    await inviteVendorMutation.mutateAsync({
+                                                        needId: inviteNeedId,
+                                                        payload: { vendor_id: service.vendor_id },
+                                                    });
+                                                    setInvitedVendorIds((prev) => new Set(prev).add(service.vendor_id));
+                                                    toast.success('Vendor invited');
+                                                } catch (err: any) {
+                                                    toast.error(
+                                                        err?.response?.data?.message || 'Failed to invite vendor'
+                                                    );
+                                                } finally {
+                                                    setInvitingVendorId(null);
+                                                }
+                                            }}
+                                            disabled={
+                                                inviteVendorMutation.isPending ||
+                                                invitedVendorIds.has(service.vendor_id)
+                                            }
+                                        >
+                                            {invitedVendorIds.has(service.vendor_id)
+                                                ? 'Invited'
+                                                : invitingVendorId === service.vendor_id
+                                                  ? 'Inviting...'
+                                                  : 'Invite to Apply'}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>

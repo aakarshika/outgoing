@@ -29,6 +29,12 @@ class RequestListCreateView(APIView):
         if category:
             requests_qs = requests_qs.filter(category__slug=category)
 
+        sort = request.query_params.get("sort", "trending")
+        if sort == "newest":
+            requests_qs = requests_qs.order_by("-created_at")
+        else:
+            requests_qs = requests_qs.order_by("-upvote_count", "-created_at")
+
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 20))
         total_count = requests_qs.count()

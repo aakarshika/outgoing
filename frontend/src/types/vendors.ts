@@ -4,6 +4,7 @@ import type { ApiResponse } from './events';
 
 export interface VendorService {
     id: number;
+    vendor_id: number;
     vendor_name: string;
     vendor_avatar: string | null;
     title: string;

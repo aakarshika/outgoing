@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Briefcase, CheckCircle, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -155,9 +156,22 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                                     </div>
                                     {need.description && <p className="text-sm text-muted-foreground mt-2">{need.description}</p>}
                                 </div>
-                                <div className="text-sm font-medium text-muted-foreground text-center bg-muted/50 px-3 py-1.5 rounded-lg border">
-                                    <span className="block text-xl text-foreground">{need.application_count}</span>
-                                    <span>Applicants</span>
+                                <div className="flex flex-col items-end gap-2">
+                                    <div className="text-sm font-medium text-muted-foreground text-center bg-muted/50 px-3 py-1.5 rounded-lg border">
+                                        <span className="block text-xl text-foreground">{need.application_count}</span>
+                                        <span>Applicants</span>
+                                    </div>
+                                    {need.status === 'open' && (
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link
+                                                to={`/vendors?eventId=${eventId}&needId=${need.id}&category=${encodeURIComponent(
+                                                    need.category
+                                                )}&needTitle=${encodeURIComponent(need.title)}`}
+                                            >
+                                                Invite Vendors
+                                            </Link>
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
 

@@ -13,9 +13,13 @@ const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'));
 const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
 const ManageEventPage = lazy(() => import('@/pages/events/ManageEventPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
+const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
 const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
+const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPage'));
+const VendorOpportunitiesPage = lazy(() => import('@/pages/vendors/VendorOpportunitiesPage'));
 const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
 const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
+const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
     SignUp: SignUpPage,
@@ -26,9 +30,13 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
     CreateEvent: CreateEventPage,
     ManageEvent: ManageEventPage,
     Dashboard: DashboardPage,
+    Calendar: CalendarPage,
     BrowseVendors: BrowseVendorsPage,
+    VendorPortfolio: VendorPortfolioPage,
+    VendorOpportunities: VendorOpportunitiesPage,
     CreateService: CreateServicePage,
     Requests: RequestsPage,
+    Alerts: AlertsPage,
 };
 
 import { useAuth } from '@/features/auth/AuthContext';

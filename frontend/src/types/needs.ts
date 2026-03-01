@@ -30,5 +30,35 @@ export interface EventNeed {
     created_at: string;
 }
 
+export interface NeedInvite {
+    id: number;
+    need: number;
+    need_title: string;
+    event_id: number;
+    event_title: string;
+    vendor: number;
+    invited_by_username: string;
+    message: string;
+    status: 'pending' | 'applied' | 'dismissed';
+    created_at: string;
+}
+
+export interface VendorOpportunity {
+    need_id: number;
+    event_id: number;
+    event_title: string;
+    event_start_time: string;
+    event_location_name: string;
+    need_title: string;
+    need_description: string;
+    category: string;
+    criticality: 'essential' | 'replaceable' | 'non_substitutable';
+    budget_min: string | null;
+    budget_max: string | null;
+    is_invited: boolean;
+}
+
 export type EventNeedListResponse = ApiResponse<EventNeed[]>;
 export type NeedApplicationDetailResponse = ApiResponse<NeedApplication>;
+export type NeedInviteDetailResponse = ApiResponse<NeedInvite>;
+export type VendorOpportunityListResponse = ApiResponse<VendorOpportunity[]>;

@@ -19,9 +19,13 @@ class TicketPurchaseView(APIView):
     def post(self, request, event_id):
         """Buy a ticket. One per user per event."""
         try:
-            event = Event.objects.get(pk=event_id, status="published")
+            event = Event.objects.get(
+                pk=event_id, lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+            )
         except Event.DoesNotExist:
-            return error_response(message="Event not found or not published", status=404)
+            return error_response(
+                message="Event not found or not available for ticketing", status=404
+            )
 
         # Check if already has ticket
         if Ticket.objects.filter(event=event, goer=request.user, status="active").exists():

@@ -96,7 +96,10 @@
 - [x] Organiser: review applications on Manage Event page
 - [x] Organiser: vendor assignment with classification tags
 - [x] Dashboard: My Services tab, My Applications tab
-- [ ] Vendor services on Showcase page
+- [x] Vendor services on Showcase page
+- [x] Host vendor invite flow from event needs (invite vendors to apply)
+- [x] Vendor opportunities feed (`/vendor-opportunities`) with matching open needs + apply flow
+- [x] Vendor portfolio route (`/vendors/portfolio/:vendorId`)
 
 ### Phase 3 — Demand Side (Event Requests)
 > Let goers express what they want, let organisers respond to demand
@@ -109,20 +112,48 @@
 - [x] Browse Requests page (`/requests`) — sorted by popularity
 - [x] Create Request form (`/requests/create`)
 - [x] Upvote interaction on request cards
-- [ ] Organiser: "I'm hosting this" → link event to request
-- [ ] Dashboard: My Requests tab
+- [x] Organiser: "I'm hosting this" → link event to request
+- [x] Dashboard: My Requests tab
 
 ### Phase 4 — Advanced Discovery
 > Smarter discovery beyond the core event feed (which ships in Phase 1)
 
-- [ ] Location-based event discovery (geolocation)
+- [x] Location-based event discovery (geolocation)
 - [ ] Personalized event recommendations
-- [ ] Trending event requests surfaced on home page
-- [ ] Search improvements (full-text, autocomplete)
-- [ ] "Near you" and "This weekend" quick filters
+- [x] Trending event requests surfaced on home page
+- [x] Search improvements (full-text, autocomplete)
+- [x] "Near you" and "This weekend" quick filters
+- [x] Unified calendar route (`/calendar`) with month grid + timeline for hosting/attending/vendor request activity
 
 ### Phase 5 — Event Lifecycle Engine
 > The decision and coordination layer that handles non-happy paths
+
+**Target lifecycle narrative (v1)**:
+1. Event created
+2. Vendors sign up / are assigned
+3. Attendees buy tickets
+4. Event happens
+5. Event cancelled (if required by real-world conditions)
+6. Vendor paid (policy-driven outcome; see open policy item)
+7. Event highlights posted / archived summary published
+
+**Lifecycle states (planned)**:
+- `draft` → `published` → `live` → `completed`
+- Risk/exception overlays: `at_risk`, `postponed`, `cancelled`
+- Finance overlays: `refund_pending`, `refund_completed`, `vendor_payout_pending`, `vendor_payout_completed`
+- Content overlays: `highlights_pending`, `highlights_published`
+
+**Transition checkpoints (planned)**:
+- `published` requires: date/time, venue, pricing, host, minimum metadata
+- `live` requires: start-time window reached and event not cancelled
+- `completed` requires: end-time passed and no unresolved incident
+- `cancelled` can occur from: `published`, `at_risk`, `postponed`, `live`
+- `highlights_published` requires: `completed` or `cancelled` with postmortem summary
+
+**Cancellation policy track (planned)**:
+- Ticket side: automatic refund workflow based on ticket type + cutoff rules
+- Vendor side: payout outcome based on contract status and cancellation timing
+- Open policy item: what happens to vendor payout on cancellation is intentionally deferred for explicit business decision in a later policy pass.
 
 **Backend**:
 - [ ] Event state machine (full lifecycle: at-risk, substituted, postponed transitions)
@@ -132,14 +163,45 @@
 - [ ] Notification dispatch (material changes → goers, operational changes → organiser only)
 - [ ] Decision audit trail (all state transitions, who decided, why)
 - [ ] Cancellation/postponement workflow with refund triggering
+- [ ] Vendor payout policy engine for cancellation outcomes (TBD rules)
+- [ ] Highlights publishing state + moderation workflow
 
 **Frontend**:
 - [ ] Organiser: event status dashboard with risk indicators
 - [ ] Organiser: vendor substitution interface (standbys, materiality, actions)
 - [ ] Organiser: event state transition controls (postpone, cancel)
+- [x] DB-driven Alerts inbox (`/alerts`) for host/vendor/attendee actionable reminders (not notifications)
 - [ ] Goer: notifications for material event changes
 - [ ] Goer: refund/credit option when event is materially altered
 - [ ] Decision history view (organiser + admin)
+- [ ] Organiser: payout visibility panel (refunds + vendor payouts)
+- [ ] Post-event highlights composer/publisher (host/admin)
+
+**Detailed execution plan (Phase 5)**:
+1. **State model foundation**
+- Introduce canonical lifecycle enum(s) and transition guard service.
+- Add transition API endpoint with server-side guardrails.
+- Emit immutable audit records on every transition.
+2. **Risk + substitution engine**
+- Add at-risk detection inputs (vendor withdrawal, attendance thresholds, operational flags).
+- Implement standby vendor activation flow with materiality scoring.
+- Trigger organizer decision tasks when substitution is required.
+3. **Cancellation + financial outcomes**
+- Build cancellation orchestration endpoint (single command path).
+- Trigger ticket refund workflow and expose processing states.
+- Add vendor payout policy hook (initial placeholder strategy + feature flag).
+4. **Notification layer**
+- Implement role-aware notifications for goers/vendors/hosts.
+- Separate material customer-facing notices from internal ops notices.
+- Add delivery logs for traceability.
+5. **Post-event closure**
+- Auto-transition eligible events to completed.
+- Add highlights workflow (`pending` → `published`) with optional moderation gate.
+- Show closure checklist in organizer UI.
+6. **Operational visibility**
+- Ship decision history timeline and filterable audit trail UI.
+- Add lifecycle health dashboard cards for organizer + ops/admin.
+- Add manual override controls with strict permission + reason capture.
 
 ### Phase 6 — Operations & Admin
 > Internal tooling for platform operations
@@ -177,16 +239,14 @@
 
 ## Priorities
 
-Phase 1 Backend & Core functionality is complete. Next priorities surround Event Management (Organiser view), Vendor integration flows (connecting applications to actual event needs on the frontend), and completing the user flow for requesting events.
+Phase 1-4 core delivery is mostly complete. The immediate priorities are finishing personalized recommendations (remaining Phase 4 item) and beginning Phase 5 lifecycle/operational logic.
 
 Priority order moving forward:
-1. [DONE] Manage Event page (`/events/:id/manage`) — edit, view attendees
-2. [DONE] Event needs section on Event Detail page (Frontend)
-3. [DONE] Apply-to-need modal/form (Frontend for Vendors)
-4. [DONE] Vendor service creation form (Dashboard)
-5. [DONE] Dashboard sections (My Services, My Applications, etc.)
-6. [DONE] Organiser: review applications on Manage Event page
-7. [DONE] Organiser: vendor assignment with classification tags
+1. [NEXT] Personalized event recommendations (user-signal ranking + For You feed mode)
+2. [NEXT] Event lifecycle state machine foundation (Phase 5 backend)
+3. [NEXT] Decision audit trail model + event transition logging
+4. [NEXT] Organizer lifecycle controls UI (postpone/cancel/at-risk markers)
+5. [NEXT] Notification dispatch rules for material event changes
 
 ## Timeline
 
@@ -203,4 +263,8 @@ Priority order moving forward:
 | 2026-02-28 | Added Phase 0.5 (Domain Design), Phase 5 (Event Lifecycle Engine), Phase 6 (Operations & Admin). Renumbered phases. Updated terminology. |
 | 2026-02-28 | Home page, interest, and ticket types folded into Phase 1. Phase 4 becomes Advanced Discovery. Updated priorities. |
 | 2026-02-28 | Added media infrastructure tasks to Phase 1. EventCategory seed data. Quick Create vs Detailed Create event form. Trending algorithm. Route cleanup task. File uploads moved into Phase 1. |
+| 2026-03-01 | Added DB-driven Alerts inbox (`/alerts`) with host/vendor/attendee actionable reminders and CTA routing. |
 | 2026-02-28 | Phase 2 completed: Manage Event page, Service creation, Needs apply modal, Dashboard tabs, Category logic matching, application statuses, assigned vendor tag. |
+| 2026-02-28 | Updated roadmap to reflect completion of Showcase features, request linking, and dashboard updates. |
+| 2026-03-01 | Phase 4 discovery improvements shipped: geolocation-based filters, trending requests on home, broader search matching, autocomplete suggestions. |
+| 2026-03-01 | Added host-to-vendor invite flow, vendor opportunities feed, vendor portfolio route, and unified calendar route with month grid + timeline. |

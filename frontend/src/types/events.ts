@@ -26,6 +26,7 @@ export interface EventListItem {
     ticket_price_flexible: string | null;
     cover_image: string | null;
     status: string;
+    lifecycle_state: EventLifecycleState;
     capacity: number | null;
     interest_count: number;
     ticket_count: number;
@@ -36,11 +37,33 @@ export interface EventListItem {
 export interface EventDetail extends EventListItem {
     description: string;
     location_address: string;
+    event_ready_message: string;
+    check_in_instructions: string;
     latitude: number | null;
     longitude: number | null;
     refund_window_hours: number;
     tags: string[];
     tickets_remaining: number | null;
+    created_at: string;
+}
+
+export type EventLifecycleState =
+    | 'draft'
+    | 'published'
+    | 'at_risk'
+    | 'postponed'
+    | 'event_ready'
+    | 'live'
+    | 'cancelled'
+    | 'completed';
+
+export interface EventLifecycleTransition {
+    id: number;
+    from_state: EventLifecycleState;
+    to_state: EventLifecycleState;
+    reason: string;
+    metadata: Record<string, unknown>;
+    actor_username: string | null;
     created_at: string;
 }
 
@@ -66,6 +89,13 @@ export interface EventAttendee {
     ticket_type: 'standard' | 'flexible';
     status: string;
     purchased_at: string;
+}
+
+export interface EventSearchSuggestion {
+    id: number;
+    title: string;
+    location_name: string;
+    category_name: string | null;
 }
 
 export interface ApiResponse<T> {

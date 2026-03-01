@@ -1,15 +1,38 @@
 /** Manage Event page — host-only dashboard for an event. */
 
-import { ArrowLeft, Users, FileEdit, ImageIcon, Briefcase } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ArrowLeft, Users, FileEdit, ImageIcon, Briefcase, LocateFixed } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
-import { useEvent, useEventAttendees, useCategories } from '@/features/events/hooks';
+import {
+    useEvent,
+    useEventAttendees,
+    useCategories,
+    useEventLifecycleHistory,
+    useTransitionEventLifecycle,
+} from '@/features/events/hooks';
 import { updateEvent } from '@/features/events/api';
 import { ManageNeedsTab } from '@/components/events/ManageNeedsTab';
+import {
+    canUseBrowserGeolocation,
+    getCurrentCoordinates,
+    reverseGeocodeCoordinates,
+} from '@/utils/geolocation';
+import type { EventLifecycleState } from '@/types/events';
+
+const LIFECYCLE_TRANSITION_OPTIONS: { value: EventLifecycleState; label: string }[] = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'published', label: 'Published' },
+    { value: 'at_risk', label: 'At Risk' },
+    { value: 'postponed', label: 'Postponed' },
+    { value: 'event_ready', label: 'Event Ready' },
+    { value: 'live', label: 'Live' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
 
 export default function ManageEventPage() {
     const { id } = useParams<{ id: string }>();
@@ -18,15 +41,28 @@ export default function ManageEventPage() {
 
     const { data: eventResponse, isLoading: isLoadingEvent } = useEvent(Number(id));
     const { data: attendeesResponse, isLoading: isLoadingAttendees } = useEventAttendees(Number(id));
+    const { data: lifecycleHistoryResponse, isLoading: isLoadingLifecycleHistory } =
+        useEventLifecycleHistory(Number(id));
     const { data: catResponse } = useCategories();
+    const transitionLifecycle = useTransitionEventLifecycle();
 
     const event = eventResponse?.data;
     const attendees = attendeesResponse?.data || [];
+    const lifecycleHistory = lifecycleHistoryResponse?.data || [];
     const categories = catResponse?.data || [];
 
     const [activeTab, setActiveTab] = useState<'details' | 'attendees' | 'needs'>('details');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
+    const [latitude, setLatitude] = useState<string>(event?.latitude?.toString() || '');
+    const [longitude, setLongitude] = useState<string>(event?.longitude?.toString() || '');
+    const [nextLifecycleState, setNextLifecycleState] =
+        useState<EventLifecycleState>('published');
+    const [transitionReason, setTransitionReason] = useState('');
+    const [eventReadyMessage, setEventReadyMessage] = useState('');
+    const locationNameRef = useRef<HTMLInputElement>(null);
+    const locationAddressRef = useRef<HTMLInputElement>(null);
 
     // Redirect if not the host
     useEffect(() => {
@@ -41,6 +77,15 @@ export default function ManageEventPage() {
     useEffect(() => {
         if (event?.cover_image) {
             setCoverPreview(event.cover_image);
+        }
+    }, [event]);
+
+    useEffect(() => {
+        if (event) {
+            setLatitude(event.latitude !== null ? String(event.latitude) : '');
+            setLongitude(event.longitude !== null ? String(event.longitude) : '');
+            setNextLifecycleState(event.lifecycle_state || 'published');
+            setEventReadyMessage(event.event_ready_message || '');
         }
     }, [event]);
 
@@ -64,10 +109,14 @@ export default function ManageEventPage() {
         const form = e.currentTarget;
         const formData = new FormData(form);
 
-        // Remove empty strings for price
-        if (!formData.get('ticket_price_flexible')) {
-            formData.delete('ticket_price_flexible');
-        }
+        // Avoid sending empty strings for optional numeric fields.
+        ['latitude', 'longitude', 'ticket_price_standard', 'ticket_price_flexible', 'capacity'].forEach(
+            (field) => {
+                if (!String(formData.get(field) || '').trim()) {
+                    formData.delete(field);
+                }
+            }
+        );
 
         const coverInput = form.querySelector<HTMLInputElement>('#cover_image');
         if (coverInput?.files?.[0]) {
@@ -99,6 +148,74 @@ export default function ManageEventPage() {
         if (!dateStr) return '';
         const d = new Date(dateStr);
         return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    const handleUseCurrentLocation = async () => {
+        if (!canUseBrowserGeolocation()) {
+            toast.error('Location needs HTTPS in production. It should work on localhost.');
+            return;
+        }
+
+        setIsDetectingLocation(true);
+        try {
+            const coords = await getCurrentCoordinates();
+            setLatitude(coords.latitude.toFixed(6));
+            setLongitude(coords.longitude.toFixed(6));
+
+            const reverse = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+            if (reverse) {
+                if (locationNameRef.current) {
+                    locationNameRef.current.value = reverse.venueName;
+                }
+                if (locationAddressRef.current) {
+                    locationAddressRef.current.value = reverse.displayAddress;
+                }
+                toast.success('Location updated from your current position');
+            } else {
+                if (locationNameRef.current && !locationNameRef.current.value.trim()) {
+                    locationNameRef.current.value = 'Current Location';
+                }
+                toast.success('Coordinates updated. You can edit venue/address manually.');
+            }
+        } catch (err: any) {
+            const message =
+                err?.code === 1
+                    ? 'Location permission was denied.'
+                    : 'Could not access your location right now.';
+            toast.error(message);
+        } finally {
+            setIsDetectingLocation(false);
+        }
+    };
+
+    const handleTransitionLifecycle = async () => {
+        if (nextLifecycleState === event.lifecycle_state) {
+            toast.info('Event is already in that lifecycle state');
+            return;
+        }
+        try {
+            if (nextLifecycleState === 'event_ready') {
+                const trimmedMessage = eventReadyMessage.trim();
+                if (!trimmedMessage) {
+                    toast.error('Please add an event ready message');
+                    return;
+                }
+
+                const messageForm = new FormData();
+                messageForm.set('event_ready_message', trimmedMessage);
+                await updateEvent(event.id, messageForm);
+            }
+
+            await transitionLifecycle.mutateAsync({
+                eventId: event.id,
+                toState: nextLifecycleState,
+                reason: transitionReason.trim() || undefined,
+            });
+            setTransitionReason('');
+            toast.success('Lifecycle state updated');
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to update lifecycle state');
+        }
     };
 
     return (
@@ -179,6 +296,17 @@ export default function ManageEventPage() {
                                     <label htmlFor="description" className="block text-sm font-medium mb-1">Description *</label>
                                     <textarea id="description" name="description" defaultValue={event.description} required rows={5} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
                                 </div>
+                                <div>
+                                    <label htmlFor="check_in_instructions" className="block text-sm font-medium mb-1">Check-in Instructions</label>
+                                    <textarea
+                                        id="check_in_instructions"
+                                        name="check_in_instructions"
+                                        defaultValue={event.check_in_instructions || ''}
+                                        rows={3}
+                                        placeholder="Entry gate, QR scan process, what to bring, contact point..."
+                                        className="w-full rounded-lg border bg-background px-4 py-2 text-sm"
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -189,13 +317,92 @@ export default function ManageEventPage() {
                                 </select>
                             </div>
 
-                            <div>
-                                <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
-                                <select id="status" name="status" defaultValue={event.status} required className="w-full rounded-lg border bg-background px-4 py-2 text-sm">
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                            <div className="md:col-span-2 rounded-lg border bg-muted/30 p-4">
+                                <h3 className="text-sm font-semibold">Lifecycle Control</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+                                    Current state: <span className="font-medium text-foreground">{event.lifecycle_state}</span>
+                                </p>
+                                <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                                    <div>
+                                        <label className="block text-xs font-medium mb-1">Next State</label>
+                                        <select
+                                            value={nextLifecycleState}
+                                            onChange={(e) =>
+                                                setNextLifecycleState(e.target.value as EventLifecycleState)
+                                            }
+                                            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                                        >
+                                            {LIFECYCLE_TRANSITION_OPTIONS.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium mb-1">Reason (optional)</label>
+                                        <input
+                                            value={transitionReason}
+                                            onChange={(e) => setTransitionReason(e.target.value)}
+                                            placeholder="Why this transition?"
+                                            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div className="flex items-end">
+                                        <Button
+                                            type="button"
+                                            onClick={handleTransitionLifecycle}
+                                            disabled={transitionLifecycle.isPending}
+                                        >
+                                            {transitionLifecycle.isPending
+                                                ? 'Updating...'
+                                                : 'Apply Transition'}
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="mt-4 border-t pt-3">
+                                    {nextLifecycleState === 'event_ready' && (
+                                        <div className="mb-3 rounded-md border bg-background p-3">
+                                            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                                                Event Ready Message
+                                            </label>
+                                            <textarea
+                                                value={eventReadyMessage}
+                                                onChange={(e) => setEventReadyMessage(e.target.value)}
+                                                rows={3}
+                                                placeholder="Share day-of notes for attendees..."
+                                                className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                    )}
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        Transition History
+                                    </h4>
+                                    {isLoadingLifecycleHistory ? (
+                                        <p className="text-sm text-muted-foreground mt-2">Loading history...</p>
+                                    ) : lifecycleHistory.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground mt-2">No transitions yet.</p>
+                                    ) : (
+                                        <div className="mt-2 space-y-2">
+                                            {lifecycleHistory.slice(0, 6).map((entry) => (
+                                                <div key={entry.id} className="text-xs rounded-md border bg-background px-3 py-2">
+                                                    <div className="font-medium">
+                                                        {entry.from_state} → {entry.to_state}
+                                                    </div>
+                                                    <div className="text-muted-foreground">
+                                                        {new Date(entry.created_at).toLocaleString()} ·{' '}
+                                                        {entry.actor_username || 'system'}
+                                                    </div>
+                                                    {entry.reason && (
+                                                        <div className="text-muted-foreground mt-1">
+                                                            {entry.reason}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div>
@@ -209,12 +416,27 @@ export default function ManageEventPage() {
 
                             <div>
                                 <label htmlFor="location_name" className="block text-sm font-medium mb-1">Location Name *</label>
-                                <input id="location_name" name="location_name" defaultValue={event.location_name} required className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                <input id="location_name" name="location_name" ref={locationNameRef} defaultValue={event.location_name} required className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
                             </div>
                             <div>
-                                <label htmlFor="location_address" className="block text-sm font-medium mb-1">Address</label>
-                                <input id="location_address" name="location_address" defaultValue={event.location_address || ''} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                <div className="mb-1 flex items-center justify-between gap-2">
+                                    <label htmlFor="location_address" className="block text-sm font-medium">Address</label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleUseCurrentLocation}
+                                        disabled={isDetectingLocation}
+                                        className="h-8 px-2.5 text-xs"
+                                    >
+                                        <LocateFixed className="h-3.5 w-3.5 mr-1" />
+                                        {isDetectingLocation ? 'Detecting...' : 'Use My Location'}
+                                    </Button>
+                                </div>
+                                <input id="location_address" name="location_address" ref={locationAddressRef} defaultValue={event.location_address || ''} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
                             </div>
+                            <input type="hidden" name="latitude" value={latitude} />
+                            <input type="hidden" name="longitude" value={longitude} />
 
                             <div>
                                 <label htmlFor="capacity" className="block text-sm font-medium mb-1">Capacity</label>

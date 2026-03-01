@@ -6,6 +6,7 @@ import type { VendorServiceDetailResponse, VendorServiceListResponse } from '@/t
 export async function fetchVendorServices(params: {
     category?: string;
     city?: string;
+    vendor_id?: number;
     page?: number;
     page_size?: number;
 }) {

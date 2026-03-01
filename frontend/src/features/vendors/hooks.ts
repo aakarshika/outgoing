@@ -12,6 +12,7 @@ import {
 export function useVendorServices(params: {
     category?: string;
     city?: string;
+    vendor_id?: number;
     page?: number;
     page_size?: number;
 }) {

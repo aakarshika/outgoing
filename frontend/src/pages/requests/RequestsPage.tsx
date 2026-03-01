@@ -2,25 +2,15 @@
 
 import { ArrowBigUp, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
 import { CategoryChips } from '@/features/events/CategoryChips';
+import { useRequests } from '@/features/requests/hooks';
+import type { EventRequest } from '@/types/requests';
 import client from '@/api/client';
-
-interface EventRequest {
-    id: number;
-    requester_name: string;
-    title: string;
-    description: string;
-    category: { id: number; name: string; slug: string; icon: string } | null;
-    location_city: string;
-    upvote_count: number;
-    user_has_upvoted: boolean;
-    created_at: string;
-}
 
 export default function RequestsPage() {
     const { isAuthenticated } = useAuth();
@@ -28,15 +18,7 @@ export default function RequestsPage() {
     const [category, setCategory] = useState<string | undefined>();
     const [showForm, setShowForm] = useState(false);
 
-    const { data: response, isLoading } = useQuery({
-        queryKey: ['requests', category],
-        queryFn: async () => {
-            const params: Record<string, string> = {};
-            if (category) params.category = category;
-            const { data } = await client.get('/requests/', { params });
-            return data;
-        },
-    });
+    const { data: response, isLoading } = useRequests({ category, sort: 'trending' });
 
     const upvoteMutation = useMutation({
         mutationFn: async ({ id, hasUpvoted }: { id: number; hasUpvoted: boolean }) => {

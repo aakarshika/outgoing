@@ -1,7 +1,15 @@
 /** API functions for the needs domain. */
 
 import client from '@/api/client';
-import type { EventNeedListResponse, NeedApplicationDetailResponse, EventNeed, NeedApplication } from '@/types/needs';
+import type {
+    EventNeedListResponse,
+    NeedApplicationDetailResponse,
+    EventNeed,
+    NeedApplication,
+    NeedInvite,
+    NeedInviteDetailResponse,
+    VendorOpportunityListResponse,
+} from '@/types/needs';
 
 export async function fetchEventNeeds(eventId: number) {
     const { data } = await client.get<EventNeedListResponse>(`/needs/events/${eventId}/`);
@@ -28,5 +36,23 @@ export async function applyToNeed(needId: number, payload: { service_id?: number
 
 export async function reviewNeedApplication(applicationId: number, status: 'accepted' | 'rejected') {
     const { data } = await client.patch<NeedApplicationDetailResponse>(`/needs/applications/${applicationId}/review/`, { status });
+    return data;
+}
+
+export async function inviteVendorToNeed(
+    needId: number,
+    payload: { vendor_id: number; message?: string }
+) {
+    const { data } = await client.post<NeedInviteDetailResponse>(`/needs/${needId}/invite/`, payload);
+    return data;
+}
+
+export async function fetchMyVendorOpportunities() {
+    const { data } = await client.get<VendorOpportunityListResponse>('/needs/opportunities/my/');
+    return data;
+}
+
+export async function fetchMyNeedInvites() {
+    const { data } = await client.get<{ success: boolean; data: NeedInvite[] }>('/needs/invites/my/');
     return data;
 }

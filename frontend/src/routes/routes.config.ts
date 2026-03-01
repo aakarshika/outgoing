@@ -17,6 +17,11 @@ export const routesConfig: RouteDefinition[] = [
         isPublic: true,
     },
     {
+        path: '/alerts',
+        componentName: 'Alerts',
+        roles: [UserRole.USER, UserRole.ADMIN],
+    },
+    {
         path: '/events/create',
         componentName: 'CreateEvent',
         roles: [UserRole.USER, UserRole.ADMIN],
@@ -37,9 +42,24 @@ export const routesConfig: RouteDefinition[] = [
         roles: [UserRole.USER, UserRole.ADMIN],
     },
     {
+        path: '/calendar',
+        componentName: 'Calendar',
+        roles: [UserRole.USER, UserRole.ADMIN],
+    },
+    {
         path: '/vendors',
         componentName: 'BrowseVendors',
         isPublic: true,
+    },
+    {
+        path: '/vendors/portfolio/:vendorId',
+        componentName: 'VendorPortfolio',
+        isPublic: true,
+    },
+    {
+        path: '/vendor-opportunities',
+        componentName: 'VendorOpportunities',
+        roles: [UserRole.USER, UserRole.ADMIN],
     },
     {
         path: '/vendors/create',

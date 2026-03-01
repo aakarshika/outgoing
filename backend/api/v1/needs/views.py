@@ -1,11 +1,11 @@
 """Views for event needs and applications."""
 
-from django.db.models import F
+from django.db.models import Exists, F, OuterRef
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from apps.events.models import Event
-from apps.needs.models import EventNeed, NeedApplication
+from apps.needs.models import EventNeed, NeedApplication, NeedInvite
 from apps.vendors.models import VendorService
 from core.responses import error_response, success_response
 
@@ -14,6 +14,7 @@ from .serializers import (
     EventNeedSerializer,
     NeedApplicationCreateSerializer,
     NeedApplicationSerializer,
+    NeedInviteSerializer,
 )
 
 
@@ -86,6 +87,9 @@ class NeedApplyView(APIView):
         EventNeed.objects.filter(pk=need_id).update(
             application_count=F("application_count") + 1
         )
+        NeedInvite.objects.filter(
+            need=need, vendor=request.user, status="pending"
+        ).update(status="applied")
 
         result = NeedApplicationSerializer(application)
         return success_response(data=result.data, message="Application submitted", status=201)
@@ -138,3 +142,112 @@ class MyNeedApplicationsView(APIView):
         )
         serializer = NeedApplicationSerializer(applications, many=True)
         return success_response(data=serializer.data)
+
+
+class NeedInviteCreateView(APIView):
+    """Create an invite for a vendor to apply to a need. Host only."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, need_id):
+        """Invite a vendor for a need."""
+        try:
+            need = EventNeed.objects.select_related("event").get(pk=need_id, status="open")
+        except EventNeed.DoesNotExist:
+            return error_response(message="Need not found or not open", status=404)
+
+        if need.event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        vendor_id = request.data.get("vendor_id")
+        if not vendor_id:
+            return error_response(message="vendor_id is required", status=400)
+
+        try:
+            vendor_service_exists = VendorService.objects.filter(
+                vendor_id=vendor_id,
+                is_active=True,
+            ).exists()
+        except (TypeError, ValueError):
+            vendor_service_exists = False
+        if not vendor_service_exists:
+            return error_response(message="Vendor not found", status=404)
+
+        invite, _ = NeedInvite.objects.update_or_create(
+            need=need,
+            vendor_id=vendor_id,
+            defaults={
+                "invited_by": request.user,
+                "message": request.data.get("message", ""),
+                "status": "pending",
+            },
+        )
+        serializer = NeedInviteSerializer(invite)
+        return success_response(data=serializer.data, message="Vendor invited", status=201)
+
+
+class MyNeedInvitesView(APIView):
+    """List invitations for the current vendor."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """List current user's invites."""
+        invites = NeedInvite.objects.filter(vendor=request.user).select_related(
+            "need__event", "invited_by"
+        )
+        serializer = NeedInviteSerializer(invites, many=True)
+        return success_response(data=serializer.data)
+
+
+class MyVendorOpportunitiesView(APIView):
+    """List open event needs that match current vendor service categories."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """List matching opportunities."""
+        categories = list(
+            VendorService.objects.filter(vendor=request.user, is_active=True)
+            .values_list("category", flat=True)
+            .distinct()
+        )
+        if not categories:
+            return success_response(data=[])
+
+        base_qs = (
+            EventNeed.objects.filter(
+                status="open",
+                category__in=categories,
+                event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
+            )
+            .exclude(applications__vendor=request.user)
+            .select_related("event")
+            .distinct()
+        )
+
+        invited_subquery = NeedInvite.objects.filter(
+            need=OuterRef("pk"),
+            vendor=request.user,
+            status="pending",
+        )
+        needs = base_qs.annotate(is_invited=Exists(invited_subquery))
+
+        data = [
+            {
+                "need_id": need.id,
+                "event_id": need.event_id,
+                "event_title": need.event.title,
+                "event_start_time": need.event.start_time,
+                "event_location_name": need.event.location_name,
+                "need_title": need.title,
+                "need_description": need.description,
+                "category": need.category,
+                "criticality": need.criticality,
+                "budget_min": need.budget_min,
+                "budget_max": need.budget_max,
+                "is_invited": bool(getattr(need, "is_invited", False)),
+            }
+            for need in needs
+        ]
+        return success_response(data=data)

@@ -1,5 +1,10 @@
 """Views for the home feed endpoint."""
 
+from datetime import datetime, time, timedelta
+from math import cos, radians
+
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
@@ -13,13 +18,60 @@ class FeedView(APIView):
 
     permission_classes = [AllowAny]
 
+    def _apply_geo_filter(self, events, request):
+        """Filter events by a rough geo bounding box around lat/lng."""
+        lat = request.query_params.get("lat")
+        lng = request.query_params.get("lng")
+        if lat is None or lng is None:
+            return events
+
+        try:
+            latitude = float(lat)
+            longitude = float(lng)
+            radius_km = float(request.query_params.get("radius_km", 25))
+        except (TypeError, ValueError):
+            return events
+
+        radius_km = max(1.0, min(radius_km, 200.0))
+        lat_delta = radius_km / 111.0
+        lng_scale = max(0.1, cos(radians(latitude)))
+        lng_delta = radius_km / (111.0 * lng_scale)
+
+        return events.filter(
+            latitude__isnull=False,
+            longitude__isnull=False,
+            latitude__gte=latitude - lat_delta,
+            latitude__lte=latitude + lat_delta,
+            longitude__gte=longitude - lng_delta,
+            longitude__lte=longitude + lng_delta,
+        )
+
+    def _apply_weekend_filter(self, events, request):
+        """Filter events happening this (or next) weekend."""
+        weekend = request.query_params.get("weekend")
+        if weekend != "true":
+            return events
+
+        now_local = timezone.localtime()
+        weekday = now_local.weekday()  # Monday=0 ... Sunday=6
+        days_until_saturday = 5 - weekday if weekday <= 5 else 6
+        saturday_date = (now_local + timedelta(days=days_until_saturday)).date()
+        monday_date = saturday_date + timedelta(days=2)
+
+        start_dt = timezone.make_aware(datetime.combine(saturday_date, time.min))
+        end_dt = timezone.make_aware(datetime.combine(monday_date, time.min))
+        return events.filter(start_time__gte=start_dt, start_time__lt=end_dt)
+
     def get(self, request):
         """
         Get the home feed.
-        Supports: ?category=, ?sort=trending|newest|popular,
+        Supports: ?category=, ?search=, ?sort=trending|newest|popular,
+                  ?lat= & ?lng= & ?radius_km=, ?weekend=true,
                   ?featured=true, ?page=, ?page_size=
         """
-        events = Event.objects.filter(status="published").select_related(
+        events = Event.objects.filter(
+            lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+        ).select_related(
             "host", "host__profile", "category"
         )
 
@@ -27,6 +79,18 @@ class FeedView(APIView):
         category = request.query_params.get("category")
         if category:
             events = events.filter(category__slug=category)
+        search = request.query_params.get("search")
+        if search:
+            events = events.filter(
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
+                | Q(location_name__icontains=search)
+                | Q(location_address__icontains=search)
+                | Q(category__name__icontains=search)
+            )
+
+        events = self._apply_geo_filter(events, request)
+        events = self._apply_weekend_filter(events, request)
 
         # Featured mode — return single top event
         featured = request.query_params.get("featured")

@@ -1,20 +1,30 @@
 /** Create Event page — form for creating a new event. */
 
-import { ArrowLeft, ImagePlus } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, ImagePlus, LocateFixed } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { createEvent } from '@/features/events/api';
 import { useCategories } from '@/features/events/hooks';
+import {
+    canUseBrowserGeolocation,
+    getCurrentCoordinates,
+    reverseGeocodeCoordinates,
+} from '@/utils/geolocation';
 
 export default function CreateEventPage() {
     const navigate = useNavigate();
     const { data: catResponse } = useCategories();
     const categories = catResponse?.data || [];
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
+    const [latitude, setLatitude] = useState<string>('');
+    const [longitude, setLongitude] = useState<string>('');
+    const locationNameRef = useRef<HTMLInputElement>(null);
+    const locationAddressRef = useRef<HTMLInputElement>(null);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -22,6 +32,15 @@ export default function CreateEventPage() {
 
         const form = e.currentTarget;
         const formData = new FormData(form);
+
+        // Avoid sending empty strings for optional numeric fields.
+        ['latitude', 'longitude', 'ticket_price_standard', 'ticket_price_flexible', 'capacity'].forEach(
+            (field) => {
+                if (!String(formData.get(field) || '').trim()) {
+                    formData.delete(field);
+                }
+            }
+        );
 
         // Handle cover image separately if present
         const coverInput = form.querySelector<HTMLInputElement>('#cover_image');
@@ -46,6 +65,44 @@ export default function CreateEventPage() {
             const reader = new FileReader();
             reader.onload = () => setCoverPreview(reader.result as string);
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUseCurrentLocation = async () => {
+        if (!canUseBrowserGeolocation()) {
+            toast.error('Location needs HTTPS in production. It should work on localhost.');
+            return;
+        }
+
+        setIsDetectingLocation(true);
+        try {
+            const coords = await getCurrentCoordinates();
+            setLatitude(coords.latitude.toFixed(6));
+            setLongitude(coords.longitude.toFixed(6));
+
+            const reverse = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+            if (reverse) {
+                if (locationNameRef.current) {
+                    locationNameRef.current.value = reverse.venueName;
+                }
+                if (locationAddressRef.current) {
+                    locationAddressRef.current.value = reverse.displayAddress;
+                }
+                toast.success('Location filled from your current position');
+            } else {
+                if (locationNameRef.current && !locationNameRef.current.value.trim()) {
+                    locationNameRef.current.value = 'Current Location';
+                }
+                toast.success('Coordinates added. You can edit venue/address manually.');
+            }
+        } catch (err: any) {
+            const message =
+                err?.code === 1
+                    ? 'Location permission was denied.'
+                    : 'Could not access your location right now.';
+            toast.error(message);
+        } finally {
+            setIsDetectingLocation(false);
         }
     };
 
@@ -161,20 +218,37 @@ export default function CreateEventPage() {
                     <input
                         id="location_name"
                         name="location_name"
+                        ref={locationNameRef}
                         required
                         className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder="e.g. Central Park, The Roxy"
                     />
                 </div>
                 <div>
-                    <label htmlFor="location_address" className="block text-sm font-medium mb-1">Address</label>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                        <label htmlFor="location_address" className="block text-sm font-medium">Address</label>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUseCurrentLocation}
+                            disabled={isDetectingLocation}
+                            className="h-8 px-2.5 text-xs"
+                        >
+                            <LocateFixed className="h-3.5 w-3.5 mr-1" />
+                            {isDetectingLocation ? 'Detecting...' : 'Use My Location'}
+                        </Button>
+                    </div>
                     <input
                         id="location_address"
                         name="location_address"
+                        ref={locationAddressRef}
                         className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder="Full address (optional)"
                     />
                 </div>
+                <input type="hidden" name="latitude" value={latitude} />
+                <input type="hidden" name="longitude" value={longitude} />
 
                 {/* Pricing */}
                 <div className="grid grid-cols-2 gap-4">

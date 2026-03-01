@@ -2,7 +2,9 @@
 
 from django.contrib import admin
 
-from .models import Event, EventCategory, EventInterest
+from .models import Event, EventCategory, EventInterest, EventLifecycleTransition
+
+
 
 
 @admin.register(EventCategory)
@@ -17,8 +19,20 @@ class EventCategoryAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     """Admin for Event."""
 
-    list_display = ["title", "host", "category", "status", "start_time", "interest_count", "ticket_count"]
-    list_filter = ["status", "category"]
+    list_display = [
+        "title",
+        "host",
+        "category",
+        "lifecycle_state",
+        "start_time",
+
+
+        "interest_count",
+        "ticket_count",
+    ]
+    list_filter = ["lifecycle_state", "category"]
+
+
     search_fields = ["title", "description"]
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ["interest_count", "ticket_count", "created_at", "updated_at"]
@@ -30,3 +44,22 @@ class EventInterestAdmin(admin.ModelAdmin):
 
     list_display = ["user", "event", "created_at"]
     list_filter = ["created_at"]
+
+
+@admin.register(EventLifecycleTransition)
+class EventLifecycleTransitionAdmin(admin.ModelAdmin):
+    """Admin for lifecycle transition audit records."""
+
+    list_display = ["event", "from_state", "to_state", "actor", "created_at"]
+    list_filter = ["from_state", "to_state", "created_at"]
+    search_fields = ["event__title", "actor__username", "reason"]
+    readonly_fields = [
+        "event",
+        "actor",
+        "from_state",
+        "to_state",
+        "reason",
+        "metadata",
+        "created_at",
+    ]
+

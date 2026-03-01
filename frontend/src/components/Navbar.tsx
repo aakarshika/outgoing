@@ -1,4 +1,4 @@
-import { Briefcase, Moon, Plus, Sun } from 'lucide-react';
+import { Bell, Briefcase, CalendarDays, Compass, Moon, Plus, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -34,9 +34,24 @@ export function Navbar() {
 
             {isAuthenticated ? (
               <>
+                <Button variant="ghost" size="sm" asChild className="gap-1.5">
+                  <Link to="/alerts">
+                    <Bell className="h-4 w-4" /> Alerts
+                  </Link>
+                </Button>
                 <Button variant="default" size="sm" asChild className="gap-1.5">
                   <Link to="/events/create">
                     <Plus className="h-4 w-4" /> Create Event
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild className="gap-1.5">
+                  <Link to="/vendor-opportunities">
+                    <Compass className="h-4 w-4" /> Opportunities
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild className="gap-1.5">
+                  <Link to="/calendar">
+                    <CalendarDays className="h-4 w-4" /> Calendar
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild className="gap-1.5 border-primary text-primary hover:bg-primary/10">

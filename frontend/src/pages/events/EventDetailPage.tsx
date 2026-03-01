@@ -12,6 +12,29 @@ import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import type { EventNeed } from '@/types/needs';
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
+import type { EventLifecycleState } from '@/types/events';
+
+const LIFECYCLE_LABELS: Record<EventLifecycleState, string> = {
+    draft: 'Draft',
+    published: 'Published',
+    at_risk: 'At Risk',
+    postponed: 'Postponed',
+    event_ready: 'Event Ready',
+    live: 'Live',
+    cancelled: 'Cancelled',
+    completed: 'Completed',
+};
+
+const LIFECYCLE_STYLES: Record<EventLifecycleState, string> = {
+    draft: 'bg-muted text-muted-foreground',
+    published: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    at_risk: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+    postponed: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+    event_ready: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+    live: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    completed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+};
 
 function formatDate(dateStr: string) {
     const d = new Date(dateStr);
@@ -91,6 +114,9 @@ export default function EventDetailPage() {
         : null;
 
     const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
+    const isHost = user?.username === event.host.username;
+    const isEventReady = event.lifecycle_state === 'event_ready';
+    const canViewReadyDetails = isHost || event.user_has_ticket;
 
     return (
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
@@ -102,7 +128,7 @@ export default function EventDetailPage() {
                 >
                     <ArrowLeft className="h-4 w-4" /> Back
                 </button>
-                {user?.username === event.host.username && (
+                {isHost && (
                     <Button variant="outline" size="sm" onClick={() => navigate(`/events/${event.id}/manage`)}>
                         <FileEdit className="h-4 w-4 mr-2" /> Manage Event
                     </Button>
@@ -132,6 +158,9 @@ export default function EventDetailPage() {
                             {event.category.name}
                         </span>
                     )}
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${LIFECYCLE_STYLES[event.lifecycle_state]}`}>
+                        {LIFECYCLE_LABELS[event.lifecycle_state]}
+                    </span>
                     <h1 className="text-3xl font-bold text-foreground">{event.title}</h1>
 
                     {/* Host */}
@@ -164,6 +193,38 @@ export default function EventDetailPage() {
                             <span>{event.location_name}{event.location_address ? `, ${event.location_address}` : ''}</span>
                         </div>
                     </div>
+
+                    {isEventReady && (
+                        <div className="border rounded-xl p-4 bg-card">
+                            <h2 className="text-base font-semibold mb-2">Event Day Details</h2>
+                            {event.event_ready_message && (
+                                <p className="text-sm text-foreground mb-3 whitespace-pre-wrap">
+                                    {event.event_ready_message}
+                                </p>
+                            )}
+                            {canViewReadyDetails ? (
+                                <div className="space-y-2 text-sm text-muted-foreground">
+                                    <p>
+                                        <span className="font-medium text-foreground">Location:</span>{' '}
+                                        {event.location_name}
+                                        {event.location_address ? `, ${event.location_address}` : ''}
+                                    </p>
+                                    {event.check_in_instructions ? (
+                                        <p className="whitespace-pre-wrap">
+                                            <span className="font-medium text-foreground">Check-in:</span>{' '}
+                                            {event.check_in_instructions}
+                                        </p>
+                                    ) : (
+                                        <p>Check-in instructions will be shared by the host soon.</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Event day location details and check-in instructions are visible to paid attendees.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Description */}
                     <div className="border-t pt-6">
@@ -275,7 +336,7 @@ export default function EventDetailPage() {
                 {/* Sidebar — tickets + social */}
                 <div className="space-y-4">
                     <div className="rounded-xl border bg-card p-6 space-y-4 sticky top-24">
-                        <h3 className="font-semibold text-lg">Get Tickets</h3>
+                        <h3 className="font-semibold text-lg">{isHost ? 'Tickets' : 'Get Tickets'}</h3>
 
                         {/* Standard */}
                         <div className="rounded-lg border p-4 space-y-2">
@@ -286,13 +347,15 @@ export default function EventDetailPage() {
                                 </span>
                             </div>
                             <p className="text-xs text-muted-foreground">Non-refundable</p>
-                            <Button
-                                className="w-full"
-                                onClick={() => handleBuyTicket('standard')}
-                                disabled={event.user_has_ticket || purchaseTicket.isPending}
-                            >
-                                {event.user_has_ticket ? 'Already Purchased' : 'Buy Standard'}
-                            </Button>
+                            {!isHost && (
+                                <Button
+                                    className="w-full"
+                                    onClick={() => handleBuyTicket('standard')}
+                                    disabled={event.user_has_ticket || purchaseTicket.isPending}
+                                >
+                                    {event.user_has_ticket ? 'Already Purchased' : 'Buy Standard'}
+                                </Button>
+                            )}
                         </div>
 
                         {/* Flexible */}
@@ -305,14 +368,16 @@ export default function EventDetailPage() {
                                 <p className="text-xs text-muted-foreground">
                                     Refundable up to {event.refund_window_hours}h before event
                                 </p>
-                                <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => handleBuyTicket('flexible')}
-                                    disabled={event.user_has_ticket || purchaseTicket.isPending}
-                                >
-                                    {event.user_has_ticket ? 'Already Purchased' : 'Buy Flexible'}
-                                </Button>
+                                {!isHost && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => handleBuyTicket('flexible')}
+                                        disabled={event.user_has_ticket || purchaseTicket.isPending}
+                                    >
+                                        {event.user_has_ticket ? 'Already Purchased' : 'Buy Flexible'}
+                                    </Button>
+                                )}
                             </div>
                         )}
 

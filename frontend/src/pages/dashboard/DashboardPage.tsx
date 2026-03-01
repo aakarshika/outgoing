@@ -10,6 +10,26 @@ import { useMyServices } from '@/features/vendors/hooks';
 import { useMyApplications } from '@/features/needs/hooks';
 
 type Tab = 'events' | 'tickets' | 'services' | 'applications';
+const LIFECYCLE_BADGE_STYLES: Record<string, string> = {
+    draft: 'bg-yellow-500/10 text-yellow-600',
+    published: 'bg-green-500/10 text-green-600',
+    at_risk: 'bg-amber-500/10 text-amber-600',
+    postponed: 'bg-orange-500/10 text-orange-600',
+    event_ready: 'bg-emerald-500/10 text-emerald-600',
+    live: 'bg-lime-500/10 text-lime-600',
+    cancelled: 'bg-red-500/10 text-red-600',
+    completed: 'bg-purple-500/10 text-purple-600',
+};
+const LIFECYCLE_LABELS: Record<string, string> = {
+    draft: 'Draft',
+    published: 'Published',
+    at_risk: 'At Risk',
+    postponed: 'Postponed',
+    event_ready: 'Event Ready',
+    live: 'Live',
+    cancelled: 'Cancelled',
+    completed: 'Completed',
+};
 
 export default function DashboardPage() {
     const [tab, setTab] = useState<Tab>('events');
@@ -109,14 +129,12 @@ export default function DashboardPage() {
                                         </p>
                                     </div>
                                     <span
-                                        className={`text-xs font-medium px-2 py-1 rounded-full ${event.status === 'published'
-                                            ? 'bg-green-500/10 text-green-600'
-                                            : event.status === 'draft'
-                                                ? 'bg-yellow-500/10 text-yellow-600'
-                                                : 'bg-red-500/10 text-red-600'
-                                            }`}
+                                        className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                            LIFECYCLE_BADGE_STYLES[event.lifecycle_state] ||
+                                            'bg-muted text-muted-foreground'
+                                        }`}
                                     >
-                                        {event.status}
+                                        {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
                                     </span>
                                 </Link>
                             ))}

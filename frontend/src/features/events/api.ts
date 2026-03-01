@@ -1,13 +1,27 @@
 /** API functions for the events and feed domain. */
 
 import client from '@/api/client';
-import type { ApiResponse, EventCategory, EventDetail, EventListItem, EventAttendee } from '@/types/events';
+import type {
+    ApiResponse,
+    EventAttendee,
+    EventCategory,
+    EventDetail,
+    EventLifecycleState,
+    EventLifecycleTransition,
+    EventListItem,
+    EventSearchSuggestion,
+} from '@/types/events';
 
 // --- Feed ---
 
 export async function fetchFeed(params: {
     category?: string;
     sort?: string;
+    search?: string;
+    weekend?: boolean;
+    lat?: number;
+    lng?: number;
+    radius_km?: number;
     featured?: boolean;
     page?: number;
     page_size?: number;
@@ -49,6 +63,30 @@ export async function fetchEvents(params: {
 
 export async function fetchEventAttendees(eventId: number) {
     const { data } = await client.get<ApiResponse<EventAttendee[]>>(`/events/${eventId}/attendees/`);
+    return data;
+}
+
+export async function transitionEventLifecycle(
+    eventId: number,
+    payload: { to_state: EventLifecycleState; reason?: string; metadata?: Record<string, unknown> }
+) {
+    const { data } = await client.post<
+        ApiResponse<{ event: EventDetail; transition: EventLifecycleTransition | null }>
+    >(`/events/${eventId}/lifecycle/transition/`, payload);
+    return data;
+}
+
+export async function fetchEventLifecycleHistory(eventId: number) {
+    const { data } = await client.get<ApiResponse<EventLifecycleTransition[]>>(
+        `/events/${eventId}/lifecycle/history/`
+    );
+    return data;
+}
+
+export async function fetchEventAutocomplete(query: string) {
+    const { data } = await client.get<ApiResponse<EventSearchSuggestion[]>>('/events/autocomplete/', {
+        params: { q: query },
+    });
     return data;
 }
 

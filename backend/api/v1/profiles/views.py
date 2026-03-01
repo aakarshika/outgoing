@@ -4,6 +4,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
+from apps.events.models import Event
 from apps.profiles.services import get_or_create_profile
 from core.responses import error_response, success_response
 from core.serializers import SuccessResponseSerializer
@@ -66,12 +67,13 @@ class PublicShowcaseView(APIView):
             "location_city": profile.location_city,
             "is_vendor": profile.is_vendor,
             "hosted_events": list(
-                user.hosted_events.filter(status="published").values(
+                user.hosted_events.filter(
+                    lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+                ).values(
                     "id", "title", "slug", "start_time", "location_name"
                 )[:10]
             ),
         }
 
         return success_response(data=data)
-
 

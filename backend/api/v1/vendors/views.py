@@ -36,6 +36,10 @@ class VendorServiceListCreateView(APIView):
         if city:
             services = services.filter(location_city__icontains=city)
 
+        vendor_id = request.query_params.get("vendor_id")
+        if vendor_id:
+            services = services.filter(vendor_id=vendor_id)
+
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 20))
         total_count = services.count()

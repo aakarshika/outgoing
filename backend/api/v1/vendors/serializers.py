@@ -9,6 +9,7 @@ class VendorServiceSerializer(serializers.ModelSerializer):
     """Serializer for the VendorService model."""
 
     vendor_name = serializers.CharField(source="vendor.username", read_only=True)
+    vendor_id = serializers.IntegerField(source="vendor.id", read_only=True)
     vendor_avatar = serializers.SerializerMethodField()
 
     class Meta:
@@ -16,7 +17,7 @@ class VendorServiceSerializer(serializers.ModelSerializer):
 
         model = VendorService
         fields = [
-            "id", "vendor_name", "vendor_avatar", "title", "description",
+            "id", "vendor_id", "vendor_name", "vendor_avatar", "title", "description",
             "category", "visibility", "base_price", "portfolio_image",
             "location_city", "is_active", "created_at",
         ]

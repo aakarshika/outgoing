@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+    fetchEventLifecycleHistory,
+    fetchEventAutocomplete,
     fetchFeed,
     fetchFeaturedEvent,
     fetchCategories,
@@ -10,12 +12,19 @@ import {
     purchaseTicket,
     fetchMyEvents,
     fetchMyTickets,
+    transitionEventLifecycle,
     fetchEventAttendees,
 } from './api';
+import type { EventLifecycleState } from '@/types/events';
 
 export function useFeed(params: {
     category?: string;
     sort?: string;
+    search?: string;
+    weekend?: boolean;
+    lat?: number;
+    lng?: number;
+    radius_km?: number;
     page?: number;
 }) {
     return useQuery({
@@ -55,6 +64,23 @@ export function useEventAttendees(eventId: number) {
     });
 }
 
+export function useEventLifecycleHistory(eventId: number) {
+    return useQuery({
+        queryKey: ['eventLifecycleHistory', eventId],
+        queryFn: () => fetchEventLifecycleHistory(eventId),
+        enabled: !!eventId,
+    });
+}
+
+export function useEventAutocomplete(query: string) {
+    return useQuery({
+        queryKey: ['eventAutocomplete', query],
+        queryFn: () => fetchEventAutocomplete(query),
+        enabled: query.trim().length >= 2,
+        staleTime: 1000 * 30,
+    });
+}
+
 export function useToggleInterest() {
     const queryClient = useQueryClient();
     return useMutation({
@@ -63,6 +89,35 @@ export function useToggleInterest() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['feed'] });
             queryClient.invalidateQueries({ queryKey: ['event'] });
+        },
+    });
+}
+
+export function useTransitionEventLifecycle() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            eventId,
+            toState,
+            reason,
+        }: {
+            eventId: number;
+            toState: EventLifecycleState;
+            reason?: string;
+        }) =>
+            transitionEventLifecycle(eventId, {
+                to_state: toState,
+                reason,
+                metadata: { source: 'manage_event_ui' },
+            }),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+            queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+            queryClient.invalidateQueries({ queryKey: ['feed'] });
+            queryClient.invalidateQueries({ queryKey: ['alerts'] });
+            queryClient.invalidateQueries({
+                queryKey: ['eventLifecycleHistory', variables.eventId],
+            });
         },
     });
 }

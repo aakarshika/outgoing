@@ -1,6 +1,6 @@
 """Views for event endpoints."""
 
-from django.db.models import F
+from django.db.models import F, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,7 +16,11 @@ from .serializers import (
     EventDetailSerializer,
     EventListSerializer,
     EventAttendeeSerializer,
+    EventTransitionRequestSerializer,
+    EventLifecycleTransitionSerializer,
 )
+
+
 
 
 class EventListCreateView(APIView):
@@ -33,7 +37,9 @@ class EventListCreateView(APIView):
     @extend_schema(responses={200: EventListSerializer(many=True)})
     def get(self, request):
         """List published events with optional filters."""
-        events = Event.objects.filter(status="published").select_related(
+        events = Event.objects.filter(
+            lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+        ).select_related(
             "host", "host__profile", "category"
         )
 
@@ -43,7 +49,13 @@ class EventListCreateView(APIView):
 
         search = request.query_params.get("search")
         if search:
-            events = events.filter(title__icontains=search)
+            events = events.filter(
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
+                | Q(location_name__icontains=search)
+                | Q(location_address__icontains=search)
+                | Q(category__name__icontains=search)
+            )
 
         start_after = request.query_params.get("start_after")
         if start_after:
@@ -129,8 +141,15 @@ class EventDetailView(APIView):
         if event.host != request.user:
             return error_response(message="Not authorized", status=403)
 
-        event.status = "cancelled"
-        event.save()
+        try:
+            event.transition_to(
+                "cancelled",
+                actor=request.user,
+                reason="Cancelled by host via delete endpoint",
+                metadata={"source": "event_delete"},
+            )
+        except ValueError as exc:
+            return error_response(message=str(exc), status=400)
         return success_response(message="Event cancelled")
 
 
@@ -185,9 +204,9 @@ class MyEventsView(APIView):
         """Get user's hosted events."""
         events = Event.objects.filter(host=request.user).select_related("category")
 
-        status_filter = request.query_params.get("status")
-        if status_filter:
-            events = events.filter(status=status_filter)
+        lifecycle_filter = request.query_params.get("lifecycle_state")
+        if lifecycle_filter:
+            events = events.filter(lifecycle_state=lifecycle_filter)
 
         serializer = EventListSerializer(
             events, many=True, context={"request": request}
@@ -205,6 +224,40 @@ class EventCategoryListView(APIView):
         categories = EventCategory.objects.all()
         serializer = EventCategorySerializer(categories, many=True)
         return success_response(data=serializer.data)
+
+
+class EventAutocompleteView(APIView):
+    """Autocomplete suggestions for event discovery search."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Return lightweight suggestions for the search box."""
+        query = (request.query_params.get("q") or "").strip()
+        if len(query) < 2:
+            return success_response(data=[])
+
+        events = (
+            Event.objects.filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES)
+            .filter(
+                Q(title__icontains=query)
+                | Q(location_name__icontains=query)
+                | Q(category__name__icontains=query)
+            )
+            .select_related("category")
+            .order_by("-interest_count", "-created_at")[:8]
+        )
+
+        suggestions = [
+            {
+                "id": event.id,
+                "title": event.title,
+                "location_name": event.location_name,
+                "category_name": event.category.name if event.category else None,
+            }
+            for event in events
+        ]
+        return success_response(data=suggestions)
 
 
 class EventAttendeesView(APIView):
@@ -232,3 +285,65 @@ class EventAttendeesView(APIView):
             tickets, many=True, context={"request": request}
         )
         return success_response(data=serializer.data)
+
+
+class EventLifecycleTransitionView(APIView):
+    """Transition lifecycle state for an event. Host only."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        """Transition event lifecycle state with an audit record."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        serializer = EventTransitionRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        try:
+            transition = event.transition_to(
+                to_state=serializer.validated_data["to_state"],
+                actor=request.user,
+                reason=serializer.validated_data.get("reason", ""),
+                metadata=serializer.validated_data.get("metadata", {}),
+            )
+        except ValueError as exc:
+            return error_response(message=str(exc), status=400)
+
+        detail = EventDetailSerializer(event, context={"request": request})
+        transition_data = (
+            EventLifecycleTransitionSerializer(transition).data if transition else None
+        )
+        return success_response(
+            data={"event": detail.data, "transition": transition_data},
+            message="Lifecycle state updated",
+        )
+
+
+
+
+class EventLifecycleHistoryView(APIView):
+    """Read lifecycle transition history for an event. Host only."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id):
+        """List lifecycle transitions in reverse chronological order."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        transitions = event.lifecycle_transitions.select_related("actor").all()
+        serializer = EventLifecycleTransitionSerializer(transitions, many=True)
+        return success_response(data=serializer.data)
+

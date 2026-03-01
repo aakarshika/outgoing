@@ -7,6 +7,9 @@ import {
     createEventNeed,
     applyToNeed,
     reviewNeedApplication,
+    inviteVendorToNeed,
+    fetchMyVendorOpportunities,
+    fetchMyNeedInvites,
 } from './api';
 
 export function useEventNeeds(eventId: number) {
@@ -43,6 +46,8 @@ export function useApplyToNeed() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
             queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+            queryClient.invalidateQueries({ queryKey: ['alerts'] });
+            queryClient.invalidateQueries({ queryKey: ['myVendorOpportunities'] });
         },
     });
 }
@@ -55,5 +60,37 @@ export function useReviewNeedApplication() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
         },
+    });
+}
+
+export function useInviteVendorToNeed() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            needId,
+            payload,
+        }: {
+            needId: number;
+            payload: { vendor_id: number; message?: string };
+        }) => inviteVendorToNeed(needId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['alerts'] });
+            queryClient.invalidateQueries({ queryKey: ['myVendorOpportunities'] });
+            queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
+        },
+    });
+}
+
+export function useMyVendorOpportunities() {
+    return useQuery({
+        queryKey: ['myVendorOpportunities'],
+        queryFn: fetchMyVendorOpportunities,
+    });
+}
+
+export function useMyNeedInvites() {
+    return useQuery({
+        queryKey: ['myNeedInvites'],
+        queryFn: fetchMyNeedInvites,
     });
 }
