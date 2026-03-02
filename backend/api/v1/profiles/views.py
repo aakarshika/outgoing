@@ -65,7 +65,6 @@ class PublicShowcaseView(APIView):
             "avatar": request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
             "cover_photo": request.build_absolute_uri(profile.cover_photo.url) if profile.cover_photo else None,
             "location_city": profile.location_city,
-            "is_vendor": profile.is_vendor,
             "hosted_events": list(
                 user.hosted_events.filter(
                     lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES

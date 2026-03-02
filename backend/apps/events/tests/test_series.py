@@ -13,7 +13,7 @@ pytestmark = pytest.mark.django_db
 def test_generate_occurrences(api_client, user_factory):
     """Test EventSeries occurrence generation with idempotency and need cloning."""
     
-    host = user_factory(is_vendor=False)
+    host = user_factory()
     api_client.force_authenticate(user=host)
     
     category = EventCategory.objects.create(name="Test Category", slug="test-cat")

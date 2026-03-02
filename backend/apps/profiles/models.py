@@ -32,9 +32,6 @@ class UserProfile(models.Model):
         blank=True,
         validators=[validate_image_upload],
     )
-    is_vendor = models.BooleanField(
-        default=False, help_text="Opted into vendor features"
-    )
     location_city = models.CharField(
         max_length=100, blank=True, help_text="City for discovery features"
     )
