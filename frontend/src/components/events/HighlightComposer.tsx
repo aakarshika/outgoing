@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAddEventHighlight } from '@/features/events/hooks';
+import { Media } from '@/components/ui/media';
 import { cn } from '@/lib/utils';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -127,7 +128,7 @@ export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: Hi
                                         <div className="relative">
                                             {previewUrl ? (
                                                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-muted">
-                                                    <img
+                                                    <Media
                                                         src={previewUrl}
                                                         alt="Preview"
                                                         className="h-full w-full object-cover"

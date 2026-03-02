@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks';
 import type { EventListItem } from '@/types/events';
 import { useToggleInterest } from './hooks';
+import { Media } from '@/components/ui/media';
 
 function formatDate(dateStr: string) {
     const d = new Date(dateStr);
@@ -70,7 +71,7 @@ export function EventCard({ event }: EventCardProps) {
                 <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                     {/* Default Background */}
                     {event.cover_image && (
-                        <img
+                        <Media
                             src={event.cover_image}
                             alt={event.title}
                             className={`h-full w-full object-cover transition-all duration-700 ${isHovered && highlights.length > 0 ? 'opacity-50 scale-110' : 'opacity-100'}`}
@@ -84,7 +85,8 @@ export function EventCard({ event }: EventCardProps) {
                             className={`absolute inset-0 transition-opacity duration-1000 ${isHovered && idx === previewIndex ? 'opacity-100' : 'opacity-0'}`}
                         >
                             {media.media_type === 'video' ? (
-                                <video
+                                <Media
+                                    type="video"
                                     src={media.file}
                                     autoPlay
                                     muted
@@ -93,7 +95,7 @@ export function EventCard({ event }: EventCardProps) {
                                     className="h-full w-full object-cover"
                                 />
                             ) : (
-                                <img
+                                <Media
                                     src={media.file}
                                     alt={`${event.title} highlight ${idx}`}
                                     className="h-full w-full object-cover"
@@ -181,7 +183,7 @@ export function EventCard({ event }: EventCardProps) {
             {/* Cover Image */}
             <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                 {event.cover_image ? (
-                    <img
+                    <Media
                         src={event.cover_image}
                         alt={event.title}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -255,7 +257,7 @@ export function EventCard({ event }: EventCardProps) {
                     {/* Host avatar */}
                     <div className="flex items-center gap-1.5">
                         {event.host.avatar ? (
-                            <img
+                            <Media
                                 src={event.host.avatar}
                                 alt={event.host.first_name}
                                 className="h-5 w-5 rounded-full object-cover"

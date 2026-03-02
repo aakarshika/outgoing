@@ -15,6 +15,7 @@ import { EventLifecycleDetails } from '@/components/events/EventLifecycleDetails
 import { EventCarousel } from '@/components/events/EventCarousel';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
+import { Media } from '@/components/ui/media';
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, Star } from 'lucide-react';
 import type { EventLifecycleState } from '@/types/events';
@@ -202,7 +203,7 @@ export default function EventDetailPage() {
                                 {event.highlights!.map((highlight: any) => (
                                     <div key={highlight.id} className="aspect-square bg-muted rounded-xl relative overflow-hidden group">
                                         {highlight.media_file && (
-                                            <img src={highlight.media_file} alt="Highlight" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                            <Media src={highlight.media_file} alt="Highlight" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                         )}
                                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-white">
                                             <p className="text-xs font-medium line-clamp-2">{highlight.text}</p>
@@ -240,14 +241,14 @@ export default function EventDetailPage() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     {review.reviewer_avatar ? (
-                                                        <img src={review.reviewer_avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                                        <Media src={review.reviewer_avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
-                                                            {review.reviewer_username[0].toUpperCase()}
+                                                            {review.reviewer_username ? review.reviewer_username[0].toUpperCase() : 'U'}
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="font-medium">{review.reviewer_username}</p>
+                                                        <p className="font-medium">{review.reviewer_username || 'Anonymous User'}</p>
                                                         <p className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
@@ -266,9 +267,9 @@ export default function EventDetailPage() {
                                                     {review.media.map((media: any) => (
                                                         <div key={media.id} className="relative w-32 h-32 rounded-lg shrink-0 overflow-hidden bg-muted snap-start">
                                                             {media.media_type === 'video' ? (
-                                                                <video src={media.file} controls className="w-full h-full object-cover" />
+                                                                <Media type="video" src={media.file} controls className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <img src={media.file} alt="review media" className="w-full h-full object-cover" />
+                                                                <Media src={media.file} alt="review media" className="w-full h-full object-cover" />
                                                             )}
                                                         </div>
                                                     ))}
@@ -285,9 +286,9 @@ export default function EventDetailPage() {
                                                                 <div className="flex items-center justify-between">
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center font-bold text-[10px] text-primary shrink-0">
-                                                                            {vr.vendor_name[0].toUpperCase()}
+                                                                            {vr.vendor_name ? vr.vendor_name[0].toUpperCase() : 'V'}
                                                                         </div>
-                                                                        <span className="text-sm font-medium line-clamp-1">{vr.vendor_name}</span>
+                                                                        <span className="text-sm font-medium line-clamp-1">{vr.vendor_name || 'Vendor'}</span>
                                                                     </div>
                                                                     <div className="flex items-center shrink-0">
                                                                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 mr-1" />

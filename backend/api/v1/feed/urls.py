@@ -8,6 +8,8 @@ from .views import (
     RecentlyViewedFeedView,
     CompletedHighlightsFeedView,
     UpcomingFeedView,
+    IconicHostsFeedView,
+    TopVendorsFeedView,
 )
 
 urlpatterns = [
@@ -15,5 +17,7 @@ urlpatterns = [
     path("recently-viewed/", RecentlyViewedFeedView.as_view(), name="feed_recently_viewed"),
     path("highlights/", CompletedHighlightsFeedView.as_view(), name="feed_highlights"),
     path("upcoming/", UpcomingFeedView.as_view(), name="feed_upcoming"),
+    path("iconic-hosts/", IconicHostsFeedView.as_view(), name="feed_iconic_hosts"),
+    path("top-vendors/", TopVendorsFeedView.as_view(), name="feed_top_vendors"),
     path("", FeedView.as_view(), name="feed"),
 ]

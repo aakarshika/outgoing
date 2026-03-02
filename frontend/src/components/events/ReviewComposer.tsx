@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAddEventReview } from '@/features/events/hooks';
+import { Media } from '@/components/ui/media';
 import { cn } from '@/lib/utils';
 
 const vendorReviewSchema = z.object({
@@ -203,9 +204,9 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
                                 {mediaPreviews.map((preview, i) => (
                                     <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border">
                                         {mediaFiles[i].type.startsWith('video/') ? (
-                                            <video src={preview} className="w-full h-full object-cover" />
+                                            <Media type="video" src={preview} className="w-full h-full object-cover" autoPlay muted loop playsInline />
                                         ) : (
-                                            <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                                            <Media src={preview} alt="preview" className="w-full h-full object-cover" />
                                         )}
                                         <button
                                             type="button"
@@ -273,7 +274,7 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
                                                 <div key={field.id} className="pt-4 border-t first:border-0 first:pt-0">
                                                     <div className="flex items-center gap-3 mb-3">
                                                         {vendor.vendor_avatar ? (
-                                                            <img src={vendor.vendor_avatar} alt="" className="w-8 h-8 rounded object-cover" />
+                                                            <Media src={vendor.vendor_avatar} alt="" className="w-8 h-8 rounded object-cover" />
                                                         ) : (
                                                             <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center font-bold text-xs text-primary">
                                                                 {vendor.vendor_name[0].toUpperCase()}

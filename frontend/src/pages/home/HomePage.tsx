@@ -7,12 +7,13 @@ import { toast } from 'sonner';
 
 import { HeroSection } from '@/features/events/HeroSection';
 import { HorizontalEventList } from '@/features/events/HorizontalEventList';
-import { useFeed, useCategories, useRecentlyViewed, useHighlightsFeed, useUpcomingFeed } from '@/features/events/hooks';
+import { useFeed, useCategories, useRecentlyViewed, useHighlightsFeed, useUpcomingFeed, useIconicHostsFeed, useTopVendorsFeed } from '@/features/events/hooks';
 import { useRequests } from '@/features/requests/hooks';
 import {
   canUseBrowserGeolocation,
   getCurrentCoordinates,
 } from '@/utils/geolocation';
+import { Media } from '@/components/ui/media';
 
 export default function HomePage() {
   const [searchParams] = useSearchParams();
@@ -45,6 +46,12 @@ export default function HomePage() {
   const { data: recentlyViewedResponse, isLoading: isLoadingRecentlyViewed } = useRecentlyViewed();
 
   const { data: thisWeekFeed, isLoading: isLoadingThisWeek } = useFeed({ sort: 'newest', weekend: true });
+
+  const { data: iconicHostsResponse } = useIconicHostsFeed();
+  const iconicHosts = iconicHostsResponse?.data || [];
+
+  const { data: topVendorsResponse } = useTopVendorsFeed();
+  const topVendors = topVendorsResponse?.data || [];
 
   const { data: trendingRequestsResponse } = useRequests({ sort: 'trending', page: 1, page_size: 10 });
   const trendingRequests = trendingRequestsResponse?.data || [];
@@ -164,33 +171,36 @@ export default function HomePage() {
         />
 
         {/* Popular Hosts */}
-        <section className="py-4">
-          <div className="mb-3 px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">🌟 Iconic Hosts This Week</h2>
-            <p className="text-sm text-muted-foreground mt-1">Discover the creators throwing the best parties right now.</p>
-          </div>
-          <div className="flex gap-8 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-4 hide-scrollbar snap-x snap-mandatory">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-3 flex-none snap-start group cursor-pointer w-28 sm:w-32">
-                <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gradient-to-tr from-primary via-primary/60 to-background p-1 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                  <div className="h-full w-full rounded-full bg-card border-[3px] border-background flex items-center justify-center overflow-hidden relative">
-                    <User className="h-12 w-12 text-muted-foreground/50 transition-all absolute" />
-                    <img
-                      src={`https://i.pravatar.cc/150?u=${i + 100}`}
-                      alt={`Host ${i + 1}`}
-                      className="h-full w-full object-cover transition-all opacity-50 group-hover:opacity-100 duration-500 relative z-10"
-                      loading="lazy"
-                    />
+        {iconicHosts.length > 0 && (
+          <section className="py-4">
+            <div className="mb-3 px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">🌟 Iconic Hosts This Week</h2>
+              <p className="text-sm text-muted-foreground mt-1">Discover the creators throwing the best parties right now.</p>
+            </div>
+            <div className="flex gap-8 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-4 hide-scrollbar snap-x snap-mandatory">
+              {iconicHosts.map((host: any) => (
+                <div key={host.id} className="flex flex-col items-center gap-3 flex-none snap-start group cursor-pointer w-28 sm:w-32">
+                  <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gradient-to-tr from-primary via-primary/60 to-background p-1 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                    <div className="h-full w-full rounded-full bg-card border-[3px] border-background flex items-center justify-center overflow-hidden relative">
+                      <Media
+                        src={host.avatar || `https://i.pravatar.cc/150?u=${host.id}`}
+                        alt={host.username}
+                        className="h-full w-full object-cover transition-all opacity-80 group-hover:opacity-100 duration-500 relative z-10"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-foreground leading-tight line-clamp-1">{host.username}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1 flex justify-center gap-1">
+                      ⭐ {host.avg_rating ? host.avg_rating.toFixed(1) : 'New'} ({host.review_count || 0})
+                    </p>
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-bold text-foreground leading-tight">Host {i + 1}</p>
-                  <p className="text-xs text-muted-foreground">Local Legend</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Popular Events Upcoming */}
         <HorizontalEventList
@@ -244,31 +254,38 @@ export default function HomePage() {
           emptyMessage="Browse some events to start building your history!"
         />
 
-        {/* Popular Vendors Placeholder */}
-        <section className="py-4">
-          <div className="mb-3 px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">🛠️ Top Rated Vendors</h2>
-            <p className="text-sm text-muted-foreground mt-1">Book the best services for your next event.</p>
-          </div>
-          <div className="flex gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-2 snap-x snap-mandatory hide-scrollbar">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="w-[260px] flex-none snap-start rounded-2xl border bg-card p-4 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between">
-                <div>
-                  <div className="h-32 w-full rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-4 overflow-hidden relative">
-                    <Briefcase className="h-10 w-10 text-muted-foreground/30 absolute z-0" />
-                    <img src={`https://picsum.photos/seed/${i + 10}0/300/200`} alt="vendor work" className="h-full w-full object-cover z-10" loading="lazy" />
+        {/* Popular Vendors */}
+        {topVendors.length > 0 && (
+          <section className="py-4">
+            <div className="mb-3 px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">🛠️ Top Rated Vendors</h2>
+              <p className="text-sm text-muted-foreground mt-1">Book the best services for your next event.</p>
+            </div>
+            <div className="flex gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-2 snap-x snap-mandatory hide-scrollbar">
+              {topVendors.map((vendor: any) => (
+                <div key={vendor.id} className="w-[260px] flex-none snap-start rounded-2xl border bg-card p-4 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between">
+                  <div>
+                    <div className="h-32 w-full rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-4 overflow-hidden relative">
+                      {vendor.portfolio_image ? (
+                        <Media src={vendor.portfolio_image} alt={vendor.title} className="h-full w-full object-cover z-10" loading="lazy" />
+                      ) : (
+                        <Briefcase className="h-10 w-10 text-muted-foreground/30 absolute z-0" />
+                      )}
+                    </div>
+                    <h3 className="font-bold text-base line-clamp-1">{vendor.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{vendor.description}</p>
                   </div>
-                  <h3 className="font-bold text-base line-clamp-1">Premium Event Catering {i + 1}</h3>
-                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">Providing high-quality gastronomic experiences tailored perfectly for your specific event needs.</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className="text-xs font-medium px-2 py-1 bg-muted rounded-md text-foreground line-clamp-1">{vendor.category || 'Service'}</span>
+                    <span className="text-xs font-semibold text-primary ml-auto flex items-center">
+                      ⭐ {vendor.avg_rating ? vendor.avg_rating.toFixed(1) : 'New'} ({vendor.event_count || 0} events)
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-1 bg-muted rounded-md text-foreground">Food & Drink</span>
-                  <span className="text-xs font-semibold text-primary ml-auto flex items-center">⭐ 4.9</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Category Lists */}
         {categories.slice(0, 5).map((category) => (

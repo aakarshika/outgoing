@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { Media } from '@/components/ui/media';
 
 interface CarouselMedia {
     id: string | number;
@@ -51,7 +52,8 @@ export function EventCarousel({ items, autoPlayInterval = 5000 }: EventCarouselP
                 {items.map((item) => (
                     <div key={item.id} className="min-w-full h-full relative">
                         {item.type === 'video' ? (
-                            <video
+                            <Media
+                                type="video"
                                 src={item.url}
                                 className="w-full h-full object-cover"
                                 autoPlay
@@ -60,7 +62,7 @@ export function EventCarousel({ items, autoPlayInterval = 5000 }: EventCarouselP
                                 playsInline
                             />
                         ) : (
-                            <img
+                            <Media
                                 src={item.url}
                                 alt={item.alt || 'Event media'}
                                 className="h-full w-full object-cover"

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Media } from '@/components/ui/media';
 import type { EventListItem } from '@/types/events';
 import { useCarouselEvents } from './hooks';
 
@@ -101,7 +102,8 @@ export function HeroSection() {
                         className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`}
                     >
                         {eventMedia.type === 'video' ? (
-                            <video
+                            <Media
+                                type="video"
                                 src={eventMedia.url}
                                 className="absolute inset-0 h-full w-full object-cover"
                                 autoPlay
@@ -110,7 +112,7 @@ export function HeroSection() {
                                 playsInline
                             />
                         ) : eventMedia.url ? (
-                            <img
+                            <Media
                                 src={eventMedia.url}
                                 alt={event.title}
                                 className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[5000ms] ${isActive ? 'scale-105' : 'scale-100'}`}

@@ -3,13 +3,17 @@
 from datetime import datetime, time, timedelta
 from math import cos, radians
 
-from django.db.models import Q
+from django.db.models import Q, Count, Avg
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from api.v1.events.serializers import EventListSerializer
+from api.v1.profiles.serializers import IconicHostSerializer
+from api.v1.vendors.serializers import VendorServiceSerializer
 from apps.events.models import Event, EventView
+from apps.profiles.models import UserProfile
+from apps.vendors.models import VendorService
 from core.responses import success_response, error_response
 
 
@@ -233,4 +237,56 @@ class UpcomingFeedView(APIView):
         )
 
         serializer = EventListSerializer(events, many=True, context={"request": request})
+        return success_response(data=serializer.data)
+
+
+class IconicHostsFeedView(APIView):
+    """Return top hosts based on published events and reviews."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get the iconic hosts this week."""
+        page_size = int(request.query_params.get("page_size", 10))
+        
+        # Annotate UserProfiles with event stats
+        hosts = (
+            UserProfile.objects.annotate(
+                published_event_count=Count(
+                    "user__hosted_events",
+                    filter=Q(user__hosted_events__lifecycle_state__in=["published", "event_ready", "completed"]),
+                    distinct=True
+                ),
+                review_count=Count("user__hosted_events__reviews", distinct=True),
+                avg_rating=Avg("user__hosted_events__reviews__rating")
+            )
+            .filter(published_event_count__gt=0)
+            .order_by("-avg_rating", "-published_event_count", "-review_count", "-id")[:page_size]
+        )
+
+        serializer = IconicHostSerializer(hosts, many=True, context={"request": request})
+        return success_response(data=serializer.data)
+
+
+class TopVendorsFeedView(APIView):
+    """Return top vendor services based on events and reviews."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get the top rated vendors."""
+        page_size = int(request.query_params.get("page_size", 10))
+
+        vendors = (
+            VendorService.objects.filter(is_active=True, visibility="customer_facing")
+            .annotate(
+                review_count=Count("reviews", distinct=True),
+                avg_rating=Avg("reviews__rating"),
+                event_count=Count("reviews__event", distinct=True) # Count distinct events they were reviewed on
+            )
+            .filter(review_count__gt=0) # Only include vendors with reviews for top rated
+            .order_by("-avg_rating", "-event_count", "-review_count", "-id")[:page_size]
+        )
+
+        serializer = VendorServiceSerializer(vendors, many=True, context={"request": request})
         return success_response(data=serializer.data)

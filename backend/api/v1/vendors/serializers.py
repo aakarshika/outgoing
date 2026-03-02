@@ -11,6 +11,9 @@ class VendorServiceSerializer(serializers.ModelSerializer):
     vendor_name = serializers.CharField(source="vendor.username", read_only=True)
     vendor_id = serializers.IntegerField(source="vendor.id", read_only=True)
     vendor_avatar = serializers.SerializerMethodField()
+    event_count = serializers.IntegerField(read_only=True, required=False)
+    review_count = serializers.IntegerField(read_only=True, required=False)
+    avg_rating = serializers.FloatField(read_only=True, required=False)
 
     class Meta:
         """Meta configuration for VendorServiceSerializer."""
@@ -20,6 +23,7 @@ class VendorServiceSerializer(serializers.ModelSerializer):
             "id", "vendor_id", "vendor_name", "vendor_avatar", "title", "description",
             "category", "visibility", "base_price", "portfolio_image",
             "location_city", "is_active", "created_at",
+            "event_count", "review_count", "avg_rating",
         ]
         read_only_fields = ["id", "created_at"]
 

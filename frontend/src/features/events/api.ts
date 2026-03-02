@@ -65,6 +65,20 @@ export async function fetchUpcomingFeed(page_size = 20) {
     return data;
 }
 
+export async function fetchIconicHostsFeed(page_size = 10) {
+    const { data } = await client.get<ApiResponse<any[]>>('/feed/iconic-hosts/', {
+        params: { page_size },
+    });
+    return data;
+}
+
+export async function fetchTopVendorsFeed(page_size = 10) {
+    const { data } = await client.get<ApiResponse<any[]>>('/feed/top-vendors/', {
+        params: { page_size },
+    });
+    return data;
+}
+
 export async function recordEventView(eventId: number) {
     await client.post(`/events/${eventId}/view/`);
 }

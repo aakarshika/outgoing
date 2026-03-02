@@ -200,7 +200,7 @@ class EventDetailSerializer(EventListSerializer):
     def get_reviews(self, obj):
         """Return full reviews only if completed."""
         if obj.lifecycle_state == "completed":
-            reviews = getattr(obj, "prefetched_reviews", obj.reviews.filter(is_public=True))
+            reviews = getattr(obj, "prefetched_reviews", obj.reviews.all())
             return EventReviewSerializer(reviews, many=True, context=self.context).data
         return []
 
@@ -215,15 +215,26 @@ class EventDetailSerializer(EventListSerializer):
 
     def get_participating_vendors(self, obj):
         """Return vendors whose needs were filled."""
-        needs = obj.needs.filter(status__in=["filled", "completed"]).select_related("assigned_vendor")
+        needs = obj.needs.filter(status__in=["filled", "completed"]).select_related("assigned_vendor", "assigned_vendor__profile")
         vendors = []
         for need in needs:
             if need.assigned_vendor:
+                vendor = need.assigned_vendor
+                vendor_name = vendor.get_full_name() or vendor.username
+                profile = getattr(vendor, "profile", None)
+                vendor_avatar = None
+                if profile and profile.avatar:
+                    request = self.context.get("request")
+                    if request:
+                        vendor_avatar = request.build_absolute_uri(profile.avatar.url)
+                    else:
+                        vendor_avatar = profile.avatar.url
+
                 vendors.append({
-                    "id": need.assigned_vendor.id,
+                    "id": vendor.id,
                     "title": need.title,
-                    "vendor_name": need.assigned_vendor.name,
-                    "vendor_avatar": self.context["request"].build_absolute_uri(need.assigned_vendor.logo.url) if need.assigned_vendor.logo and self.context.get("request") else None
+                    "vendor_name": vendor_name,
+                    "vendor_avatar": vendor_avatar
                 })
         return vendors
 

@@ -10,6 +10,8 @@ import {
     fetchRecentlyViewed,
     fetchHighlightsFeed,
     fetchUpcomingFeed,
+    fetchIconicHostsFeed,
+    fetchTopVendorsFeed,
     recordEventView,
     fetchCategories,
     fetchEvent,
@@ -83,6 +85,22 @@ export function useUpcomingFeed() {
     return useQuery({
         queryKey: ['feed', 'upcoming'],
         queryFn: () => fetchUpcomingFeed(20),
+        staleTime: 1000 * 60 * 5,
+    });
+}
+
+export function useIconicHostsFeed() {
+    return useQuery({
+        queryKey: ['feed', 'iconic-hosts'],
+        queryFn: () => fetchIconicHostsFeed(10),
+        staleTime: 1000 * 60 * 5,
+    });
+}
+
+export function useTopVendorsFeed() {
+    return useQuery({
+        queryKey: ['feed', 'top-vendors'],
+        queryFn: () => fetchTopVendorsFeed(10),
         staleTime: 1000 * 60 * 5,
     });
 }

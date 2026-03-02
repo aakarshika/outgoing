@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Briefcase, ChevronRight, AlertTriangle, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Media } from '@/components/ui/media';
 import { EventSeriesNav } from './EventSeriesNav';
 import { EventDetail, EventListItem } from '@/types/events';
 
@@ -103,7 +104,7 @@ export function EventLifecycleDetails(props: EventLifecycleDetailsProps) {
     const HostInfo = () => (
         <div className="flex items-center gap-3 mb-6">
             {event.host.avatar ? (
-                <img src={event.host.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                <Media src={event.host.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
             ) : (
                 <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
                     {(event.host.first_name?.[0] || event.host.username[0]).toUpperCase()}
@@ -358,16 +359,6 @@ export function EventLifecycleDetails(props: EventLifecycleDetailsProps) {
                             <h2 className="text-2xl font-bold mb-2">Event Completed!</h2>
                             <p className="text-muted-foreground mb-6">Thank you for attending. Relive the moments and share your feedback.</p>
 
-                            {(isHost || isAttendee) && (
-                                <div className="flex gap-4">
-                                    <Button asChild>
-                                        <Link to={`/events/${event.id}/story`}>View Highlights</Link>
-                                    </Button>
-                                    <Button variant="outline" asChild>
-                                        <Link to={`/events/${event.id}/reviews/write`}>Leave a Review</Link>
-                                    </Button>
-                                </div>
-                            )}
                         </div>
 
                         <HostInfo />

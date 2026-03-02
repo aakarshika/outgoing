@@ -42,6 +42,7 @@ export function HorizontalEventList({
         if (!emptyMessage) return null;
         return (
             <div className="py-8 px-4 sm:px-6 lg:px-8 text-center border rounded-xl border-dashed bg-muted/20">
+                <h2 className="text-xl font-bold tracking-tight text-foreground">{title}</h2>
                 <p className="text-sm text-muted-foreground">{emptyMessage}</p>
             </div>
         );
