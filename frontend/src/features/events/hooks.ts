@@ -6,6 +6,11 @@ import {
     fetchEventAutocomplete,
     fetchFeed,
     fetchFeaturedEvent,
+    fetchCarouselEvents,
+    fetchRecentlyViewed,
+    fetchHighlightsFeed,
+    fetchUpcomingFeed,
+    recordEventView,
     fetchCategories,
     fetchEvent,
     toggleInterest,
@@ -23,7 +28,9 @@ import {
     updateEventSeries,
     fetchEventSeriesOccurrences,
     generateEventSeriesOccurrences,
+    deleteEvent,
 } from './api';
+
 import type { EventLifecycleState } from '@/types/events';
 
 export function useFeed(params: {
@@ -48,6 +55,44 @@ export function useFeaturedEvent() {
         queryFn: fetchFeaturedEvent,
     });
 }
+
+export function useCarouselEvents() {
+    return useQuery({
+        queryKey: ['feed', 'carousel'],
+        queryFn: fetchCarouselEvents,
+    });
+}
+
+export function useRecentlyViewed() {
+    return useQuery({
+        queryKey: ['feed', 'recently-viewed'],
+        queryFn: () => fetchRecentlyViewed(20),
+        staleTime: 1000 * 60, // refresh every minute
+    });
+}
+
+export function useHighlightsFeed() {
+    return useQuery({
+        queryKey: ['feed', 'highlights'],
+        queryFn: () => fetchHighlightsFeed(20),
+        staleTime: 1000 * 60 * 5,
+    });
+}
+
+export function useUpcomingFeed() {
+    return useQuery({
+        queryKey: ['feed', 'upcoming'],
+        queryFn: () => fetchUpcomingFeed(20),
+        staleTime: 1000 * 60 * 5,
+    });
+}
+
+export function useRecordEventView(eventId: number) {
+    return useMutation({
+        mutationFn: () => recordEventView(eventId),
+    });
+}
+
 
 export function useCategories() {
     return useQuery({
@@ -131,6 +176,18 @@ export function useTransitionEventLifecycle() {
     });
 }
 
+export function useDeleteEvent() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (eventId: number) => deleteEvent(eventId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['feed'] });
+            queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+            queryClient.invalidateQueries({ queryKey: ['eventSeriesOccurrences'] });
+        },
+    });
+}
+
 export function usePurchaseTicket() {
     const queryClient = useQueryClient();
     return useMutation({
@@ -180,8 +237,8 @@ export function useAddEventHighlight() {
 export function useAddEventReview() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ eventId, payload }: { eventId: number; payload: { rating: number; text: string } }) =>
-            addEventReview(eventId, payload),
+        mutationFn: ({ eventId, formData }: { eventId: number; formData: FormData }) =>
+            addEventReview(eventId, formData),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
         },

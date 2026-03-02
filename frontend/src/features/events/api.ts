@@ -39,6 +39,37 @@ export async function fetchFeaturedEvent() {
     return data;
 }
 
+export async function fetchCarouselEvents() {
+    const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/carousel/');
+    return data;
+}
+
+export async function fetchRecentlyViewed(page_size = 20) {
+    const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/recently-viewed/', {
+        params: { page_size },
+    });
+    return data;
+}
+
+export async function fetchHighlightsFeed(page_size = 20) {
+    const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/highlights/', {
+        params: { page_size },
+    });
+    return data;
+}
+
+export async function fetchUpcomingFeed(page_size = 20) {
+    const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/upcoming/', {
+        params: { page_size },
+    });
+    return data;
+}
+
+export async function recordEventView(eventId: number) {
+    await client.post(`/events/${eventId}/view/`);
+}
+
+
 // --- Categories ---
 
 export async function fetchCategories() {
@@ -80,8 +111,10 @@ export async function addEventHighlight(eventId: number, formData: FormData) {
     return data;
 }
 
-export async function addEventReview(eventId: number, payload: { rating: number; text: string }) {
-    const { data } = await client.post<ApiResponse<any>>(`/events/${eventId}/reviews/`, payload);
+export async function addEventReview(eventId: number, formData: FormData) {
+    const { data } = await client.post<ApiResponse<any>>(`/events/${eventId}/reviews/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return data;
 }
 
@@ -120,6 +153,11 @@ export async function updateEvent(eventId: number, formData: FormData) {
     const { data } = await client.patch<ApiResponse<EventDetail>>(`/events/${eventId}/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return data;
+}
+
+export async function deleteEvent(eventId: number) {
+    const { data } = await client.delete<ApiResponse<any>>(`/events/${eventId}/`);
     return data;
 }
 

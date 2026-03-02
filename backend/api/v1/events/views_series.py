@@ -213,6 +213,11 @@ class EventSeriesGenerateView(APIView):
                             budget_max=template.budget_max,
                             status="open"
                         )
+            
+            # If this is just a preview, rollback the transaction so nothing is saved
+            if request.data.get("preview"):
+                transaction.set_rollback(True)
                         
         serializer = EventListSerializer(generated_events, many=True, context={"request": request})
-        return success_response(data=serializer.data, message=f"Generated {len(generated_events)} occurrences", status=201)
+        message = "Previewed" if request.data.get("preview") else "Generated"
+        return success_response(data=serializer.data, message=f"{message} {len(generated_events)} occurrences", status=200 if request.data.get("preview") else 201)

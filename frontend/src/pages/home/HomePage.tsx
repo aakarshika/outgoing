@@ -1,60 +1,53 @@
-/** Home Page — event-centric feed with Hero, Category Chips, and Event Cards. */
+/** Home Page — Netflix style event-centric feed with multiple horizontal scrolling lists. */
 
-import { CalendarDays, LocateFixed, Search } from 'lucide-react';
+import { CalendarDays, LocateFixed, User, Briefcase } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { CategoryChips } from '@/features/events/CategoryChips';
-import { EventCard } from '@/features/events/EventCard';
 import { HeroSection } from '@/features/events/HeroSection';
-import { useEventAutocomplete, useFeed } from '@/features/events/hooks';
+import { HorizontalEventList } from '@/features/events/HorizontalEventList';
+import { useFeed, useCategories, useRecentlyViewed, useHighlightsFeed, useUpcomingFeed } from '@/features/events/hooks';
 import { useRequests } from '@/features/requests/hooks';
 import {
   canUseBrowserGeolocation,
   getCurrentCoordinates,
 } from '@/utils/geolocation';
-import { useDebouncedValue } from '@/utils/useDebouncedValue';
-
-type SortOption = 'trending' | 'newest' | 'popular';
-
-const SORT_TABS: { key: SortOption; label: string }[] = [
-  { key: 'trending', label: '🔥 Trending' },
-  { key: 'newest', label: '✨ New' },
-  { key: 'popular', label: '❤️ Popular' },
-];
 
 export default function HomePage() {
-  const [category, setCategory] = useState<string | undefined>();
-  const [sort, setSort] = useState<SortOption>('trending');
-  const [search, setSearch] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get('search') || '';
+
   const [weekendOnly, setWeekendOnly] = useState(false);
   const [nearYouEnabled, setNearYouEnabled] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [page] = useState(1);
-  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const { data: response, isLoading } = useFeed({
-    category,
-    sort,
-    page,
-    search: debouncedSearch.trim() || undefined,
-    weekend: weekendOnly || undefined,
+  const { data: categoriesResponse } = useCategories();
+  const categories = categoriesResponse?.data || [];
+
+  // For the UI rewrite, we will use the generic feed for multiple rows 
+  // with varying parameters to approximate the content, since dedicated endpoints don't exist yet.
+
+  const { data: searchFeed, isLoading: isLoadingSearch } = useFeed({ search: search || undefined });
+
+  const { data: trendingFeed, isLoading: isLoadingTrending } = useFeed({ sort: 'trending', weekend: weekendOnly || undefined });
+  const { data: nearYouFeed, isLoading: isLoadingNearYou } = useFeed({
     lat: nearYouEnabled && coords ? coords.lat : undefined,
     lng: nearYouEnabled && coords ? coords.lng : undefined,
     radius_km: nearYouEnabled ? 25 : undefined,
+    weekend: weekendOnly || undefined,
   });
-  const { data: trendingRequestsResponse } = useRequests({
-    sort: 'trending',
-    page: 1,
-    page_size: 4,
-  });
-  const events = response?.data || [];
+
+  // Dedicated endpoints
+  const { data: highlightsFeedResponse, isLoading: isLoadingHighlights } = useHighlightsFeed();
+  const { data: upcomingFeedResponse, isLoading: isLoadingUpcoming } = useUpcomingFeed();
+  const { data: recentlyViewedResponse, isLoading: isLoadingRecentlyViewed } = useRecentlyViewed();
+
+  const { data: thisWeekFeed, isLoading: isLoadingThisWeek } = useFeed({ sort: 'newest', weekend: true });
+
+  const { data: trendingRequestsResponse } = useRequests({ sort: 'trending', page: 1, page_size: 10 });
   const trendingRequests = trendingRequestsResponse?.data || [];
-  const { data: autocompleteResponse } = useEventAutocomplete(debouncedSearch);
-  const suggestions = autocompleteResponse?.data || [];
 
   const toggleNearYou = async () => {
     if (nearYouEnabled) {
@@ -73,102 +66,37 @@ export default function HomePage() {
       setCoords({ lat: current.latitude, lng: current.longitude });
       setNearYouEnabled(true);
     } catch (err: any) {
-      toast.error(
-        err?.code === 1
-          ? 'Location permission denied.'
-          : 'Could not fetch your location right now.'
-      );
+      toast.error('Could not fetch your location right now.');
     } finally {
       setIsDetectingLocation(false);
     }
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
+    <div className="pb-12 bg-background">
       {/* Hero Section */}
-      <section className="pt-6 pb-4">
+      <section className="pt-6 pb-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <HeroSection />
-      </section>
 
-      {/* Category Chips */}
-      <section className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <CategoryChips selected={category} onSelect={setCategory} />
-      </section>
-
-      {/* Sort Tabs */}
-      <section className="flex gap-2 pt-4 pb-2">
-        {SORT_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setSort(tab.key)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all
-              ${sort === tab.key
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }
-            `}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </section>
-
-      {/* Search + Quick Filters */}
-      <section className="flex flex-col gap-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
-            placeholder="Search events..."
-            className="h-10 w-full rounded-lg border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-30 mt-1 w-full rounded-lg border bg-card p-1 shadow-lg">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion.id}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    setSearch(suggestion.title);
-                    setShowSuggestions(false);
-                  }}
-                  className="w-full rounded-md px-3 py-2 text-left hover:bg-muted"
-                >
-                  <p className="text-sm font-medium">{suggestion.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {[suggestion.category_name, suggestion.location_name]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex gap-2">
+        {/* Quick Filters */}
+        <div className="mt-4 flex gap-2">
           <button
             onClick={toggleNearYou}
             disabled={isDetectingLocation}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              nearYouEnabled
-                ? 'bg-primary/10 text-primary'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
-            }`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${nearYouEnabled
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted/50 text-foreground hover:bg-muted'
+              }`}
           >
             <LocateFixed className="h-4 w-4" />
             {isDetectingLocation ? 'Locating...' : 'Near You'}
           </button>
           <button
             onClick={() => setWeekendOnly((value) => !value)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              weekendOnly
-                ? 'bg-primary/10 text-primary'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
-            }`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${weekendOnly
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted/50 text-foreground hover:bg-muted'
+              }`}
           >
             <CalendarDays className="h-4 w-4" />
             This Weekend
@@ -176,72 +104,183 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trending Requests */}
-      {trendingRequests.length > 0 && (
-        <section className="pt-4 pb-2">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Trending Requests</h2>
-            <Link
-              to="/requests"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              See all
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {trendingRequests.map((request) => (
-              <Link
-                key={request.id}
-                to="/requests"
-                className="rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm"
-              >
-                <p className="line-clamp-1 font-medium text-foreground">{request.title}</p>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {request.description}
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>▲ {request.upvote_count}</span>
-                  {request.location_city && <span>📍 {request.location_city}</span>}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Main Content */}
+      <div className="space-y-6 mt-4">
 
-      {/* Events Feed */}
-      <section className="pt-2">
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border bg-card overflow-hidden animate-pulse">
-                <div className="aspect-[16/9] bg-muted" />
-                <div className="p-4 space-y-3">
-                  <div className="h-3 w-24 rounded bg-muted" />
-                  <div className="h-5 w-3/4 rounded bg-muted" />
-                  <div className="h-3 w-1/2 rounded bg-muted" />
+        {search && (
+          <HorizontalEventList
+            title={`Search Results for "${search}"`}
+            events={searchFeed?.data || []}
+            isLoading={isLoadingSearch}
+            emptyMessage="No exact matches found."
+          />
+        )}
+
+        {/* Trending Events */}
+        <HorizontalEventList
+          title="🔥 Trending Events"
+          events={trendingFeed?.data || []}
+          isLoading={isLoadingTrending}
+        />
+
+        {/* Nearby Events */}
+        {nearYouEnabled ? (
+          <HorizontalEventList
+            title="📍 Near You"
+            events={nearYouFeed?.data || []}
+            isLoading={isLoadingNearYou}
+          />
+        ) : (
+          <section className="py-4">
+            <div className="mb-3 px-4 sm:px-6 lg:px-8">
+              <h2 className="text-xl font-bold tracking-tight text-foreground">📍 Near You</h2>
+            </div>
+            <div className="px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col items-center justify-center p-8 rounded-xl border border-dashed bg-muted/30 text-center">
+                <LocateFixed className="h-10 w-10 text-muted-foreground mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">Discover local events</h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+                  Enable location services to see the best experiences happening around you right now.
+                </p>
+                <button
+                  onClick={toggleNearYou}
+                  disabled={isDetectingLocation}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:scale-105 active:scale-95 shadow-sm"
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  {isDetectingLocation ? 'Detecting...' : 'Enable Location'}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Popular Recent Events Completed - Highlights & Rewinds */}
+        <HorizontalEventList
+          title="📸 Highlights & Rewinds"
+          events={highlightsFeedResponse?.data || []}
+          isLoading={isLoadingHighlights}
+          cardWidth="w-[320px] sm:w-[420px]"
+        />
+
+        {/* Popular Hosts */}
+        <section className="py-4">
+          <div className="mb-3 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">🌟 Iconic Hosts This Week</h2>
+            <p className="text-sm text-muted-foreground mt-1">Discover the creators throwing the best parties right now.</p>
+          </div>
+          <div className="flex gap-8 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-4 hide-scrollbar snap-x snap-mandatory">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-3 flex-none snap-start group cursor-pointer w-28 sm:w-32">
+                <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-gradient-to-tr from-primary via-primary/60 to-background p-1 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                  <div className="h-full w-full rounded-full bg-card border-[3px] border-background flex items-center justify-center overflow-hidden relative">
+                    <User className="h-12 w-12 text-muted-foreground/50 transition-all absolute" />
+                    <img
+                      src={`https://i.pravatar.cc/150?u=${i + 100}`}
+                      alt={`Host ${i + 1}`}
+                      className="h-full w-full object-cover transition-all opacity-50 group-hover:opacity-100 duration-500 relative z-10"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-foreground leading-tight">Host {i + 1}</p>
+                  <p className="text-xs text-muted-foreground">Local Legend</p>
                 </div>
               </div>
             ))}
           </div>
-        ) : events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-5xl mb-4">🎉</div>
-            <h3 className="text-lg font-semibold text-foreground">No events yet</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {category
-                ? 'No events in this category yet. Try another one!'
-                : 'Be the first to create an event.'}
-            </p>
+        </section>
+
+        {/* Popular Events Upcoming */}
+        <HorizontalEventList
+          title="✨ Popular Upcoming"
+          events={upcomingFeedResponse?.data || []}
+          isLoading={isLoadingUpcoming}
+        />
+
+        {/* Wishlists (Requests) */}
+        {trendingRequests.length > 0 && (
+          <section className="py-4 bg-muted/30">
+            <div className="mb-3 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+              <h2 className="text-xl font-bold tracking-tight text-foreground">✨ Wishlisted Experiences</h2>
+              <Link to="/requests" className="text-sm font-medium text-primary hover:underline transition-all">
+                See all
+              </Link>
+            </div>
+            <div className="flex gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-1 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {trendingRequests.map((request) => (
+                <Link
+                  key={request.id}
+                  to={`/requests/${request.id}`}
+                  className="w-[280px] sm:w-[320px] flex-none snap-start rounded-xl border bg-card p-5 transition-all hover:shadow-lg hover:-translate-y-1"
+                >
+                  <p className="line-clamp-2 font-semibold text-foreground text-lg">{request.title}</p>
+                  <p className="mt-2 text-sm text-foreground/80 line-clamp-3 leading-relaxed">
+                    "{request.description}"
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="font-semibold text-primary px-2 py-1 bg-primary/10 rounded-full">▲ {request.upvote_count} Upvotes</span>
+                    {request.location_city && <span>📍 {request.location_city}</span>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* This Week Events */}
+        <HorizontalEventList
+          title="📅 Happening This Week"
+          events={thisWeekFeed?.data || []}
+          isLoading={isLoadingThisWeek}
+        />
+
+        {/* Recently Viewed Events */}
+        <HorizontalEventList
+          title="👁️ Resume Exploring"
+          events={recentlyViewedResponse?.data || []}
+          isLoading={isLoadingRecentlyViewed}
+          emptyMessage="Browse some events to start building your history!"
+        />
+
+        {/* Popular Vendors Placeholder */}
+        <section className="py-4">
+          <div className="mb-3 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">🛠️ Top Rated Vendors</h2>
+            <p className="text-sm text-muted-foreground mt-1">Book the best services for your next event.</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+          <div className="flex gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 pt-2 snap-x snap-mandatory hide-scrollbar">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="w-[260px] flex-none snap-start rounded-2xl border bg-card p-4 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between">
+                <div>
+                  <div className="h-32 w-full rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-4 overflow-hidden relative">
+                    <Briefcase className="h-10 w-10 text-muted-foreground/30 absolute z-0" />
+                    <img src={`https://picsum.photos/seed/${i + 10}0/300/200`} alt="vendor work" className="h-full w-full object-cover z-10" loading="lazy" />
+                  </div>
+                  <h3 className="font-bold text-base line-clamp-1">Premium Event Catering {i + 1}</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">Providing high-quality gastronomic experiences tailored perfectly for your specific event needs.</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-xs font-medium px-2 py-1 bg-muted rounded-md text-foreground">Food & Drink</span>
+                  <span className="text-xs font-semibold text-primary ml-auto flex items-center">⭐ 4.9</span>
+                </div>
+              </div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+
+        {/* Category Lists */}
+        {categories.slice(0, 5).map((category) => (
+          <HorizontalEventList
+            key={category.id}
+            title={`${category.icon || '📌'} ${category.name} Events`}
+            events={(trendingFeed?.data || []).filter(e => e.category?.id === category.id)}
+            isLoading={isLoadingTrending}
+          />
+        ))}
+
+      </div>
     </div>
   );
 }

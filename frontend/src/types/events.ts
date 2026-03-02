@@ -13,6 +13,15 @@ export interface EventHost {
     avatar: string | null;
 }
 
+export interface EventMedia {
+    id: number;
+    media_type: 'image' | 'video';
+    category: 'gallery' | 'highlight';
+    file: string;
+    order: number;
+    created_at: string;
+}
+
 export interface EventListItem {
     id: number;
     host: EventHost;
@@ -34,6 +43,7 @@ export interface EventListItem {
     user_has_ticket: boolean;
     series?: { id: number; name: string } | null;
     occurrence_index?: number | null;
+    media?: EventMedia[];
 }
 
 export interface EventSeriesNeedTemplate {
@@ -77,6 +87,11 @@ export interface EventDetail extends EventListItem {
     tags: string[];
     tickets_remaining: number | null;
     created_at: string;
+    highlights?: any[];
+    reviews?: any[];
+    average_rating?: number | null;
+    participating_vendors?: any[];
+    host_events_count?: number;
 }
 
 export type EventLifecycleState =

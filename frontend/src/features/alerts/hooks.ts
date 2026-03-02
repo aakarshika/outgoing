@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { fetchAlerts } from './api';
 
-export function useAlerts() {
+export function useAlerts(options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: ['alerts'],
         queryFn: fetchAlerts,
@@ -12,5 +12,6 @@ export function useAlerts() {
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
         refetchInterval: 1000 * 60,
+        ...options,
     });
 }

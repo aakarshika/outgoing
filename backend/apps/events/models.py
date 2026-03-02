@@ -268,6 +268,35 @@ class Event(models.Model):
         return str(self.title)
 
 
+class EventMedia(models.Model):
+    """Multiple media items (images or videos) for an event's gallery or highlights."""
+
+    MEDIA_TYPE_CHOICES = [
+        ("image", "Image"),
+        ("video", "Video"),
+    ]
+    CATEGORY_CHOICES = [
+        ("gallery", "Gallery (Pre-event/Marketing)"),
+        ("highlight", "Highlight (Post-event)"),
+    ]
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="media")
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default="image")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="gallery")
+    file = models.FileField(upload_to="events/media/")
+    order = models.PositiveIntegerField(default=0, help_text="Ordering for display")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Meta configuration for EventMedia."""
+        ordering = ["order", "-created_at"]
+        verbose_name_plural = "Event Media"
+
+    def __str__(self):
+        """String representation of the EventMedia."""
+        return f"{self.media_type} for {self.event.title}"
+
+
 class EventInterest(models.Model):
     """Lightweight 'I'm interested' signal — social bookmark + demand signal."""
 
@@ -368,4 +397,54 @@ class EventReview(models.Model):
     def __str__(self):
         """String representation of the EventReview."""
         return f"{self.rating}-star review for {self.event.title} by {self.reviewer.username}"
+
+
+class EventReviewMedia(models.Model):
+    """Media attached to an event review."""
+    review = models.ForeignKey(EventReview, on_delete=models.CASCADE, related_name="media")
+    file = models.ImageField(upload_to="reviews/media/", validators=[validate_image_upload])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class EventVendorReview(models.Model):
+    """A rating left for a specific vendor within a broader event review."""
+    event_review = models.ForeignKey(EventReview, on_delete=models.CASCADE, related_name="vendor_reviews")
+    vendor = models.ForeignKey('vendors.VendorService', on_delete=models.CASCADE, related_name="event_reviews")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    text = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["event_review", "vendor"]
+        ordering = ["-created_at"]
+
+
+class EventView(models.Model):
+    """Tracks the last time a user viewed an event detail page.
+
+    Used to power the 'Recently Viewed' feed section.
+    An upsert pattern is used: calling update_or_create on (event, user)
+    refreshes the timestamp each time the user revisits.
+    """
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="views")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="viewed_events",
+    )
+    last_viewed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Meta configuration for EventView."""
+
+        unique_together = ["event", "user"]
+        ordering = ["-last_viewed_at"]
+
+    def __str__(self):
+        """String representation of the EventView."""
+        return f"{self.user.username} viewed {self.event.title}"
 

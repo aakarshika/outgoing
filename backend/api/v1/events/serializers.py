@@ -10,7 +10,10 @@ from apps.events.models import (
     EventInterest, 
     EventLifecycleTransition,
     EventHighlight,
-    EventReview
+    EventReview,
+    EventReviewMedia,
+    EventVendorReview,
+    EventMedia
 )
 
 from dateutil.rrule import rrulestr
@@ -49,6 +52,11 @@ class EventHostSerializer(serializers.Serializer):
         return None
 
 
+class EventMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventMedia
+        fields = ["id", "media_type", "category", "file", "order", "created_at"]
+
 class EventListSerializer(serializers.ModelSerializer):
     """Serializer for event list/card view — enriched for Event Cards."""
 
@@ -57,6 +65,7 @@ class EventListSerializer(serializers.ModelSerializer):
     series = serializers.SerializerMethodField()
     user_is_interested = serializers.SerializerMethodField()
     user_has_ticket = serializers.SerializerMethodField()
+    media = EventMediaSerializer(many=True, read_only=True)
 
     class Meta:
         """Meta configuration for EventListSerializer."""
@@ -70,7 +79,7 @@ class EventListSerializer(serializers.ModelSerializer):
             "lifecycle_state",
             "interest_count", "ticket_count",
 
-
+            "media",
             "user_is_interested", "user_has_ticket",
         ]
         
@@ -139,6 +148,11 @@ class EventDetailSerializer(EventListSerializer):
     tickets_remaining = serializers.SerializerMethodField()
     location_address = serializers.SerializerMethodField()
     check_in_instructions = serializers.SerializerMethodField()
+    highlights = serializers.SerializerMethodField()
+    reviews = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    participating_vendors = serializers.SerializerMethodField()
+    host_events_count = serializers.SerializerMethodField()
 
     class Meta(EventListSerializer.Meta):
         """Meta configuration for EventDetailSerializer."""
@@ -146,6 +160,7 @@ class EventDetailSerializer(EventListSerializer):
         fields = EventListSerializer.Meta.fields + [
             "description", "location_address", "event_ready_message", "check_in_instructions", "latitude", "longitude",
             "refund_window_hours", "tags", "tickets_remaining", "created_at",
+            "highlights", "reviews", "average_rating", "participating_vendors", "host_events_count"
         ]
 
     def get_tickets_remaining(self, obj):
@@ -173,6 +188,48 @@ class EventDetailSerializer(EventListSerializer):
     def get_check_in_instructions(self, obj):
         """Return protected check-in instructions only to authorized viewers."""
         return obj.check_in_instructions if self._can_view_sensitive_details(obj) else ""
+
+    def get_highlights(self, obj):
+        """Return highlights depending on event state."""
+        if obj.lifecycle_state in ["live", "completed"]:
+            # Uses the prefetched highlights
+            highlights = getattr(obj, "prefetched_highlights", obj.highlights.all())
+            return EventHighlightSerializer(highlights, many=True, context=self.context).data
+        return []
+
+    def get_reviews(self, obj):
+        """Return full reviews only if completed."""
+        if obj.lifecycle_state == "completed":
+            reviews = getattr(obj, "prefetched_reviews", obj.reviews.filter(is_public=True))
+            return EventReviewSerializer(reviews, many=True, context=self.context).data
+        return []
+
+    def get_average_rating(self, obj):
+        """Calculate average rating if completed."""
+        if obj.lifecycle_state == "completed":
+            reviews = getattr(obj, "prefetched_reviews", obj.reviews.filter(is_public=True))
+            if not reviews:
+                return None
+            return sum(r.rating for r in reviews) / len(reviews)
+        return None
+
+    def get_participating_vendors(self, obj):
+        """Return vendors whose needs were filled."""
+        needs = obj.needs.filter(status__in=["filled", "completed"]).select_related("assigned_vendor")
+        vendors = []
+        for need in needs:
+            if need.assigned_vendor:
+                vendors.append({
+                    "id": need.assigned_vendor.id,
+                    "title": need.title,
+                    "vendor_name": need.assigned_vendor.name,
+                    "vendor_avatar": self.context["request"].build_absolute_uri(need.assigned_vendor.logo.url) if need.assigned_vendor.logo and self.context.get("request") else None
+                })
+        return vendors
+
+    def get_host_events_count(self, obj):
+        """Return number of completed events by this host."""
+        return Event.objects.filter(host=obj.host, lifecycle_state="completed").count()
 
 
 class EventCreateSerializer(serializers.ModelSerializer):
@@ -346,16 +403,39 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             return profile.avatar.url
         return None
 
+class EventReviewMediaSerializer(serializers.ModelSerializer):
+    """Serializer for event review media."""
+    
+    class Meta:
+        model = EventReviewMedia
+        fields = ["id", "file", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class EventVendorReviewSerializer(serializers.ModelSerializer):
+    """Serializer for vendor reviews."""
+    
+    vendor_id = serializers.IntegerField(source="vendor.id", read_only=True)
+    vendor_name = serializers.CharField(source="vendor.name", read_only=True)
+
+    class Meta:
+        model = EventVendorReview
+        fields = ["id", "vendor_id", "vendor_name", "rating", "text", "created_at"]
+        read_only_fields = ["id", "vendor_id", "vendor_name", "created_at"]
+
+
 class EventReviewSerializer(serializers.ModelSerializer):
     """Serializer for event reviews."""
 
     reviewer_username = serializers.CharField(source="reviewer.username", read_only=True)
     reviewer_avatar = serializers.SerializerMethodField()
+    media = EventReviewMediaSerializer(many=True, read_only=True)
+    vendor_reviews = EventVendorReviewSerializer(many=True, read_only=True)
 
     class Meta:
         """Meta configuration for EventReviewSerializer."""
         model = EventReview
-        fields = ["id", "reviewer_username", "reviewer_avatar", "rating", "text", "is_public", "created_at"]
+        fields = ["id", "reviewer_username", "reviewer_avatar", "rating", "text", "is_public", "media", "vendor_reviews", "created_at"]
         read_only_fields = ["id", "reviewer_username", "reviewer_avatar", "created_at"]
 
     def get_reviewer_avatar(self, obj):
@@ -367,45 +447,4 @@ class EventReviewSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
-
-class EventStorySerializer(EventDetailSerializer):
-    """Serializer for the Showcase / Story page."""
-
-    highlights = EventHighlightSerializer(many=True, read_only=True)
-    reviews = EventReviewSerializer(many=True, read_only=True)
-    average_rating = serializers.SerializerMethodField()
-    participating_vendors = serializers.SerializerMethodField()
-    host_events_count = serializers.SerializerMethodField()
-
-    class Meta(EventDetailSerializer.Meta):
-        """Meta configuration for EventStorySerializer."""
-        fields = EventDetailSerializer.Meta.fields + [
-            "highlights", "reviews", "average_rating", "participating_vendors", "host_events_count"
-        ]
-
-    def get_average_rating(self, obj):
-        """Calculate average rating from reviews."""
-        reviews = obj.reviews.filter(is_public=True)
-        if hasattr(obj, 'prefetched_reviews'):
-            reviews = obj.prefetched_reviews
-        if not reviews:
-            return None
-        return sum(r.rating for r in reviews) / len(reviews)
-
-    def get_participating_vendors(self, obj):
-        """Get vendor services assigned to this event via needs."""
-        from apps.needs.models import NeedApplication
-        from api.v1.vendors.serializers import VendorServiceSerializer
-        
-        accepted_applications = NeedApplication.objects.filter(
-            need__event=obj, status="accepted"
-        ).select_related("service", "service__vendor", "service__vendor__profile")
-        
-        services = [app.service for app in accepted_applications if app.service]
-        
-        return VendorServiceSerializer(services, many=True, context=self.context).data
-
-    def get_host_events_count(self, obj):
-        """Count how many past events the host has completed."""
-        return Event.objects.filter(host=obj.host, lifecycle_state="completed").count()
 

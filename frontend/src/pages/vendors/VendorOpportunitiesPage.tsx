@@ -54,14 +54,14 @@ export default function VendorOpportunitiesPage() {
     const [query, setQuery] = useState('');
     const filtered = query
         ? opportunities.filter((opportunity) => {
-              const normalized = query.toLowerCase();
-              return (
-                  opportunity.need_title.toLowerCase().includes(normalized) ||
-                  opportunity.event_title.toLowerCase().includes(normalized) ||
-                  opportunity.category.toLowerCase().includes(normalized) ||
-                  opportunity.event_location_name.toLowerCase().includes(normalized)
-              );
-          })
+            const normalized = query.toLowerCase();
+            return (
+                opportunity.need_title.toLowerCase().includes(normalized) ||
+                opportunity.event_title.toLowerCase().includes(normalized) ||
+                opportunity.category.toLowerCase().includes(normalized) ||
+                opportunity.event_location_name.toLowerCase().includes(normalized)
+            );
+        })
         : opportunities;
     const serviceCategories = Array.from(
         new Set(myServices.map((service) => getCategoryLabel(service.category)))
@@ -83,7 +83,7 @@ export default function VendorOpportunitiesPage() {
                             </p>
                         </div>
                         <Button asChild variant="outline" size="sm">
-                            <Link to="/vendors/create">Update My Services</Link>
+                            <Link to="/vendors/create">+ Create New Service</Link>
                         </Button>
                     </div>
 
@@ -146,9 +146,8 @@ export default function VendorOpportunitiesPage() {
                     {filtered.map((opportunity) => (
                         <article
                             key={opportunity.need_id}
-                            className={`group rounded-xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                                opportunity.is_invited ? 'ring-1 ring-emerald-300/60 dark:ring-emerald-700/60' : ''
-                            }`}
+                            className={`group rounded-xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md ${opportunity.is_invited ? 'ring-1 ring-emerald-300/60 dark:ring-emerald-700/60' : ''
+                                }`}
                         >
                             <div className="flex flex-col justify-between gap-4">
                                 <div>
@@ -158,10 +157,9 @@ export default function VendorOpportunitiesPage() {
                                             {getCategoryLabel(opportunity.category)}
                                         </span>
                                         <span
-                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                CRITICALITY_STYLES[opportunity.criticality] ||
+                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${CRITICALITY_STYLES[opportunity.criticality] ||
                                                 CRITICALITY_STYLES.replaceable
-                                            }`}
+                                                }`}
                                         >
                                             {CRITICALITY_LABELS[opportunity.criticality] || 'Replaceable'}
                                         </span>

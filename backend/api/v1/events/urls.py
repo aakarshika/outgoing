@@ -6,17 +6,15 @@ from .views import (
     EventAutocompleteView,
     EventLifecycleHistoryView,
     EventLifecycleTransitionView,
-
-
     EventCategoryListView,
     EventDetailView,
     EventInterestView,
     EventListCreateView,
     MyEventsView,
     EventAttendeesView,
-    EventStoryView,
     EventHighlightListCreateView,
     EventReviewCreateView,
+    EventViewView,
 )
 
 urlpatterns = [
@@ -39,7 +37,7 @@ urlpatterns = [
     path("<int:event_id>/", EventDetailView.as_view(), name="event_detail"),
     path("<int:event_id>/interest/", EventInterestView.as_view(), name="event_interest"),
     path("<int:event_id>/attendees/", EventAttendeesView.as_view(), name="event_attendees"),
-    path("<int:event_id>/story/", EventStoryView.as_view(), name="event_story"),
     path("<int:event_id>/highlights/", EventHighlightListCreateView.as_view(), name="event_highlights"),
     path("<int:event_id>/reviews/", EventReviewCreateView.as_view(), name="event_reviews"),
+    path("<int:event_id>/view/", EventViewView.as_view(), name="event_view"),
 ]

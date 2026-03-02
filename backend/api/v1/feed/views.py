@@ -5,12 +5,12 @@ from math import cos, radians
 
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from api.v1.events.serializers import EventListSerializer
-from apps.events.models import Event
-from core.responses import success_response
+from apps.events.models import Event, EventView
+from core.responses import success_response, error_response
 
 
 class FeedView(APIView):
@@ -128,3 +128,109 @@ class FeedView(APIView):
             data=serializer.data,
             meta={"page": page, "page_size": page_size, "total_count": total_count},
         )
+
+
+class CarouselFeedView(APIView):
+    """Carousel feed — returns a mix of upcoming top events and past event highlights."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        Get the carousel events.
+        Includes a few popular upcoming events, and a few completed events with highlights.
+        """
+        now = timezone.now()
+
+        # 1. Top upcoming events (high interest, happening in the future)
+        upcoming_events = Event.objects.filter(
+            lifecycle_state__in=["published", "event_ready"],
+            start_time__gte=now
+        ).order_by("-interest_count")[:3]
+
+        # 2. Top past events (completed, high interest)
+        past_events = Event.objects.filter(
+            lifecycle_state="completed",
+        ).exclude(
+            id__in=[e.id for e in upcoming_events]
+        ).order_by("-interest_count")[:3]
+
+        # Combine and interleave them simply
+        combined = list(upcoming_events) + list(past_events)
+        
+        # We might want to sort by start time, or just serve upcoming first. 
+        # For a carousel, a mixed order is sometimes nice, but let's just do upcoming then past.
+
+        serializer = EventListSerializer(
+            combined, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+
+class RecentlyViewedFeedView(APIView):
+    """Return the events a user has most recently viewed. Auth required."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get recently viewed events ordered by last_viewed_at descending."""
+        page_size = int(request.query_params.get("page_size", 20))
+
+        view_qs = (
+            EventView.objects.filter(user=request.user)
+            .select_related(
+                "event", "event__host", "event__host__profile", "event__category"
+            )
+            .order_by("-last_viewed_at")[:page_size]
+        )
+
+        events = [ev.event for ev in view_qs]
+        serializer = EventListSerializer(events, many=True, context={"request": request})
+        return success_response(data=serializer.data)
+
+
+class CompletedHighlightsFeedView(APIView):
+    """Return completed events that have highlights or reviews — for 'Highlights & Rewinds'."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get completed events with highlight/review content."""
+        page_size = int(request.query_params.get("page_size", 20))
+
+        events = (
+            Event.objects.filter(lifecycle_state="completed")
+            .filter(
+                Q(highlights__isnull=False) | Q(reviews__isnull=False)
+            )
+            .distinct()
+            .select_related("host", "host__profile", "category")
+            .prefetch_related("media")
+            .order_by("-interest_count", "-updated_at")[:page_size]
+        )
+
+        serializer = EventListSerializer(events, many=True, context={"request": request})
+        return success_response(data=serializer.data)
+
+
+class UpcomingFeedView(APIView):
+    """Return upcoming published events ordered by start time."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get upcoming events sorted by start_time ascending."""
+        now = timezone.now()
+        page_size = int(request.query_params.get("page_size", 20))
+
+        events = (
+            Event.objects.filter(
+                lifecycle_state__in=["published", "event_ready", "at_risk"],
+                start_time__gte=now,
+            )
+            .select_related("host", "host__profile", "category")
+            .order_by("start_time")[:page_size]
+        )
+
+        serializer = EventListSerializer(events, many=True, context={"request": request})
+        return success_response(data=serializer.data)
