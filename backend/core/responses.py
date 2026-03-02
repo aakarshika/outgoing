@@ -18,7 +18,7 @@ def success_response(data=None, message="Success", meta=None, status=200):
             "success": True,
             "message": message,
             "data": data if data is not None else {},
-            "meta": meta if meta is not None else {}
+            "meta": meta if meta is not None else {},
         },
         status=status,
     )

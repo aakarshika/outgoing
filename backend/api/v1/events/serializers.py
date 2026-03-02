@@ -3,21 +3,20 @@
 from rest_framework import serializers
 
 from apps.events.models import (
-    Event, 
-    EventCategory, 
+    Event,
+    EventCategory,
     EventSeries,
     EventSeriesNeedTemplate,
-    EventInterest, 
+    EventInterest,
     EventLifecycleTransition,
     EventHighlight,
     EventReview,
     EventReviewMedia,
     EventVendorReview,
-    EventMedia
+    EventMedia,
 )
 
 from dateutil.rrule import rrulestr
-from datetime import datetime
 from django.utils import timezone
 from django.db import transaction
 
@@ -57,6 +56,7 @@ class EventMediaSerializer(serializers.ModelSerializer):
         model = EventMedia
         fields = ["id", "media_type", "category", "file", "order", "created_at"]
 
+
 class EventListSerializer(serializers.ModelSerializer):
     """Serializer for event list/card view — enriched for Event Cards."""
 
@@ -72,17 +72,29 @@ class EventListSerializer(serializers.ModelSerializer):
 
         model = Event
         fields = [
-            "id", "host", "title", "slug", "category", "series", "occurrence_index",
-            "location_name", "start_time", "end_time",
-            "ticket_price_standard", "ticket_price_flexible",
-            "cover_image", "status", "capacity",
+            "id",
+            "host",
+            "title",
+            "slug",
+            "category",
+            "series",
+            "occurrence_index",
+            "location_name",
+            "start_time",
+            "end_time",
+            "ticket_price_standard",
+            "ticket_price_flexible",
+            "cover_image",
+            "status",
+            "capacity",
             "lifecycle_state",
-            "interest_count", "ticket_count",
-
+            "interest_count",
+            "ticket_count",
             "media",
-            "user_is_interested", "user_has_ticket",
+            "user_is_interested",
+            "user_has_ticket",
         ]
-        
+
     def get_series(self, obj):
         if obj.series:
             return {"id": obj.series.id, "name": obj.series.name}
@@ -92,9 +104,7 @@ class EventListSerializer(serializers.ModelSerializer):
         """Check if the current user is interested in this event."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return EventInterest.objects.filter(
-                event=obj, user=request.user
-            ).exists()
+            return EventInterest.objects.filter(event=obj, user=request.user).exists()
         return False
 
     def get_user_has_ticket(self, obj):
@@ -107,37 +117,51 @@ class EventListSerializer(serializers.ModelSerializer):
 
 class EventSeriesNeedTemplateSerializer(serializers.ModelSerializer):
     """Serializer for EventSeriesNeedTemplate."""
-    
+
     class Meta:
         model = EventSeriesNeedTemplate
         fields = [
-            "id", "title", "description", "category", "criticality", 
-            "budget_min", "budget_max", "created_at"
+            "id",
+            "title",
+            "description",
+            "category",
+            "criticality",
+            "budget_min",
+            "budget_max",
+            "created_at",
         ]
         read_only_fields = ["id", "created_at"]
 
 
 class EventSeriesSerializer(serializers.ModelSerializer):
     """Basic serializer for Event Series."""
-    
+
     host = EventHostSerializer(read_only=True)
-    
+
     class Meta:
         model = EventSeries
         fields = [
-            "id", "host", "name", "description", "recurrence_rule", "timezone",
-            "default_location_name", "default_location_address", "default_capacity",
-            "default_ticket_price_standard", "default_ticket_price_flexible",
-            "created_at"
+            "id",
+            "host",
+            "name",
+            "description",
+            "recurrence_rule",
+            "timezone",
+            "default_location_name",
+            "default_location_address",
+            "default_capacity",
+            "default_ticket_price_standard",
+            "default_ticket_price_flexible",
+            "created_at",
         ]
         read_only_fields = ["id", "host", "created_at"]
 
 
 class EventSeriesDetailSerializer(EventSeriesSerializer):
     """Full detail serializer for Event Series with nested templates."""
-    
+
     need_templates = EventSeriesNeedTemplateSerializer(many=True, read_only=True)
-    
+
     class Meta(EventSeriesSerializer.Meta):
         fields = EventSeriesSerializer.Meta.fields + ["need_templates"]
 
@@ -158,9 +182,21 @@ class EventDetailSerializer(EventListSerializer):
         """Meta configuration for EventDetailSerializer."""
 
         fields = EventListSerializer.Meta.fields + [
-            "description", "location_address", "event_ready_message", "check_in_instructions", "latitude", "longitude",
-            "refund_window_hours", "tags", "tickets_remaining", "created_at",
-            "highlights", "reviews", "average_rating", "participating_vendors", "host_events_count"
+            "description",
+            "location_address",
+            "event_ready_message",
+            "check_in_instructions",
+            "latitude",
+            "longitude",
+            "refund_window_hours",
+            "tags",
+            "tickets_remaining",
+            "created_at",
+            "highlights",
+            "reviews",
+            "average_rating",
+            "participating_vendors",
+            "host_events_count",
         ]
 
     def get_tickets_remaining(self, obj):
@@ -187,14 +223,18 @@ class EventDetailSerializer(EventListSerializer):
 
     def get_check_in_instructions(self, obj):
         """Return protected check-in instructions only to authorized viewers."""
-        return obj.check_in_instructions if self._can_view_sensitive_details(obj) else ""
+        return (
+            obj.check_in_instructions if self._can_view_sensitive_details(obj) else ""
+        )
 
     def get_highlights(self, obj):
         """Return highlights depending on event state."""
         if obj.lifecycle_state in ["live", "completed"]:
             # Uses the prefetched highlights
             highlights = getattr(obj, "prefetched_highlights", obj.highlights.all())
-            return EventHighlightSerializer(highlights, many=True, context=self.context).data
+            return EventHighlightSerializer(
+                highlights, many=True, context=self.context
+            ).data
         return []
 
     def get_reviews(self, obj):
@@ -207,7 +247,9 @@ class EventDetailSerializer(EventListSerializer):
     def get_average_rating(self, obj):
         """Calculate average rating if completed."""
         if obj.lifecycle_state == "completed":
-            reviews = getattr(obj, "prefetched_reviews", obj.reviews.filter(is_public=True))
+            reviews = getattr(
+                obj, "prefetched_reviews", obj.reviews.filter(is_public=True)
+            )
             if not reviews:
                 return None
             return sum(r.rating for r in reviews) / len(reviews)
@@ -215,7 +257,9 @@ class EventDetailSerializer(EventListSerializer):
 
     def get_participating_vendors(self, obj):
         """Return vendors whose needs were filled."""
-        needs = obj.needs.filter(status__in=["filled", "completed"]).select_related("assigned_vendor", "assigned_vendor__profile")
+        needs = obj.needs.filter(status__in=["filled", "completed"]).select_related(
+            "assigned_vendor", "assigned_vendor__profile"
+        )
         vendors = []
         for need in needs:
             if need.assigned_vendor:
@@ -230,12 +274,14 @@ class EventDetailSerializer(EventListSerializer):
                     else:
                         vendor_avatar = profile.avatar.url
 
-                vendors.append({
-                    "id": vendor.id,
-                    "title": need.title,
-                    "vendor_name": vendor_name,
-                    "vendor_avatar": vendor_avatar
-                })
+                vendors.append(
+                    {
+                        "id": vendor.id,
+                        "title": need.title,
+                        "vendor_name": vendor_name,
+                        "vendor_avatar": vendor_avatar,
+                    }
+                )
         return vendors
 
     def get_host_events_count(self, obj):
@@ -250,7 +296,11 @@ class EventCreateSerializer(serializers.ModelSerializer):
         queryset=EventCategory.objects.all(), source="category", write_only=True
     )
     series_id = serializers.PrimaryKeyRelatedField(
-        queryset=EventSeries.objects.all(), source="series", write_only=True, required=False, allow_null=True
+        queryset=EventSeries.objects.all(),
+        source="series",
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
@@ -258,22 +308,50 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
         model = Event
         fields = [
-            "title", "description", "category_id", "series_id", "occurrence_index",
-            "location_name", "location_address", "event_ready_message", "check_in_instructions", "latitude", "longitude",
-            "start_time", "end_time", "capacity",
-            "ticket_price_standard", "ticket_price_flexible",
-            "refund_window_hours", "cover_image", "status", "lifecycle_state", "tags",
-            "is_recurring", "recurrence_rule", "generate_count"
+            "title",
+            "description",
+            "category_id",
+            "series_id",
+            "occurrence_index",
+            "location_name",
+            "location_address",
+            "event_ready_message",
+            "check_in_instructions",
+            "latitude",
+            "longitude",
+            "start_time",
+            "end_time",
+            "capacity",
+            "ticket_price_standard",
+            "ticket_price_flexible",
+            "refund_window_hours",
+            "cover_image",
+            "status",
+            "lifecycle_state",
+            "tags",
+            "is_recurring",
+            "recurrence_rule",
+            "generate_count",
         ]
         read_only_fields = ["lifecycle_state", "occurrence_index"]
 
-    is_recurring = serializers.BooleanField(required=False, write_only=True, default=False)
-    recurrence_rule = serializers.CharField(required=False, write_only=True, allow_blank=True, allow_null=True)
-    generate_count = serializers.IntegerField(required=False, write_only=True, default=4, min_value=1, max_value=52)
+    is_recurring = serializers.BooleanField(
+        required=False, write_only=True, default=False
+    )
+    recurrence_rule = serializers.CharField(
+        required=False, write_only=True, allow_blank=True, allow_null=True
+    )
+    generate_count = serializers.IntegerField(
+        required=False, write_only=True, default=4, min_value=1, max_value=52
+    )
 
     def validate(self, attrs):
         if attrs.get("is_recurring") and not attrs.get("recurrence_rule"):
-            raise serializers.ValidationError({"recurrence_rule": "Recurrence rule is required if event is recurring."})
+            raise serializers.ValidationError(
+                {
+                    "recurrence_rule": "Recurrence rule is required if event is recurring."
+                }
+            )
         return super().validate(attrs)
 
     @transaction.atomic
@@ -285,7 +363,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
         event = super().create(validated_data)
 
         if is_recurring and recurrence_rule:
-            # Create the internal EventSeries 
+            # Create the internal EventSeries
             series = EventSeries.objects.create(
                 host=event.host,
                 name=event.title,
@@ -296,9 +374,9 @@ class EventCreateSerializer(serializers.ModelSerializer):
                 default_location_address=event.location_address,
                 default_capacity=event.capacity,
                 default_ticket_price_standard=event.ticket_price_standard,
-                default_ticket_price_flexible=event.ticket_price_flexible
+                default_ticket_price_flexible=event.ticket_price_flexible,
             )
-            
+
             # Link the first event
             event.series = series
             event.occurrence_index = 1
@@ -312,11 +390,11 @@ class EventCreateSerializer(serializers.ModelSerializer):
             dates = []
             for i, dt in enumerate(rule):
                 if i == 0:
-                    continue # skip the first one since we already created it
+                    continue  # skip the first one since we already created it
                 if len(dates) >= generate_count - 1:
                     break
                 dates.append(dt)
-            
+
             next_index = 2
             for dt in dates:
                 # Idempotency check just in case
@@ -341,8 +419,6 @@ class EventCreateSerializer(serializers.ModelSerializer):
                     next_index += 1
 
         return event
-
-
 
 
 class EventTransitionRequestSerializer(serializers.Serializer):
@@ -373,8 +449,6 @@ class EventLifecycleTransitionSerializer(serializers.ModelSerializer):
         ]
 
 
-
-
 class EventAttendeeSerializer(serializers.ModelSerializer):
     """Serializer for attendees of an event."""
 
@@ -384,9 +458,7 @@ class EventAttendeeSerializer(serializers.ModelSerializer):
         """Meta configuration for EventAttendeeSerializer."""
 
         model = Ticket
-        fields = [
-            "id", "user", "ticket_type", "status", "purchased_at"
-        ]
+        fields = ["id", "user", "ticket_type", "status", "purchased_at"]
 
 
 class EventHighlightSerializer(serializers.ModelSerializer):
@@ -397,12 +469,26 @@ class EventHighlightSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Meta configuration for EventHighlightSerializer."""
+
         model = EventHighlight
         fields = [
-            "id", "author_username", "author_avatar", "role", "text", 
-            "media_file", "moderation_status", "created_at"
+            "id",
+            "author_username",
+            "author_avatar",
+            "role",
+            "text",
+            "media_file",
+            "moderation_status",
+            "created_at",
         ]
-        read_only_fields = ["id", "author_username", "author_avatar", "moderation_status", "created_at", "role"]
+        read_only_fields = [
+            "id",
+            "author_username",
+            "author_avatar",
+            "moderation_status",
+            "created_at",
+            "role",
+        ]
 
     def get_author_avatar(self, obj):
         """Return the author's avatar URL or None."""
@@ -414,9 +500,10 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             return profile.avatar.url
         return None
 
+
 class EventReviewMediaSerializer(serializers.ModelSerializer):
     """Serializer for event review media."""
-    
+
     class Meta:
         model = EventReviewMedia
         fields = ["id", "file", "created_at"]
@@ -425,7 +512,7 @@ class EventReviewMediaSerializer(serializers.ModelSerializer):
 
 class EventVendorReviewSerializer(serializers.ModelSerializer):
     """Serializer for vendor reviews."""
-    
+
     vendor_id = serializers.IntegerField(source="vendor.id", read_only=True)
     vendor_name = serializers.CharField(source="vendor.name", read_only=True)
 
@@ -438,15 +525,28 @@ class EventVendorReviewSerializer(serializers.ModelSerializer):
 class EventReviewSerializer(serializers.ModelSerializer):
     """Serializer for event reviews."""
 
-    reviewer_username = serializers.CharField(source="reviewer.username", read_only=True)
+    reviewer_username = serializers.CharField(
+        source="reviewer.username", read_only=True
+    )
     reviewer_avatar = serializers.SerializerMethodField()
     media = EventReviewMediaSerializer(many=True, read_only=True)
     vendor_reviews = EventVendorReviewSerializer(many=True, read_only=True)
 
     class Meta:
         """Meta configuration for EventReviewSerializer."""
+
         model = EventReview
-        fields = ["id", "reviewer_username", "reviewer_avatar", "rating", "text", "is_public", "media", "vendor_reviews", "created_at"]
+        fields = [
+            "id",
+            "reviewer_username",
+            "reviewer_avatar",
+            "rating",
+            "text",
+            "is_public",
+            "media",
+            "vendor_reviews",
+            "created_at",
+        ]
         read_only_fields = ["id", "reviewer_username", "reviewer_avatar", "created_at"]
 
     def get_reviewer_avatar(self, obj):
@@ -458,4 +558,3 @@ class EventReviewSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
-

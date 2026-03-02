@@ -39,7 +39,7 @@ class RequestListCreateView(APIView):
         page_size = int(request.query_params.get("page_size", 20))
         total_count = requests_qs.count()
         start = (page - 1) * page_size
-        requests_page = requests_qs[start:start + page_size]
+        requests_page = requests_qs[start : start + page_size]
 
         serializer = EventRequestSerializer(
             requests_page, many=True, context={"request": request}
@@ -54,9 +54,7 @@ class RequestListCreateView(APIView):
         serializer = EventRequestCreateSerializer(data=request.data)
         if serializer.is_valid():
             event_request = serializer.save(requester=request.user)
-            result = EventRequestSerializer(
-                event_request, context={"request": request}
-            )
+            result = EventRequestSerializer(event_request, context={"request": request})
             return success_response(
                 data=result.data, message="Request created", status=201
             )
@@ -126,11 +124,7 @@ class RequestWishlistView(APIView):
         if wishlist_as not in allowed_values:
             return error_response(
                 message="Validation Error",
-                errors={
-                    "wishlist_as": [
-                        "Must be one of: goer, host, vendor."
-                    ]
-                },
+                errors={"wishlist_as": ["Must be one of: goer, host, vendor."]},
             )
 
         wishlist, _ = RequestWishlist.objects.update_or_create(

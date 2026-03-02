@@ -16,7 +16,7 @@ Example usage:
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence
+from typing import Optional, Sequence
 
 from django.conf import settings
 
@@ -51,7 +51,9 @@ def _default_model() -> str:
 EXAMPLE_SYSTEM_PROMPT = """You are a helpful assistant. You answer concisely and clearly.
 If you don't know something, say so. Use a friendly, professional tone."""
 
-EXAMPLE_USER_PROMPT = """Say hello and tell me in one sentence what you can help with."""
+EXAMPLE_USER_PROMPT = (
+    """Say hello and tell me in one sentence what you can help with."""
+)
 
 
 # -----------------------------------------------------------------------------

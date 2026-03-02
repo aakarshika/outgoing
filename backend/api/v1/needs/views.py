@@ -45,7 +45,9 @@ class EventNeedsView(APIView):
         if serializer.is_valid():
             need = serializer.save(event=event)
             result = EventNeedSerializer(need)
-            return success_response(data=result.data, message="Need created", status=201)
+            return success_response(
+                data=result.data, message="Need created", status=201
+            )
         return error_response(message="Validation Error", errors=serializer.errors)
 
 
@@ -92,7 +94,9 @@ class NeedApplyView(APIView):
         ).update(status="applied")
 
         result = NeedApplicationSerializer(application)
-        return success_response(data=result.data, message="Application submitted", status=201)
+        return success_response(
+            data=result.data, message="Application submitted", status=201
+        )
 
 
 class NeedApplicationReviewView(APIView):
@@ -103,9 +107,9 @@ class NeedApplicationReviewView(APIView):
     def patch(self, request, application_id):
         """Update application status."""
         try:
-            application = NeedApplication.objects.select_related(
-                "need__event"
-            ).get(pk=application_id)
+            application = NeedApplication.objects.select_related("need__event").get(
+                pk=application_id
+            )
         except NeedApplication.DoesNotExist:
             return error_response(message="Application not found", status=404)
 
@@ -114,7 +118,9 @@ class NeedApplicationReviewView(APIView):
 
         new_status = request.data.get("status")
         if new_status not in ("accepted", "rejected"):
-            return error_response(message="Status must be 'accepted' or 'rejected'", status=400)
+            return error_response(
+                message="Status must be 'accepted' or 'rejected'", status=400
+            )
 
         application.status = new_status
         application.save()
@@ -130,6 +136,7 @@ class NeedApplicationReviewView(APIView):
             data=NeedApplicationSerializer(application).data,
         )
 
+
 class MyNeedApplicationsView(APIView):
     """List need applications submitted by the authenticated vendor."""
 
@@ -137,9 +144,9 @@ class MyNeedApplicationsView(APIView):
 
     def get(self, request):
         """List my applications."""
-        applications = NeedApplication.objects.filter(vendor=request.user).select_related(
-            "need", "need__event"
-        )
+        applications = NeedApplication.objects.filter(
+            vendor=request.user
+        ).select_related("need", "need__event")
         serializer = NeedApplicationSerializer(applications, many=True)
         return success_response(data=serializer.data)
 
@@ -152,7 +159,9 @@ class NeedInviteCreateView(APIView):
     def post(self, request, need_id):
         """Invite a vendor for a need."""
         try:
-            need = EventNeed.objects.select_related("event").get(pk=need_id, status="open")
+            need = EventNeed.objects.select_related("event").get(
+                pk=need_id, status="open"
+            )
         except EventNeed.DoesNotExist:
             return error_response(message="Need not found or not open", status=404)
 
@@ -183,7 +192,9 @@ class NeedInviteCreateView(APIView):
             },
         )
         serializer = NeedInviteSerializer(invite)
-        return success_response(data=serializer.data, message="Vendor invited", status=201)
+        return success_response(
+            data=serializer.data, message="Vendor invited", status=201
+        )
 
 
 class MyNeedInvitesView(APIView):

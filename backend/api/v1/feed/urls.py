@@ -14,7 +14,11 @@ from .views import (
 
 urlpatterns = [
     path("carousel/", CarouselFeedView.as_view(), name="carousel_feed"),
-    path("recently-viewed/", RecentlyViewedFeedView.as_view(), name="feed_recently_viewed"),
+    path(
+        "recently-viewed/",
+        RecentlyViewedFeedView.as_view(),
+        name="feed_recently_viewed",
+    ),
     path("highlights/", CompletedHighlightsFeedView.as_view(), name="feed_highlights"),
     path("upcoming/", UpcomingFeedView.as_view(), name="feed_upcoming"),
     path("iconic-hosts/", IconicHostsFeedView.as_view(), name="feed_iconic_hosts"),

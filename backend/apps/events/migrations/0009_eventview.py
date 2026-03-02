@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("events", "0008_eventreviewmedia_eventvendorreview"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

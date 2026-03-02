@@ -17,6 +17,4 @@ def validate_image_upload(image):
         raise ValidationError(f"Image must be under {max_size_mb} MB.")
 
     if hasattr(image, "content_type") and image.content_type not in allowed_types:
-        raise ValidationError(
-            "Unsupported image format. Use JPEG, PNG, or WebP."
-        )
+        raise ValidationError("Unsupported image format. Use JPEG, PNG, or WebP.")

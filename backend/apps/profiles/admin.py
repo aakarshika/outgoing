@@ -13,4 +13,3 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     list_display = ("user", "phone_number", "bio", "created_at", "updated_at")
     search_fields = ("user__username", "user__email", "phone_number")
-

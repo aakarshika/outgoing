@@ -32,12 +32,22 @@ urlpatterns = [
         EventLifecycleHistoryView.as_view(),
         name="event_lifecycle_history",
     ),
-
-
     path("<int:event_id>/", EventDetailView.as_view(), name="event_detail"),
-    path("<int:event_id>/interest/", EventInterestView.as_view(), name="event_interest"),
-    path("<int:event_id>/attendees/", EventAttendeesView.as_view(), name="event_attendees"),
-    path("<int:event_id>/highlights/", EventHighlightListCreateView.as_view(), name="event_highlights"),
-    path("<int:event_id>/reviews/", EventReviewCreateView.as_view(), name="event_reviews"),
+    path(
+        "<int:event_id>/interest/", EventInterestView.as_view(), name="event_interest"
+    ),
+    path(
+        "<int:event_id>/attendees/",
+        EventAttendeesView.as_view(),
+        name="event_attendees",
+    ),
+    path(
+        "<int:event_id>/highlights/",
+        EventHighlightListCreateView.as_view(),
+        name="event_highlights",
+    ),
+    path(
+        "<int:event_id>/reviews/", EventReviewCreateView.as_view(), name="event_reviews"
+    ),
     path("<int:event_id>/view/", EventViewView.as_view(), name="event_view"),
 ]

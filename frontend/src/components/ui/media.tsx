@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { ImageOff, VideoOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type BaseMediaProps = {
     fallbackClassName?: string;
@@ -23,7 +21,6 @@ export function Media({ fallbackClassName, ...props }: MediaProps) {
         setHasError(true);
     };
 
-    const className = props.className;
 
     if (hasError || !props.src) {
         const { type, fallbackClassName: _, ...imgProps } = props as ImageMediaProps;

@@ -28,8 +28,12 @@ class TicketPurchaseView(APIView):
             )
 
         # Check if already has ticket
-        if Ticket.objects.filter(event=event, goer=request.user, status="active").exists():
-            return error_response(message="Already have a ticket for this event", status=400)
+        if Ticket.objects.filter(
+            event=event, goer=request.user, status="active"
+        ).exists():
+            return error_response(
+                message="Already have a ticket for this event", status=400
+            )
 
         # Check capacity
         if event.capacity is not None and event.ticket_count >= event.capacity:
@@ -61,7 +65,9 @@ class TicketPurchaseView(APIView):
         Event.objects.filter(pk=event_id).update(ticket_count=F("ticket_count") + 1)
 
         result = TicketSerializer(ticket)
-        return success_response(data=result.data, message="Ticket purchased", status=201)
+        return success_response(
+            data=result.data, message="Ticket purchased", status=201
+        )
 
 
 class MyTicketsView(APIView):

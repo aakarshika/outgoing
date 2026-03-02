@@ -41,5 +41,3 @@ class UserProfile(models.Model):
     def __str__(self):
         """String representation of the UserProfile."""
         return f"{self.user.username}'s Profile"
-
-

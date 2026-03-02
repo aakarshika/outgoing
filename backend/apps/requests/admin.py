@@ -9,7 +9,14 @@ from .models import EventRequest, RequestUpvote, RequestWishlist
 class EventRequestAdmin(admin.ModelAdmin):
     """Admin for EventRequest."""
 
-    list_display = ["title", "requester", "category", "status", "upvote_count", "created_at"]
+    list_display = [
+        "title",
+        "requester",
+        "category",
+        "status",
+        "upvote_count",
+        "created_at",
+    ]
     list_filter = ["status", "category"]
     search_fields = ["title", "description"]
 

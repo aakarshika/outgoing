@@ -18,8 +18,16 @@ class NeedApplicationSerializer(serializers.ModelSerializer):
 
         model = NeedApplication
         fields = [
-            "id", "vendor_name", "need_title", "event_title", "event_id",
-            "service", "message", "proposed_price", "status", "created_at",
+            "id",
+            "vendor_name",
+            "need_title",
+            "event_title",
+            "event_id",
+            "service",
+            "message",
+            "proposed_price",
+            "status",
+            "created_at",
         ]
         read_only_fields = ["id", "status", "created_at"]
 
@@ -34,10 +42,18 @@ class EventNeedSerializer(serializers.ModelSerializer):
 
         model = EventNeed
         fields = [
-            "id", "title", "description", "category", "criticality",
-            "budget_min", "budget_max", "status",
-            "assigned_vendor", "application_count",
-            "applications", "created_at",
+            "id",
+            "title",
+            "description",
+            "category",
+            "criticality",
+            "budget_min",
+            "budget_max",
+            "status",
+            "assigned_vendor",
+            "application_count",
+            "applications",
+            "created_at",
         ]
         read_only_fields = ["id", "application_count", "created_at"]
 
@@ -50,8 +66,12 @@ class EventNeedCreateSerializer(serializers.ModelSerializer):
 
         model = EventNeed
         fields = [
-            "title", "description", "category", "criticality",
-            "budget_min", "budget_max",
+            "title",
+            "description",
+            "category",
+            "criticality",
+            "budget_min",
+            "budget_max",
         ]
 
 
@@ -71,7 +91,9 @@ class NeedInviteSerializer(serializers.ModelSerializer):
     need_title = serializers.CharField(source="need.title", read_only=True)
     event_title = serializers.CharField(source="need.event.title", read_only=True)
     event_id = serializers.IntegerField(source="need.event.id", read_only=True)
-    invited_by_username = serializers.CharField(source="invited_by.username", read_only=True)
+    invited_by_username = serializers.CharField(
+        source="invited_by.username", read_only=True
+    )
 
     class Meta:
         """Meta configuration for NeedInviteSerializer."""

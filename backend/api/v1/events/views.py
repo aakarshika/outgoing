@@ -1,12 +1,20 @@
 """Views for event endpoints."""
 
+import json
+
 from django.db.models import F, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.events.models import Event, EventCategory, EventInterest, EventReview, EventView
+from apps.events.models import (
+    Event,
+    EventCategory,
+    EventInterest,
+    EventReview,
+    EventView,
+)
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
 
@@ -21,8 +29,6 @@ from .serializers import (
     EventHighlightSerializer,
     EventReviewSerializer,
 )
-
-
 
 
 class EventListCreateView(APIView):
@@ -41,9 +47,7 @@ class EventListCreateView(APIView):
         """List published events with optional filters."""
         events = Event.objects.filter(
             lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-        ).select_related(
-            "host", "host__profile", "category"
-        )
+        ).select_related("host", "host__profile", "category")
 
         category = request.query_params.get("category")
         if category:
@@ -68,7 +72,7 @@ class EventListCreateView(APIView):
         page_size = int(request.query_params.get("page_size", 20))
         total_count = events.count()
         start = (page - 1) * page_size
-        events = events[start:start + page_size]
+        events = events[start : start + page_size]
 
         serializer = EventListSerializer(
             events, many=True, context={"request": request}
@@ -78,7 +82,9 @@ class EventListCreateView(APIView):
             meta={"page": page, "page_size": page_size, "total_count": total_count},
         )
 
-    @extend_schema(request=EventCreateSerializer, responses={201: EventDetailSerializer})
+    @extend_schema(
+        request=EventCreateSerializer, responses={201: EventDetailSerializer}
+    )
     def post(self, request):
         """Create a new event. Authenticated user becomes the host."""
         serializer = EventCreateSerializer(data=request.data)
@@ -106,19 +112,27 @@ class EventDetailView(APIView):
     def get(self, request, event_id):
         """Get full event detail including highlights and reviews."""
         try:
-            event = Event.objects.select_related(
-                "host", "host__profile", "category"
-            ).prefetch_related(
-                "highlights", "highlights__author", "highlights__author__profile",
-                "reviews", "reviews__reviewer", "reviews__reviewer__profile"
-            ).get(pk=event_id)
+            event = (
+                Event.objects.select_related("host", "host__profile", "category")
+                .prefetch_related(
+                    "highlights",
+                    "highlights__author",
+                    "highlights__author__profile",
+                    "reviews",
+                    "reviews__reviewer",
+                    "reviews__reviewer__profile",
+                )
+                .get(pk=event_id)
+            )
         except Event.DoesNotExist:
             return error_response(message="Event not found", status=404)
 
         serializer = EventDetailSerializer(event, context={"request": request})
         return success_response(data=serializer.data)
 
-    @extend_schema(request=EventCreateSerializer, responses={200: EventDetailSerializer})
+    @extend_schema(
+        request=EventCreateSerializer, responses={200: EventDetailSerializer}
+    )
     def patch(self, request, event_id):
         """Update an event. Host only."""
         try:
@@ -170,9 +184,7 @@ class EventInterestView(APIView):
         except Event.DoesNotExist:
             return error_response(message="Event not found", status=404)
 
-        _, created = EventInterest.objects.get_or_create(
-            event=event, user=request.user
-        )
+        _, created = EventInterest.objects.get_or_create(event=event, user=request.user)
         if not created:
             return error_response(message="Already interested", status=409)
 
@@ -282,8 +294,7 @@ class EventAttendeesView(APIView):
             return error_response(message="Not authorized", status=403)
 
         tickets = Ticket.objects.filter(
-            event=event, 
-            status__in=["active", "used"]
+            event=event, status__in=["active", "used"]
         ).select_related("goer", "goer__profile")
 
         serializer = EventAttendeeSerializer(
@@ -331,8 +342,6 @@ class EventLifecycleTransitionView(APIView):
         )
 
 
-
-
 class EventLifecycleHistoryView(APIView):
     """Read lifecycle transition history for an event. Host only."""
 
@@ -353,12 +362,11 @@ class EventLifecycleHistoryView(APIView):
         return success_response(data=serializer.data)
 
 
-
 class EventHighlightListCreateView(APIView):
     """Create a highlight for an event."""
-    
+
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    
+
     def get_permissions(self):
         """Public for GET, auth for POST."""
         if self.request.method == "GET":
@@ -371,72 +379,90 @@ class EventHighlightListCreateView(APIView):
             event = Event.objects.get(pk=event_id)
         except Event.DoesNotExist:
             return error_response(message="Event not found", status=404)
-        
+
         role = "host" if event.host == request.user else "goer"
-        
-        serializer = EventHighlightSerializer(data=request.data, context={"request": request})
+
+        serializer = EventHighlightSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             highlight = serializer.save(event=event, author=request.user, role=role)
-            return success_response(data=EventHighlightSerializer(highlight, context={"request": request}).data, status=201)
+            return success_response(
+                data=EventHighlightSerializer(
+                    highlight, context={"request": request}
+                ).data,
+                status=201,
+            )
         return error_response(message="Validation Error", errors=serializer.errors)
 
 
-import json
-
 class EventReviewCreateView(APIView):
     """Create a review for an event."""
-    
+
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, event_id):
+    def post(self, request, event_id):  # noqa: C901
         """Post a review with optional media and vendor ratings."""
         try:
             event = Event.objects.get(pk=event_id)
         except Event.DoesNotExist:
             return error_response(message="Event not found", status=404)
-        
+
         if event.host == request.user:
-            return error_response(message="Host cannot review their own event", status=403)
-            
-        if not event.tickets.filter(goer=request.user, status__in=["active", "used"]).exists():
-            return error_response(message="You must attend the event to leave a review", status=403)
+            return error_response(
+                message="Host cannot review their own event", status=403
+            )
+
+        if not event.tickets.filter(
+            goer=request.user, status__in=["active", "used"]
+        ).exists():
+            return error_response(
+                message="You must attend the event to leave a review", status=403
+            )
 
         if EventReview.objects.filter(event=event, reviewer=request.user).exists():
-            return error_response(message="You have already reviewed this event", status=409)
+            return error_response(
+                message="You have already reviewed this event", status=409
+            )
 
-        serializer = EventReviewSerializer(data=request.data, context={"request": request})
+        serializer = EventReviewSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             review = serializer.save(event=event, reviewer=request.user)
-            
+
             # Handle media files
-            media_files = request.FILES.getlist('media')
+            media_files = request.FILES.getlist("media")
             from apps.events.models import EventReviewMedia
+
             for file in media_files:
                 EventReviewMedia.objects.create(review=review, file=file)
-                
+
             # Handle vendor reviews
-            vendor_reviews_data = request.data.get('vendor_reviews')
+            vendor_reviews_data = request.data.get("vendor_reviews")
             if vendor_reviews_data:
                 try:
                     if isinstance(vendor_reviews_data, str):
                         vendor_reviews_data = json.loads(vendor_reviews_data)
-                    
+
                     from apps.events.models import EventVendorReview
+
                     for v_review in vendor_reviews_data:
                         EventVendorReview.objects.create(
                             event_review=review,
-                            vendor_id=v_review.get('vendor_id'),
-                            rating=v_review.get('rating'),
-                            text=v_review.get('text', '')
+                            vendor_id=v_review.get("vendor_id"),
+                            rating=v_review.get("rating"),
+                            text=v_review.get("text", ""),
                         )
                 except (ValueError, TypeError, json.JSONDecodeError):
-                    pass # Or handle error appropriately
-                    
-            return success_response(data=EventReviewSerializer(review, context={"request": request}).data, status=201)
+                    pass  # Or handle error appropriately
+
+            return success_response(
+                data=EventReviewSerializer(review, context={"request": request}).data,
+                status=201,
+            )
         return error_response(message="Validation Error", errors=serializer.errors)
-
-
 
 
 class EventViewView(APIView):
@@ -447,6 +473,7 @@ class EventViewView(APIView):
     def post(self, request, event_id):
         """Upsert an EventView record for this user so last_viewed_at is always fresh."""
         from django.utils import timezone as tz
+
         try:
             event = Event.objects.only("id").get(pk=event_id)
         except Event.DoesNotExist:
@@ -459,6 +486,4 @@ class EventViewView(APIView):
             # auto_now won't fire on update(), so use a direct update
             EventView.objects.filter(pk=view_obj.pk).update(last_viewed_at=tz.now())
 
-        return success_response(
-            data={"recorded": True}, status=201 if created else 200
-        )
+        return success_response(data={"recorded": True}, status=201 if created else 200)

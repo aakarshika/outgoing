@@ -15,12 +15,22 @@ class TicketSerializer(serializers.ModelSerializer):
 
         model = Ticket
         fields = [
-            "id", "event_summary", "ticket_type", "is_refundable",
-            "refund_deadline", "price_paid", "status", "purchased_at",
+            "id",
+            "event_summary",
+            "ticket_type",
+            "is_refundable",
+            "refund_deadline",
+            "price_paid",
+            "status",
+            "purchased_at",
         ]
         read_only_fields = [
-            "id", "is_refundable", "refund_deadline",
-            "price_paid", "status", "purchased_at",
+            "id",
+            "is_refundable",
+            "refund_deadline",
+            "price_paid",
+            "status",
+            "purchased_at",
         ]
 
     def get_event_summary(self, obj):

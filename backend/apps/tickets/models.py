@@ -23,9 +23,7 @@ class Ticket(models.Model):
         ("refunded", "Refunded"),
     ]
 
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="tickets"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="tickets")
     goer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -50,9 +48,8 @@ class Ticket(models.Model):
         if self.ticket_type == "flexible":
             self.is_refundable = True
             if self.event and not self.refund_deadline:
-                self.refund_deadline = (
-                    self.event.start_time
-                    - timedelta(hours=self.event.refund_window_hours)
+                self.refund_deadline = self.event.start_time - timedelta(
+                    hours=self.event.refund_window_hours
                 )
         else:
             self.is_refundable = False

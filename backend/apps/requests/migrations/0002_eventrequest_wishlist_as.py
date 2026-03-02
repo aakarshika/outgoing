@@ -26,7 +26,11 @@ class Migration(migrations.Migration):
                 (
                     "wishlist_as",
                     models.CharField(
-                        choices=[("goer", "Goer"), ("host", "Host"), ("vendor", "Vendor")],
+                        choices=[
+                            ("goer", "Goer"),
+                            ("host", "Host"),
+                            ("vendor", "Vendor"),
+                        ],
                         max_length=20,
                     ),
                 ),

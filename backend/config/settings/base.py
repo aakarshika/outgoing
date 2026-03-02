@@ -1,7 +1,6 @@
 """Base settings for the monolith project."""
 
 import os
-import sys
 from pathlib import Path
 from datetime import timedelta
 
@@ -24,7 +23,9 @@ else:
     ALLOWED_HOSTS = ["*"] if DEBUG else [".vercel.app", "outgoing-backend.vercel.app"]
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
+)
 env_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 if env_cors_origins:
     CORS_ALLOWED_ORIGINS = [h.strip() for h in env_cors_origins.split(",") if h.strip()]
@@ -33,7 +34,7 @@ elif not CORS_ALLOW_ALL_ORIGINS:
         "http://localhost:5173",
         "http://localhost:5151",
     ]
-    
+
 # In production, default to allowing all origins so the frontend can hit it
 # You can override this by setting CORS_ALLOW_ALL_ORIGINS=False and defining CORS_ALLOWED_ORIGINS
 if not DEBUG and not env_cors_origins and not CORS_ALLOW_ALL_ORIGINS:

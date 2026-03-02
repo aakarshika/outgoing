@@ -1,6 +1,6 @@
 /** Home Page — Netflix style event-centric feed with multiple horizontal scrolling lists. */
 
-import { CalendarDays, LocateFixed, User, Briefcase } from 'lucide-react';
+import { CalendarDays, LocateFixed, Briefcase } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';

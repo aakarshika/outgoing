@@ -52,6 +52,7 @@ export function CategoryChips({ selected, onSelect }: CategoryChipsProps) {
                         }
           `}
                 >
+                    hhhh
                     <span>{ICON_MAP[cat.icon] || '📌'}</span>
                     {cat.name}
                 </button>

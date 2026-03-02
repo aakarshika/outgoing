@@ -19,9 +19,17 @@ class EventRequestSerializer(serializers.ModelSerializer):
 
         model = EventRequest
         fields = [
-            "id", "requester_name", "title", "description",
-            "category", "location_city", "upvote_count",
-            "status", "user_has_upvoted", "user_wishlist_as", "created_at",
+            "id",
+            "requester_name",
+            "title",
+            "description",
+            "category",
+            "location_city",
+            "upvote_count",
+            "status",
+            "user_has_upvoted",
+            "user_wishlist_as",
+            "created_at",
         ]
 
     def get_user_has_upvoted(self, obj):
@@ -35,9 +43,11 @@ class EventRequestSerializer(serializers.ModelSerializer):
         """Return current user's wishlist intent for this request."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            wishlist = obj.wishlists.filter(user=request.user).values_list(
-                "wishlist_as", flat=True
-            ).first()
+            wishlist = (
+                obj.wishlists.filter(user=request.user)
+                .values_list("wishlist_as", flat=True)
+                .first()
+            )
             return wishlist
         return None
 
@@ -46,7 +56,9 @@ class EventRequestCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating event requests."""
 
     category_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__("apps.events.models", fromlist=["EventCategory"]).EventCategory.objects.all(),
+        queryset=__import__(
+            "apps.events.models", fromlist=["EventCategory"]
+        ).EventCategory.objects.all(),
         source="category",
         write_only=True,
         required=False,

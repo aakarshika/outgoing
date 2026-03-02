@@ -62,17 +62,18 @@ class PublicShowcaseView(APIView):
             "last_name": user.last_name,
             "headline": profile.headline,
             "showcase_bio": profile.showcase_bio,
-            "avatar": request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
-            "cover_photo": request.build_absolute_uri(profile.cover_photo.url) if profile.cover_photo else None,
+            "avatar": request.build_absolute_uri(profile.avatar.url)
+            if profile.avatar
+            else None,
+            "cover_photo": request.build_absolute_uri(profile.cover_photo.url)
+            if profile.cover_photo
+            else None,
             "location_city": profile.location_city,
             "hosted_events": list(
                 user.hosted_events.filter(
                     lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-                ).values(
-                    "id", "title", "slug", "start_time", "location_name"
-                )[:10]
+                ).values("id", "title", "slug", "start_time", "location_name")[:10]
             ),
         }
 
         return success_response(data=data)
-

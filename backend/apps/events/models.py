@@ -36,8 +36,10 @@ class EventSeries(models.Model):
     )
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    recurrence_rule = models.CharField(max_length=1000, blank=True, help_text="e.g. FREQ=WEEKLY;BYDAY=SU")
-    timezone = models.CharField(max_length=100, default='UTC')
+    recurrence_rule = models.CharField(
+        max_length=1000, blank=True, help_text="e.g. FREQ=WEEKLY;BYDAY=SU"
+    )
+    timezone = models.CharField(max_length=100, default="UTC")
     default_location_name = models.CharField(max_length=200, blank=True)
     default_location_address = models.CharField(max_length=300, blank=True)
     default_capacity = models.PositiveIntegerField(null=True, blank=True)
@@ -51,6 +53,7 @@ class EventSeries(models.Model):
 
     class Meta:
         """Meta configuration for EventSeries."""
+
         verbose_name_plural = "Event Series"
         ordering = ["-created_at"]
 
@@ -68,7 +71,9 @@ class EventSeriesNeedTemplate(models.Model):
         ("non_substitutable", "Non-Substitutable"),
     ]
 
-    series = models.ForeignKey(EventSeries, on_delete=models.CASCADE, related_name="need_templates")
+    series = models.ForeignKey(
+        EventSeries, on_delete=models.CASCADE, related_name="need_templates"
+    )
     title = models.CharField(max_length=200, help_text="e.g. DJ, Photographer")
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100, default="other")
@@ -85,6 +90,7 @@ class EventSeriesNeedTemplate(models.Model):
 
     class Meta:
         """Meta configuration for EventSeriesNeedTemplate."""
+
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -150,7 +156,9 @@ class Event(models.Model):
         blank=True,
         related_name="events",
     )
-    occurrence_index = models.PositiveIntegerField(null=True, blank=True, help_text="1-based sequence inside a series")
+    occurrence_index = models.PositiveIntegerField(
+        null=True, blank=True, help_text="1-based sequence inside a series"
+    )
     location_name = models.CharField(max_length=200)
     location_address = models.CharField(max_length=300, blank=True)
     check_in_instructions = models.TextField(blank=True, default="")
@@ -165,16 +173,22 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     capacity = models.PositiveIntegerField(null=True, blank=True)
     ticket_price_standard = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        help_text="Non-refundable ticket price. Null means free."
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Non-refundable ticket price. Null means free.",
     )
     ticket_price_flexible = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        help_text="Refundable ticket price (premium tier)."
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Refundable ticket price (premium tier).",
     )
     refund_window_hours = models.PositiveIntegerField(
         default=24,
-        help_text="Hours before start_time that flexible tickets can be refunded."
+        help_text="Hours before start_time that flexible tickets can be refunded.",
     )
     cover_image = models.ImageField(
         upload_to="events/",
@@ -224,8 +238,6 @@ class Event(models.Model):
         """Return True if lifecycle transition is allowed."""
         # Temporary product rule: allow transitions between any lifecycle states.
         return to_state in dict(self.LIFECYCLE_CHOICES)
-
-
 
     def _status_for_lifecycle_state(self, lifecycle_state):
         """Map lifecycle state to coarse-grained legacy status."""
@@ -281,14 +293,19 @@ class EventMedia(models.Model):
     ]
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="media")
-    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES, default="image")
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="gallery")
+    media_type = models.CharField(
+        max_length=10, choices=MEDIA_TYPE_CHOICES, default="image"
+    )
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default="gallery"
+    )
     file = models.FileField(upload_to="events/media/")
     order = models.PositiveIntegerField(default=0, help_text="Ordering for display")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         """Meta configuration for EventMedia."""
+
         ordering = ["order", "-created_at"]
         verbose_name_plural = "Event Media"
 
@@ -300,9 +317,7 @@ class EventMedia(models.Model):
 class EventInterest(models.Model):
     """Lightweight 'I'm interested' signal — social bookmark + demand signal."""
 
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="interests"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="interests")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -362,16 +377,30 @@ class EventHighlight(models.Model):
         ("rejected", "Rejected"),
     ]
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="highlights")
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_highlights")
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, related_name="highlights"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="event_highlights",
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="goer")
     text = models.TextField(blank=True)
-    media_file = models.ImageField(upload_to="highlights/", null=True, blank=True, validators=[validate_image_upload])
-    moderation_status = models.CharField(max_length=20, choices=MODERATION_CHOICES, default="approved")
+    media_file = models.ImageField(
+        upload_to="highlights/",
+        null=True,
+        blank=True,
+        validators=[validate_image_upload],
+    )
+    moderation_status = models.CharField(
+        max_length=20, choices=MODERATION_CHOICES, default="approved"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         """Meta configuration for EventHighlight."""
+
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -383,14 +412,19 @@ class EventReview(models.Model):
     """A rating and review left by an attendee for an event."""
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reviews")
-    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_reviews")
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_reviews"
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     text = models.TextField(blank=True)
     is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         """Meta configuration for EventReview."""
+
         unique_together = ["event", "reviewer"]
         ordering = ["-created_at"]
 
@@ -401,8 +435,13 @@ class EventReview(models.Model):
 
 class EventReviewMedia(models.Model):
     """Media attached to an event review."""
-    review = models.ForeignKey(EventReview, on_delete=models.CASCADE, related_name="media")
-    file = models.ImageField(upload_to="reviews/media/", validators=[validate_image_upload])
+
+    review = models.ForeignKey(
+        EventReview, on_delete=models.CASCADE, related_name="media"
+    )
+    file = models.ImageField(
+        upload_to="reviews/media/", validators=[validate_image_upload]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -411,9 +450,16 @@ class EventReviewMedia(models.Model):
 
 class EventVendorReview(models.Model):
     """A rating left for a specific vendor within a broader event review."""
-    event_review = models.ForeignKey(EventReview, on_delete=models.CASCADE, related_name="vendor_reviews")
-    vendor = models.ForeignKey('vendors.VendorService', on_delete=models.CASCADE, related_name="event_reviews")
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+
+    event_review = models.ForeignKey(
+        EventReview, on_delete=models.CASCADE, related_name="vendor_reviews"
+    )
+    vendor = models.ForeignKey(
+        "vendors.VendorService", on_delete=models.CASCADE, related_name="event_reviews"
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     text = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -447,4 +493,3 @@ class EventView(models.Model):
     def __str__(self):
         """String representation of the EventView."""
         return f"{self.user.username} viewed {self.event.title}"
-

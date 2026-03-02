@@ -1,3 +1,4 @@
+# flake8: noqa: F405
 from .base import *  # noqa: F401,F403
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
@@ -24,7 +25,11 @@ WHITENOISE_USE_FINDERS = True
 # ---------- WhiteNoise for serving static files ----------
 # Insert WhiteNoise right after SecurityMiddleware
 _security_idx = next(
-    (i for i, m in enumerate(MIDDLEWARE) if m == "django.middleware.security.SecurityMiddleware"),
+    (
+        i
+        for i, m in enumerate(MIDDLEWARE)
+        if m == "django.middleware.security.SecurityMiddleware"
+    ),
     0,
 )
 MIDDLEWARE.insert(_security_idx + 1, "whitenoise.middleware.WhiteNoiseMiddleware")
@@ -33,5 +38,3 @@ MIDDLEWARE.insert(_security_idx + 1, "whitenoise.middleware.WhiteNoiseMiddleware
 # Silk has native C extensions that fail to compile on Vercel's Lambda runtime.
 INSTALLED_APPS = [app for app in INSTALLED_APPS if app != "silk"]
 MIDDLEWARE = [m for m in MIDDLEWARE if m != "silk.middleware.SilkyMiddleware"]
-
-

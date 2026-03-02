@@ -18,8 +18,14 @@ class IconicHostSerializer(serializers.ModelSerializer):
 
         model = UserProfile
         fields = [
-            "id", "username", "avatar", "headline", "location_city",
-            "published_event_count", "review_count", "avg_rating"
+            "id",
+            "username",
+            "avatar",
+            "headline",
+            "location_city",
+            "published_event_count",
+            "review_count",
+            "avg_rating",
         ]
 
 
@@ -31,9 +37,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         model = UserProfile
         fields = [
-            "phone_number", "bio", "headline", "showcase_bio",
-            "avatar", "cover_photo", "location_city",
-            "created_at", "updated_at",
+            "phone_number",
+            "bio",
+            "headline",
+            "showcase_bio",
+            "avatar",
+            "cover_photo",
+            "location_city",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
-

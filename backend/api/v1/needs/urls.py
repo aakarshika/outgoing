@@ -23,5 +23,9 @@ urlpatterns = [
     ),
     path("applications/my/", MyNeedApplicationsView.as_view(), name="my_applications"),
     path("invites/my/", MyNeedInvitesView.as_view(), name="my_invites"),
-    path("opportunities/my/", MyVendorOpportunitiesView.as_view(), name="my_opportunities"),
+    path(
+        "opportunities/my/",
+        MyVendorOpportunitiesView.as_view(),
+        name="my_opportunities",
+    ),
 ]

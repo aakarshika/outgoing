@@ -3,9 +3,18 @@
 from django.contrib import admin
 
 from .models import (
-    Event, EventCategory, EventInterest, EventLifecycleTransition,
-    EventSeries, EventSeriesNeedTemplate, EventMedia, EventHighlight,
-    EventReview, EventReviewMedia, EventVendorReview, EventView
+    Event,
+    EventCategory,
+    EventInterest,
+    EventLifecycleTransition,
+    EventSeries,
+    EventSeriesNeedTemplate,
+    EventMedia,
+    EventHighlight,
+    EventReview,
+    EventReviewMedia,
+    EventVendorReview,
+    EventView,
 )
 
 
@@ -20,6 +29,7 @@ class EventCategoryAdmin(admin.ModelAdmin):
 @admin.register(EventSeries)
 class EventSeriesAdmin(admin.ModelAdmin):
     """Admin for EventSeries."""
+
     list_display = ["name", "host", "recurrence_rule", "created_at"]
     search_fields = ["name", "description"]
 
@@ -27,6 +37,7 @@ class EventSeriesAdmin(admin.ModelAdmin):
 @admin.register(EventSeriesNeedTemplate)
 class EventSeriesNeedTemplateAdmin(admin.ModelAdmin):
     """Admin for EventSeriesNeedTemplate."""
+
     list_display = ["series", "title", "category", "criticality"]
     list_filter = ["category", "criticality"]
 
@@ -53,6 +64,7 @@ class EventAdmin(admin.ModelAdmin):
 @admin.register(EventMedia)
 class EventMediaAdmin(admin.ModelAdmin):
     """Admin for EventMedia."""
+
     list_display = ["event", "media_type", "category", "created_at"]
     list_filter = ["media_type", "category"]
 
@@ -60,6 +72,7 @@ class EventMediaAdmin(admin.ModelAdmin):
 @admin.register(EventHighlight)
 class EventHighlightAdmin(admin.ModelAdmin):
     """Admin for EventHighlight."""
+
     list_display = ["event", "author", "role", "moderation_status", "created_at"]
     list_filter = ["role", "moderation_status"]
 
@@ -67,6 +80,7 @@ class EventHighlightAdmin(admin.ModelAdmin):
 @admin.register(EventReview)
 class EventReviewAdmin(admin.ModelAdmin):
     """Admin for EventReview."""
+
     list_display = ["event", "reviewer", "rating", "is_public", "created_at"]
     list_filter = ["rating", "is_public"]
 
@@ -74,12 +88,14 @@ class EventReviewAdmin(admin.ModelAdmin):
 @admin.register(EventReviewMedia)
 class EventReviewMediaAdmin(admin.ModelAdmin):
     """Admin for EventReviewMedia."""
+
     list_display = ["review", "created_at"]
 
 
 @admin.register(EventVendorReview)
 class EventVendorReviewAdmin(admin.ModelAdmin):
     """Admin for EventVendorReview."""
+
     list_display = ["event_review", "vendor", "rating", "created_at"]
     list_filter = ["rating"]
 
@@ -87,6 +103,7 @@ class EventVendorReviewAdmin(admin.ModelAdmin):
 @admin.register(EventView)
 class EventViewAdmin(admin.ModelAdmin):
     """Admin for EventView."""
+
     list_display = ["event", "user", "last_viewed_at"]
 
 
@@ -114,4 +131,3 @@ class EventLifecycleTransitionAdmin(admin.ModelAdmin):
         "metadata",
         "created_at",
     ]
-

@@ -14,7 +14,7 @@ from api.v1.vendors.serializers import VendorServiceSerializer
 from apps.events.models import Event, EventView
 from apps.profiles.models import UserProfile
 from apps.vendors.models import VendorService
-from core.responses import success_response, error_response
+from core.responses import success_response
 
 
 class FeedView(APIView):
@@ -75,9 +75,7 @@ class FeedView(APIView):
         """
         events = Event.objects.filter(
             lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-        ).select_related(
-            "host", "host__profile", "category"
-        )
+        ).select_related("host", "host__profile", "category")
 
         # Category filter
         category = request.query_params.get("category")
@@ -123,7 +121,7 @@ class FeedView(APIView):
         page_size = int(request.query_params.get("page_size", 20))
         total_count = events.count()
         start = (page - 1) * page_size
-        events_page = events[start:start + page_size]
+        events_page = events[start : start + page_size]
 
         serializer = EventListSerializer(
             events_page, many=True, context={"request": request}
@@ -148,21 +146,22 @@ class CarouselFeedView(APIView):
 
         # 1. Top upcoming events (high interest, happening in the future)
         upcoming_events = Event.objects.filter(
-            lifecycle_state__in=["published", "event_ready"],
-            start_time__gte=now
+            lifecycle_state__in=["published", "event_ready"], start_time__gte=now
         ).order_by("-interest_count")[:3]
 
         # 2. Top past events (completed, high interest)
-        past_events = Event.objects.filter(
-            lifecycle_state="completed",
-        ).exclude(
-            id__in=[e.id for e in upcoming_events]
-        ).order_by("-interest_count")[:3]
+        past_events = (
+            Event.objects.filter(
+                lifecycle_state="completed",
+            )
+            .exclude(id__in=[e.id for e in upcoming_events])
+            .order_by("-interest_count")[:3]
+        )
 
         # Combine and interleave them simply
         combined = list(upcoming_events) + list(past_events)
-        
-        # We might want to sort by start time, or just serve upcoming first. 
+
+        # We might want to sort by start time, or just serve upcoming first.
         # For a carousel, a mixed order is sometimes nice, but let's just do upcoming then past.
 
         serializer = EventListSerializer(
@@ -189,7 +188,9 @@ class RecentlyViewedFeedView(APIView):
         )
 
         events = [ev.event for ev in view_qs]
-        serializer = EventListSerializer(events, many=True, context={"request": request})
+        serializer = EventListSerializer(
+            events, many=True, context={"request": request}
+        )
         return success_response(data=serializer.data)
 
 
@@ -204,16 +205,16 @@ class CompletedHighlightsFeedView(APIView):
 
         events = (
             Event.objects.filter(lifecycle_state="completed")
-            .filter(
-                Q(highlights__isnull=False) | Q(reviews__isnull=False)
-            )
+            .filter(Q(highlights__isnull=False) | Q(reviews__isnull=False))
             .distinct()
             .select_related("host", "host__profile", "category")
             .prefetch_related("media")
             .order_by("-interest_count", "-updated_at")[:page_size]
         )
 
-        serializer = EventListSerializer(events, many=True, context={"request": request})
+        serializer = EventListSerializer(
+            events, many=True, context={"request": request}
+        )
         return success_response(data=serializer.data)
 
 
@@ -236,7 +237,9 @@ class UpcomingFeedView(APIView):
             .order_by("start_time")[:page_size]
         )
 
-        serializer = EventListSerializer(events, many=True, context={"request": request})
+        serializer = EventListSerializer(
+            events, many=True, context={"request": request}
+        )
         return success_response(data=serializer.data)
 
 
@@ -248,23 +251,33 @@ class IconicHostsFeedView(APIView):
     def get(self, request):
         """Get the iconic hosts this week."""
         page_size = int(request.query_params.get("page_size", 10))
-        
+
         # Annotate UserProfiles with event stats
         hosts = (
             UserProfile.objects.annotate(
                 published_event_count=Count(
                     "user__hosted_events",
-                    filter=Q(user__hosted_events__lifecycle_state__in=["published", "event_ready", "completed"]),
-                    distinct=True
+                    filter=Q(
+                        user__hosted_events__lifecycle_state__in=[
+                            "published",
+                            "event_ready",
+                            "completed",
+                        ]
+                    ),
+                    distinct=True,
                 ),
                 review_count=Count("user__hosted_events__reviews", distinct=True),
-                avg_rating=Avg("user__hosted_events__reviews__rating")
+                avg_rating=Avg("user__hosted_events__reviews__rating"),
             )
             .filter(published_event_count__gt=0)
-            .order_by("-avg_rating", "-published_event_count", "-review_count", "-id")[:page_size]
+            .order_by("-avg_rating", "-published_event_count", "-review_count", "-id")[
+                :page_size
+            ]
         )
 
-        serializer = IconicHostSerializer(hosts, many=True, context={"request": request})
+        serializer = IconicHostSerializer(
+            hosts, many=True, context={"request": request}
+        )
         return success_response(data=serializer.data)
 
 
@@ -282,11 +295,17 @@ class TopVendorsFeedView(APIView):
             .annotate(
                 review_count=Count("reviews", distinct=True),
                 avg_rating=Avg("reviews__rating"),
-                event_count=Count("reviews__event", distinct=True) # Count distinct events they were reviewed on
+                event_count=Count(
+                    "reviews__event", distinct=True
+                ),  # Count distinct events they were reviewed on
             )
-            .filter(review_count__gt=0) # Only include vendors with reviews for top rated
+            .filter(
+                review_count__gt=0
+            )  # Only include vendors with reviews for top rated
             .order_by("-avg_rating", "-event_count", "-review_count", "-id")[:page_size]
         )
 
-        serializer = VendorServiceSerializer(vendors, many=True, context={"request": request})
+        serializer = VendorServiceSerializer(
+            vendors, many=True, context={"request": request}
+        )
         return success_response(data=serializer.data)

@@ -22,9 +22,7 @@ class EventNeed(models.Model):
         ("cancelled", "Cancelled"),
     ]
 
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="needs"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="needs")
     title = models.CharField(max_length=200, help_text="e.g. DJ, Photographer")
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100, default="other")

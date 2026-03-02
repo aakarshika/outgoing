@@ -11,12 +11,16 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+
 def api_root(request):
-    return JsonResponse({
-        "status": "ok", 
-        "message": "Outgoing API is running successfully. Catch you on the flip side!",
-        "documentation": "/api/docs/"
-    })
+    return JsonResponse(
+        {
+            "status": "ok",
+            "message": "Outgoing API is running successfully. Catch you on the flip side!",
+            "documentation": "/api/docs/",
+        }
+    )
+
 
 urlpatterns = [
     path("", api_root, name="api-root"),

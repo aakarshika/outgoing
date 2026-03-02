@@ -20,10 +20,22 @@ class VendorServiceSerializer(serializers.ModelSerializer):
 
         model = VendorService
         fields = [
-            "id", "vendor_id", "vendor_name", "vendor_avatar", "title", "description",
-            "category", "visibility", "base_price", "portfolio_image",
-            "location_city", "is_active", "created_at",
-            "event_count", "review_count", "avg_rating",
+            "id",
+            "vendor_id",
+            "vendor_name",
+            "vendor_avatar",
+            "title",
+            "description",
+            "category",
+            "visibility",
+            "base_price",
+            "portfolio_image",
+            "location_city",
+            "is_active",
+            "created_at",
+            "event_count",
+            "review_count",
+            "avg_rating",
         ]
         read_only_fields = ["id", "created_at"]
 
@@ -46,26 +58,48 @@ class VendorServiceCreateSerializer(serializers.ModelSerializer):
 
         model = VendorService
         fields = [
-            "title", "description", "category", "visibility",
-            "base_price", "portfolio_image", "location_city",
+            "title",
+            "description",
+            "category",
+            "visibility",
+            "base_price",
+            "portfolio_image",
+            "location_city",
         ]
 
 
 class VendorReviewSerializer(serializers.ModelSerializer):
     """Serializer for vendor reviews."""
 
-    reviewer_username = serializers.CharField(source="reviewer.username", read_only=True)
+    reviewer_username = serializers.CharField(
+        source="reviewer.username", read_only=True
+    )
     reviewer_avatar = serializers.SerializerMethodField()
-    vendor_service_title = serializers.CharField(source="vendor_service.title", read_only=True)
+    vendor_service_title = serializers.CharField(
+        source="vendor_service.title", read_only=True
+    )
 
     class Meta:
         """Meta configuration for VendorReviewSerializer."""
+
         model = VendorReview
         fields = [
-            "id", "reviewer_username", "reviewer_avatar", "vendor_service_title", 
-            "rating", "text", "is_public", "created_at"
+            "id",
+            "reviewer_username",
+            "reviewer_avatar",
+            "vendor_service_title",
+            "rating",
+            "text",
+            "is_public",
+            "created_at",
         ]
-        read_only_fields = ["id", "reviewer_username", "reviewer_avatar", "vendor_service_title", "created_at"]
+        read_only_fields = [
+            "id",
+            "reviewer_username",
+            "reviewer_avatar",
+            "vendor_service_title",
+            "created_at",
+        ]
 
     def get_reviewer_avatar(self, obj):
         """Return the reviewer's avatar URL or None."""
