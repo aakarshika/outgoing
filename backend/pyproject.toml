@@ -1,3 +1,10 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["api", "core", "apps", "config"]
+
 [project]
 name = "outgoing-backend"
 version = "0.1.0"
@@ -8,7 +15,6 @@ dependencies = [
     "Django==5.2.11",
     "django-cors-headers==4.9.0",
     "django-filter==25.2",
-    "django-silk==5.4.3",
     "djangorestframework==3.16.1",
     "djangorestframework_simplejwt==5.5.1",
     "drf-spectacular==0.29.0",
@@ -22,6 +28,8 @@ dependencies = [
     "python-dateutil==2.9.0.post0",
     "gunicorn>=21.2.0",
     "whitenoise==6.7.0",
+    "django-storages==1.14.4",
+    "boto3>=1.28.0",
 ]
 
 [tool.black]

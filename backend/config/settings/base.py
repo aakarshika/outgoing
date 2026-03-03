@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "drf_spectacular",
+    "storages",
     # Local
     "core",
     "api",
@@ -73,7 +74,6 @@ INSTALLED_APPS = [
     "apps.needs",
     "apps.requests",
     "apps.content_generator",
-    "silk",
 ]
 
 MIDDLEWARE = [
@@ -85,7 +85,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "silk.middleware.SilkyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -169,3 +168,31 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
 }
+
+# Supabase S3-compatible Storage (via django-storages)
+# Falls back to local file storage when not configured (e.g. local dev).
+_SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+_SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET_NAME", "media")
+_S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
+_S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
+
+if _S3_ACCESS_KEY and _SUPABASE_URL:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "endpoint_url": f"{_SUPABASE_URL}/storage/v1/s3",
+                "access_key": _S3_ACCESS_KEY,
+                "secret_key": _S3_SECRET_KEY,
+                "bucket_name": _SUPABASE_BUCKET,
+                "custom_domain": f"{_SUPABASE_URL.replace('https://', '')}/storage/v1/object/public/{_SUPABASE_BUCKET}",
+                "default_acl": "public-read",
+                "querystring_auth": False,
+                "file_overwrite": False,
+                "addressing_style": "path",
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }

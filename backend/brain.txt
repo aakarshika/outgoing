@@ -1,0 +1,107 @@
+DONE:
+
+on the home page , at the top, where you put a large image of an event, instead, it should be a carosel with left and right arrows that user can click, and also changes automatically after a certain time. it will show the top events and top highlights of some events. like movie theatre websites do .. they show upcoming moveis, and ongoing movies ..
+we will also show upcoming interesting events that many people are interested in, and also we will show the highlights of the held events that were popular. 
+the carosel will round robin the list of these top events 
+events can have multiple pictures/ videos for highlights and multiple pictures for the event. 
+
+
+DONE:
+could you seed some data for the events that have happened, some live, some event ready, and some upcoming ones. some highlights for the occurred ones too. make some events recurring - out of the recurring ones, make some already happened, some in future. 
+no need to seed pictures. i will do it later. but still add text highlights for done events. 
+i have 10 fake users - email: "test5@example.com", id: 5, username: "testuser5"
+with this pattern. so use these users to seed the data. 
+
+
+
+DONE:
+
+a new events page
+picture carousel at the top - 
+    containing highlights or event pictures constantly changing.
+next -
+if the event is upcoming -  
+    upcoming details  
+    no check in instructions
+    show the ticket buying options
+    approx location and dates , 
+    host and possible vendor needs and which vendors have signed up
+    how many have purchased yet, and how many seats are remaining - visual representation
+if event is ready - 
+    basic details, how many going
+    show check in instructions for goers. 
+    if not a goer for this event, only show upcoming details and "tickets closed"
+    also show a countdown timer for when the event will be live.
+if event is live - 
+    show basic details 
+    show check in instructions for goers. 
+    "live" banner
+    buttons to add highlights for the attendees.
+if event is completed - 
+    highlights and add highlight options for attendees or host. 
+    full list of reviews and ratings 
+    if attendee, review options for event 
+        inside review, add option to review every vendor if they want or overall event.
+        let them add multiple pictures.
+if event cancelled - 
+    apology and reason 
+--------
+if event is recurring - 
+picture carousel at the top - with all completed events highlights and upcoming event pictures.
+next -
+horizontal scrollable list of events in the series. past , upcoming, ready, live, future 
+    if the user selects any one of the events from the series at the top horizontal list, then only load the rest of the page as if a single event was selected as described above.
+if not selected, show both:
+    if an event from the series is upcoming or live - show those details 
+    if other events from the series are done - then those done details below it, like highlights and reviews.
+
+with all these changes.. i want to get rid of the story route .. and bring the showcase things to the main event details page - and only show them when the evnt is live or completed. 
+i already described how i want it. 
+the picture at the top of events page can be replaced by the picture carosel i want that shows either event picture, or highlights pictures all in the same carousel changing automatically
+also take care of recurring event type in the same page. 
+
+
+
+DO:
+
+on manage events page - 
+make it properly formatted to handle the event transitions.
+and recurring event details 
+
+other things also - make them prettier like location etc.. 
+the entire page please make it better looking.
+
+
+DO:
+on the home page, redesign the way the feed items show up. it should be like netflix or any website that has tv programs. at the top, the picture carosel is good. below it, instead of having search bar, move the search bar to the navbar .
+here there will be a list of horizontally scrollable lists of different events. 
+the horizontalk lists will be - 
+trending events,
+nearby events, 
+popular recent events completed with highlights,
+popular hosts this week (put in circles),
+popular events upcoming, 
+wishlists  (requests) format them differently than events but still horizontal list,
+this week events,
+recently viewed events,
+popular vendors (format differently than hosts),
+user selected category 1 events,
+user selected category 2 events,
+and more category wise event lists .. 
+
+create event card to reuse component. 
+upcoming and completed events must be formatted differently. if live, show live 
+
+first focus on the UI and fetch all the events for all lists. we will fetch differently for each section later. 
+
+
+
+DO:
+the  Iconic Hosts This Week section - fetch from db. create a metric taking into account the events they have published and the reviews they got. 
+
+
+for Top Rated Vendors - 
+fetch the vendor services with reviews and add to the vendor how many events they have provided services in.
+
+
+for both - there will be a formula, but the formula should fetch all the vendors and hosts .. just the order will be calculated. 
