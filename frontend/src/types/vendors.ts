@@ -1,6 +1,6 @@
 /** Shared types for the vendors domain. */
 
-import type { ApiResponse } from './events';
+import type { ApiResponse, EventListItem } from './events';
 
 export interface VendorService {
     id: number;
@@ -16,6 +16,17 @@ export interface VendorService {
     location_city: string;
     is_active: boolean;
     created_at: string;
+    avg_rating?: number;
+    event_count?: number;
+    reviews?: Array<{
+        id: number;
+        reviewer_username: string;
+        reviewer_avatar: string | null;
+        rating: number;
+        text: string;
+        created_at: string;
+    }>;
+    past_events?: EventListItem[];
 }
 
 export type VendorServiceListResponse = ApiResponse<VendorService[]>;

@@ -220,10 +220,30 @@ export function EventCard({ event }: EventCardProps) {
                             }`}
                     />
                 </button>
-                {/* Price tag */}
-                <span className="absolute bottom-3 right-3 rounded-full bg-background/90 backdrop-blur-sm px-3 py-1 text-sm font-semibold text-foreground">
-                    {formatPrice(event.ticket_price_standard, event.ticket_price_flexible)}
-                </span>
+
+                {/* Status-specific bottom-right badge */}
+                {event.lifecycle_state === 'event_ready' && (
+                    <div className="absolute bottom-3 right-3 rounded-xl bg-background/95 backdrop-blur-sm p-2.5 shadow-xl border border-primary/20 min-w-[120px]">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-tight">Full Capacity</span>
+                            <span className="text-[10px] font-bold text-foreground">
+                                {Math.round((event.ticket_count / (event.capacity || 1)) * 100)}%
+                            </span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div
+                                className="bg-primary h-full rounded-full transition-all duration-1000"
+                                style={{ width: `${Math.min(100, (event.ticket_count / (event.capacity || 1)) * 100)}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {(event.lifecycle_state === 'published' || event.lifecycle_state === 'live') && (
+                    <span className="absolute bottom-3 right-3 rounded-full bg-background/90 backdrop-blur-sm px-3 py-1 text-sm font-semibold text-foreground shadow-sm">
+                        {formatPrice(event.ticket_price_standard, event.ticket_price_flexible)}
+                    </span>
+                )}
             </div>
 
             {/* Info */}

@@ -44,6 +44,9 @@ export interface EventListItem {
     series?: { id: number; name: string } | null;
     occurrence_index?: number | null;
     media?: EventMedia[];
+    description?: string;
+    reviews?: any[];
+    average_rating?: number | null;
 }
 
 export interface EventSeriesNeedTemplate {

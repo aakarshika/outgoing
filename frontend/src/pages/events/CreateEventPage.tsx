@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { createEvent } from '@/features/events/api';
+import { compressImage } from '@/utils/image';
 import { useCategories } from '@/features/events/hooks';
 import {
     canUseBrowserGeolocation,
@@ -75,7 +76,13 @@ export default function CreateEventPage() {
         // Handle cover image separately if present
         const coverInput = form.querySelector<HTMLInputElement>('#cover_image');
         if (coverInput?.files?.[0]) {
-            formData.set('cover_image', coverInput.files[0]);
+            try {
+                const compressedFile = await compressImage(coverInput.files[0], { newFileName: 'event_cover' });
+                formData.set('cover_image', compressedFile);
+            } catch (err) {
+                console.error("Image compression failed", err);
+                formData.set('cover_image', coverInput.files[0]);
+            }
         }
 
         if (isRecurring) {

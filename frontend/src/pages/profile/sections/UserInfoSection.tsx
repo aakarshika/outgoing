@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/features/auth/hooks';
-import { Check } from 'lucide-react';
+import { Check, Camera, X } from 'lucide-react';
 import client from '@/api/client';
+import { UserAvatar } from '@/components/ui/UserAvatar';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { toast } from 'sonner';
 
 export const UserInfoSection = () => {
     const { user } = useAuth();
@@ -12,6 +15,9 @@ export const UserInfoSection = () => {
         last_name: '',
         phone: '',
     });
+    const [avatar, setAvatar] = useState<string | null>(null);
+    const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -22,6 +28,7 @@ export const UserInfoSection = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
 
     // Reset sync when user logs out
     useEffect(() => {
@@ -43,12 +50,13 @@ export const UserInfoSection = () => {
                 phone: user.phone_number ?? '',
             };
             try {
-                const res = await client.get<{ success: boolean; data: { phone_number?: string } }>('/profiles/me/');
+                const res = await client.get<{ success: boolean; data: { phone_number?: string; avatar?: string } }>('/profiles/me/');
                 const profile = res.data?.data;
                 const data = {
                     ...base,
                     phone: profile?.phone_number ?? base.phone,
                 };
+                setAvatar(profile?.avatar ?? null);
                 initialFormDataRef.current = data;
                 setFormData(data);
             } catch {
@@ -63,22 +71,48 @@ export const UserInfoSection = () => {
 
     useEffect(() => {
         if (loading || !initialFormDataRef.current) return;
-        const timer = setTimeout(() => {
-            if (JSON.stringify(formData) !== JSON.stringify(initialFormDataRef.current)) {
-                handleSave();
-            }
-        }, 1000);
 
-        return () => clearTimeout(timer);
-    }, [formData, loading]);
+        const hasFormChanged = JSON.stringify(formData) !== JSON.stringify(initialFormDataRef.current);
+        // If something changed, debounce the save
+        if (hasFormChanged || pendingAvatarFile) {
+            const timer = setTimeout(() => {
+                handleSave();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [formData, pendingAvatarFile, loading]);
 
     const handleSave = async () => {
+        if (saving) return;
         setSaving(true);
-        // Mock API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setSaving(false);
-        setLastSaved(new Date().toLocaleTimeString());
-        setTimeout(() => setLastSaved(null), 3000);
+
+        try {
+            const data = new FormData();
+            data.append('phone_number', formData.phone);
+
+            if (pendingAvatarFile) {
+                data.append('avatar', pendingAvatarFile);
+            }
+
+            const res = await client.patch('/profiles/me/', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (res.data?.success) {
+                setLastSaved(new Date().toLocaleTimeString());
+                initialFormDataRef.current = { ...formData };
+                setPendingAvatarFile(null); // Clear pending file once saved
+                if (res.data.data?.avatar) {
+                    setAvatar(res.data.data.avatar);
+                }
+                setTimeout(() => setLastSaved(null), 3000);
+            }
+        } catch (err) {
+            toast.error('Failed to save profile changes');
+            console.error(err);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const inputClass =
@@ -106,6 +140,52 @@ export const UserInfoSection = () => {
             </header>
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                <div className="mb-8 flex flex-col items-center sm:flex-row sm:gap-6">
+                    <ImageUpload
+                        onImageSelected={setPendingAvatarFile}
+                        currentImage={avatar}
+                        compressionOptions={{ maxWidth: 800, maxHeight: 800, quality: 0.8 }}
+                    >
+                        {({ previewUrl, openSelector, removeImage }) => (
+                            <div className="group relative">
+                                <UserAvatar
+                                    src={previewUrl}
+                                    username={formData.username}
+                                    size="xl"
+                                    borderGradient
+                                />
+                                <button
+                                    onClick={openSelector}
+                                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <Camera className="text-white h-6 w-6" />
+                                </button>
+                                {previewUrl && (
+                                    <button
+                                        onClick={removeImage}
+                                        className="absolute -top-1 -right-1 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm hover:scale-110 transition-transform"
+                                        title="Remove photo"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </ImageUpload>
+                    <div className="mt-4 text-center sm:mt-0 sm:text-left">
+                        <h3 className="text-lg font-medium">Profile Picture</h3>
+                        <p className="text-sm text-muted-foreground mb-3">
+                            Click the image to upload a new one. PNG or JPG, max 2MB.
+                        </p>
+                        <button
+                            onClick={() => (document.querySelector('.group button') as HTMLButtonElement)?.click()}
+                            className="text-sm font-semibold text-primary hover:underline"
+                        >
+                            Change photo
+                        </button>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Username</label>

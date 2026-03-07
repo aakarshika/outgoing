@@ -95,19 +95,38 @@ class Command(BaseCommand):
             su.set_password("root")
             su.save()
 
-        # 3 pure goers, 2 pure hosts, 3 vendors (who can also be goers/hosts)
+        # Diverse users including mixed roles
         self.stdout.write("Creating users...")
         users = {}
-        user_data = [
-            ("goer1", "Alice", "Goer", "goer"),
-            ("goer2", "Bob", "Attendee", "goer"),
-            ("goer3", "Charlie", "Fan", "goer"),
-            ("host1", "Diana", "Organizer", "host"),
-            ("host2", "Eve", "Planner", "host"),
-            ("vendor1", "Frank", "DJ", "vendor"),
-            ("vendor2", "Grace", "Photographer", "vendor"),
-            ("vendor3", "Heidi", "Caterer", "vendor"),
-        ]
+        user_data = []
+
+        # Pure Goers
+        for i in range(1, 11):
+            user_data.append((f"goer{i}", f"Goer{i}", "Lastname", "goer"))
+
+        # Pure Hosts
+        for i in range(1, 4):
+            user_data.append((f"host{i}", f"Host{i}", "Lastname", "host"))
+
+        # Pure Vendors
+        for i in range(1, 6):
+            user_data.append((f"vendor{i}", f"Vendor{i}", "Lastname", "vendor"))
+
+        # Host + Goer
+        for i in range(1, 4):
+            user_data.append((f"hostgoer{i}", f"HostGoer{i}", "Lastname", "host and goer"))
+
+        # Vendor + Goer
+        for i in range(1, 4):
+            user_data.append((f"vendorgoer{i}", f"VendorGoer{i}", "Lastname", "vendor and goer"))
+
+        # Host + Vendor
+        for i in range(1, 3):
+            user_data.append((f"hostvendor{i}", f"HostVendor{i}", "Lastname", "host and vendor"))
+
+        # All three
+        for i in range(1, 4):
+            user_data.append((f"omni{i}", f"Omni{i}", "Lastname", "event enthusiast"))
 
         for username, first, last, role in user_data:
             user = User.objects.create_user(
@@ -118,9 +137,11 @@ class Command(BaseCommand):
                 last_name=last,
             )
             profile, _ = UserProfile.objects.get_or_create(user=user)
-            profile.bio = f"Hi, I'm {first} and I love events!"
-            profile.headline = f"Enthusiastic {role.capitalize()}"
-            profile.location_city = "New York"
+            profile.bio = f"Hi, I'm {first} and I'm a passionate {role}."
+            profile.headline = f"Professional {role.capitalize()}"
+            profile.location_city = "New York" if i % 2 == 0 else "Los Angeles"
+            profile.phone_number = f"555-01{i:02d}"
+            profile.showcase_bio = f"Detailed showcase bio for {first}. This {role} has a lot of experience in the event industry and loves connecting with others."
 
             # Using update to bypass ImageField validation for string URL
             UserProfile.objects.filter(pk=profile.pk).update(
@@ -128,51 +149,45 @@ class Command(BaseCommand):
             )
             users[username] = user
 
-        # 3. Vendor Services
+        all_hosts = [u for u in users.values() if any(role in u.username for role in ["host", "omni"])]
+        all_vendors = [u for u in users.values() if any(role in u.username for role in ["vendor", "omni"])]
+        all_goers = [u for u in users.values() if any(role in u.username for role in ["goer", "omni"])]
+
+        # 10 Vendor Services
         self.stdout.write("Creating vendor services...")
         services = []
-        dj_service = VendorService.objects.create(
-            vendor=users["vendor1"],
-            title="DJ Frank's Beats",
-            description="Premium DJ services for your events.",
-            category="DJ",
-            base_price=Decimal("500.00"),
-            location_city="New York",
-        )
-        VendorService.objects.filter(pk=dj_service.pk).update(
-            portfolio_image=PLACEHOLDER_PORTFOLIO
-        )
+        vendor_types = [
+            ("DJ", "Beats & Rhythms", "Premium audio experiences."),
+            ("Photography", "Lens & Light", "Capturing every moment."),
+            ("Catering", "Gourmet Bites", "Exquisite culinary delights."),
+            ("Security", "Safe Guard", "Professional security services."),
+            ("Decor", "Ambient Designs", "Transforming spaces."),
+            ("Lighting", "Bright Star", "Dynamic event lighting."),
+            ("AV", "Visual Tech", "State-of-the-art AV solutions."),
+            ("Floral", "Bloom & Petal", "Beautiful flower arrangements."),
+            ("Bartending", "Mix Master", "Craft cocktails and service."),
+            ("Cleaning", "Sparkle Squad", "Post-event cleaning services."),
+        ]
 
-        photo_service = VendorService.objects.create(
-            vendor=users["vendor2"],
-            title="Grace Photos",
-            description="Capturing your best moments.",
-            category="Photography",
-            base_price=Decimal("300.00"),
-            location_city="New York",
-        )
-        VendorService.objects.filter(pk=photo_service.pk).update(
-            portfolio_image=PLACEHOLDER_PORTFOLIO
-        )
-
-        cater_service = VendorService.objects.create(
-            vendor=users["vendor3"],
-            title="Heidi's Catering",
-            description="Delicious food for all.",
-            category="Catering",
-            base_price=Decimal("1000.00"),
-            location_city="New York",
-        )
-        VendorService.objects.filter(pk=cater_service.pk).update(
-            portfolio_image=PLACEHOLDER_PORTFOLIO
-        )
-
-        services.extend([dj_service, photo_service, cater_service])
+        for i, (cat, title_prefix, desc) in enumerate(vendor_types, 1):
+            vendor_user = all_vendors[(i - 1) % len(all_vendors)]
+            service = VendorService.objects.create(
+                vendor=vendor_user,
+                title=f"{title_prefix} by {vendor_user.first_name}",
+                description=desc,
+                category=cat,
+                base_price=Decimal(str(100 * i)),
+                location_city="New York" if i % 2 == 0 else "Los Angeles",
+            )
+            VendorService.objects.filter(pk=service.pk).update(
+                portfolio_image=PLACEHOLDER_PORTFOLIO
+            )
+            services.append(service)
 
         # 4. Recurring Series
         self.stdout.write("Creating event series...")
         series1 = EventSeries.objects.create(
-            host=users["host1"],
+            host=all_hosts[0],
             name="Weekly Tech Meetup",
             description="Learn tech every week.",
             recurrence_rule="FREQ=WEEKLY;BYDAY=WE",
@@ -198,97 +213,78 @@ class Command(BaseCommand):
             e = Event.objects.create(
                 host=host,
                 title=title,
-                description=f"Description for {title}",
+                description=f"A spectacular {cat.name} event. {title} features top-tier entertainment and a great atmosphere.",
                 category=cat,
-                location_name="The Venue",
-                location_address="123 Main St",
+                location_name=f"{title} Venue",
+                location_address=f"{100 + start_offset_days} Event Ave",
                 start_time=start,
                 end_time=end,
-                capacity=100,
-                ticket_price_standard=Decimal("20.00") if status != "draft" else None,
+                capacity=100 + abs(start_offset_days),
+                ticket_price_standard=Decimal("25.00") if status != "draft" else None,
+                ticket_price_flexible=Decimal("40.00") if status != "draft" else None,
                 status=status,
                 lifecycle_state=l_state,
                 series=series,
+                latitude=Decimal("40.7128") + Decimal(str(start_offset_days * 0.001)),
+                longitude=Decimal("-74.0060") + Decimal(str(start_offset_days * 0.001)),
+                tags=["exciting", cat.slug, "featured"],
+                check_in_instructions="Please have your digital ticket ready at the entrance.",
+                event_ready_message="The event is starting soon! Get ready for an amazing experience.",
             )
             Event.objects.filter(pk=e.pk).update(cover_image=PLACEHOLDER_EVENT_IMG)
             return e
 
-        events = {
-            "draft": create_event(
-                "Draft Party",
-                users["host1"],
-                "draft",
-                "draft",
-                30,
-                db_categories["nightlife"],
-            ),
-            "published": create_event(
-                "Published Concert",
-                users["host2"],
-                "published",
-                "published",
-                15,
-                db_categories["music"],
-            ),
-            "at_risk": create_event(
-                "At Risk Picnic",
-                users["host1"],
-                "published",
-                "at_risk",
-                2,
-                db_categories["outdoors-adventure"],
-            ),
-            "postponed": create_event(
-                "Postponed Workshop",
-                users["host2"],
-                "published",
-                "postponed",
-                45,
-                db_categories["workshops-classes"],
-            ),
-            "event_ready": create_event(
-                "Ready Festival",
-                users["host1"],
-                "published",
-                "event_ready",
-                1,
-                db_categories["festivals"],
-            ),
-            "live": create_event(
-                "Live Comedy Show",
-                users["host2"],
-                "published",
-                "live",
-                0,
-                db_categories["comedy"],
-            ),
-            "completed": create_event(
-                "Past Gala",
-                users["host1"],
-                "completed",
-                "completed",
-                -10,
-                db_categories["networking-social"],
-            ),
-            "series_past": create_event(
-                "Weekly Tech Meetup #1",
-                users["host1"],
-                "completed",
-                "completed",
-                -7,
-                db_categories["tech-innovation"],
-                series1,
-            ),
-            "series_upcoming": create_event(
-                "Weekly Tech Meetup #2",
-                users["host1"],
-                "published",
-                "published",
-                7,
-                db_categories["tech-innovation"],
-                series1,
-            ),
-        }
+        events = {}
+        # Create events for each category and various lifecycle states
+        cat_list = list(db_categories.values())
+        for i, cat in enumerate(cat_list):
+            host = all_hosts[i % len(all_hosts)]
+            
+            # Mix up statuses and offsets
+            if i % 7 == 0:
+                state, status, offset = "draft", "draft", 30 + i
+            elif i % 7 == 1:
+                state, status, offset = "published", "published", 15 + i
+            elif i % 7 == 2:
+                state, status, offset = "at_risk", "published", 2 + i
+            elif i % 7 == 3:
+                state, status, offset = "postponed", "published", 45 + i
+            elif i % 7 == 4:
+                state, status, offset = "event_ready", "published", 1 + i
+            elif i % 7 == 5:
+                state, status, offset = "live", "published", 0
+            else:
+                state, status, offset = "completed", "completed", -10 - i
+
+            event_key = f"event_{i}"
+            events[event_key] = create_event(
+                f"Big {cat.name} Bash {i}",
+                host,
+                status,
+                state,
+                offset,
+                cat
+            )
+        
+        # Add a couple of series events
+        events["series_past"] = create_event(
+            "Weekly Tech Meetup #1",
+            all_hosts[0],
+            "completed",
+            "completed",
+            -7,
+            db_categories["tech-innovation"],
+            series1,
+        )
+        events["series_upcoming"] = create_event(
+            "Weekly Tech Meetup #2",
+            all_hosts[0],
+            "published",
+            "published",
+            7,
+            db_categories["tech-innovation"],
+            series1,
+        )
 
         # Event Lifecycle Transitions
         for key, e in events.items():
@@ -303,133 +299,163 @@ class Command(BaseCommand):
 
         # 6. Needs, Applications, Invites
         self.stdout.write("Creating needs and applications...")
-        # Need on published event
-        need1 = EventNeed.objects.create(
-            event=events["published"],
-            title="Looking for DJ",
-            category="DJ",
-            budget_max=Decimal("600.00"),
-        )
-        NeedApplication.objects.create(
-            need=need1,
-            vendor=users["vendor1"],
-            service=dj_service,
-            proposed_price=Decimal("500.00"),
-            status="accepted",
-        )
-        need1.assigned_vendor = users["vendor1"]
-        need1.status = "filled"
-        need1.save()
+        # Add needs to diverse events
+        needs_list = []
+        for i, (key, e) in enumerate(list(events.items())[:10]):
+            vendor_user = all_vendors[i % len(all_vendors)]
+            service = services[i % 10]
+            
+            need = EventNeed.objects.create(
+                event=e,
+                title=f"Need for {service.category}",
+                category=service.category,
+                budget_max=service.base_price * Decimal("1.2"),
+                status="filled" if i % 2 == 0 else "open"
+            )
+            needs_list.append(need)
 
-        # Need on live event
-        need2 = EventNeed.objects.create(
-            event=events["live"], title="Need Photographer", category="Photography"
-        )
-        NeedInvite.objects.create(
-            need=need2,
-            vendor=users["vendor2"],
-            invited_by=users["host2"],
-            message="Please apply!",
-        )
-        NeedApplication.objects.create(
-            need=need2, vendor=users["vendor2"], service=photo_service, status="pending"
-        )
+            if need.status == "filled":
+                NeedApplication.objects.create(
+                    need=need,
+                    vendor=vendor_user,
+                    service=service,
+                    proposed_price=service.base_price,
+                    status="accepted",
+                )
+                need.assigned_vendor = vendor_user
+                need.save()
+            else:
+                # Add a few applications and invites for open needs
+                for j in range(1, 3):
+                    v_idx = (i + j) % len(all_vendors)
+                    NeedApplication.objects.create(
+                        need=need,
+                        vendor=all_vendors[v_idx],
+                        service=services[(i+j) % 10],
+                        status="pending"
+                    )
+                    NeedInvite.objects.create(
+                        need=need,
+                        vendor=all_vendors[v_idx],
+                        invited_by=e.host,
+                        message=f"Hey vendor, we'd love for you to join {e.title}!"
+                    )
 
         # 7. Tickets
         self.stdout.write("Creating tickets...")
-        for goer in [users["goer1"], users["goer2"], users["goer3"]]:
-            Ticket.objects.create(
-                event=events["published"],
-                goer=goer,
-                ticket_type="standard",
-                price_paid=Decimal("20.00"),
-            )
-            Ticket.objects.create(
-                event=events["completed"],
-                goer=goer,
-                ticket_type="flexible",
-                price_paid=Decimal("25.00"),
-            )
+        for i, (key, e) in enumerate(events.items()):
+            if e.status in ["published", "completed", "live"]:
+                # Each event gets 5-10 tickets
+                num_tickets = 5 + (i % 6)
+                for j in range(num_tickets):
+                    goer = all_goers[(i + j) % len(all_goers)]
+                    Ticket.objects.get_or_create(
+                        event=e,
+                        goer=goer,
+                        defaults={
+                            "ticket_type": "standard" if j % 3 != 0 else "flexible",
+                            "price_paid": e.ticket_price_standard if j % 3 != 0 else e.ticket_price_flexible,
+                        }
+                    )
+                e.ticket_count = num_tickets
+                e.save()
 
-        events["published"].ticket_count = 3
-        events["published"].save()
-        events["completed"].ticket_count = 3
-        events["completed"].save()
+        # 9. Reviews (Many reviews for completed events)
+        self.stdout.write("Creating reviews and highlights...")
+        completed_events = [e for e in events.values() if e.status == "completed"]
+        for i, e in enumerate(completed_events):
+            # Highlights
+            for j in range(1, 4):
+                author = all_goers[(j + i) % len(all_goers)]
+                h = EventHighlight.objects.create(
+                    event=e,
+                    author=author,
+                    role="goer",
+                    text=f"Check out this moment from {e.title}! Highlight #{j}",
+                    moderation_status="approved",
+                )
+                EventHighlight.objects.filter(pk=h.pk).update(media_file=PLACEHOLDER_EVENT_IMG)
 
-        # 8. Highlights (on completed and live)
-        self.stdout.write("Creating highlights & media...")
-        h1 = EventHighlight.objects.create(
-            event=events["completed"],
-            author=users["goer1"],
-            role="goer",
-            text="Best gala ever!",
-            moderation_status="approved",
-        )
-        EventHighlight.objects.filter(pk=h1.pk).update(media_file=PLACEHOLDER_EVENT_IMG)
+            # Event Media Gallery
+            for j in range(1, 5):
+                m = EventMedia.objects.create(
+                    event=e, 
+                    media_type="image" if j % 2 == 0 else "video", 
+                    category="gallery",
+                    order=j
+                )
+                EventMedia.objects.filter(pk=m.pk).update(file=PLACEHOLDER_EVENT_IMG)
 
-        h2 = EventHighlight.objects.create(
-            event=events["live"],
-            author=users["host2"],
-            role="host",
-            text="We are live!",
-            moderation_status="approved",
-        )
-        EventHighlight.objects.filter(pk=h2.pk).update(media_file=PLACEHOLDER_EVENT_IMG)
+        def random_rating(seed):
+            return 3 + (seed % 3)
 
-        # Event Media
-        m1 = EventMedia.objects.create(
-            event=events["completed"], media_type="image", category="highlight"
-        )
-        EventMedia.objects.filter(pk=m1.pk).update(file=PLACEHOLDER_EVENT_IMG)
+            # Reviews
+            for j in range(1, 6):
+                reviewer = all_goers[(j + i * 5) % len(all_goers)]
+                rev = EventReview.objects.create(
+                    event=e,
+                    reviewer=reviewer,
+                    rating=random_rating(j),
+                    text=f"Review #{j} for {e.title}: An absolutely wonderful experience!",
+                )
+                rev_m = EventReviewMedia.objects.create(review=rev)
+                EventReviewMedia.objects.filter(pk=rev_m.pk).update(file=PLACEHOLDER_EVENT_IMG)
 
-        # 9. Reviews
-        self.stdout.write("Creating reviews...")
-        rev = EventReview.objects.create(
-            event=events["completed"],
-            reviewer=users["goer2"],
-            rating=5,
-            text="Fantastic experience.",
-        )
-        rev_m = EventReviewMedia.objects.create(review=rev)
-        EventReviewMedia.objects.filter(pk=rev_m.pk).update(file=PLACEHOLDER_EVENT_IMG)
+                # Vendor review for the service provided at this event (if any needs were filled)
+                for need in e.needs.filter(status="filled"):
+                    EventVendorReview.objects.create(
+                        event_review=rev, 
+                        vendor=need.applications.filter(status="accepted").first().service, 
+                        rating=random_rating(j), 
+                        text="The vendor did a great job!"
+                    )
 
-        # Vendor review attached to event
-        EventVendorReview.objects.create(
-            event_review=rev, vendor=cater_service, rating=4, text="Food was good."
-        )
-
-        # Standalone Vendor Review
-        VendorReview.objects.create(
-            vendor_service=dj_service,
-            reviewer=users["goer3"],
-            rating=5,
-            text="Played all the right tracks.",
-        )
+        # Standalone Vendor Reviews
+        for i, s in enumerate(services):
+            for j in range(1, 4):
+                reviewer = all_goers[(j + i * 3) % len(all_goers)]
+                VendorReview.objects.create(
+                    vendor_service=s,
+                    reviewer=reviewer,
+                    rating=random_rating(j),
+                    text=f"Service review for {s.title}: Highly professional and recommended.",
+                )
 
         # 10. Interests and Views
         self.stdout.write("Creating interests and views...")
-        EventInterest.objects.create(event=events["published"], user=users["goer3"])
-        events["published"].interest_count = 1
-        events["published"].save()
-
-        EventView.objects.create(event=events["published"], user=users["goer1"])
-        EventView.objects.create(event=events["completed"], user=users["goer2"])
+        for i, (key, e) in enumerate(events.items()):
+            # Each event gets some views and interests
+            for j in range(1, 6):
+                user = all_goers[(i + j) % len(all_goers)]
+                if j % 2 == 0:
+                    EventInterest.objects.get_or_create(event=e, user=user)
+                    e.interest_count += 1
+                EventView.objects.get_or_create(event=e, user=user)
+            e.save()
 
         # 11. Requests
         self.stdout.write("Creating requests...")
-        req = EventRequest.objects.create(
-            requester=users["goer1"],
-            title="Bring back the Retro 80s Party!",
-            description="We need more 80s synth music nights.",
-            category=db_categories["music"],
-            location_city="New York",
-            status="open",
-        )
-        RequestUpvote.objects.create(request=req, user=users["goer2"])
-        RequestWishlist.objects.create(
-            request=req, user=users["vendor1"], wishlist_as="vendor"
-        )
-        req.upvote_count = 1
-        req.save()
+        for i in range(1, 6):
+            cat = cat_list[i % len(cat_list)]
+            req = EventRequest.objects.create(
+                requester=all_goers[i % len(all_goers)],
+                title=f"Request for more {cat.name} events in the city!",
+                description=f"I really love {cat.name} and we need more of them. Specifically, events that are {cat.slug} focused.",
+                category=cat,
+                location_city="New York" if i % 2 == 0 else "Los Angeles",
+                status="open" if i < 4 else "fulfilled",
+                fulfilled_event=events[f"event_{i}"] if i >= 4 else None
+            )
+            # Add upvotes
+            for j in range(1, 5):
+                upvoter = all_goers[(i + j) % len(all_goers)]
+                RequestUpvote.objects.get_or_create(request=req, user=upvoter)
+                req.upvote_count += 1
+            
+            # Add wishlist
+            RequestWishlist.objects.create(
+                request=req, user=all_vendors[i % len(all_vendors)], wishlist_as="vendor"
+            )
+            req.save()
 
         self.stdout.write(self.style.SUCCESS("Database seeded successfully!"))

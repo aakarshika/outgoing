@@ -8,8 +8,10 @@ import { ThemeWrapper } from '@/theme/ThemeWrapper';
 const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
+const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'));
+const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
 const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
 const ManageEventPage = lazy(() => import('@/pages/events/ManageEventPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
@@ -18,6 +20,7 @@ const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage')
 const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPage'));
 const VendorOpportunitiesPage = lazy(() => import('@/pages/vendors/VendorOpportunitiesPage'));
 const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
+const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage'));
 const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
 
@@ -25,8 +28,10 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
     SignUp: SignUpPage,
     SignIn: SignInPage,
     Profile: ProfilePage,
+    UserProfile: UserProfilePage,
     Home: HomePage,
-    EventDetail: EventDetailPage,
+    EventDetailOld: EventDetailPage,
+    EventDetail: EventDetailNewPage,
     CreateEvent: CreateEventPage,
     ManageEvent: ManageEventPage,
     Dashboard: DashboardPage,
@@ -35,6 +40,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
     VendorPortfolio: VendorPortfolioPage,
     VendorOpportunities: VendorOpportunitiesPage,
     CreateService: CreateServicePage,
+    ServiceDetail: ServiceDetailPage,
     Requests: RequestsPage,
     Alerts: AlertsPage,
 };

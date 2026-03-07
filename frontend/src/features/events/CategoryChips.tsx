@@ -1,22 +1,7 @@
 /** Category chip filter bar — horizontal scrolling category selector. */
 
+import { CATEGORY_ICON_MAP } from './constants';
 import { useCategories } from './hooks';
-
-// Map category icon names to simple emoji fallbacks (Lucide icons loaded lazily)
-const ICON_MAP: Record<string, string> = {
-    music: '🎵',
-    utensils: '🍽️',
-    moon: '🌙',
-    dumbbell: '💪',
-    palette: '🎨',
-    cpu: '💻',
-    'book-open': '📖',
-    mountain: '⛰️',
-    laugh: '😂',
-    users: '👥',
-    'party-popper': '🎉',
-    'heart-handshake': '🤝',
-};
 
 interface CategoryChipsProps {
     selected: string | undefined;
@@ -52,8 +37,7 @@ export function CategoryChips({ selected, onSelect }: CategoryChipsProps) {
                         }
           `}
                 >
-                    hhhh
-                    <span>{ICON_MAP[cat.icon] || '📌'}</span>
+                    <span>{CATEGORY_ICON_MAP[cat.icon] || '📌'}</span>
                     {cat.name}
                 </button>
             ))}

@@ -66,6 +66,8 @@ class EventListSerializer(serializers.ModelSerializer):
     user_is_interested = serializers.SerializerMethodField()
     user_has_ticket = serializers.SerializerMethodField()
     media = EventMediaSerializer(many=True, read_only=True)
+    reviews = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for EventListSerializer."""
@@ -91,6 +93,9 @@ class EventListSerializer(serializers.ModelSerializer):
             "interest_count",
             "ticket_count",
             "media",
+            "description",
+            "reviews",
+            "average_rating",
             "user_is_interested",
             "user_has_ticket",
         ]
@@ -113,6 +118,18 @@ class EventListSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.tickets.filter(goer=request.user, status="active").exists()
         return False
+
+    def get_reviews(self, obj):
+        """Return a small subset of public reviews for snippets."""
+        reviews = obj.reviews.filter(is_public=True).order_by("-rating")[:2]
+        return EventReviewSerializer(reviews, many=True, context=self.context).data
+
+    def get_average_rating(self, obj):
+        """Calculate average rating for display."""
+        reviews = obj.reviews.filter(is_public=True)
+        if not reviews.exists():
+            return None
+        return sum(r.rating for r in reviews) / len(reviews)
 
 
 class EventSeriesNeedTemplateSerializer(serializers.ModelSerializer):

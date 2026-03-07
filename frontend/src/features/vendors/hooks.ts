@@ -7,6 +7,7 @@ import {
     createVendorService,
     updateVendorService,
     deleteVendorService,
+    fetchVendorService,
 } from './api';
 
 export function useVendorServices(params: {
@@ -27,6 +28,14 @@ export function useMyServices(options?: { enabled?: boolean }) {
         queryKey: ['myServices'],
         queryFn: fetchMyServices,
         enabled: options?.enabled,
+    });
+}
+
+export function useVendorService(serviceId: number) {
+    return useQuery({
+        queryKey: ['vendors', serviceId],
+        queryFn: () => fetchVendorService(serviceId),
+        enabled: !!serviceId,
     });
 }
 

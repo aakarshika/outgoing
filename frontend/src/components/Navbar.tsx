@@ -58,23 +58,25 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-sm">
+      <nav className="sticky top-0 z-50 border-b-2 border-dashed border-gray-300 bg-[#f4f1ea]/95 backdrop-blur-sm shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-4">
-              <Link to="/" className="flex flex-shrink-0 items-center mr-4">
-                <span className="text-xl font-bold text-foreground">Outgoing</span>
+              <Link to="/" className="flex flex-shrink-0 items-center mr-4 relative group">
+                <div className="absolute -inset-1 bg-yellow-300 opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
+                <span className="text-2xl font-bold text-gray-900 relative z-10" style={{ fontFamily: '"Permanent Marker"' }}>Outgoing</span>
               </Link>
               <div className="hidden md:flex relative w-64 lg:w-96">
                 <form onSubmit={handleSearchSubmit} className="w-full relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                     placeholder="Search events, locations..."
-                    className="h-9 w-full rounded-full border bg-muted/30 focus:bg-background pl-9 pr-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-primary/20"
+                    className="h-10 w-full rounded-md border-2 border-gray-800 bg-white pl-9 pr-3 text-sm outline-none transition-all shadow-[2px_3px_0px_#333] focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_#333] focus:ring-0"
+                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
                   />
                 </form>
                 {showSuggestions && suggestions.length > 0 && (
@@ -113,7 +115,7 @@ export function Navbar() {
                       )}
                     </Link>
                   </Button>
-                  <Button variant="default" size="sm" asChild className="hidden gap-1.5 sm:inline-flex">
+                  <Button variant="default" size="sm" asChild className="hidden gap-1.5 sm:inline-flex rounded-none border-2 border-gray-800 bg-blue-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 transition-all font-bold" style={{ fontFamily: '"Permanent Marker"' }}>
                     <Link to="/events/create">
                       <Plus className="h-4 w-4" /> Create Event
                     </Link>
@@ -121,10 +123,10 @@ export function Navbar() {
                 </>
               ) : (
                 <div className="hidden gap-2 sm:flex">
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className="font-bold font-serif hover:bg-yellow-200 hover:rotate-2 transition-all">
                     <Link to="/signin">Sign In</Link>
                   </Button>
-                  <Button size="sm" asChild>
+                  <Button size="sm" asChild className="rounded-none border-2 border-gray-800 bg-pink-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 transition-all font-bold" style={{ fontFamily: '"Permanent Marker"' }}>
                     <Link to="/signup">Sign Up</Link>
                   </Button>
                 </div>
@@ -135,6 +137,7 @@ export function Navbar() {
                 onClick={() => setIsMenuOpen((open) => !open)}
                 aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isMenuOpen}
+                className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
               >
                 {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </Button>

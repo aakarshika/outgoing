@@ -18,6 +18,7 @@ import {
     useDeleteEvent,
 } from '@/features/events/hooks';
 import { updateEvent } from '@/features/events/api';
+import { compressImage } from '@/utils/image';
 import { ManageNeedsTab } from '@/components/events/ManageNeedsTab';
 import {
     canUseBrowserGeolocation,
@@ -149,7 +150,16 @@ export default function ManageEventPage() {
 
         const coverInput = form.querySelector<HTMLInputElement>('#cover_image');
         if (coverInput?.files?.[0]) {
-            formData.set('cover_image', coverInput.files[0]);
+            try {
+                const compressedFile = await compressImage(coverInput.files[0], { newFileName: 'event_cover' });
+                console.log(`Original size: ${Math.round(coverInput.files[0].size / 1024)}KB, Compressed size: ${Math.round(compressedFile.size / 1024)}KB`);
+                toast.info(`Image compressed: ${Math.round(coverInput.files[0].size / 1024)}KB -> ${Math.round(compressedFile.size / 1024)}KB`);
+                formData.delete('cover_image');
+                formData.set('cover_image', compressedFile);
+            } catch (err) {
+                console.error("Image compression failed", err);
+                formData.set('cover_image', coverInput.files[0]); // Fallback to original
+            }
         } else {
             formData.delete('cover_image');
         }

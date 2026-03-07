@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +24,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAddEventHighlight } from '@/features/events/hooks';
 import { Media } from '@/components/ui/media';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { cn } from '@/lib/utils';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -53,7 +54,6 @@ interface HighlightComposerProps {
 }
 
 export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: HighlightComposerProps) {
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const addHighlight = useAddEventHighlight();
 
     const form = useForm<HighlightFormValues>({
@@ -64,26 +64,8 @@ export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: Hi
         },
     });
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            form.setValue('media', file);
-            form.clearErrors('media');
-            // Create preview URL
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
 
-    const clearMedia = () => {
-        form.setValue('media', '');
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-        }
-        setPreviewUrl(null);
-    };
-
-    const onSubmit = (data: HighlightFormValues) => {
+    const onSubmit = async (data: HighlightFormValues) => {
         const formData = new FormData();
         formData.append('text', data.text);
         if (data.media instanceof File) {
@@ -96,7 +78,6 @@ export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: Hi
                 onSuccess: () => {
                     toast.success('Highlight added successfully!');
                     form.reset();
-                    clearMedia();
                     onOpenChange(false);
                 },
                 onError: (error: any) => {
@@ -125,49 +106,67 @@ export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: Hi
                             render={() => (
                                 <FormItem>
                                     <FormControl>
-                                        <div className="relative">
-                                            {previewUrl ? (
-                                                <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-muted">
-                                                    <Media
-                                                        src={previewUrl}
-                                                        alt="Preview"
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="absolute right-2 top-2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
-                                                        onClick={clearMedia}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <label
-                                                    htmlFor="media-upload"
-                                                    className={cn(
-                                                        "flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-muted/50 hover:bg-muted transition-colors",
-                                                        form.formState.errors.media && "border-destructive text-destructive"
+                                        <ImageUpload
+                                            onImageSelected={(file) => {
+                                                form.setValue('media', file || '');
+                                                form.clearErrors('media');
+                                            }}
+                                            aspectRatio="video"
+                                            label="Click to upload photo or video"
+                                            description="PNG, JPG, MP4 up to 10MB"
+                                        >
+                                            {({ previewUrl, openSelector, removeImage, isCompressing }) => (
+                                                <div className="relative">
+                                                    {previewUrl ? (
+                                                        <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-muted">
+                                                            <Media
+                                                                src={previewUrl}
+                                                                alt="Preview"
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                className="absolute right-2 top-2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
+                                                                onClick={removeImage}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                            {isCompressing && (
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                                                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={openSelector}
+                                                            disabled={isCompressing}
+                                                            className={cn(
+                                                                "flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-muted/50 hover:bg-muted transition-colors",
+                                                                form.formState.errors.media && "border-destructive text-destructive"
+                                                            )}
+                                                        >
+                                                            {isCompressing ? (
+                                                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                                            ) : (
+                                                                <>
+                                                                    <div className="rounded-full bg-background p-3 shadow-sm">
+                                                                        <Upload className="h-5 w-5 text-muted-foreground" />
+                                                                    </div>
+                                                                    <div className="text-center">
+                                                                        <p className="text-sm font-medium">Click to upload photo or video</p>
+                                                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </button>
                                                     )}
-                                                >
-                                                    <div className="rounded-full bg-background p-3 shadow-sm">
-                                                        <Upload className="h-5 w-5 text-muted-foreground" />
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-sm font-medium">Click to upload photo or video</p>
-                                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
-                                                    </div>
-                                                </label>
+                                                </div>
                                             )}
-                                            <input
-                                                id="media-upload"
-                                                type="file"
-                                                accept="image/*,video/*"
-                                                className="hidden"
-                                                onChange={handleFileChange}
-                                            />
-                                        </div>
+                                        </ImageUpload>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -197,7 +196,6 @@ export function HighlightComposer({ eventId, isOpen, onOpenChange, trigger }: Hi
                                 variant="outline"
                                 onClick={() => {
                                     form.reset();
-                                    clearMedia();
                                     onOpenChange(false);
                                 }}
                                 disabled={addHighlight.isPending}

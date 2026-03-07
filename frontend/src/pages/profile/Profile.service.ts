@@ -8,6 +8,10 @@ export const ProfileService = {
     updateProfile: async (data: any) => {
         const res = await client.patch('/auth/me/', data);
         return res.data;
+    },
+    getPublicProfile: async (username: string) => {
+        const res = await client.get(`/profiles/${username}/`);
+        return res.data;
     }
 };
 

@@ -25,6 +25,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAddEventReview } from '@/features/events/hooks';
 import { Media } from '@/components/ui/media';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { cn } from '@/lib/utils';
 
 const vendorReviewSchema = z.object({
@@ -70,21 +72,6 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
         name: "vendor_reviews",
     });
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.length) return;
-        const newFiles = Array.from(e.target.files);
-
-        // Max 5 files
-        if (mediaFiles.length + newFiles.length > 5) {
-            toast.error('You can upload a maximum of 5 media files.');
-            return;
-        }
-
-        setMediaFiles((prev) => [...prev, ...newFiles]);
-
-        const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
-        setMediaPreviews((prev) => [...prev, ...newPreviews]);
-    };
 
     const removeFile = (index: number) => {
         setMediaFiles((prev) => prev.filter((_, i) => i !== index));
@@ -94,12 +81,12 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
         });
     };
 
-    const onSubmit = (data: ReviewFormValues) => {
+    const onSubmit = async (data: ReviewFormValues) => {
         const formData = new FormData();
         formData.append('rating', data.rating.toString());
         formData.append('text', data.text);
 
-        // Append media files
+        // Media files are already compressed by ImageUpload
         mediaFiles.forEach((file) => {
             formData.append('media', file);
         });
@@ -218,17 +205,40 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
                                     </div>
                                 ))}
                                 {mediaFiles.length < 5 && (
-                                    <label className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary/70 hover:bg-primary/5 hover:border-primary/50 cursor-pointer transition-colors">
-                                        <ImagePlus className="w-6 h-6 mb-1" />
-                                        <span className="text-[10px] font-medium text-center px-1">Upload Media</span>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*,video/mp4,video/quicktime"
-                                            className="hidden"
-                                            onChange={handleFileChange}
-                                        />
-                                    </label>
+                                    <ImageUpload
+                                        multiple
+                                        onImagesSelected={(newFiles) => {
+                                            const remainingSlots = 5 - mediaFiles.length;
+                                            const filesToAdd = newFiles.slice(0, remainingSlots);
+
+                                            setMediaFiles(prev => [...prev, ...filesToAdd]);
+                                            const newPreviews = filesToAdd.map(f => URL.createObjectURL(f));
+                                            setMediaPreviews(prev => [...prev, ...newPreviews]);
+
+                                            if (newFiles.length > remainingSlots) {
+                                                toast.error(`Only ${remainingSlots} more files could be added.`);
+                                            }
+                                        }}
+                                        compressionOptions={{ maxWidth: 1200, quality: 0.8 }}
+                                    >
+                                        {({ openSelector, isCompressing }) => (
+                                            <button
+                                                type="button"
+                                                onClick={openSelector}
+                                                disabled={isCompressing}
+                                                className="w-24 h-24 rounded-lg border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary/70 hover:bg-primary/5 hover:border-primary/50 cursor-pointer transition-colors"
+                                            >
+                                                {isCompressing ? (
+                                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <ImagePlus className="w-6 h-6 mb-1" />
+                                                        <span className="text-[10px] font-medium text-center px-1">Upload Media</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </ImageUpload>
                                 )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-2">Max 5 files (images or MP4/MOV videos).</p>
@@ -273,13 +283,11 @@ export function ReviewComposer({ eventId, eventName, participatingVendors = [], 
                                             return (
                                                 <div key={field.id} className="pt-4 border-t first:border-0 first:pt-0">
                                                     <div className="flex items-center gap-3 mb-3">
-                                                        {vendor.vendor_avatar ? (
-                                                            <Media src={vendor.vendor_avatar} alt="" className="w-8 h-8 rounded object-cover" />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center font-bold text-xs text-primary">
-                                                                {vendor.vendor_name[0].toUpperCase()}
-                                                            </div>
-                                                        )}
+                                                        <UserAvatar
+                                                            src={vendor.vendor_avatar}
+                                                            username={vendor.vendor_name}
+                                                            size="sm"
+                                                        />
                                                         <div>
                                                             <p className="font-medium text-sm leading-none">{vendor.title}</p>
                                                             <p className="text-xs text-muted-foreground leading-none mt-1">by {vendor.vendor_name}</p>

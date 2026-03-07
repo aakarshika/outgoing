@@ -16,6 +16,7 @@ import { EventCarousel } from '@/components/events/EventCarousel';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { Media } from '@/components/ui/media';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, Star } from 'lucide-react';
 import type { EventLifecycleState } from '@/types/events';
@@ -240,13 +241,11 @@ export default function EventDetailPage() {
                                         <div key={review.id} className="p-6 rounded-2xl border bg-card space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    {review.reviewer_avatar ? (
-                                                        <Media src={review.reviewer_avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
-                                                            {review.reviewer_username ? review.reviewer_username[0].toUpperCase() : 'U'}
-                                                        </div>
-                                                    )}
+                                                    <UserAvatar
+                                                        src={review.reviewer_avatar}
+                                                        username={review.reviewer_username}
+                                                        size="md"
+                                                    />
                                                     <div>
                                                         <p className="font-medium">{review.reviewer_username || 'Anonymous User'}</p>
                                                         <p className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>

@@ -37,6 +37,11 @@ export const routesConfig: RouteDefinition[] = [
         isPublic: true,
     },
     {
+        path: '/events/:id/new',
+        componentName: 'EventDetailNew',
+        isPublic: true,
+    },
+    {
         path: '/dashboard',
         componentName: 'Dashboard',
         roles: [UserRole.USER, UserRole.ADMIN],
@@ -67,6 +72,11 @@ export const routesConfig: RouteDefinition[] = [
         roles: [UserRole.USER, UserRole.ADMIN],
     },
     {
+        path: '/services/:id',
+        componentName: 'ServiceDetail',
+        isPublic: true,
+    },
+    {
         path: '/requests',
         componentName: 'Requests',
         isPublic: true,
@@ -88,5 +98,10 @@ export const routesConfig: RouteDefinition[] = [
         componentName: 'Profile',
         roles: [UserRole.USER, UserRole.ADMIN],
         theme: 'profile-theme',
+    },
+    {
+        path: '/user/:username',
+        componentName: 'UserProfile',
+        isPublic: true,
     },
 ];

@@ -17,6 +17,7 @@ interface CreateServiceFormData {
     portfolio_image: string | FileList;
 }
 
+import { compressImage } from '@/utils/image';
 import { VENDOR_CATEGORIES } from '@/constants/categories';
 
 export default function CreateServicePage() {
@@ -46,18 +47,31 @@ export default function CreateServicePage() {
         if (data.base_price) formData.append('base_price', data.base_price);
         if (data.travel_radius_miles) formData.append('travel_radius_miles', data.travel_radius_miles);
         if (data.portfolio_url) formData.append('portfolio_url', data.portfolio_url);
-        if (selectedImage) formData.append('portfolio_image', selectedImage);
 
-        createMutation.mutate(formData, {
-            onSuccess: () => {
-                toast.success('Vendor service created successfully!');
-                navigate('/dashboard');
-            },
-            onError: (error: any) => {
-                const message = error?.response?.data?.message || 'Failed to create service';
-                toast.error(message);
+        const submitData = async () => {
+            if (selectedImage) {
+                try {
+                    const compressedFile = await compressImage(selectedImage, { newFileName: 'portfolio_image' });
+                    formData.append('portfolio_image', compressedFile);
+                } catch (err) {
+                    console.error("Image compression failed", err);
+                    formData.append('portfolio_image', selectedImage);
+                }
             }
-        });
+
+            createMutation.mutate(formData, {
+                onSuccess: () => {
+                    toast.success('Vendor service created successfully!');
+                    navigate('/dashboard');
+                },
+                onError: (error: any) => {
+                    const message = error?.response?.data?.message || 'Failed to create service';
+                    toast.error(message);
+                }
+            });
+        };
+
+        submitData();
     };
 
     return (

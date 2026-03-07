@@ -33,6 +33,11 @@ export async function updateVendorService(serviceId: number, formData: FormData)
     return data;
 }
 
+export async function fetchVendorService(serviceId: number) {
+    const { data } = await client.get<VendorServiceDetailResponse>(`/vendors/${serviceId}/`);
+    return data;
+}
+
 export async function deleteVendorService(serviceId: number) {
     const { data } = await client.delete(`/vendors/${serviceId}/`);
     return data;

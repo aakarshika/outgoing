@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from apps.vendors.models import VendorService, VendorReview
+from api.v1.events.serializers import EventListSerializer
 
 
 class VendorServiceSerializer(serializers.ModelSerializer):
@@ -14,6 +15,8 @@ class VendorServiceSerializer(serializers.ModelSerializer):
     event_count = serializers.IntegerField(read_only=True, required=False)
     review_count = serializers.IntegerField(read_only=True, required=False)
     avg_rating = serializers.FloatField(read_only=True, required=False)
+    reviews = serializers.SerializerMethodField()
+    past_events = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for VendorServiceSerializer."""
@@ -36,8 +39,33 @@ class VendorServiceSerializer(serializers.ModelSerializer):
             "event_count",
             "review_count",
             "avg_rating",
+            "reviews",
+            "past_events",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def get_reviews(self, obj):
+        """Return public reviews for this service."""
+        reviews = obj.reviews.filter(is_public=True).order_by("-created_at")[:5]
+        return VendorReviewSerializer(reviews, many=True, context=self.context).data
+
+    def get_past_events(self, obj):
+        """Return events where this service was accepted."""
+        from apps.needs.models import NeedApplication
+        from apps.events.models import Event
+
+        # Find events through accepted applications
+        event_ids = NeedApplication.objects.filter(
+            service=obj, status="accepted"
+        ).values_list("need__event_id", flat=True)
+
+        events = (
+            Event.objects.filter(id__in=event_ids)
+            .select_related("host", "host__profile", "category")
+            .prefetch_related("media", "reviews")
+        )
+
+        return EventListSerializer(events, many=True, context=self.context).data
 
     def get_vendor_avatar(self, obj):
         """Return vendor's avatar URL."""
