@@ -5,6 +5,7 @@ from django.urls import path
 from .views import (
     EventNeedsView,
     NeedApplicationReviewView,
+    NeedApplicationUpdateView,
     NeedApplyView,
     MyNeedApplicationsView,
     NeedInviteCreateView,
@@ -21,6 +22,11 @@ urlpatterns = [
         "applications/<int:application_id>/review/",
         NeedApplicationReviewView.as_view(),
         name="application_review",
+    ),
+    path(
+        "applications/<int:application_id>/",
+        NeedApplicationUpdateView.as_view(),
+        name="application_update",
     ),
     path("applications/my/", MyNeedApplicationsView.as_view(), name="my_applications"),
     path("invites/my/", MyNeedInvitesView.as_view(), name="my_invites"),

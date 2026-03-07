@@ -12,6 +12,8 @@ export interface VendorService {
     category: string;
     visibility: 'customer_facing' | 'operational';
     base_price: string | null;
+    travel_radius_miles?: string | null;
+    portfolio_url?: string | null;
     portfolio_image: string | null;
     location_city: string;
     is_active: boolean;

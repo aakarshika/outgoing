@@ -34,18 +34,18 @@ PLACEHOLDER_EVENT_IMG = "https://placehold.co/600x400/png"
 PLACEHOLDER_PORTFOLIO = "https://placehold.co/800x600/png"
 
 CATEGORIES = [
-    {"name": "Music", "slug": "music", "icon": "music"},
-    {"name": "Food & Drink", "slug": "food-drink", "icon": "utensils"},
-    {"name": "Nightlife", "slug": "nightlife", "icon": "moon"},
-    {"name": "Sports & Fitness", "slug": "sports-fitness", "icon": "dumbbell"},
-    {"name": "Arts & Culture", "slug": "arts-culture", "icon": "palette"},
-    {"name": "Tech & Innovation", "slug": "tech-innovation", "icon": "cpu"},
-    {"name": "Workshops & Classes", "slug": "workshops-classes", "icon": "book-open"},
-    {"name": "Outdoors & Adventure", "slug": "outdoors-adventure", "icon": "mountain"},
-    {"name": "Comedy", "slug": "comedy", "icon": "laugh"},
-    {"name": "Networking & Social", "slug": "networking-social", "icon": "users"},
-    {"name": "Festivals", "slug": "festivals", "icon": "party-popper"},
-    {"name": "Community", "slug": "community", "icon": "heart-handshake"},
+    {"id": 5, "name": "Arts & Culture", "slug": "arts-culture", "icon": "palette"},
+    {"id": 9, "name": "Comedy", "slug": "comedy", "icon": "laugh"},
+    {"id": 12, "name": "Community", "slug": "community", "icon": "heart-handshake"},
+    {"id": 11, "name": "Festivals", "slug": "festivals", "icon": "party-popper"},
+    {"id": 2, "name": "Food & Drink", "slug": "food-drink", "icon": "utensils"},
+    {"id": 1, "name": "Music", "slug": "music", "icon": "music"},
+    {"id": 10, "name": "Networking & Social", "slug": "networking-social", "icon": "users"},
+    {"id": 3, "name": "Nightlife", "slug": "nightlife", "icon": "moon"},
+    {"id": 8, "name": "Outdoors & Adventure", "slug": "outdoors-adventure", "icon": "mountain"},
+    {"id": 4, "name": "Sports & Fitness", "slug": "sports-fitness", "icon": "dumbbell"},
+    {"id": 6, "name": "Tech & Innovation", "slug": "tech-innovation", "icon": "cpu"},
+    {"id": 7, "name": "Workshops & Classes", "slug": "workshops-classes", "icon": "book-open"},
 ]
 
 
@@ -80,9 +80,12 @@ class Command(BaseCommand):
         # 1. Categories
         db_categories = {}
         for cat_data in CATEGORIES:
-            cat, _ = EventCategory.objects.get_or_create(
+            cat, _ = EventCategory.objects.update_or_create(
                 slug=cat_data["slug"],
-                defaults={"name": cat_data["name"], "icon": cat_data["icon"]},
+                defaults={
+                    "name": cat_data["name"],
+                    "icon": cat_data["icon"],
+                },
             )
             db_categories[cat.slug] = cat
 
@@ -153,7 +156,7 @@ class Command(BaseCommand):
         all_vendors = [u for u in users.values() if any(role in u.username for role in ["vendor", "omni"])]
         all_goers = [u for u in users.values() if any(role in u.username for role in ["goer", "omni"])]
 
-        # 10 Vendor Services
+        # Vendor services: ensure every vendor-capable user has at least one service
         self.stdout.write("Creating vendor services...")
         services = []
         vendor_types = [
@@ -168,16 +171,17 @@ class Command(BaseCommand):
             ("bartending", "Mix Master", "Craft cocktails and bar service."),
             ("event_planning", "Plan Perfect", "Full-service event planning & coordination."),
         ]
-
-        for i, (cat, title_prefix, desc) in enumerate(vendor_types, 1):
-            vendor_user = all_vendors[(i - 1) % len(all_vendors)]
+        service_count = max(len(all_vendors), len(vendor_types))
+        for i in range(service_count):
+            cat, title_prefix, desc = vendor_types[i % len(vendor_types)]
+            vendor_user = all_vendors[i % len(all_vendors)]
             service = VendorService.objects.create(
                 vendor=vendor_user,
                 title=f"{title_prefix} by {vendor_user.first_name}",
                 description=desc,
                 category=cat,
-                base_price=Decimal(str(100 * i)),
-                location_city="New York" if i % 2 == 0 else "Los Angeles",
+                base_price=Decimal(str(100 * (i + 1))),
+                location_city="New York" if (i + 1) % 2 == 0 else "Los Angeles",
             )
             VendorService.objects.filter(pk=service.pk).update(
                 portfolio_image=PLACEHOLDER_PORTFOLIO
@@ -236,7 +240,7 @@ class Command(BaseCommand):
 
         events = {}
         # Create events for each category and various lifecycle states
-        cat_list = list(db_categories.values())
+        cat_list = [db_categories[cat_data["slug"]] for cat_data in CATEGORIES]
         for i, cat in enumerate(cat_list):
             host = all_hosts[i % len(all_hosts)]
             
@@ -303,7 +307,7 @@ class Command(BaseCommand):
         needs_list = []
         for i, (key, e) in enumerate(list(events.items())[:10]):
             vendor_user = all_vendors[i % len(all_vendors)]
-            service = services[i % 10]
+            service = services[i % len(services)]
             
             need = EventNeed.objects.create(
                 event=e,
@@ -331,7 +335,7 @@ class Command(BaseCommand):
                     NeedApplication.objects.create(
                         need=need,
                         vendor=all_vendors[v_idx],
-                        service=services[(i+j) % 10],
+                        service=services[(i + j) % len(services)],
                         status="pending"
                     )
                     NeedInvite.objects.create(

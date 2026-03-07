@@ -39,6 +39,11 @@ export async function reviewNeedApplication(applicationId: number, status: 'acce
     return data;
 }
 
+export async function updateNeedApplication(applicationId: number, payload: { service_id?: number | null; message?: string; proposed_price?: number | null }) {
+    const { data } = await client.patch<NeedApplicationDetailResponse>(`/needs/applications/${applicationId}/`, payload);
+    return data;
+}
+
 export async function inviteVendorToNeed(
     needId: number,
     payload: { vendor_id: number; message?: string }

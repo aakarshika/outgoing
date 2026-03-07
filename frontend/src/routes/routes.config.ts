@@ -62,11 +62,6 @@ export const routesConfig: RouteDefinition[] = [
         isPublic: true,
     },
     {
-        path: '/vendor-opportunities',
-        componentName: 'VendorOpportunities',
-        roles: [UserRole.USER, UserRole.ADMIN],
-    },
-    {
         path: '/vendors/create',
         componentName: 'CreateService',
         roles: [UserRole.USER, UserRole.ADMIN],
@@ -75,6 +70,11 @@ export const routesConfig: RouteDefinition[] = [
         path: '/services/:id',
         componentName: 'ServiceDetail',
         isPublic: true,
+    },
+    {
+        path: '/services/:id/edit',
+        componentName: 'EditService',
+        roles: [UserRole.USER, UserRole.ADMIN],
     },
     {
         path: '/requests',

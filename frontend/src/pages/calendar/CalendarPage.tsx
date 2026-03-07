@@ -12,7 +12,7 @@ import {
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
+
 import { useMyEvents, useMyTickets, useMyInterestedEvents } from '@/features/events/hooks';
 import { useMyApplications, useMyNeedInvites } from '@/features/needs/hooks';
 import type { TicketInfo, EventListItem } from '@/types/events';
@@ -233,7 +233,7 @@ export default function CalendarPage() {
                 <section
                     className="mb-8 p-6 sm:p-8"
                     style={{
-                        ...scrapbookTheme.paperCard,
+                        ...(scrapbookTheme as any).paperCard,
                         transform: 'rotate(-0.5deg)',
                         backgroundColor: '#fffdf0',
                     }}
@@ -252,7 +252,7 @@ export default function CalendarPage() {
                             <span
                                 className="px-4 py-2 font-bold"
                                 style={{
-                                    ...scrapbookTheme.stickyNote,
+                                    ...(scrapbookTheme as any).stickyNote,
                                     backgroundColor: '#bfdbfe',
                                     transform: 'rotate(2deg)',
                                 }}
@@ -262,7 +262,7 @@ export default function CalendarPage() {
                             <span
                                 className="px-4 py-2 font-bold"
                                 style={{
-                                    ...scrapbookTheme.stickyNote,
+                                    ...(scrapbookTheme as any).stickyNote,
                                     backgroundColor: '#a7f3d0',
                                     transform: 'rotate(-1deg)',
                                 }}
@@ -272,7 +272,7 @@ export default function CalendarPage() {
                             <span
                                 className="px-4 py-2 font-bold"
                                 style={{
-                                    ...scrapbookTheme.stickyNote,
+                                    ...(scrapbookTheme as any).stickyNote,
                                     backgroundColor: '#fecaca',
                                     transform: 'rotate(1deg)',
                                 }}
@@ -282,7 +282,7 @@ export default function CalendarPage() {
                             <span
                                 className="px-4 py-2 font-bold"
                                 style={{
-                                    ...scrapbookTheme.stickyNote,
+                                    ...(scrapbookTheme as any).stickyNote,
                                     backgroundColor: '#fde68a',
                                     transform: 'rotate(-2deg)',
                                 }}
@@ -307,7 +307,7 @@ export default function CalendarPage() {
                             className={`px-4 py-2 font-bold transition-transform hover:scale-105 active:scale-95 ${filter === tab.key ? 'text-black' : 'text-gray-600'
                                 }`}
                             style={{
-                                ...scrapbookTheme.border,
+                                ...(scrapbookTheme as any).border,
                                 fontFamily: '"Caveat"',
                                 fontSize: '1.25rem',
                                 backgroundColor: filter === tab.key ? '#fde047' : '#fdfdfd',
@@ -322,7 +322,7 @@ export default function CalendarPage() {
                 <section
                     className="mb-8 p-4 sm:p-6"
                     style={{
-                        ...scrapbookTheme.paperCard,
+                        ...(scrapbookTheme as any).paperCard,
                         transform: 'rotate(0.5deg)',
                         backgroundColor: '#fcfcfc',
                     }}
@@ -424,7 +424,7 @@ export default function CalendarPage() {
                         <div
                             className="p-12 text-center"
                             style={{
-                                ...scrapbookTheme.paperCard,
+                                ...(scrapbookTheme as any).paperCard,
                                 transform: 'rotate(1deg)',
                                 backgroundColor: '#fffdf0',
                             }}
@@ -442,7 +442,7 @@ export default function CalendarPage() {
                                     key={item.id}
                                     className="p-5 transition-transform hover:-translate-y-1"
                                     style={{
-                                        ...scrapbookTheme.paperCard,
+                                        ...(scrapbookTheme as any).paperCard,
                                         backgroundColor: item.kind === 'saved' ? '#fee2e2' : '#fdfdfd',
                                         transform: `rotate(${i % 2 === 0 ? 0.5 : -0.5}deg)`,
                                     }}

@@ -137,6 +137,47 @@ class NeedApplicationReviewView(APIView):
         )
 
 
+class NeedApplicationUpdateView(APIView):
+    """Update a pending need application (vendor only)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, application_id):
+        """Update proposed price or message of an application."""
+        try:
+            application = NeedApplication.objects.get(pk=application_id, vendor=request.user)
+        except NeedApplication.DoesNotExist:
+            return error_response(message="Application not found", status=404)
+
+        if application.status != "pending":
+            return error_response(message="Can only edit pending applications", status=400)
+
+        serializer = NeedApplicationCreateSerializer(data=request.data, partial=True)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        if "message" in serializer.validated_data:
+            application.message = serializer.validated_data["message"]
+        if "proposed_price" in serializer.validated_data:
+            application.proposed_price = serializer.validated_data["proposed_price"]
+        if "service_id" in serializer.validated_data:
+            service_id = serializer.validated_data["service_id"]
+            if service_id:
+                try:
+                    service = VendorService.objects.get(pk=service_id, vendor=request.user)
+                    application.service = service
+                except VendorService.DoesNotExist:
+                    return error_response(message="Service not found", status=404)
+            else:
+                application.service = None
+
+        application.save()
+        result = NeedApplicationSerializer(application)
+        return success_response(
+            data=result.data, message="Application updated", status=200
+        )
+
+
 class MyNeedApplicationsView(APIView):
     """List need applications submitted by the authenticated vendor."""
 

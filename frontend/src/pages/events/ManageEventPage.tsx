@@ -1,6 +1,6 @@
 /** Manage Event page — host-only dashboard for an event. */
 
-import { ArrowLeft, Users, FileEdit, ImageIcon, Briefcase, LocateFixed, FileText, Calendar, Ticket, Activity, Repeat, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, Users, FileEdit, ImageIcon, Briefcase, LocateFixed, FileText, Calendar, Ticket, Repeat, MapPin, Clock, Globe, Link2, ChevronDown, ChevronUp, ExternalLink, ArrowRight, Timer } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,16 +27,49 @@ import {
 } from '@/utils/geolocation';
 import type { EventLifecycleState } from '@/types/events';
 
-const LIFECYCLE_TRANSITION_OPTIONS: { value: EventLifecycleState; label: string }[] = [
-    { value: 'draft', label: 'Draft' },
-    { value: 'published', label: 'Published' },
-    { value: 'at_risk', label: 'At Risk' },
-    { value: 'postponed', label: 'Postponed' },
-    { value: 'event_ready', label: 'Event Ready' },
-    { value: 'live', label: 'Live' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-];
+
+
+const LIFECYCLE_FLOW_CONFIG: Record<EventLifecycleState, { color: string; bg: string; border: string; label: string; emoji: string }> = {
+    draft: { color: '#6b7280', bg: '#f3f4f6', border: '#d1d5db', label: 'Draft', emoji: '📝' },
+    published: { color: '#2563eb', bg: '#dbeafe', border: '#93c5fd', label: 'Published', emoji: '🚀' },
+    at_risk: { color: '#d97706', bg: '#fef3c7', border: '#fcd34d', label: 'At Risk', emoji: '⚠️' },
+    postponed: { color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', label: 'Postponed', emoji: '⏸️' },
+    event_ready: { color: '#059669', bg: '#d1fae5', border: '#6ee7b7', label: 'Event Ready', emoji: '✅' },
+    live: { color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', label: 'Live', emoji: '🔴' },
+    completed: { color: '#065f46', bg: '#d1fae5', border: '#34d399', label: 'Completed', emoji: '🎉' },
+    cancelled: { color: '#991b1b', bg: '#fee2e2', border: '#f87171', label: 'Cancelled', emoji: '❌' },
+};
+
+const ALLOWED_TRANSITIONS: Record<EventLifecycleState, EventLifecycleState[]> = {
+    draft: ['published', 'cancelled'],
+    published: ['at_risk', 'postponed', 'event_ready', 'cancelled', 'completed'],
+    at_risk: ['published', 'postponed', 'event_ready', 'cancelled'],
+    postponed: ['published', 'event_ready', 'cancelled'],
+    event_ready: ['at_risk', 'live', 'cancelled', 'completed'],
+    live: ['completed', 'cancelled'],
+    cancelled: [],
+    completed: [],
+};
+
+const FLOW_PIPELINE: EventLifecycleState[] = ['draft', 'published', 'event_ready', 'live', 'completed'];
+
+const detectPlatform = (url: string): { name: string; icon: string } => {
+    const lower = url.toLowerCase();
+    if (lower.includes('zoom.us') || lower.includes('zoom.com')) return { name: 'Zoom', icon: '🎥' };
+    if (lower.includes('teams.microsoft.com') || lower.includes('teams.live.com')) return { name: 'Teams', icon: '🟦' };
+    if (lower.includes('meet.google.com')) return { name: 'Google Meet', icon: '🟢' };
+    if (lower.includes('slack.com')) return { name: 'Slack', icon: '💬' };
+    if (lower.includes('discord.gg') || lower.includes('discord.com')) return { name: 'Discord', icon: '🎮' };
+    return { name: 'Link', icon: '🔗' };
+};
+
+const formatDuration = (ms: number) => {
+    const mins = Math.round(ms / 60000);
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+};
 
 export default function ManageEventPage() {
     const { id } = useParams<{ id: string }>();
@@ -67,6 +100,11 @@ export default function ManageEventPage() {
     const [eventReadyMessage, setEventReadyMessage] = useState('');
     const [generateUntil, setGenerateUntil] = useState<string>('');
     const [previewDates, setPreviewDates] = useState<any[]>([]);
+    const [showHistory, setShowHistory] = useState(false);
+    const [selectedTransitionTarget, setSelectedTransitionTarget] = useState<EventLifecycleState | null>(null);
+    const [locationMode, setLocationMode] = useState<'offline' | 'online'>('offline');
+    const [onlineUrl, setOnlineUrl] = useState('');
+    const [eventDuration, setEventDuration] = useState<number>(0);
 
     const { data: occurrencesResponse, isLoading: isLoadingOccurrences } = useEventSeriesOccurrences(event?.series?.id ?? 0);
     const deleteEventMutation = useDeleteEvent();
@@ -97,6 +135,14 @@ export default function ManageEventPage() {
             setLongitude(event.longitude !== null ? String(event.longitude) : '');
             setNextLifecycleState(event.lifecycle_state || 'published');
             setEventReadyMessage(event.event_ready_message || '');
+            // Detect online mode from existing data
+            if (event.location_address === 'Online Event') {
+                setLocationMode('online');
+                setOnlineUrl(event.location_name || '');
+            }
+            // Calculate initial duration
+            const dur = new Date(event.end_time).getTime() - new Date(event.start_time).getTime();
+            if (dur > 0) setEventDuration(dur);
         }
     }, [event]);
 
@@ -294,6 +340,200 @@ export default function ManageEventPage() {
                     </div>
                 </div>
 
+                {/* ═══ Status Flowchart Pipeline ═══ */}
+                <div className="bg-white border-2 border-gray-800 p-5 shadow-[3px_4px_0px_#333] relative mb-6" style={{ transform: 'rotate(0.15deg)' }}>
+                    <div className="absolute -top-3 left-6 px-3 py-0.5 bg-yellow-200 border border-gray-400/50 shadow-sm" style={{ transform: 'rotate(-2deg)', fontFamily: '"Permanent Marker", cursive', fontSize: '0.75rem' }}>
+                        Event Status
+                    </div>
+
+                    {/* Pipeline visualization */}
+                    <div className="flex items-center justify-between gap-1 mt-3 mb-4 overflow-x-auto pb-2">
+                        {FLOW_PIPELINE.map((state, idx) => {
+                            const cfg = LIFECYCLE_FLOW_CONFIG[state];
+                            const isCurrent = event.lifecycle_state === state;
+                            const isPast = FLOW_PIPELINE.indexOf(event.lifecycle_state) > idx;
+                            const canTransition = ALLOWED_TRANSITIONS[event.lifecycle_state]?.includes(state) && !isCurrent;
+
+                            return (
+                                <div key={state} className="flex items-center flex-shrink-0">
+                                    <button
+                                        type="button"
+                                        disabled={!canTransition}
+                                        onClick={() => {
+                                            if (canTransition) {
+                                                setSelectedTransitionTarget(state);
+                                                setNextLifecycleState(state);
+                                            }
+                                        }}
+                                        className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 transition-all min-w-[80px] ${isCurrent
+                                            ? 'ring-2 ring-offset-2 scale-110 shadow-lg'
+                                            : canTransition
+                                                ? 'hover:scale-105 hover:shadow-md cursor-pointer opacity-90'
+                                                : isPast
+                                                    ? 'opacity-40'
+                                                    : 'opacity-30'
+                                            }`}
+                                        style={{
+                                            backgroundColor: isCurrent ? cfg.bg : isPast ? cfg.bg : '#fafafa',
+                                            borderColor: isCurrent ? cfg.color : isPast ? cfg.border : '#e5e7eb',
+                                            color: cfg.color,
+                                        }}
+                                    >
+                                        <span className="text-base">{cfg.emoji}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: '"Caveat", cursive', fontSize: '0.85rem', fontWeight: 700 }}>
+                                            {cfg.label}
+                                        </span>
+                                        {isCurrent && (
+                                            <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-green-500 border-2 border-white animate-pulse" />
+                                        )}
+                                        {canTransition && !isCurrent && (
+                                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-medium px-1.5 py-0.5 rounded-full bg-gray-800 text-white whitespace-nowrap">
+                                                click
+                                            </span>
+                                        )}
+                                    </button>
+                                    {idx < FLOW_PIPELINE.length - 1 && (
+                                        <div className="flex items-center mx-1">
+                                            <div className={`h-0.5 w-4 ${isPast ? 'bg-green-400' : 'bg-gray-300'}`} />
+                                            <ArrowRight className={`h-3 w-3 ${isPast ? 'text-green-400' : 'text-gray-300'}`} />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Side transitions: at_risk, postponed, cancelled */}
+                    <div className="flex flex-wrap gap-2 mb-4 border-t border-dashed border-gray-300 pt-3">
+                        {(['at_risk', 'postponed', 'cancelled'] as EventLifecycleState[]).map((state) => {
+                            const cfg = LIFECYCLE_FLOW_CONFIG[state];
+                            const isCurrent = event.lifecycle_state === state;
+                            const canTransition = ALLOWED_TRANSITIONS[event.lifecycle_state]?.includes(state) && !isCurrent;
+
+                            return (
+                                <button
+                                    key={state}
+                                    type="button"
+                                    disabled={!canTransition}
+                                    onClick={() => {
+                                        if (canTransition) {
+                                            setSelectedTransitionTarget(state);
+                                            setNextLifecycleState(state);
+                                        }
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${isCurrent
+                                        ? 'ring-2 ring-offset-1 scale-105 shadow-md'
+                                        : canTransition
+                                            ? 'hover:scale-105 hover:shadow cursor-pointer'
+                                            : 'opacity-30 cursor-default'
+                                        }`}
+                                    style={{
+                                        backgroundColor: isCurrent ? cfg.bg : '#fafafa',
+                                        borderColor: isCurrent ? cfg.color : canTransition ? cfg.border : '#e5e7eb',
+                                        color: cfg.color,
+                                    }}
+                                >
+                                    <span>{cfg.emoji}</span>
+                                    <span style={{ fontFamily: '"Caveat", cursive', fontSize: '0.9rem' }}>{cfg.label}</span>
+                                    {isCurrent && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Transition action area */}
+                    {selectedTransitionTarget && selectedTransitionTarget !== event.lifecycle_state && (
+                        <div className="border-2 border-dashed border-gray-400 rounded-lg p-4 bg-yellow-50/50 space-y-3 mb-3" style={{ transform: 'rotate(-0.2deg)' }}>
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>Transition:</span>
+                                <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: LIFECYCLE_FLOW_CONFIG[event.lifecycle_state].bg, color: LIFECYCLE_FLOW_CONFIG[event.lifecycle_state].color, border: `1px solid ${LIFECYCLE_FLOW_CONFIG[event.lifecycle_state].border}` }}>
+                                    {LIFECYCLE_FLOW_CONFIG[event.lifecycle_state].emoji} {LIFECYCLE_FLOW_CONFIG[event.lifecycle_state].label}
+                                </span>
+                                <ArrowRight className="h-4 w-4 text-gray-500" />
+                                <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: LIFECYCLE_FLOW_CONFIG[selectedTransitionTarget].bg, color: LIFECYCLE_FLOW_CONFIG[selectedTransitionTarget].color, border: `1px solid ${LIFECYCLE_FLOW_CONFIG[selectedTransitionTarget].border}` }}>
+                                    {LIFECYCLE_FLOW_CONFIG[selectedTransitionTarget].emoji} {LIFECYCLE_FLOW_CONFIG[selectedTransitionTarget].label}
+                                </span>
+                            </div>
+                            <input
+                                value={transitionReason}
+                                onChange={(e) => setTransitionReason(e.target.value)}
+                                placeholder="Reason for transition (optional)"
+                                className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
+                            />
+                            {selectedTransitionTarget === 'event_ready' && (
+                                <div className="rounded-md border bg-green-50 border-green-200 p-3">
+                                    <label className="block text-xs font-semibold text-green-800 mb-1">Event Ready Message (required)</label>
+                                    <textarea
+                                        value={eventReadyMessage}
+                                        onChange={(e) => setEventReadyMessage(e.target.value)}
+                                        rows={2}
+                                        placeholder="Share day-of notes, parking updates..."
+                                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm resize-none"
+                                    />
+                                </div>
+                            )}
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={handleTransitionLifecycle}
+                                    disabled={transitionLifecycle.isPending}
+                                    className="border-2 border-gray-800 bg-yellow-300 text-gray-900 shadow-[1px_2px_0px_#333] hover:bg-yellow-400 font-bold"
+                                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                                >
+                                    {transitionLifecycle.isPending ? 'Updating...' : 'Apply'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => { setSelectedTransitionTarget(null); setTransitionReason(''); }}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* History toggle */}
+                    <button
+                        type="button"
+                        onClick={() => setShowHistory(!showHistory)}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                        {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        <span style={{ fontFamily: '"Caveat", cursive', fontSize: '0.9rem' }}>
+                            {showHistory ? 'Hide' : 'Show'} transition history
+                        </span>
+                    </button>
+
+                    {showHistory && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                            {isLoadingLifecycleHistory ? (
+                                <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+                            ) : lifecycleHistory.length === 0 ? (
+                                <p className="text-sm text-muted-foreground italic">No transitions recorded.</p>
+                            ) : (
+                                lifecycleHistory.slice(0, 6).map((entry) => (
+                                    <div key={entry.id} className="flex items-center gap-2 text-xs">
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: LIFECYCLE_FLOW_CONFIG[entry.from_state]?.bg, color: LIFECYCLE_FLOW_CONFIG[entry.from_state]?.color }}>
+                                            {entry.from_state.replace('_', ' ')}
+                                        </span>
+                                        <ArrowRight className="h-3 w-3 text-gray-400" />
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: LIFECYCLE_FLOW_CONFIG[entry.to_state]?.bg, color: LIFECYCLE_FLOW_CONFIG[entry.to_state]?.color }}>
+                                            {entry.to_state.replace('_', ' ')}
+                                        </span>
+                                        <span className="text-muted-foreground ml-auto">
+                                            {new Date(entry.created_at).toLocaleDateString()} · {entry.actor_username || 'system'}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex gap-1 mb-8 overflow-x-auto pb-1 mt-4">
                     {[
                         { id: 'details', icon: FileEdit, label: 'Edit Details' },
@@ -386,64 +626,284 @@ export default function ManageEventPage() {
                             </div>
                         </div>
 
-                        {/* Schedule & Location Card */}
+                        {/* ═══ Scheduling Card ═══ */}
                         <div className="bg-[#fffdf5] border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative mb-8" style={{ transform: 'rotate(0.5deg)' }}>
                             <div className="flex items-center gap-2 mb-6 border-b-2 border-gray-800 pb-2 border-dashed">
                                 <Calendar className="h-6 w-6 text-gray-800" />
-                                <h2 className="text-xl font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>Schedule & Location</h2>
+                                <h2 className="text-xl font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>Scheduling</h2>
                             </div>
-                            <div className="grid md:grid-cols-2 gap-8">
-                                {/* Dates */}
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground mb-4">
-                                        <Clock className="h-4 w-4 text-muted-foreground" /> Date & Time
-                                    </h3>
+
+                            {/* Smart Date & Time */}
+                            <div className="space-y-4 mb-6">
+                                <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                    <Clock className="h-4 w-4 text-muted-foreground" /> Date & Time
+                                </h3>
+                                <div className="grid md:grid-cols-2 gap-4">
                                     <div>
                                         <label htmlFor="start_time" className="block text-sm font-medium mb-1">Start Time *</label>
-                                        <input id="start_time" name="start_time" type="datetime-local" defaultValue={dateToLocalValue(event.start_time)} required className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
+                                        <input
+                                            id="start_time" name="start_time" type="datetime-local"
+                                            defaultValue={dateToLocalValue(event.start_time)} required
+                                            onChange={(e) => {
+                                                const startEl = e.target;
+                                                const endEl = document.getElementById('end_time') as HTMLInputElement;
+                                                if (startEl.value && endEl && eventDuration > 0) {
+                                                    const newEnd = new Date(new Date(startEl.value).getTime() + eventDuration);
+                                                    endEl.value = new Date(newEnd.getTime() - newEnd.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                                                }
+                                            }}
+                                            className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                                        />
                                     </div>
                                     <div>
                                         <label htmlFor="end_time" className="block text-sm font-medium mb-1">End Time *</label>
-                                        <input id="end_time" name="end_time" type="datetime-local" defaultValue={dateToLocalValue(event.end_time)} required className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
+                                        <input
+                                            id="end_time" name="end_time" type="datetime-local"
+                                            defaultValue={dateToLocalValue(event.end_time)} required
+                                            onChange={(e) => {
+                                                const endEl = e.target;
+                                                const startEl = document.getElementById('start_time') as HTMLInputElement;
+                                                if (startEl?.value && endEl.value) {
+                                                    const dur = new Date(endEl.value).getTime() - new Date(startEl.value).getTime();
+                                                    if (dur > 0) setEventDuration(dur);
+                                                }
+                                            }}
+                                            className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                                        />
                                     </div>
                                 </div>
 
-                                {/* Location */}
+                                {/* Duration display & quick-set */}
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    {eventDuration > 0 && (
+                                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold border border-blue-200">
+                                            <Timer className="h-3 w-3" /> Duration: {formatDuration(eventDuration)}
+                                        </span>
+                                    )}
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Quick set:</span>
+                                    {[{ label: '1h', ms: 3600000 }, { label: '2h', ms: 7200000 }, { label: '3h', ms: 10800000 }, { label: 'Half Day', ms: 21600000 }, { label: 'Full Day', ms: 43200000 }].map((preset) => (
+                                        <button
+                                            key={preset.label}
+                                            type="button"
+                                            onClick={() => {
+                                                setEventDuration(preset.ms);
+                                                const startEl = document.getElementById('start_time') as HTMLInputElement;
+                                                const endEl = document.getElementById('end_time') as HTMLInputElement;
+                                                if (startEl?.value && endEl) {
+                                                    const newEnd = new Date(new Date(startEl.value).getTime() + preset.ms);
+                                                    endEl.value = new Date(newEnd.getTime() - newEnd.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                                                }
+                                            }}
+                                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-2 transition-all hover:scale-105 ${eventDuration === preset.ms
+                                                ? 'bg-gray-800 text-white border-gray-800'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                                                }`}
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Recurring Event Timeline */}
+                            {event?.series && (
+                                <div className="border-t-2 border-dashed border-gray-300 pt-5 mt-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                                            <Repeat className="h-4 w-4 text-primary" /> Series Timeline
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold border border-purple-200">
+                                            {occurrences.filter((o: any) => o.lifecycle_state !== 'cancelled').length} scheduled
+                                        </span>
+                                    </div>
+
+                                    {/* Horizontal scrolling timeline */}
+                                    <div className="flex gap-3 overflow-x-auto pb-3 snap-x no-scrollbar">
+                                        {isLoadingOccurrences ? (
+                                            <p className="text-sm text-muted-foreground animate-pulse py-4">Loading timeline...</p>
+                                        ) : (
+                                            [...occurrences].sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()).map((occ: any) => {
+                                                const isCurrent = occ.id === event.id;
+                                                const isPast = new Date(occ.start_time) < new Date();
+                                                const isCancelled = occ.lifecycle_state === 'cancelled';
+                                                const occCfg = LIFECYCLE_FLOW_CONFIG[occ.lifecycle_state as EventLifecycleState] || LIFECYCLE_FLOW_CONFIG.draft;
+
+                                                return (
+                                                    <div key={occ.id} className="flex items-center gap-0 flex-shrink-0 snap-start">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { if (!isCurrent) navigate(`/events/${occ.id}`); }}
+                                                            className={`relative flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
+                                                                ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
+                                                                : isCancelled
+                                                                    ? 'opacity-40 bg-gray-50 border-gray-300'
+                                                                    : isPast
+                                                                        ? 'bg-gray-50 border-gray-300 hover:border-gray-500 cursor-pointer'
+                                                                        : 'bg-white border-gray-300 hover:border-primary hover:shadow-md cursor-pointer'
+                                                                }`}
+                                                        >
+                                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mb-1" style={{ backgroundColor: occCfg.bg, color: occCfg.color, border: `1px solid ${occCfg.border}` }}>
+                                                                {occCfg.label}
+                                                            </span>
+                                                            <span className="text-xs font-bold text-gray-800" style={{ fontFamily: '"Caveat", cursive', fontSize: '0.95rem' }}>
+                                                                {new Date(occ.start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-500">
+                                                                {new Date(occ.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                            {isCurrent && (
+                                                                <span className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-yellow-400 border border-gray-800 rounded-full font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>YOU</span>
+                                                            )}
+                                                            {!isCurrent && !isCancelled && occ.id !== event.id && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteOccurrence(occ.id); }}
+                                                                    className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-red-100 border border-red-300 text-red-500 text-[10px] flex items-center justify-center hover:bg-red-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    title="Delete"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            )}
+                                                        </button>
+                                                        <div className="w-4 h-0.5 bg-gray-200 flex-shrink-0" />
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    {/* Generate more dates */}
+                                    <div className="mt-4 p-4 rounded-lg border-2 border-dashed border-purple-200 bg-purple-50/30">
+                                        <label className="block text-sm font-medium mb-1">Generate Until Date</label>
+                                        <p className="text-xs text-muted-foreground mb-2">Auto-generate future occurrences based on recurrence rule.</p>
+                                        <input
+                                            type="date" value={generateUntil}
+                                            onChange={(e) => setGenerateUntil(e.target.value)}
+                                            className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                        />
+                                        {previewDates.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-purple-200">
+                                                <h4 className="text-xs font-bold uppercase tracking-wide text-purple-700 mb-2">
+                                                    Will Generate {previewDates.length} Instances
+                                                </h4>
+                                                <ul className="text-sm space-y-1 max-h-28 overflow-y-auto">
+                                                    {previewDates.map((d: any, idx) => (
+                                                        <li key={idx} className="text-muted-foreground flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block" />
+                                                            {new Date(d.start_time).toLocaleDateString()} - {new Date(d.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ═══ Location Card ═══ */}
+                        <div className="bg-[#f0fdf4] border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative mb-8" style={{ transform: 'rotate(-0.3deg)' }}>
+                            <div className="flex items-center gap-2 mb-6 border-b-2 border-gray-800 pb-2 border-dashed">
+                                <MapPin className="h-6 w-6 text-gray-800" />
+                                <h2 className="text-xl font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>Location</h2>
+                            </div>
+
+                            {/* Online / Offline toggle */}
+                            <div className="flex gap-1 p-1 bg-gray-100 rounded-full w-fit mb-6 border border-gray-200">
+                                {[{ mode: 'offline' as const, icon: MapPin, label: 'In Person' }, { mode: 'online' as const, icon: Globe, label: 'Online' }].map(({ mode, icon: Icon, label }) => (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => setLocationMode(mode)}
+                                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${locationMode === mode
+                                            ? 'bg-white shadow-md text-gray-800 border border-gray-200'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
+                                    >
+                                        <Icon className="h-4 w-4" /> {label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {locationMode === 'offline' ? (
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground mb-4">
-                                        <MapPin className="h-4 w-4 text-muted-foreground" /> Venue
-                                    </h3>
                                     <div>
                                         <label htmlFor="location_name" className="block text-sm font-medium mb-1">Location Name *</label>
-                                        <input id="location_name" name="location_name" ref={locationNameRef} defaultValue={event.location_name} required placeholder="e.g. Central Park" className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
+                                        <input id="location_name" name="location_name" ref={locationNameRef} defaultValue={event.location_address !== 'Online Event' ? event.location_name : ''} required placeholder="e.g. Central Park" className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
                                             <label htmlFor="location_address" className="block text-sm font-medium mb-1">Address</label>
                                             <Button
-                                                type="button"
-                                                variant="secondary"
-                                                size="sm"
+                                                type="button" variant="secondary" size="sm"
                                                 onClick={handleUseCurrentLocation}
                                                 disabled={isDetectingLocation}
-                                                className="h-7 px-2.5 text-xs bg-primary/10 text-primary hover:bg-primary/20"
+                                                className="h-7 px-2.5 text-xs border-2 border-gray-800 bg-green-200 text-gray-800 shadow-[1px_1px_0px_#333] hover:bg-green-300 font-bold"
                                             >
                                                 <LocateFixed className="h-3.5 w-3.5 mr-1.5" />
-                                                {isDetectingLocation ? 'Detecting...' : 'Use My Location'}
+                                                {isDetectingLocation ? 'Detecting...' : '📍 Find My Location'}
                                             </Button>
                                         </div>
-                                        <input id="location_address" name="location_address" ref={locationAddressRef} defaultValue={event.location_address || ''} placeholder="Full street address" className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
+                                        <input id="location_address" name="location_address" ref={locationAddressRef} defaultValue={event.location_address !== 'Online Event' ? (event.location_address || '') : ''} placeholder="Full street address" className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
                                     </div>
                                     <input type="hidden" name="latitude" value={latitude} />
                                     <input type="hidden" name="longitude" value={longitude} />
                                     {latitude && longitude && (
                                         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                            <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                                            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
                                             Coordinates set ({latitude}, {longitude})
                                         </p>
                                     )}
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Meeting URL *</label>
+                                        <div className="relative">
+                                            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                value={onlineUrl}
+                                                onChange={(e) => setOnlineUrl(e.target.value)}
+                                                placeholder="https://zoom.us/j/... or meet.google.com/..."
+                                                className="w-full rounded-lg border bg-background pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                                            />
+                                        </div>
+                                        {/* hidden fields so form submission includes location */}
+                                        <input type="hidden" name="location_name" value={onlineUrl || 'Online Event'} />
+                                        <input type="hidden" name="location_address" value="Online Event" />
+                                    </div>
+
+                                    {/* Detected platform */}
+                                    {onlineUrl && (
+                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white border-2 border-dashed border-gray-300">
+                                            <span className="text-2xl">{detectPlatform(onlineUrl).icon}</span>
+                                            <div>
+                                                <p className="text-sm font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}>
+                                                    {detectPlatform(onlineUrl).name}
+                                                </p>
+                                                <a href={onlineUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                    <ExternalLink className="h-3 w-3" /> Open link
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Platform suggestions */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {[{ name: 'Zoom', icon: '🎥', prefix: 'https://zoom.us/j/' }, { name: 'Google Meet', icon: '🟢', prefix: 'https://meet.google.com/' }, { name: 'Teams', icon: '🟦', prefix: 'https://teams.microsoft.com/l/meetup-join/' }, { name: 'Discord', icon: '🎮', prefix: 'https://discord.gg/' }].map(p => (
+                                            <button
+                                                key={p.name}
+                                                type="button"
+                                                onClick={() => { if (!onlineUrl) setOnlineUrl(p.prefix); }}
+                                                className="flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium bg-white hover:bg-gray-50 transition-colors"
+                                            >
+                                                <span>{p.icon}</span> {p.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Tickets Card */}
@@ -477,224 +937,6 @@ export default function ManageEventPage() {
                             </div>
                         </div>
 
-                        {/* Status & Controls Card */}
-                        <div className="bg-[#fff5f5] border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative mb-8" style={{ transform: 'rotate(0.25deg)' }}>
-                            <div className="flex items-center gap-2 mb-6 border-b-2 border-gray-800 pb-2 border-dashed">
-                                <Activity className="h-6 w-6 text-gray-800" />
-                                <h2 className="text-xl font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>Status & Controls</h2>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-8 divide-y md:divide-y-0 md:divide-x border-gray-800">
-                                {/* Lifecycle */}
-                                <div className="space-y-5">
-                                    <div>
-                                        <h3 className="text-sm font-semibold mb-1">Event Lifecycle</h3>
-                                        <p className="text-xs text-muted-foreground">Manage the current status of your event.</p>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
-                                        <span className="text-sm font-medium">Current Status</span>
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary uppercase tracking-wide">
-                                            {event.lifecycle_state.replace('_', ' ')}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium mb-1">Transition To</label>
-                                            <select
-                                                value={nextLifecycleState}
-                                                onChange={(e) => setNextLifecycleState(e.target.value as EventLifecycleState)}
-                                                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
-                                            >
-                                                {LIFECYCLE_TRANSITION_OPTIONS.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium mb-1">Reason (optional)</label>
-                                            <input
-                                                value={transitionReason}
-                                                onChange={(e) => setTransitionReason(e.target.value)}
-                                                placeholder="Why is the status changing?"
-                                                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
-                                            />
-                                        </div>
-
-                                        {nextLifecycleState === 'event_ready' && (
-                                            <div className="rounded-md border bg-primary/5 border-primary/20 p-3 mt-3">
-                                                <label className="block text-xs font-semibold uppercase tracking-wide text-primary mb-1">
-                                                    Event Ready Message
-                                                </label>
-                                                <p className="text-xs text-muted-foreground mb-2">This message will be sent to all attendees.</p>
-                                                <textarea
-                                                    value={eventReadyMessage}
-                                                    onChange={(e) => setEventReadyMessage(e.target.value)}
-                                                    rows={3}
-                                                    placeholder="Share day-of notes, parking updates, or welcome messages..."
-                                                    className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                />
-                                            </div>
-                                        )}
-
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            className="w-full"
-                                            onClick={handleTransitionLifecycle}
-                                            disabled={transitionLifecycle.isPending || nextLifecycleState === event.lifecycle_state}
-                                        >
-                                            {transitionLifecycle.isPending ? 'Updating Status...' : 'Apply Transition'}
-                                        </Button>
-                                    </div>
-
-                                    <div className="pt-4 mt-4 border-t">
-                                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                                            Transition History
-                                        </h4>
-                                        {isLoadingLifecycleHistory ? (
-                                            <p className="text-sm text-muted-foreground animate-pulse">Loading history...</p>
-                                        ) : lifecycleHistory.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground italic">No transitions recorded.</p>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {lifecycleHistory.slice(0, 4).map((entry) => (
-                                                    <div key={entry.id} className="relative pl-4 border-l-2 border-muted pb-1 last:pb-0 last:border-transparent">
-                                                        <div className="absolute w-2 h-2 bg-muted-foreground/30 rounded-full -left-[5px] top-1.5 ring-4 ring-background"></div>
-                                                        <div className="text-xs">
-                                                            <div className="font-medium flex items-center gap-1.5 text-foreground">
-                                                                <span className="capitalize">{entry.from_state.replace('_', ' ')}</span>
-                                                                <ArrowLeft className="h-3 w-3 rotate-180 text-muted-foreground" />
-                                                                <span className="capitalize">{entry.to_state.replace('_', ' ')}</span>
-                                                            </div>
-                                                            <div className="text-muted-foreground mt-0.5">
-                                                                {new Date(entry.created_at).toLocaleDateString()} at {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {entry.actor_username || 'system'}
-                                                            </div>
-                                                            {entry.reason && (
-                                                                <div className="text-muted-foreground/80 mt-1 italic border-l-2 border-muted pl-2 py-0.5 bg-muted/10 rounded-r">
-                                                                    "{entry.reason}"
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Recurrence (if applicable) */}
-                                <div className="md:pl-8 space-y-5 pt-8 md:pt-0">
-                                    {event?.series ? (
-                                        <>
-                                            <div>
-                                                <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
-                                                    <Repeat className="h-4 w-4 text-primary" /> Recurring Schedule
-                                                </h3>
-                                                <p className="text-xs text-muted-foreground">This event is part of a series. Manage future occurrences.</p>
-                                            </div>
-
-                                            <div className="rounded-xl border bg-primary/5 p-4 border-primary/20">
-                                                <div className="mb-4">
-                                                    <label className="block text-sm font-medium mb-1">Generate Until Date</label>
-                                                    <p className="text-xs text-muted-foreground">Select an end date to auto-populate future occurrences based on your event's recurrence rule.</p>
-                                                </div>
-                                                <div className="relative">
-                                                    <input
-                                                        type="date"
-                                                        value={generateUntil}
-                                                        onChange={(e) => setGenerateUntil(e.target.value)}
-                                                        className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                                                    />
-                                                </div>
-                                                {previewDates.length > 0 && (
-                                                    <div className="mt-4 pt-4 border-t border-primary/10">
-                                                        <h4 className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
-                                                            Will Generate {previewDates.length} Instances
-                                                        </h4>
-                                                        <ul className="text-sm space-y-1 max-h-32 overflow-y-auto">
-                                                            {previewDates.map((d: any, idx) => (
-                                                                <li key={idx} className="text-muted-foreground flex items-center gap-2">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-primary/40 inline-block"></span>
-                                                                    {new Date(d.start_time).toLocaleDateString()} - {new Date(d.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* List of existing instances */}
-                                            <div className="pt-4 mt-4 border-t">
-                                                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center justify-between">
-                                                    <span>Upcoming Occurrences</span>
-                                                    <span className="px-2 py-0.5 rounded-full bg-muted text-xs">{occurrences.filter((o: any) => o.lifecycle_state !== 'cancelled').length} scheduled</span>
-                                                </h4>
-                                                {isLoadingOccurrences ? (
-                                                    <p className="text-sm text-muted-foreground animate-pulse">Loading occurrences...</p>
-                                                ) : occurrences.length === 0 ? (
-                                                    <p className="text-sm text-muted-foreground italic">No occurrences found.</p>
-                                                ) : (
-                                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                                        {occurrences.map((occ: any) => {
-                                                            const isCancelled = occ.lifecycle_state === 'cancelled';
-                                                            return (
-                                                                <div key={occ.id} className={`flex items-center justify-between p-2.5 rounded-lg border bg-card text-sm ${isCancelled ? 'opacity-60' : ''}`}>
-                                                                    <div>
-                                                                        <div className="font-medium flex items-center gap-2">
-                                                                            {new Date(occ.start_time).toLocaleDateString()}
-                                                                            {isCancelled && <span className="text-[10px] uppercase font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">Cancelled</span>}
-                                                                        </div>
-                                                                        <div className="text-xs text-muted-foreground mt-0.5">
-                                                                            {new Date(occ.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                        </div>
-                                                                    </div>
-                                                                    {!isCancelled && occ.id !== event.id && (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Button
-                                                                                type="button"
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-7 text-xs"
-                                                                                onClick={() => navigate(`/events/${occ.id}`)}
-                                                                            >
-                                                                                View
-                                                                            </Button>
-                                                                            <Button
-                                                                                type="button"
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-7 text-xs text-destructive hover:bg-destructive/10"
-                                                                                onClick={() => handleDeleteOccurrence(occ.id)}
-                                                                            >
-                                                                                Delete
-                                                                            </Button>
-                                                                        </div>
-                                                                    )}
-                                                                    {occ.id === event.id && (
-                                                                        <span className="text-xs font-medium text-primary px-2">Currently Editing</span>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-xl border-muted bg-muted/10">
-                                            <Repeat className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                                            <h3 className="text-sm font-medium text-foreground">Not a recurring event</h3>
-                                            <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
-                                                This is a single occurrence event. Scheduled future dates cannot be generated automatically.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
 
                         <div className="flex justify-end gap-3 pt-2 sticky bottom-6 z-10">
                             <Button type="submit" size="lg" disabled={isSubmitting} className="border-2 border-gray-800 bg-yellow-300 text-gray-900 shadow-[2px_3px_0px_#333] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold px-8" style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.1rem' }}>

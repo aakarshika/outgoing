@@ -294,7 +294,7 @@ function NeedCard({ opportunity, isPotential = false, onApply }: NeedCardProps) 
 
 type Tab = 'relevant' | 'potential';
 
-export default function VendorOpportunitiesPage() {
+export function OpportunitiesTab() {
     const { data: opportunitiesResponse, isLoading } = useMyVendorOpportunities();
     const { data: potentialResponse, isLoading: isLoadingPotential } = useMyPotentialOpportunities();
     const { data: myServicesResponse, isLoading: isLoadingServices } = useMyServices();
@@ -333,243 +333,234 @@ export default function VendorOpportunitiesPage() {
 
     return (
         <ThemeProvider theme={scrapbookTheme}>
-            <Box sx={{
-                minHeight: '100vh',
-                bgcolor: '#f4f1ea',
-                backgroundImage: 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
-                backgroundSize: '15px 15px',
-                backgroundAttachment: 'fixed',
-                p: { xs: 2, sm: 4, md: 6 },
-            }}>
-                <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+            <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 
-                    {/* ── Hero Banner ── */}
-                    <Paper elevation={2} sx={{
-                        mb: 5,
-                        p: { xs: 3, sm: 4 },
-                        bgcolor: '#fff',
-                        position: 'relative',
-                        overflow: 'visible',
-                        border: '1px solid #e5e7eb',
-                    }}>
-                        <WashiTape color="rgba(37, 99, 235, 0.4)" rotate="-3deg" width={100} />
+                {/* ── Hero Banner ── */}
+                <Paper elevation={2} sx={{
+                    mb: 5,
+                    p: { xs: 3, sm: 4 },
+                    bgcolor: '#fff',
+                    position: 'relative',
+                    overflow: 'visible',
+                    border: '1px solid #e5e7eb',
+                }}>
+                    <WashiTape color="rgba(37, 99, 235, 0.4)" rotate="-3deg" width={100} />
 
-                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { sm: 'flex-start' }, gap: 3 }}>
-                            <Box>
-                                <Typography sx={{
-                                    fontSize: '0.65rem',
-                                    fontWeight: 'bold',
-                                    letterSpacing: 2,
-                                    textTransform: 'uppercase',
-                                    color: '#2563eb',
-                                    fontFamily: 'monospace',
-                                    mb: 1,
-                                }}>
-                                    Vendor Match Feed
-                                </Typography>
-                                <Typography sx={{
-                                    fontFamily: '"Permanent Marker", cursive',
-                                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                                    transform: 'rotate(-1deg)',
-                                    lineHeight: 1.1,
-                                    mb: 1,
-                                }}>
-                                    Opportunities for You
-                                </Typography>
-                                <Typography variant="body2" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}>
-                                    Curated event needs based on your active service categories.
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { sm: 'flex-start' }, gap: 3 }}>
+                        <Box>
+                            <Typography sx={{
+                                fontSize: '0.65rem',
+                                fontWeight: 'bold',
+                                letterSpacing: 2,
+                                textTransform: 'uppercase',
+                                color: '#2563eb',
+                                fontFamily: 'monospace',
+                                mb: 1,
+                            }}>
+                                Vendor Match Feed
+                            </Typography>
+                            <Typography sx={{
+                                fontFamily: '"Permanent Marker", cursive',
+                                fontSize: { xs: '1.8rem', sm: '2.5rem' },
+                                transform: 'rotate(-1deg)',
+                                lineHeight: 1.1,
+                                mb: 1,
+                            }}>
+                                Opportunities for You
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}>
+                                Curated event needs based on your active service categories.
+                            </Typography>
+                        </Box>
+                        <Button asChild variant="outline" size="sm">
+                            <Link to="/vendors/create">+ Create New Service</Link>
+                        </Button>
+                    </Box>
+
+                    {/* Stats stickers */}
+                    <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                        <Box sx={{ px: 1.5, py: 0.5, border: '1px solid #333', transform: 'rotate(-1deg)', bgcolor: '#fff' }}>
+                            <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                                {filteredRelevant.length} matched needs
+                            </Typography>
+                        </Box>
+                        <Box sx={{ px: 1.5, py: 0.5, border: '1px dashed #16a34a', transform: 'rotate(1deg)', bgcolor: '#f0fdf4' }}>
+                            <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#16a34a' }}>
+                                {filteredPotential.length} potential
+                            </Typography>
+                        </Box>
+                        {invitedCount > 0 && (
+                            <Box sx={{ px: 1.5, py: 0.5, border: '2px solid rgba(234, 179, 8, 0.5)', transform: 'rotate(2deg)', bgcolor: '#fefce8' }}>
+                                <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#a16207' }}>
+                                    {invitedCount} host invites ✨
                                 </Typography>
                             </Box>
-                            <Button asChild variant="outline" size="sm">
-                                <Link to="/vendors/create">+ Create New Service</Link>
-                            </Button>
-                        </Box>
-
-                        {/* Stats stickers */}
-                        <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                            <Box sx={{ px: 1.5, py: 0.5, border: '1px solid #333', transform: 'rotate(-1deg)', bgcolor: '#fff' }}>
-                                <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
-                                    {filteredRelevant.length} matched needs
+                        )}
+                        {serviceCategories.slice(0, 4).map((category) => (
+                            <Box key={category} sx={{
+                                px: 1.5, py: 0.5,
+                                border: '1px dashed #ccc',
+                                transform: `rotate(${(Math.random() * 4 - 2).toFixed(1)}deg)`,
+                                bgcolor: '#fff',
+                            }}>
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#2563eb' }}>
+                                    {category}
                                 </Typography>
                             </Box>
-                            <Box sx={{ px: 1.5, py: 0.5, border: '1px dashed #16a34a', transform: 'rotate(1deg)', bgcolor: '#f0fdf4' }}>
-                                <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#16a34a' }}>
-                                    {filteredPotential.length} potential
-                                </Typography>
-                            </Box>
-                            {invitedCount > 0 && (
-                                <Box sx={{ px: 1.5, py: 0.5, border: '2px solid rgba(234, 179, 8, 0.5)', transform: 'rotate(2deg)', bgcolor: '#fefce8' }}>
-                                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#a16207' }}>
-                                        {invitedCount} host invites ✨
-                                    </Typography>
-                                </Box>
-                            )}
-                            {serviceCategories.slice(0, 4).map((category) => (
-                                <Box key={category} sx={{
-                                    px: 1.5, py: 0.5,
-                                    border: '1px dashed #ccc',
-                                    transform: `rotate(${(Math.random() * 4 - 2).toFixed(1)}deg)`,
-                                    bgcolor: '#fff',
-                                }}>
-                                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#2563eb' }}>
-                                        {category}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Box>
-                    </Paper>
+                        ))}
+                    </Box>
+                </Paper>
 
-                    {/* ── Search strip ── */}
-                    <Box sx={{
-                        mb: 3,
-                        display: 'flex',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: { sm: 'center' },
-                        justifyContent: 'space-between',
-                        gap: 2,
-                    }}>
-                        <Box sx={{ position: 'relative', width: '100%', maxWidth: { sm: 420 } }}>
-                            <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#999' }} />
-                            <input
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search by need, event, location..."
-                                style={{
-                                    width: '100%',
-                                    height: 42,
-                                    paddingLeft: 36,
-                                    paddingRight: 12,
-                                    fontSize: '0.875rem',
-                                    fontFamily: 'serif',
-                                    border: '1px solid #333',
-                                    borderRadius: 0,
-                                    background: '#fff',
-                                    outline: 'none',
-                                }}
-                            />
-                        </Box>
-                        <Typography sx={{ fontFamily: '"Caveat", cursive', color: '#888', fontSize: '0.9rem' }}>
-                            Apply early to land the gig! ☝️
+                {/* ── Search strip ── */}
+                <Box sx={{
+                    mb: 3,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { sm: 'center' },
+                    justifyContent: 'space-between',
+                    gap: 2,
+                }}>
+                    <Box sx={{ position: 'relative', width: '100%', maxWidth: { sm: 420 } }}>
+                        <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#999' }} />
+                        <input
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search by need, event, location..."
+                            style={{
+                                width: '100%',
+                                height: 42,
+                                paddingLeft: 36,
+                                paddingRight: 12,
+                                fontSize: '0.875rem',
+                                fontFamily: 'serif',
+                                border: '1px solid #333',
+                                borderRadius: 0,
+                                background: '#fff',
+                                outline: 'none',
+                            }}
+                        />
+                    </Box>
+                    <Typography sx={{ fontFamily: '"Caveat", cursive', color: '#888', fontSize: '0.9rem' }}>
+                        Apply early to land the gig! ☝️
+                    </Typography>
+                </Box>
+
+                {/* ── Tabs — washi tape style ── */}
+                <Box sx={{ mb: 4, display: 'flex', gap: 0 }}>
+                    <Box
+                        onClick={() => setActiveTab('relevant')}
+                        sx={{
+                            px: 3, py: 1.5,
+                            cursor: 'pointer',
+                            bgcolor: activeTab === 'relevant' ? 'rgba(37, 99, 235, 0.35)' : 'rgba(37, 99, 235, 0.1)',
+                            borderBottom: activeTab === 'relevant' ? '3px solid #2563eb' : '3px solid transparent',
+                            transition: 'all 0.2s ease',
+                            transform: 'rotate(-1deg)',
+                            '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.25)' },
+                        }}
+                    >
+                        <Typography sx={{
+                            fontSize: '0.85rem',
+                            fontFamily: '"Permanent Marker", cursive',
+                            color: activeTab === 'relevant' ? '#1d4ed8' : '#6b7280',
+                        }}>
+                            Relevant {filteredRelevant.length > 0 && `(${filteredRelevant.length})`}
                         </Typography>
                     </Box>
-
-                    {/* ── Tabs — washi tape style ── */}
-                    <Box sx={{ mb: 4, display: 'flex', gap: 0 }}>
-                        <Box
-                            onClick={() => setActiveTab('relevant')}
-                            sx={{
-                                px: 3, py: 1.5,
-                                cursor: 'pointer',
-                                bgcolor: activeTab === 'relevant' ? 'rgba(37, 99, 235, 0.35)' : 'rgba(37, 99, 235, 0.1)',
-                                borderBottom: activeTab === 'relevant' ? '3px solid #2563eb' : '3px solid transparent',
-                                transition: 'all 0.2s ease',
-                                transform: 'rotate(-1deg)',
-                                '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.25)' },
-                            }}
-                        >
-                            <Typography sx={{
-                                fontSize: '0.85rem',
-                                fontFamily: '"Permanent Marker", cursive',
-                                color: activeTab === 'relevant' ? '#1d4ed8' : '#6b7280',
-                            }}>
-                                Relevant {filteredRelevant.length > 0 && `(${filteredRelevant.length})`}
-                            </Typography>
-                        </Box>
-                        <Box
-                            onClick={() => setActiveTab('potential')}
-                            sx={{
-                                px: 3, py: 1.5,
-                                cursor: 'pointer',
-                                bgcolor: activeTab === 'potential' ? 'rgba(22, 163, 74, 0.3)' : 'rgba(22, 163, 74, 0.08)',
-                                borderBottom: activeTab === 'potential' ? '3px solid #16a34a' : '3px solid transparent',
-                                transition: 'all 0.2s ease',
-                                transform: 'rotate(1deg)',
-                                '&:hover': { bgcolor: 'rgba(22, 163, 74, 0.2)' },
-                            }}
-                        >
-                            <Typography sx={{
-                                fontSize: '0.85rem',
-                                fontFamily: '"Permanent Marker", cursive',
-                                color: activeTab === 'potential' ? '#16a34a' : '#6b7280',
-                            }}>
-                                Potential {filteredPotential.length > 0 && `(${filteredPotential.length})`}
-                            </Typography>
-                        </Box>
+                    <Box
+                        onClick={() => setActiveTab('potential')}
+                        sx={{
+                            px: 3, py: 1.5,
+                            cursor: 'pointer',
+                            bgcolor: activeTab === 'potential' ? 'rgba(22, 163, 74, 0.3)' : 'rgba(22, 163, 74, 0.08)',
+                            borderBottom: activeTab === 'potential' ? '3px solid #16a34a' : '3px solid transparent',
+                            transition: 'all 0.2s ease',
+                            transform: 'rotate(1deg)',
+                            '&:hover': { bgcolor: 'rgba(22, 163, 74, 0.2)' },
+                        }}
+                    >
+                        <Typography sx={{
+                            fontSize: '0.85rem',
+                            fontFamily: '"Permanent Marker", cursive',
+                            color: activeTab === 'potential' ? '#16a34a' : '#6b7280',
+                        }}>
+                            Potential {filteredPotential.length > 0 && `(${filteredPotential.length})`}
+                        </Typography>
                     </Box>
-
-                    {/* Potential tab callout */}
-                    {activeTab === 'potential' && (
-                        <Paper elevation={0} sx={{
-                            mb: 4, p: 3,
-                            bgcolor: '#f0fdf4',
-                            border: '1px dashed #16a34a',
-                            transform: 'rotate(-0.5deg)',
-                            position: 'relative',
-                        }}>
-                            <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem', color: '#15803d' }}>
-                                <strong>These are opportunities outside your current services.</strong> Create a service in that category to apply — it only takes a minute! ✍️
-                            </Typography>
-                        </Paper>
-                    )}
-
-                    {!isLoadingServices && myServices.length === 0 && activeTab === 'relevant' && (
-                        <Paper elevation={0} sx={{
-                            mb: 4, p: 3,
-                            bgcolor: '#fff9e6',
-                            border: '1px solid #e0d8c0',
-                            transform: 'rotate(0.5deg)',
-                        }}>
-                            <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem', color: '#92400e' }}>
-                                Add at least one vendor service category to see matching opportunities. 📋
-                            </Typography>
-                        </Paper>
-                    )}
-
-                    {/* ── Cards ── */}
-                    {isTabLoading ? (
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
-                            {Array.from({ length: 6 }).map((_, i) => (
-                                <Box key={i} sx={{
-                                    height: 240,
-                                    bgcolor: '#fff',
-                                    border: '1px solid #e5e7eb',
-                                    opacity: 0.5,
-                                    animation: 'pulse 2s infinite',
-                                }} />
-                            ))}
-                        </Box>
-                    ) : activeList.length === 0 ? (
-                        <Paper elevation={1} sx={{
-                            p: 6,
-                            textAlign: 'center',
-                            bgcolor: '#fff9e6',
-                            border: '1px solid #e0d8c0',
-                            position: 'relative',
-                        }}>
-                            <WashiTape color="rgba(0,0,0,0.08)" rotate="5deg" width={70} />
-                            <BellRing style={{ width: 40, height: 40, margin: '0 auto 12px', color: '#d97706', opacity: 0.7 }} />
-                            <Typography sx={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.3rem', mb: 1 }}>
-                                {activeTab === 'relevant' ? 'No matching opportunities right now' : 'No potential opportunities found'}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#888' }}>
-                                {activeTab === 'relevant'
-                                    ? 'Check back soon or expand your service categories.'
-                                    : 'All open needs match your existing services — great coverage!'}
-                            </Typography>
-                        </Paper>
-                    ) : (
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
-                            {activeList.map((opportunity) => (
-                                <NeedCard
-                                    key={opportunity.need_id}
-                                    opportunity={opportunity}
-                                    isPotential={activeTab === 'potential'}
-                                    onApply={(o) => setSelectedNeed(o)}
-                                />
-                            ))}
-                        </Box>
-                    )}
                 </Box>
+
+                {/* Potential tab callout */}
+                {activeTab === 'potential' && (
+                    <Paper elevation={0} sx={{
+                        mb: 4, p: 3,
+                        bgcolor: '#f0fdf4',
+                        border: '1px dashed #16a34a',
+                        transform: 'rotate(-0.5deg)',
+                        position: 'relative',
+                    }}>
+                        <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem', color: '#15803d' }}>
+                            <strong>These are opportunities outside your current services.</strong> Create a service in that category to apply — it only takes a minute! ✍️
+                        </Typography>
+                    </Paper>
+                )}
+
+                {!isLoadingServices && myServices.length === 0 && activeTab === 'relevant' && (
+                    <Paper elevation={0} sx={{
+                        mb: 4, p: 3,
+                        bgcolor: '#fff9e6',
+                        border: '1px solid #e0d8c0',
+                        transform: 'rotate(0.5deg)',
+                    }}>
+                        <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem', color: '#92400e' }}>
+                            Add at least one vendor service category to see matching opportunities. 📋
+                        </Typography>
+                    </Paper>
+                )}
+
+                {/* ── Cards ── */}
+                {isTabLoading ? (
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <Box key={i} sx={{
+                                height: 240,
+                                bgcolor: '#fff',
+                                border: '1px solid #e5e7eb',
+                                opacity: 0.5,
+                                animation: 'pulse 2s infinite',
+                            }} />
+                        ))}
+                    </Box>
+                ) : activeList.length === 0 ? (
+                    <Paper elevation={1} sx={{
+                        p: 6,
+                        textAlign: 'center',
+                        bgcolor: '#fff9e6',
+                        border: '1px solid #e0d8c0',
+                        position: 'relative',
+                    }}>
+                        <WashiTape color="rgba(0,0,0,0.08)" rotate="5deg" width={70} />
+                        <BellRing style={{ width: 40, height: 40, margin: '0 auto 12px', color: '#d97706', opacity: 0.7 }} />
+                        <Typography sx={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.3rem', mb: 1 }}>
+                            {activeTab === 'relevant' ? 'No matching opportunities right now' : 'No potential opportunities found'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#888' }}>
+                            {activeTab === 'relevant'
+                                ? 'Check back soon or expand your service categories.'
+                                : 'All open needs match your existing services — great coverage!'}
+                        </Typography>
+                    </Paper>
+                ) : (
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
+                        {activeList.map((opportunity) => (
+                            <NeedCard
+                                key={opportunity.need_id}
+                                opportunity={opportunity}
+                                isPotential={activeTab === 'potential'}
+                                onApply={(o) => setSelectedNeed(o)}
+                            />
+                        ))}
+                    </Box>
+                )}
 
                 {selectedNeed && (
                     <ApplyToNeedModal

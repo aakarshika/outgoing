@@ -18,9 +18,9 @@ const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
 const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
 const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPage'));
-const VendorOpportunitiesPage = lazy(() => import('@/pages/vendors/VendorOpportunitiesPage'));
 const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
 const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage'));
+const EditServicePage = lazy(() => import('@/pages/vendors/EditServicePage'));
 const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
 
@@ -32,15 +32,16 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
     Home: HomePage,
     EventDetailOld: EventDetailPage,
     EventDetail: EventDetailNewPage,
+    EventDetailNew: EventDetailNewPage,
     CreateEvent: CreateEventPage,
     ManageEvent: ManageEventPage,
     Dashboard: DashboardPage,
     Calendar: CalendarPage,
     BrowseVendors: BrowseVendorsPage,
     VendorPortfolio: VendorPortfolioPage,
-    VendorOpportunities: VendorOpportunitiesPage,
     CreateService: CreateServicePage,
     ServiceDetail: ServiceDetailPage,
+    EditService: EditServicePage,
     Requests: RequestsPage,
     Alerts: AlertsPage,
 };

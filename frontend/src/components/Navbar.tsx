@@ -1,4 +1,4 @@
-import { Bell, Briefcase, CalendarDays, Compass, Menu, Moon, Plus, Sun, X, User, LayoutDashboard, Search } from 'lucide-react';
+import { Bell, Briefcase, CalendarDays, Menu, Moon, Plus, Sun, X, User, LayoutDashboard, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -52,7 +52,6 @@ export function Navbar() {
     { to: '/profile', label: 'Profile', icon: User },
   ];
   const vendorLinks = [
-    { to: '/vendor-opportunities', label: 'Opportunities', icon: Compass },
     { to: '/vendors/create', label: '+ Create Service', icon: Briefcase },
   ];
 

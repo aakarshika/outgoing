@@ -11,6 +11,7 @@ import {
     fetchMyVendorOpportunities,
     fetchMyPotentialOpportunities,
     fetchMyNeedInvites,
+    updateNeedApplication,
 } from './api';
 
 export function useEventNeeds(eventId: number) {
@@ -59,6 +60,18 @@ export function useReviewNeedApplication() {
         mutationFn: ({ applicationId, status }: { applicationId: number; status: 'accepted' | 'rejected' }) =>
             reviewNeedApplication(applicationId, status),
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
+        },
+    });
+}
+
+export function useUpdateNeedApplication() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ applicationId, payload }: { applicationId: number; payload: { service_id?: number | null; message?: string; proposed_price?: number | null } }) =>
+            updateNeedApplication(applicationId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['myApplications'] });
             queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
         },
     });
