@@ -12,21 +12,12 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { HostCard } from '@/components/ui/HostCard';
 import { Media } from '@/components/ui/media';
-import { PostItNote } from '@/components/ui/PostItNote';
 import { useAuth } from '@/features/auth/hooks';
 import type { EventListItem } from '@/types/events';
 
-import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
-import { StarCutoutCard } from './cards/StarCutoutCard';
-import { UserActionCard } from './cards/UserActionCard';
 import { CATEGORY_THEMES } from './CategoricalBackground';
 import { useCarouselEvents, useToggleInterest } from './hooks';
-
-export type MixedCarouselItem =
-  | { type: 'event'; data: EventListItem }
-  | { type: 'custom'; index: number };
 
 // --- Styled Components / Decorations ---
 
@@ -410,8 +401,9 @@ const EventTapeCard = ({
         >
           <Heart
             size={18}
-            className={`transition-colors ${event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
-              }`}
+            className={`transition-colors ${
+              event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
+            }`}
           />
         </button>
 
@@ -475,25 +467,25 @@ const EventTapeCard = ({
 
           {(event.lifecycle_state === 'published' ||
             event.lifecycle_state === 'live') && (
-              <Box
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 4,
-                  ml: 'auto',
-                  boxShadow: 2,
-                  fontWeight: 'bold',
-                  fontSize: '0.8rem',
-                }}
-              >
-                $
-                {event.ticket_price_standard
-                  ? parseFloat(event.ticket_price_standard).toFixed(0)
-                  : 'Free'}
-              </Box>
-            )}
+            <Box
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'white',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 4,
+                ml: 'auto',
+                boxShadow: 2,
+                fontWeight: 'bold',
+                fontSize: '0.8rem',
+              }}
+            >
+              $
+              {event.ticket_price_standard
+                ? parseFloat(event.ticket_price_standard).toFixed(0)
+                : 'Free'}
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -612,92 +604,6 @@ const EventTapeCard = ({
   );
 };
 
-// --- Custom Card Wrapper ---
-
-const CustomCardCarouselWrapper = ({
-  cycleIndex,
-  isFocused,
-  index,
-}: {
-  cycleIndex: number;
-  isFocused: boolean;
-  index: number;
-}) => {
-  const rotation = useMemo(
-    () => (index % 2 === 0 ? 1 : -1) * (1 + Math.random() * 2),
-    [index],
-  );
-
-  return (
-    <Box
-      sx={{
-        flex: '0 0 auto',
-        width: { xs: 280, sm: 350 },
-        height: 520,
-        mx: { xs: '20px', sm: '50px' },
-        mt: isFocused ? 14 : 8,
-        transform: isFocused
-          ? `rotate(0deg) scale(1.15)`
-          : `rotate(${rotation}deg) scale(0.95)`,
-        zIndex: isFocused ? 30 : 20,
-        transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-        position: 'relative',
-        display: 'flex',
-        filter: isFocused ? 'none' : 'grayscale(20%)',
-        opacity: isFocused ? 1 : 0.8,
-        '&:hover': {
-          transform: isFocused
-            ? `rotate(0deg) scale(1.18)`
-            : `rotate(0deg) scale(1.02)`,
-          zIndex: 35,
-          filter: 'none',
-          opacity: 1,
-        },
-      }}
-    >
-      <PhotoClip />
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          '& > *': { width: '100%', height: '100%', m: 0 },
-        }}
-      >
-        {cycleIndex === 0 && <PlatformDescriptionCard />}
-        {cycleIndex === 1 && <UserActionCard />}
-        {cycleIndex === 2 && (
-          <PostItNote
-            username="party_animal"
-            rating={5}
-            comment="Outgoing changed my weekends forever! Met the coolest people here."
-            color="#ff9ecd"
-            rotation="0"
-          />
-        )}
-        {cycleIndex === 3 && <StarCutoutCard />}
-        {cycleIndex === 4 && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '100%',
-              bgcolor: 'transparent',
-            }}
-          >
-            <HostCard
-              host={{ username: 'legendary.host', avatar: null }}
-              rating={4.9}
-              tag="Top 1% Host"
-              rotation={0}
-            />
-          </Box>
-        )}
-      </Box>
-    </Box>
-  );
-};
-
 // --- Main Carousel Component ---
 
 export function BedroomHeroCarousel() {
@@ -707,31 +613,19 @@ export function BedroomHeroCarousel() {
   const hasInitialPositionedRef = useRef(false);
   const [centeredIndex, setCenteredIndex] = useState(0);
 
-  const mixedEvents = useMemo(() => {
-    const result: MixedCarouselItem[] = [];
-    for (let i = 0; i < events.length; i++) {
-      result.push({ type: 'event', data: events[i] });
-      if ((i + 1) % 3 === 0 && i !== events.length - 1) {
-        // Every 4th card
-        result.push({ type: 'custom', index: Math.floor(Math.random() * 5) });
-      }
-    }
-    return result;
-  }, [events]);
-
   // Triple the sequence for infinite-scroll illusion.
   const displayEvents = useMemo(() => {
-    if (mixedEvents.length === 0) return [];
-    return [...mixedEvents, ...mixedEvents, ...mixedEvents];
-  }, [mixedEvents]);
+    if (events.length === 0) return [];
+    return [...events, ...events, ...events];
+  }, [events]);
 
   useEffect(() => {
-    if (mixedEvents.length > 0) {
+    if (events.length > 0) {
       // Always start on the second item in the middle copy.
-      setCenteredIndex(mixedEvents.length + (mixedEvents.length > 1 ? 1 : 0));
+      setCenteredIndex(events.length + (events.length > 1 ? 1 : 0));
       hasInitialPositionedRef.current = false;
     }
-  }, [mixedEvents.length]);
+  }, [events.length]);
 
   const scrollToCenteredIndex = (index: number, behavior: ScrollBehavior) => {
     if (!scrollRef.current) return;
@@ -758,28 +652,27 @@ export function BedroomHeroCarousel() {
 
   // Keep index in the middle copy with an invisible recenter.
   useEffect(() => {
-    if (mixedEvents.length === 0) return;
-    const lowerBound = mixedEvents.length;
-    const upperBound = mixedEvents.length * 2;
+    if (events.length === 0) return;
+    const lowerBound = events.length;
+    const upperBound = events.length * 2;
 
     if (centeredIndex < lowerBound || centeredIndex >= upperBound) {
       const offsetInSequence =
-        ((centeredIndex % mixedEvents.length) + mixedEvents.length) %
-        mixedEvents.length;
-      const recenteredIndex = mixedEvents.length + offsetInSequence;
+        ((centeredIndex % events.length) + events.length) % events.length;
+      const recenteredIndex = events.length + offsetInSequence;
       scrollToCenteredIndex(recenteredIndex, 'auto');
       setCenteredIndex(recenteredIndex);
     }
-  }, [centeredIndex, mixedEvents.length]);
+  }, [centeredIndex, events.length]);
 
   // Auto-rotate
   useEffect(() => {
-    if (mixedEvents.length === 0) return;
+    if (events.length === 0) return;
     const interval = setInterval(() => {
       setCenteredIndex((prev) => prev + 1);
     }, 5000);
     return () => clearInterval(interval);
-  }, [mixedEvents.length]);
+  }, [events.length]);
 
   if (isLoading) {
     return <Box sx={{ height: 620, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 2 }} />;
@@ -793,7 +686,7 @@ export function BedroomHeroCarousel() {
         position: 'relative',
         width: '100%',
         overflow: 'visible',
-        pb: 10
+        pb: 10,
         // Removed bgcolor to blend seamlessly into HomePage scrapbook background
       }}
     >
@@ -860,19 +753,7 @@ export function BedroomHeroCarousel() {
 
         {displayEvents.map((item, idx) => (
           <Box key={`card-${idx}`} data-card="true" sx={{ flex: '0 0 auto' }}>
-            {item.type === 'event' ? (
-              <EventTapeCard
-                event={item.data}
-                isFocused={idx === centeredIndex}
-                index={idx}
-              />
-            ) : (
-              <CustomCardCarouselWrapper
-                cycleIndex={item.index % 5}
-                isFocused={idx === centeredIndex}
-                index={idx}
-              />
-            )}
+            <EventTapeCard event={item} isFocused={idx === centeredIndex} index={idx} />
           </Box>
         ))}
       </Box>

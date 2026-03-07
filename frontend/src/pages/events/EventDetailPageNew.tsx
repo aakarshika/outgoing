@@ -1,23 +1,18 @@
-import {
-  Box,
-  Grid,
-  ThemeProvider,
-} from '@mui/material';
+import { Box, Grid, ThemeProvider } from '@mui/material';
+import { Button as MuiButton, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
+import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
-import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
-import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
+import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { useAuth } from '@/features/auth/hooks';
-import {
-  CategoricalBackground,
-} from '@/features/events/CategoricalBackground';
+import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
   useEvent,
   useEventSeriesOccurrences,
@@ -32,20 +27,14 @@ import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
 import { AttendanceSection } from './components/AttendanceSection';
-import { ServicesSection } from './components/ServicesSection';
 import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
 import { ReviewsSection } from './components/ReviewsSection';
+import { ServicesSection } from './components/ServicesSection';
 import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
 import { getDaysAgo } from './components/scrapbookHelpers';
-
-import {
-  Button as MuiButton,
-  Typography,
-} from '@mui/material';
-
 
 // --- Main Page Component ---
 
@@ -82,8 +71,13 @@ export default function EventDetailPageNew() {
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [isManageTicketOpen, setIsManageTicketOpen] = useState(false);
   const [manageInitialIndex, setManageInitialIndex] = useState(0);
-  const [quickBuyData, setQuickBuyData] = useState<{ tierId: number; quantity: number } | null>(null);
-  const [oneClickStatus, setOneClickStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [quickBuyData, setQuickBuyData] = useState<{
+    tierId: number;
+    quantity: number;
+  } | null>(null);
+  const [oneClickStatus, setOneClickStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
   const [editReviewData, setEditReviewData] = useState<any>(null);
   const [clearTicketformTrigger, setClearTicketformTrigger] = useState(0);
 
@@ -195,8 +189,6 @@ export default function EventDetailPageNew() {
     if (!isAuthenticated) return navigate('/signin');
     setSelectedTierId(tierId);
     setSelectedQuantity(_quantity);
-    // Modal will handle quantity internally based on initial state, 
-    // but we can pass it if we update the modal props. 
     // For now, let's just open it with the tier selected.
     setIsTicketingModalOpen(true);
   };
@@ -207,14 +199,19 @@ export default function EventDetailPageNew() {
     setOneClickStatus('idle');
   };
 
-  const handleQuickBuyConfirm = ({ guestName }: { guestName: string; paymentMethod: string }) => {
+  const handleQuickBuyConfirm = ({
+    guestName,
+  }: {
+    guestName: string;
+    paymentMethod: string;
+  }) => {
     if (!quickBuyData) return;
     setOneClickStatus('loading');
 
     const tickets = Array.from({ length: quickBuyData.quantity }).map((_, i) => ({
       tier_id: quickBuyData.tierId,
       guest_name: i === 0 ? guestName.trim() : '',
-      is_18_plus: true
+      is_18_plus: true,
     }));
 
     purchaseTicket.mutate(
@@ -233,8 +230,8 @@ export default function EventDetailPageNew() {
           setOneClickStatus('error');
           toast.error('Purchase failed');
           setTimeout(() => setOneClickStatus('idle'), 3000);
-        }
-      }
+        },
+      },
     );
   };
 
@@ -336,7 +333,6 @@ export default function EventDetailPageNew() {
                 <Box id="details">
                   <DetailsSection event={event} isHost={isHost} />
                 </Box>
-
               </Grid>
 
               {/* Right Column: Tickets, Attendance, Services */}
@@ -356,18 +352,13 @@ export default function EventDetailPageNew() {
                 </Box>
 
                 <Box id="attendance">
-                  <AttendanceSection
-                    event={event}
-                    highlights={highlights}
-                  />
+                  <AttendanceSection event={event} />
                 </Box>
-
               </Grid>
             </Grid>
 
             {/* Section 4: Memory Box */}
             <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
-
               <Box id="services">
                 <ServicesSection
                   event={event}
@@ -402,8 +393,8 @@ export default function EventDetailPageNew() {
                   }}
                   onDeleteReview={(reviewId) => {
                     deleteReview.mutate(reviewId, {
-                      onSuccess: () => toast.success("Review deleted successfully."),
-                      onError: () => toast.error("Failed to delete review.")
+                      onSuccess: () => toast.success('Review deleted successfully.'),
+                      onError: () => toast.error('Failed to delete review.'),
                     });
                   }}
                 />

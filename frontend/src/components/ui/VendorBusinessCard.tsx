@@ -109,7 +109,9 @@ export const VendorBusinessCard = ({
               lineHeight: 1.2,
               mb: 0.5,
               letterSpacing: '0.5px',
-              whiteSpace: 'nowrap',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}
@@ -130,7 +132,8 @@ export const VendorBusinessCard = ({
               mb: 1,
             }}
           >
-            {category} Specialist
+            {category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}{' '}
+            Specialist
           </Typography>
           <Typography
             sx={{ fontSize: '0.6rem', color: '#888', fontFamily: 'monospace' }}
