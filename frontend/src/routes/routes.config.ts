@@ -114,4 +114,9 @@ export const routesConfig: RouteDefinition[] = [
     componentName: 'UserProfile',
     isPublic: true,
   },
+  {
+    path: '/browse',
+    componentName: 'BrowseFeed',
+    isPublic: true,
+  },
 ];

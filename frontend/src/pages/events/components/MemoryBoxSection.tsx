@@ -5,14 +5,13 @@ import {
     Typography,
     Paper,
 } from '@mui/material';
-
-import { Highlighter, WashiTape, DoodleStar, DoodleHeart, DoodleArrow, DoodleSwirl, DoodleCloud, DoodleFlower } from './scrapbookHelpers';
-import { HighlightCard } from './HighlightCard';
-import { HighlightFeedViewer } from './HighlightFeedViewer';
-
 import { useNavigate, useParams } from 'react-router-dom';
 import { Camera, Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
+
+import { Highlighter, DoodleStar, DoodleHeart, DoodleArrow, DoodleSwirl, DoodleCloud, DoodleFlower } from './scrapbookHelpers';
+import { HighlightCard } from './HighlightCard';
+import { HighlightFeedViewer } from './HighlightFeedViewer';
 
 export const MemoryBoxSection = ({
     highlights,
@@ -35,8 +34,6 @@ export const MemoryBoxSection = ({
 
     return (
         <Box sx={{ mt: 6, position: 'relative' }}>
-
-
             {/* Highlights Grid in a Decorative Container */}
             <Paper
                 elevation={0}

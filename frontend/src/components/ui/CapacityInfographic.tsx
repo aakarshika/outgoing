@@ -1,6 +1,6 @@
-import { Typography, Box } from '@mui/material';
-import React, { useMemo } from 'react';
+import { Box, Typography } from '@mui/material';
 import { UserIcon } from 'lucide-react';
+import React, { useMemo } from 'react';
 
 interface CapacityInfographicProps {
   capacity: number;
@@ -148,7 +148,10 @@ export const CapacityInfographic = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   transform: isMini ? 'none' : `rotate(${Math.random() * 20 - 10}deg)`,
-                  boxShadow: !isMini && isFilled ? '1px 1px 0px rgba(211, 205, 205, 0.2)' : 'none',
+                  boxShadow:
+                    !isMini && isFilled
+                      ? '1px 1px 0px rgba(211, 205, 205, 0.2)'
+                      : 'none',
                 }}
               >
                 <UserIcon
@@ -170,10 +173,21 @@ export const CapacityInfographic = ({
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-              <Typography sx={{ fontSize: isMini ? '0.6rem' : '0.8rem', fontWeight: 'bold', color: '#666' }}>
+              <Typography
+                sx={{
+                  fontSize: isMini ? '0.6rem' : '0.8rem',
+                  fontWeight: 'bold',
+                  color: '#666',
+                }}
+              >
                 {isMini ? '' : 'FILLED'}
               </Typography>
-              <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: isMini ? '0.9rem' : '1.4rem' }}>
+              <Typography
+                sx={{
+                  fontFamily: '"Permanent Marker"',
+                  fontSize: isMini ? '0.9rem' : '1.4rem',
+                }}
+              >
                 {filled}
               </Typography>
             </Box>
@@ -188,13 +202,17 @@ export const CapacityInfographic = ({
               /
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-              <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: isMini ? '0.9rem' : '1.4rem' }}>
+              <Typography
+                sx={{
+                  fontFamily: '"Permanent Marker"',
+                  fontSize: isMini ? '0.9rem' : '1.4rem',
+                }}
+              >
                 {capacity}
               </Typography>
             </Box>
           </Box>
         </Box>
-
 
         {daysLeftText && (
           <Typography

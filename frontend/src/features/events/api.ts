@@ -20,7 +20,9 @@ export async function fetchFeed(params: {
   category?: string;
   sort?: string;
   search?: string;
+  location?: string;
   weekend?: boolean;
+  online?: boolean; // Added online filter support
   lat?: number;
   lng?: number;
   radius_km?: number;
@@ -145,9 +147,9 @@ export async function addEventHighlight(eventId: number, formData: FormData) {
 }
 
 export async function toggleHighlightLike(highlightId: number) {
-  const { data } = await client.post<ApiResponse<{ liked: boolean; likes_count: number }>>(
-    `/events/highlights/${highlightId}/like/`,
-  );
+  const { data } = await client.post<
+    ApiResponse<{ liked: boolean; likes_count: number }>
+  >(`/events/highlights/${highlightId}/like/`);
   return data;
 }
 
@@ -158,7 +160,10 @@ export async function fetchHighlightComments(highlightId: number) {
   return data;
 }
 
-export async function addHighlightComment(highlightId: number, payload: { text: string; parent?: number }) {
+export async function addHighlightComment(
+  highlightId: number,
+  payload: { text: string; parent?: number },
+) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/highlights/${highlightId}/comments/`,
     payload,
@@ -231,10 +236,26 @@ export async function deleteEvent(eventId: number) {
   return data;
 }
 
-export async function updateEventTicketTiers(eventId: number, tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>, updateSeries: boolean = false) {
-  const { data } = await client.put<ApiResponse<any>>(`/events/${eventId}/ticket_tiers/`, tiers, {
-    params: { update_series: updateSeries }
-  });
+export async function updateEventTicketTiers(
+  eventId: number,
+  tiers: Array<{
+    name: string;
+    price: string;
+    capacity?: number | null;
+    is_refundable: boolean;
+    refund_percentage?: number;
+    description?: string;
+    admits?: number;
+  }>,
+  updateSeries: boolean = false,
+) {
+  const { data } = await client.put<ApiResponse<any>>(
+    `/events/${eventId}/ticket_tiers/`,
+    tiers,
+    {
+      params: { update_series: updateSeries },
+    },
+  );
   return data;
 }
 
@@ -257,14 +278,22 @@ export async function toggleInterest(eventId: number, isInterested: boolean) {
 
 export async function purchaseTicket(
   eventId: number,
-  payload: { tickets: Array<{ tier_id?: number | null, guest_name?: string, is_18_plus: boolean }> }
+  payload: {
+    tickets: Array<{
+      tier_id?: number | null;
+      guest_name?: string;
+      is_18_plus: boolean;
+    }>;
+  },
 ) {
   const { data } = await client.post(`/tickets/events/${eventId}/`, payload);
   return data;
 }
 
 export async function updateTicket(ticketId: number, guestName: string) {
-  const { data } = await client.patch(`/tickets/${ticketId}/`, { guest_name: guestName });
+  const { data } = await client.patch(`/tickets/${ticketId}/`, {
+    guest_name: guestName,
+  });
   return data;
 }
 

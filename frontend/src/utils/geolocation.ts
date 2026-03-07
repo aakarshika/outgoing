@@ -78,3 +78,29 @@ export async function reverseGeocodeCoordinates(
     return null;
   }
 }
+
+export type LocationSuggestion = {
+  display_name: string;
+  lat: string;
+  lon: string;
+  place_id: number;
+};
+
+export async function searchLocation(query: string): Promise<LocationSuggestion[]> {
+  if (!query || query.length < 3) return [];
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        query,
+      )}&limit=5&addressdetails=1`,
+    );
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return data as LocationSuggestion[];
+  } catch (error) {
+    console.error('Error searching location:', error);
+    return [];
+  }
+}

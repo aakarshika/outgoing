@@ -5,6 +5,7 @@ import { scan } from 'react-scan';
 
 import { Toaster } from '@/components/ui/sonner';
 
+import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
 import { AuthProvider } from './features/auth/hooks';
 import { AppRoutes } from './routes/AppRoutes';
@@ -24,12 +25,13 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
               <Navbar />
               <Toaster />
               <main className="flex-1 bg-background">
                 <AppRoutes />
               </main>
+              <Footer />
             </div>
           </BrowserRouter>
           {process.env.NODE_ENV === 'development' && (

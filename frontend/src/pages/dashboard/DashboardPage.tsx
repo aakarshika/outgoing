@@ -118,10 +118,11 @@ export default function DashboardPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${tab === t.key
-                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-                }`}
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
+                tab === t.key
+                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+              }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}
@@ -251,16 +252,16 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {tickets.map((ticket: any, idx: number) => (
-                  <div
-                    key={ticket.id}
-                    className="relative group text-left block"
-                  >
+                  <div key={ticket.id} className="relative group text-left block">
                     {/* Event card (background) */}
                     <div
                       className="border-2 border-gray-800 bg-white p-3 shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] flex flex-col h-full"
                       style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` }}
                     >
-                      <div className="aspect-[16/10] bg-gray-100 overflow-hidden border border-gray-200 mb-3 relative cursor-pointer" onClick={() => setManagingTicket(ticket)}>
+                      <div
+                        className="aspect-[16/10] bg-gray-100 overflow-hidden border border-gray-200 mb-3 relative cursor-pointer"
+                        onClick={() => setManagingTicket(ticket)}
+                      >
                         {ticket.event_summary.cover_image ? (
                           <Media
                             src={ticket.event_summary.cover_image}
@@ -277,17 +278,44 @@ export default function DashboardPage() {
                         )}
                         {ticket.status === 'cancelled' && (
                           <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center p-2 z-10">
-                            <span className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest" style={{ fontFamily: '"Permanent Marker", cursive' }}>CANCELLED</span>
-                            <span className="text-sm font-bold text-gray-800" style={{ fontFamily: '"Permanent Marker", cursive' }}>On {new Date(ticket.updated_at).toLocaleDateString()}</span>
-                            <span className="text-sm font-bold text-gray-800" style={{ fontFamily: '"Permanent Marker", cursive' }}>Refunded: ${(parseFloat(ticket.price_paid) * (ticket.is_refundable && ticket.refund_percentage ? ticket.refund_percentage / 100 : 0)).toFixed(2)}</span>
+                            <span
+                              className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest"
+                              style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                              CANCELLED
+                            </span>
+                            <span
+                              className="text-sm font-bold text-gray-800"
+                              style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                              On {new Date(ticket.updated_at).toLocaleDateString()}
+                            </span>
+                            <span
+                              className="text-sm font-bold text-gray-800"
+                              style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                              Refunded: $
+                              {(
+                                parseFloat(ticket.price_paid) *
+                                (ticket.is_refundable && ticket.refund_percentage
+                                  ? ticket.refund_percentage / 100
+                                  : 0)
+                              ).toFixed(2)}
+                            </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex-1 cursor-pointer" onClick={() => setManagingTicket(ticket)}>
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => setManagingTicket(ticket)}
+                      >
                         <h3
                           className="font-bold text-gray-900 truncate"
-                          style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+                          style={{
+                            fontFamily: '"Caveat", cursive',
+                            fontSize: '1.15rem',
+                          }}
                         >
                           {ticket.event_summary.title}
                         </h3>
@@ -301,10 +329,24 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex gap-2 mt-4 justify-between">
-                        <Link to={`/events/${ticket.event_summary.id}`} className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1" style={{ fontFamily: '"Permanent Marker", cursive', boxShadow: '1px 1px 0px rgba(0,0,0,0.8)' }}>
+                        <Link
+                          to={`/events/${ticket.event_summary.id}`}
+                          className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
+                          style={{
+                            fontFamily: '"Permanent Marker", cursive',
+                            boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                          }}
+                        >
                           EVENT PAGE
                         </Link>
-                        <button onClick={() => setManagingTicket(ticket)} className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1" style={{ fontFamily: '"Permanent Marker", cursive', boxShadow: '1px 1px 0px rgba(0,0,0,0.8)' }}>
+                        <button
+                          onClick={() => setManagingTicket(ticket)}
+                          className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1"
+                          style={{
+                            fontFamily: '"Permanent Marker", cursive',
+                            boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                          }}
+                        >
                           MANAGE TICKET
                         </button>
                       </div>
@@ -608,8 +650,22 @@ export default function DashboardPage() {
       <TicketManagementModal
         isOpen={!!managingTicket}
         onClose={() => setManagingTicket(null)}
-        tickets={managingTicket ? tickets.filter((t: any) => t.event_summary.id === managingTicket.event_summary.id) : []}
-        initialIndex={managingTicket ? tickets.filter((t: any) => t.event_summary.id === managingTicket.event_summary.id).findIndex((t: any) => t.id === managingTicket.id) : 0}
+        tickets={
+          managingTicket
+            ? tickets.filter(
+                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+              )
+            : []
+        }
+        initialIndex={
+          managingTicket
+            ? tickets
+                .filter(
+                  (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+                )
+                .findIndex((t: any) => t.id === managingTicket.id)
+            : 0
+        }
       />
     </div>
   );

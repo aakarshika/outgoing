@@ -90,6 +90,26 @@ class FeedView(APIView):
                 | Q(location_address__icontains=search)
                 | Q(category__name__icontains=search)
             )
+            
+        location = request.query_params.get("location")
+        if location:
+            events = events.filter(
+                Q(location_name__icontains=location)
+                | Q(location_address__icontains=location)
+                | Q(location_city__icontains=location)
+                | Q(location_state__icontains=location)
+            )
+            
+        is_online = request.query_params.get("online")
+        if is_online == "true":
+            # SQLite doesn't support __contains with a list/choice on JSON fields well.
+            # We search for the string 'online' within the JSON text or location fields.
+            events = events.filter(
+                Q(location_name__icontains="online") | 
+                Q(location_name__icontains="virtual") |
+                Q(location_name__icontains="zoom") |
+                Q(tags__icontains="online")
+            )
 
         events = self._apply_geo_filter(events, request)
         events = self._apply_weekend_filter(events, request)

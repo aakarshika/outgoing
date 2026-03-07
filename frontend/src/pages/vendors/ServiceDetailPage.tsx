@@ -149,13 +149,25 @@ export default function ServiceDetailPage() {
   if (isError || !service) {
     return (
       <Box sx={{ p: 8, textAlign: 'center', fontFamily: '"Playfair Display", serif' }}>
-        <Typography variant="h4" sx={{ mb: 2, fontWeight: 900, textTransform: 'uppercase' }}>
+        <Typography
+          variant="h4"
+          sx={{ mb: 2, fontWeight: 900, textTransform: 'uppercase' }}
+        >
           Classified Ad Not Found
         </Typography>
         <Typography sx={{ mb: 4, fontStyle: 'italic', fontFamily: 'serif' }}>
           We couldn't locate the requested service in our records.
         </Typography>
-        <Button component={Link} to="/vendors" sx={{ color: '#1a1a1a', borderBottom: '1px solid #1a1a1a', borderRadius: 0, fontWeight: 'bold' }}>
+        <Button
+          component={Link}
+          to="/vendors"
+          sx={{
+            color: '#1a1a1a',
+            borderBottom: '1px solid #1a1a1a',
+            borderRadius: 0,
+            fontWeight: 'bold',
+          }}
+        >
           RETURN TO DIRECTORY
         </Button>
       </Box>

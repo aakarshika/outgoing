@@ -165,10 +165,31 @@ const FEATURE_ITEMS: { name: string; emoji: string }[] = [
 type FeatureTag = 'featured' | 'additional' | 'extra';
 type EventFeature = { name: string; tag: FeatureTag };
 
-const TAG_COLORS: Record<FeatureTag, { bg: string; border: string; text: string; label: string; emoji: string }> = {
-  featured: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', label: 'Featured', emoji: '⭐' },
-  additional: { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af', label: 'Additional', emoji: '➕' },
-  extra: { bg: '#d1fae5', border: '#10b981', text: '#065f46', label: 'Extra', emoji: '🎁' },
+const TAG_COLORS: Record<
+  FeatureTag,
+  { bg: string; border: string; text: string; label: string; emoji: string }
+> = {
+  featured: {
+    bg: '#fef3c7',
+    border: '#f59e0b',
+    text: '#92400e',
+    label: 'Featured',
+    emoji: '⭐',
+  },
+  additional: {
+    bg: '#dbeafe',
+    border: '#3b82f6',
+    text: '#1e40af',
+    label: 'Additional',
+    emoji: '➕',
+  },
+  extra: {
+    bg: '#d1fae5',
+    border: '#10b981',
+    text: '#065f46',
+    label: 'Extra',
+    emoji: '🎁',
+  },
 };
 
 const detectPlatform = (url: string): { name: string; icon: string } => {
@@ -237,7 +258,18 @@ export default function ManageEventPage() {
   const [onlineUrl, setOnlineUrl] = useState('');
   const [eventDuration, setEventDuration] = useState<number>(0);
 
-  const [ticketTiers, setTicketTiers] = useState<Array<{ id?: number, name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>>([]);
+  const [ticketTiers, setTicketTiers] = useState<
+    Array<{
+      id?: number;
+      name: string;
+      price: string;
+      capacity?: number | null;
+      is_refundable: boolean;
+      refund_percentage?: number;
+      description?: string;
+      admits?: number;
+    }>
+  >([]);
   const [eventFeatures, setEventFeatures] = useState<EventFeature[]>([]);
 
   const { data: occurrencesResponse, isLoading: isLoadingOccurrences } =
@@ -285,8 +317,21 @@ export default function ManageEventPage() {
       } else {
         // Initialize with reasonable defaults if empty
         setTicketTiers([
-          { name: 'Basic', price: '10', is_refundable: false, description: 'Standard entry', admits: 1 },
-          { name: 'Premium', price: '25', is_refundable: true, refund_percentage: 100, description: 'Includes merch and skip-the-line', admits: 1 }
+          {
+            name: 'Basic',
+            price: '10',
+            is_refundable: false,
+            description: 'Standard entry',
+            admits: 1,
+          },
+          {
+            name: 'Premium',
+            price: '25',
+            is_refundable: true,
+            refund_percentage: 100,
+            description: 'Includes merch and skip-the-line',
+            admits: 1,
+          },
         ]);
       }
       if (event.features && event.features.length > 0) {
@@ -391,7 +436,7 @@ export default function ManageEventPage() {
       await updateTicketTiers.mutateAsync({
         eventId: event.id,
         tiers: ticketTiers,
-        updateSeries: applyToSeries
+        updateSeries: applyToSeries,
       });
 
       toast.success('Event updated successfully!');
@@ -582,14 +627,15 @@ export default function ManageEventPage() {
                         setNextLifecycleState(state);
                       }
                     }}
-                    className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 transition-all min-w-[80px] ${isCurrent
-                      ? 'ring-2 ring-offset-2 scale-110 shadow-lg'
-                      : canTransition
-                        ? 'hover:scale-105 hover:shadow-md cursor-pointer opacity-90'
-                        : isPast
-                          ? 'opacity-40'
-                          : 'opacity-30'
-                      }`}
+                    className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 transition-all min-w-[80px] ${
+                      isCurrent
+                        ? 'ring-2 ring-offset-2 scale-110 shadow-lg'
+                        : canTransition
+                          ? 'hover:scale-105 hover:shadow-md cursor-pointer opacity-90'
+                          : isPast
+                            ? 'opacity-40'
+                            : 'opacity-30'
+                    }`}
                     style={{
                       backgroundColor: isCurrent ? cfg.bg : isPast ? cfg.bg : '#fafafa',
                       borderColor: isCurrent
@@ -656,12 +702,13 @@ export default function ManageEventPage() {
                         setNextLifecycleState(state);
                       }
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${isCurrent
-                      ? 'ring-2 ring-offset-1 scale-105 shadow-md'
-                      : canTransition
-                        ? 'hover:scale-105 hover:shadow cursor-pointer'
-                        : 'opacity-30 cursor-default'
-                      }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
+                      isCurrent
+                        ? 'ring-2 ring-offset-1 scale-105 shadow-md'
+                        : canTransition
+                          ? 'hover:scale-105 hover:shadow cursor-pointer'
+                          : 'opacity-30 cursor-default'
+                    }`}
                     style={{
                       backgroundColor: isCurrent ? cfg.bg : '#fafafa',
                       borderColor: isCurrent
@@ -845,10 +892,11 @@ export default function ManageEventPage() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as any)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${activeTab === t.id
-                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-                }`}
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
+                activeTab === t.id
+                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+              }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}
@@ -1119,10 +1167,11 @@ export default function ManageEventPage() {
                             .slice(0, 16);
                         }
                       }}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-2 transition-all hover:scale-105 ${eventDuration === preset.ms
-                        ? 'bg-gray-800 text-white border-gray-800'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
-                        }`}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-2 transition-all hover:scale-105 ${
+                        eventDuration === preset.ms
+                          ? 'bg-gray-800 text-white border-gray-800'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                      }`}
                     >
                       {preset.label}
                     </button>
@@ -1166,7 +1215,7 @@ export default function ManageEventPage() {
                           const isCancelled = occ.lifecycle_state === 'cancelled';
                           const occCfg =
                             LIFECYCLE_FLOW_CONFIG[
-                            occ.lifecycle_state as EventLifecycleState
+                              occ.lifecycle_state as EventLifecycleState
                             ] || LIFECYCLE_FLOW_CONFIG.draft;
 
                           return (
@@ -1182,17 +1231,19 @@ export default function ManageEventPage() {
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' || e.key === ' ') {
-                                    if (!isCurrent) navigate(`/events/${occ.id}/manage`);
+                                    if (!isCurrent)
+                                      navigate(`/events/${occ.id}/manage`);
                                   }
                                 }}
-                                className={`relative group flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
-                                  ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
-                                  : isCancelled
-                                    ? 'opacity-40 bg-gray-50 border-gray-300'
-                                    : isPast
-                                      ? 'bg-gray-50 border-gray-300 hover:border-gray-500 cursor-pointer'
-                                      : 'bg-white border-gray-300 hover:border-primary hover:shadow-md cursor-pointer'
-                                  }`}
+                                className={`relative group flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${
+                                  isCurrent
+                                    ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
+                                    : isCancelled
+                                      ? 'opacity-40 bg-gray-50 border-gray-300'
+                                      : isPast
+                                        ? 'bg-gray-50 border-gray-300 hover:border-gray-500 cursor-pointer'
+                                        : 'bg-white border-gray-300 hover:border-primary hover:shadow-md cursor-pointer'
+                                }`}
                               >
                                 <span
                                   className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mb-1"
@@ -1319,10 +1370,11 @@ export default function ManageEventPage() {
                     key={mode}
                     type="button"
                     onClick={() => setLocationMode(mode)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${locationMode === mode
-                      ? 'bg-white shadow-md text-gray-800 border border-gray-200'
-                      : 'text-gray-500 hover:text-gray-700'
-                      }`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                      locationMode === mode
+                        ? 'bg-white shadow-md text-gray-800 border border-gray-200'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
                     style={{ fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
                   >
                     <Icon className="h-4 w-4" /> {label}
@@ -1507,7 +1559,9 @@ export default function ManageEventPage() {
                       className="w-full rounded-lg border bg-background pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-mono"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Leave empty for unlimited</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Leave empty for unlimited
+                  </p>
                 </div>
               </div>
 
@@ -1515,19 +1569,37 @@ export default function ManageEventPage() {
               <div className="mt-8 border-t-2 border-dashed border-gray-800 pt-6">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xl">🏷️</span>
-                  <h3 className="text-lg font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>Event Features</h3>
+                  <h3
+                    className="text-lg font-bold"
+                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                  >
+                    Event Features
+                  </h3>
                 </div>
-                <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: '"Caveat", cursive', fontSize: '1rem' }}>
-                  Select what your event offers, then tag each as Featured, Additional, or Extra
+                <p
+                  className="text-sm text-gray-500 mb-4"
+                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
+                >
+                  Select what your event offers, then tag each as Featured, Additional,
+                  or Extra
                 </p>
 
                 {/* Feature Tag Legend */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(Object.entries(TAG_COLORS) as [FeatureTag, typeof TAG_COLORS[FeatureTag]][]).map(([tag, cfg]) => (
+                  {(
+                    Object.entries(TAG_COLORS) as [
+                      FeatureTag,
+                      (typeof TAG_COLORS)[FeatureTag],
+                    ][]
+                  ).map(([tag, cfg]) => (
                     <span
                       key={tag}
                       className="px-2 py-0.5 text-xs font-bold rounded-full border"
-                      style={{ backgroundColor: cfg.bg, borderColor: cfg.border, color: cfg.text }}
+                      style={{
+                        backgroundColor: cfg.bg,
+                        borderColor: cfg.border,
+                        color: cfg.text,
+                      }}
                     >
                       {cfg.emoji} {cfg.label}
                     </span>
@@ -1537,27 +1609,37 @@ export default function ManageEventPage() {
                 {/* Feature Grid */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   {FEATURE_ITEMS.map((item) => {
-                    const selected = eventFeatures.find(f => f.name === item.name);
+                    const selected = eventFeatures.find((f) => f.name === item.name);
                     return (
                       <div key={item.name} className="relative">
                         <button
                           type="button"
                           onClick={() => {
                             if (selected) {
-                              setEventFeatures(eventFeatures.filter(f => f.name !== item.name));
+                              setEventFeatures(
+                                eventFeatures.filter((f) => f.name !== item.name),
+                              );
                             } else {
-                              setEventFeatures([...eventFeatures, { name: item.name, tag: 'featured' }]);
+                              setEventFeatures([
+                                ...eventFeatures,
+                                { name: item.name, tag: 'featured' },
+                              ]);
                             }
                           }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${selected
-                            ? 'shadow-[1px_2px_0px_#333] font-bold scale-105'
-                            : 'border-gray-300 bg-white text-gray-600 hover:border-gray-500 hover:bg-gray-50'
-                            }`}
-                          style={selected ? {
-                            backgroundColor: TAG_COLORS[selected.tag].bg,
-                            borderColor: TAG_COLORS[selected.tag].border,
-                            color: TAG_COLORS[selected.tag].text,
-                          } : undefined}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
+                            selected
+                              ? 'shadow-[1px_2px_0px_#333] font-bold scale-105'
+                              : 'border-gray-300 bg-white text-gray-600 hover:border-gray-500 hover:bg-gray-50'
+                          }`}
+                          style={
+                            selected
+                              ? {
+                                  backgroundColor: TAG_COLORS[selected.tag].bg,
+                                  borderColor: TAG_COLORS[selected.tag].border,
+                                  color: TAG_COLORS[selected.tag].text,
+                                }
+                              : undefined
+                          }
                         >
                           <span>{item.emoji}</span>
                           <span>{item.name}</span>
@@ -1567,17 +1649,22 @@ export default function ManageEventPage() {
                         {/* Tag selector dropdown for selected items */}
                         {selected && (
                           <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 flex gap-0.5 z-10">
-                            {(Object.keys(TAG_COLORS) as FeatureTag[]).map(tag => (
+                            {(Object.keys(TAG_COLORS) as FeatureTag[]).map((tag) => (
                               <button
                                 key={tag}
                                 type="button"
                                 onClick={() => {
-                                  setEventFeatures(eventFeatures.map(f =>
-                                    f.name === item.name ? { ...f, tag } : f
-                                  ));
+                                  setEventFeatures(
+                                    eventFeatures.map((f) =>
+                                      f.name === item.name ? { ...f, tag } : f,
+                                    ),
+                                  );
                                 }}
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[8px] transition-all ${selected.tag === tag ? 'scale-125 ring-1 ring-offset-1' : 'opacity-60 hover:opacity-100'
-                                  }`}
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[8px] transition-all ${
+                                  selected.tag === tag
+                                    ? 'scale-125 ring-1 ring-offset-1'
+                                    : 'opacity-60 hover:opacity-100'
+                                }`}
                                 style={{
                                   backgroundColor: TAG_COLORS[tag].bg,
                                   borderColor: TAG_COLORS[tag].border,
@@ -1597,11 +1684,14 @@ export default function ManageEventPage() {
                 {/* Selected summary */}
                 {eventFeatures.length > 0 && (
                   <div className="bg-yellow-50/80 border border-yellow-200 rounded-lg p-3 mt-6">
-                    <p className="text-xs font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                    <p
+                      className="text-xs font-semibold text-gray-700 mb-2"
+                      style={{ fontFamily: '"Permanent Marker", cursive' }}
+                    >
                       Selected ({eventFeatures.length})
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {eventFeatures.map(f => (
+                      {eventFeatures.map((f) => (
                         <span
                           key={f.name}
                           className="px-2 py-0.5 text-xs rounded-full border font-medium"
@@ -1611,7 +1701,7 @@ export default function ManageEventPage() {
                             color: TAG_COLORS[f.tag].text,
                           }}
                         >
-                          {FEATURE_ITEMS.find(i => i.name === f.name)?.emoji} {f.name}
+                          {FEATURE_ITEMS.find((i) => i.name === f.name)?.emoji} {f.name}
                         </span>
                       ))}
                     </div>
@@ -1621,7 +1711,12 @@ export default function ManageEventPage() {
 
               <div className="mt-8 border-t-2 border-dashed border-gray-800 pt-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>Custom Ticket Tiers</h3>
+                  <h3
+                    className="text-lg font-bold"
+                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                  >
+                    Custom Ticket Tiers
+                  </h3>
                   <Button
                     type="button"
                     variant="outline"
@@ -1630,7 +1725,13 @@ export default function ManageEventPage() {
                     onClick={() => {
                       setTicketTiers([
                         ...ticketTiers,
-                        { name: 'New Tier', price: '0', is_refundable: false, description: '', admits: 1 }
+                        {
+                          name: 'New Tier',
+                          price: '0',
+                          is_refundable: false,
+                          description: '',
+                          admits: 1,
+                        },
                       ]);
                     }}
                   >
@@ -1640,7 +1741,10 @@ export default function ManageEventPage() {
 
                 <div className="space-y-4">
                   {ticketTiers.map((tier, index) => (
-                    <div key={index} className="bg-white border-2 border-gray-800 p-4 rounded-lg relative flex flex-col md:flex-row gap-4 shadow-[2px_2px_0px_#333]">
+                    <div
+                      key={index}
+                      className="bg-white border-2 border-gray-800 p-4 rounded-lg relative flex flex-col md:flex-row gap-4 shadow-[2px_2px_0px_#333]"
+                    >
                       <button
                         type="button"
                         onClick={() => {
@@ -1657,7 +1761,9 @@ export default function ManageEventPage() {
                       <div className="flex-1 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-bold mb-1">Pass Name</label>
+                            <label className="block text-xs font-bold mb-1">
+                              Pass Name
+                            </label>
                             <input
                               type="text"
                               value={tier.name}
@@ -1672,7 +1778,9 @@ export default function ManageEventPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-bold mb-1">Price ($)</label>
+                            <label className="block text-xs font-bold mb-1">
+                              Price ($)
+                            </label>
                             <input
                               type="number"
                               step="0.01"
@@ -1690,7 +1798,9 @@ export default function ManageEventPage() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-bold mb-1 text-gray-600">Short Description</label>
+                          <label className="block text-xs font-bold mb-1 text-gray-600">
+                            Short Description
+                          </label>
                           <input
                             type="text"
                             value={tier.description || ''}
@@ -1709,7 +1819,9 @@ export default function ManageEventPage() {
                       <div className="flex-1 space-y-3 bg-gray-50 p-2 rounded border border-gray-200">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">Admits (People)</label>
+                            <label className="block text-xs font-bold text-gray-600 mb-1">
+                              Admits (People)
+                            </label>
                             <input
                               type="number"
                               min="1"
@@ -1723,13 +1835,18 @@ export default function ManageEventPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">Max Passes limit</label>
+                            <label className="block text-xs font-bold text-gray-600 mb-1">
+                              Max Passes limit
+                            </label>
                             <input
                               type="number"
                               value={tier.capacity === null ? '' : tier.capacity}
                               onChange={(e) => {
                                 const newTiers = [...ticketTiers];
-                                newTiers[index].capacity = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                newTiers[index].capacity =
+                                  e.target.value === ''
+                                    ? undefined
+                                    : parseInt(e.target.value);
                                 setTicketTiers(newTiers);
                               }}
                               className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white"
@@ -1758,11 +1875,13 @@ export default function ManageEventPage() {
                               <span className="text-xs text-gray-500">Refund %</span>
                               <input
                                 type="number"
-                                min="1" max="100"
+                                min="1"
+                                max="100"
                                 value={tier.refund_percentage || 100}
                                 onChange={(e) => {
                                   const newTiers = [...ticketTiers];
-                                  newTiers[index].refund_percentage = parseInt(e.target.value) || 100;
+                                  newTiers[index].refund_percentage =
+                                    parseInt(e.target.value) || 100;
                                   setTicketTiers(newTiers);
                                 }}
                                 className="w-16 border border-gray-300 rounded px-1 text-sm"
@@ -1792,7 +1911,10 @@ export default function ManageEventPage() {
                     onChange={(e) => setApplyToSeries(e.target.checked)}
                     className="w-5 h-5 rounded border-2 border-gray-800 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
                   />
-                  <span className="font-bold text-gray-800 select-none" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                  <span
+                    className="font-bold text-gray-800 select-none"
+                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                  >
                     Apply to entire series
                   </span>
                 </label>
@@ -1912,10 +2034,11 @@ export default function ManageEventPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${attendee.ticket_type === 'flexible'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                : 'bg-secondary text-secondary-foreground'
-                                }`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                attendee.ticket_type === 'flexible'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                  : 'bg-secondary text-secondary-foreground'
+                              }`}
                             >
                               {attendee.ticket_type.charAt(0).toUpperCase() +
                                 attendee.ticket_type.slice(1)}

@@ -144,7 +144,9 @@ export function TicketConfirmationModal({
                 style={{ fontFamily: '"Inter", sans-serif', fontSize: '0.8rem' }}
               >
                 <strong className="font-bold">Important:</strong>
-                <span className="block sm:inline">Add your Aadhar to complete ticket purchase.</span>
+                <span className="block sm:inline">
+                  Add your Aadhar to complete ticket purchase.
+                </span>
               </div>
             )}
 

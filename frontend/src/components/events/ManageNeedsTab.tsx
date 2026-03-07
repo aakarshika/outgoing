@@ -12,7 +12,13 @@ import {
 } from '@/features/needs/hooks';
 import type { EventNeed, NeedApplication } from '@/types/needs';
 
-export function ManageNeedsTab({ eventId, isSeries }: { eventId: number; isSeries?: boolean }) {
+export function ManageNeedsTab({
+  eventId,
+  isSeries,
+}: {
+  eventId: number;
+  isSeries?: boolean;
+}) {
   const { data: needsResponse, isLoading } = useEventNeeds(eventId);
   const needs = needsResponse?.data || [];
 
@@ -246,9 +252,8 @@ export function ManageNeedsTab({ eventId, isSeries }: { eventId: number; isSerie
               </Button>
             </div>
           </form>
-        </div >
-      )
-      }
+        </div>
+      )}
 
       <div className="space-y-6">
         {needs.length === 0 ? (
@@ -375,12 +380,13 @@ export function ManageNeedsTab({ eventId, isSeries }: { eventId: number; isSerie
                               {app.vendor_name}
                             </span>
                             <span
-                              className={`text-[0.65rem] px-2 py-0.5 border-2 uppercase font-bold ${app.status === 'pending'
-                                ? 'bg-yellow-200 border-yellow-600 text-yellow-900'
-                                : app.status === 'accepted'
-                                  ? 'bg-green-200 border-green-600 text-green-900'
-                                  : 'bg-red-200 border-red-600 text-red-900'
-                                }`}
+                              className={`text-[0.65rem] px-2 py-0.5 border-2 uppercase font-bold ${
+                                app.status === 'pending'
+                                  ? 'bg-yellow-200 border-yellow-600 text-yellow-900'
+                                  : app.status === 'accepted'
+                                    ? 'bg-green-200 border-green-600 text-green-900'
+                                    : 'bg-red-200 border-red-600 text-red-900'
+                              }`}
                               style={{
                                 fontFamily: '"Permanent Marker", cursive',
                                 transform: 'rotate(-2deg)',

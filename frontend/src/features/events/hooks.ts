@@ -53,11 +53,15 @@ export function useFeed(params: {
     category?: string;
     sort?: string;
     search?: string;
+    location?: string;
     weekend?: boolean;
+    online?: boolean;
     lat?: number;
     lng?: number;
     radius_km?: number;
+    featured?: boolean;
     page?: number;
+    page_size?: number;
 }) {
     return useQuery({
         queryKey: ['feed', params],
