@@ -20,6 +20,8 @@ from apps.events.models import (
     EventTicketTier,
     EventHighlightLike,
     EventHighlightComment,
+    EventReviewLike,
+    EventReviewComment,
 )
 from apps.tickets.models import Ticket
 
@@ -643,6 +645,45 @@ class EventHighlightCommentSerializer(serializers.ModelSerializer):
         return []
 
 
+class EventReviewCommentSerializer(serializers.ModelSerializer):
+    """Serializer for event review comments."""
+
+    author_username = serializers.CharField(source="author.username", read_only=True)
+    author_avatar = serializers.SerializerMethodField()
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventReviewComment
+        fields = [
+            "id",
+            "author_username",
+            "author_avatar",
+            "text",
+            "parent",
+            "created_at",
+            "updated_at",
+            "replies",
+        ]
+        read_only_fields = ["id", "author_username", "author_avatar", "created_at", "updated_at"]
+
+    def get_author_avatar(self, obj):
+        profile = getattr(obj.author, "profile", None)
+        if profile and profile.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+            return profile.avatar.url
+        return None
+
+    def get_replies(self, obj):
+        """Return nested replies."""
+        if obj.replies.exists():
+            return EventReviewCommentSerializer(
+                obj.replies.all(), many=True, context=self.context
+            ).data
+        return []
+
+
 class EventReviewMediaSerializer(serializers.ModelSerializer):
     """Serializer for event review media."""
 
@@ -673,6 +714,9 @@ class EventReviewSerializer(serializers.ModelSerializer):
     reviewer_avatar = serializers.SerializerMethodField()
     media = EventReviewMediaSerializer(many=True, read_only=True)
     vendor_reviews = EventVendorReviewSerializer(many=True, read_only=True)
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    user_has_liked = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for EventReviewSerializer."""
@@ -688,8 +732,23 @@ class EventReviewSerializer(serializers.ModelSerializer):
             "media",
             "vendor_reviews",
             "created_at",
+            "likes_count",
+            "comments_count",
+            "user_has_liked",
         ]
         read_only_fields = ["id", "reviewer_username", "reviewer_avatar", "created_at"]
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def get_user_has_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
 
     def get_reviewer_avatar(self, obj):
         """Return the reviewer's avatar URL or None."""

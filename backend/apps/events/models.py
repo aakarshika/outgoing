@@ -585,3 +585,52 @@ class EventHighlightComment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on highlight {self.highlight.id}"
+
+
+class EventReviewLike(models.Model):
+    """User likes on an event review."""
+
+    review = models.ForeignKey(
+        EventReview, on_delete=models.CASCADE, related_name="likes"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="review_likes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["review", "user"]
+
+    def __str__(self):
+        return f"{self.user.username} liked review {self.review.id}"
+
+
+class EventReviewComment(models.Model):
+    """Comments on an event review with nested support."""
+
+    review = models.ForeignKey(
+        EventReview, on_delete=models.CASCADE, related_name="comments"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="review_comments",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on review {self.review.id}"

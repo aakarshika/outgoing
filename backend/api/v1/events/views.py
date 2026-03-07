@@ -19,6 +19,8 @@ from apps.events.models import (
     EventHighlight,
     EventHighlightLike,
     EventHighlightComment,
+    EventReviewLike,
+    EventReviewComment,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -35,6 +37,7 @@ from .serializers import (
     EventTransitionRequestSerializer,
     EventTicketTierSerializer,
     EventHighlightCommentSerializer,
+    EventReviewCommentSerializer,
 )
 
 
@@ -692,6 +695,108 @@ class EventReviewCreateView(APIView):
                 data=EventReviewSerializer(review, context={"request": request}).data,
                 status=201,
             )
+        return error_response(message="Validation Error", errors=serializer.errors)
+
+
+class EventReviewDetailView(APIView):
+    """Retrieve, update, or delete a specific review."""
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        serializer = EventReviewSerializer(review, context={"request": request})
+        return success_response(data=serializer.data)
+
+    def patch(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        if review.reviewer != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        serializer = EventReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response(data=serializer.data, message="Review updated")
+        return error_response(message="Validation Error", errors=serializer.errors)
+
+    def delete(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        if review.reviewer != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        review.delete()
+        return success_response(message="Review deleted")
+
+
+class EventReviewLikeToggleView(APIView):
+    """Toggle like on an event review."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        like, created = EventReviewLike.objects.get_or_create(
+            review=review, user=request.user
+        )
+        if not created:
+            like.delete()
+            return success_response(data={"liked": False, "likes_count": review.likes.count()})
+
+        return success_response(
+            data={"liked": True, "likes_count": review.likes.count()}, status=201
+        )
+
+
+class EventReviewCommentCreateListView(APIView):
+    """List or create comments for an event review."""
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        # Only return top-level comments; serializer will handle nesting
+        comments = review.comments.filter(parent__isnull=True).select_related("author", "author__profile")
+        serializer = EventReviewCommentSerializer(
+            comments, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+    def post(self, request, review_id):
+        try:
+            review = EventReview.objects.get(pk=review_id)
+        except EventReview.DoesNotExist:
+            return error_response(message="Review not found", status=404)
+
+        serializer = EventReviewCommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(review=review, author=request.user)
+            return success_response(data=serializer.data, status=201)
         return error_response(message="Validation Error", errors=serializer.errors)
 
 

@@ -1,0 +1,301 @@
+{
+  "users": [
+    {
+      "username": "host1",
+      "email": "host1@example.com",
+      "password": "password123",
+      "first_name": "Host",
+      "last_name": "One"
+    },
+    {
+      "username": "vendor1",
+      "email": "vendor1@example.com",
+      "password": "password123",
+      "first_name": "Vendor",
+      "last_name": "One"
+    },
+    {
+      "username": "goer1",
+      "email": "goer1@example.com",
+      "password": "password123",
+      "first_name": "Goer",
+      "last_name": "One"
+    },
+    {
+      "username": "goer2",
+      "email": "goer2@example.com",
+      "password": "password123",
+      "first_name": "Goer",
+      "last_name": "Two"
+    }
+  ],
+  "profiles": [
+    {
+      "user": "host1",
+      "headline": "Community Host",
+      "bio": "I host neighborhood events.",
+      "location_city": "New York",
+      "avatar": "https://placehold.co/150x150/png",
+      "cover_photo": "https://placehold.co/800x400/png"
+    },
+    {
+      "user": "vendor1",
+      "headline": "Event Photographer",
+      "bio": "I capture event moments.",
+      "location_city": "New York",
+      "avatar": "https://placehold.co/150x150/png",
+      "cover_photo": "https://placehold.co/800x400/png"
+    },
+    {
+      "user": "goer1",
+      "headline": "Weekend Explorer",
+      "bio": "I attend local events.",
+      "location_city": "New York",
+      "avatar": "https://placehold.co/150x150/png",
+      "cover_photo": "https://placehold.co/800x400/png"
+    }
+  ],
+  "categories": [
+    {
+      "slug": "music",
+      "name": "Music",
+      "icon": "music"
+    },
+    {
+      "slug": "food-drink",
+      "name": "Food & Drink",
+      "icon": "utensils"
+    }
+  ],
+  "services": [
+    {
+      "key": "svc_photo_1",
+      "vendor": "vendor1",
+      "title": "Moments by Vendor1",
+      "description": "Photography coverage for social events.",
+      "category": "photography",
+      "base_price": "300.00",
+      "location_city": "New York",
+      "portfolio_image": "https://placehold.co/800x600/png"
+    }
+  ],
+  "series": [
+    {
+      "key": "series_weekly_music",
+      "host": "host1",
+      "name": "Weekly Music Jam",
+      "description": "Recurring open jam session.",
+      "recurrence_rule": "FREQ=WEEKLY;BYDAY=SA",
+      "timezone": "UTC",
+      "default_location_name": "Riverside Hall",
+      "default_capacity": 120
+    }
+  ],
+  "series_need_templates": [
+    {
+      "series": "series_weekly_music",
+      "title": "Photographer",
+      "description": "Need candid and stage photos",
+      "category": "photography",
+      "criticality": "replaceable",
+      "budget_min": "150.00",
+      "budget_max": "400.00"
+    }
+  ],
+  "events": [
+    {
+      "key": "event_music_night_1",
+      "slug": "event-music-night-1",
+      "host": "host1",
+      "category": "music",
+      "series": "series_weekly_music",
+      "occurrence_index": 1,
+      "title": "Music Night Vol. 1",
+      "description": "Live performances and community jam.",
+      "location_name": "Riverside Hall",
+      "location_address": "123 River St, New York",
+      "latitude": "40.712800",
+      "longitude": "-74.006000",
+      "start_time": "2026-08-14T18:00:00Z",
+      "end_time": "2026-08-14T22:00:00Z",
+      "capacity": 120,
+      "status": "published",
+      "lifecycle_state": "live",
+      "tags": ["featured", "music"],
+      "features": [
+        {
+          "name": "Music",
+          "tag": "featured"
+        },
+        {
+          "name": "Food",
+          "tag": "additional"
+        }
+      ],
+      "check_in_instructions": "Show ticket QR at gate A.",
+      "event_ready_message": "Doors open in 30 minutes.",
+      "cover_image": "https://placehold.co/600x400/png"
+    }
+  ],
+  "event_lifecycle_transitions": [
+    {
+      "event": "event_music_night_1",
+      "actor": "host1",
+      "from_state": "draft",
+      "to_state": "live",
+      "reason": "Initial sample transition"
+    }
+  ],
+  "event_ticket_tiers": [
+    {
+      "key": "tier_music_general",
+      "event": "event_music_night_1",
+      "name": "General Admission",
+      "description": "Standard event entry",
+      "admits": 1,
+      "color": "#fef3c7",
+      "price": "25.00",
+      "capacity": 100,
+      "is_refundable": true,
+      "refund_percentage": 100
+    }
+  ],
+  "event_needs": [
+    {
+      "key": "need_music_photo",
+      "event": "event_music_night_1",
+      "title": "Photographer",
+      "description": "Need event photos and short reels",
+      "category": "photography",
+      "criticality": "essential",
+      "budget_min": "150.00",
+      "budget_max": "400.00",
+      "status": "filled",
+      "assigned_vendor": "vendor1"
+    }
+  ],
+  "need_applications": [
+    {
+      "key": "app_music_photo_vendor1",
+      "need": "need_music_photo",
+      "vendor": "vendor1",
+      "service": "svc_photo_1",
+      "message": "I can cover full event + edited highlights.",
+      "proposed_price": "320.00",
+      "status": "accepted"
+    }
+  ],
+  "need_invites": [
+    {
+      "need": "need_music_photo",
+      "vendor": "vendor1",
+      "invited_by": "host1",
+      "message": "Would love to have you onboard.",
+      "status": "applied"
+    }
+  ],
+  "tickets": [
+    {
+      "event": "event_music_night_1",
+      "goer": "goer1",
+      "tier": "tier_music_general",
+      "ticket_type": "General Admission",
+      "color": "#fef3c7",
+      "guest_name": "Goer One",
+      "is_18_plus": true,
+      "barcode": "TICKETGOER1001",
+      "is_refundable": true,
+      "refund_percentage": 100,
+      "price_paid": "25.00",
+      "status": "active"
+    }
+  ],
+  "event_media": [
+    {
+      "event": "event_music_night_1",
+      "media_type": "image",
+      "category": "gallery",
+      "order": 1,
+      "file": "https://placehold.co/600x400/png"
+    }
+  ],
+  "event_highlights": [
+    {
+      "event": "event_music_night_1",
+      "author": "goer1",
+      "role": "goer",
+      "text": "Amazing energy at the venue!",
+      "media_file": "https://placehold.co/600x400/png",
+      "moderation_status": "approved"
+    }
+  ],
+  "event_reviews": [
+    {
+      "key": "review_music_night_1_goer1",
+      "event": "event_music_night_1",
+      "reviewer": "goer1",
+      "rating": 5,
+      "text": "Great event and smooth check-in.",
+      "is_public": true
+    }
+  ],
+  "event_review_media": [
+    {
+      "review": "review_music_night_1_goer1",
+      "file": "https://placehold.co/600x400/png"
+    }
+  ],
+  "event_vendor_reviews": [
+    {
+      "event_review": "review_music_night_1_goer1",
+      "vendor_service": "svc_photo_1",
+      "rating": 5,
+      "text": "Photographer delivered excellent shots."
+    }
+  ],
+  "vendor_reviews": [
+    {
+      "vendor_service": "svc_photo_1",
+      "reviewer": "goer2",
+      "event": "event_music_night_1",
+      "rating": 4,
+      "text": "Good communication and quick turnaround."
+    }
+  ],
+  "event_interests": [
+    {
+      "event": "event_music_night_1",
+      "user": "goer2"
+    }
+  ],
+  "event_views": [
+    {
+      "event": "event_music_night_1",
+      "user": "goer1"
+    }
+  ],
+  "event_requests": [
+    {
+      "key": "request_more_music",
+      "requester": "goer2",
+      "title": "More late-night music events",
+      "description": "Would love more Friday music sessions in NYC.",
+      "category": "music",
+      "location_city": "New York",
+      "status": "open"
+    }
+  ],
+  "request_upvotes": [
+    {
+      "request": "request_more_music",
+      "user": "goer1"
+    }
+  ],
+  "request_wishlists": [
+    {
+      "request": "request_more_music",
+      "user": "vendor1",
+      "wishlist_as": "vendor"
+    }
+  ]
+}

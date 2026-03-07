@@ -26,7 +26,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Media } from '@/components/ui/media';
 import { Textarea } from '@/components/ui/textarea';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { useAddEventReview } from '@/features/events/hooks';
+import { useAddEventReview, useUpdateEventReview } from '@/features/events/hooks';
 import { cn } from '@/lib/utils';
 
 const vendorReviewSchema = z.object({
@@ -53,6 +53,7 @@ interface ReviewComposerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   trigger?: React.ReactNode;
+  initialData?: any;
 }
 
 export function ReviewComposer({
@@ -62,22 +63,31 @@ export function ReviewComposer({
   isOpen,
   onOpenChange,
   trigger,
+  initialData,
 }: ReviewComposerProps) {
   const addReview = useAddEventReview();
+  const updateReview = useUpdateEventReview();
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
-  const [showVendorReviews, setShowVendorReviews] = useState(false);
+  const [showVendorReviews, setShowVendorReviews] = useState(
+    !!initialData?.vendorReviews?.length
+  );
 
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
-      rating: 0,
-      text: '',
-      vendor_reviews: participatingVendors.map((v) => ({
-        vendor_id: v.id,
-        rating: 0,
-        text: '',
-      })),
+      rating: initialData?.rating || 0,
+      text: initialData?.comment || '',
+      vendor_reviews: participatingVendors.map((v) => {
+        const existingVendorReview = initialData?.vendorReviews?.find(
+          (vr: any) => vr.vendorName === v.vendor_name
+        );
+        return {
+          vendor_id: v.id,
+          rating: existingVendorReview?.rating || 0,
+          text: existingVendorReview?.comment || '',
+        };
+      }),
     },
   });
 
@@ -112,18 +122,33 @@ export function ReviewComposer({
       }
     }
 
-    addReview.mutate(
-      { eventId, formData },
-      {
-        onSuccess: () => {
-          toast.success('Thank you for your review!');
-          handleClose();
+    if (initialData?.id) {
+      updateReview.mutate(
+        { reviewId: initialData.id, formData },
+        {
+          onSuccess: () => {
+            toast.success('Review updated successfully!');
+            handleClose();
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to update review.');
+          },
         },
-        onError: (error: any) => {
-          toast.error(error?.response?.data?.message || 'Failed to submit review.');
+      );
+    } else {
+      addReview.mutate(
+        { eventId, formData },
+        {
+          onSuccess: () => {
+            toast.success('Thank you for your review!');
+            handleClose();
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to submit review.');
+          },
         },
-      },
-    );
+      );
+    }
   };
 
   const handleClose = () => {
@@ -134,6 +159,29 @@ export function ReviewComposer({
     setShowVendorReviews(false);
     onOpenChange(false);
   };
+
+  // Reset form when initialData changes or dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        rating: initialData?.rating || 0,
+        text: initialData?.comment || '',
+        vendor_reviews: participatingVendors.map((v) => {
+          const existingVendorReview = initialData?.vendorReviews?.find(
+            (vr: any) => vr.vendorName === v.vendor_name
+          );
+          return {
+            vendor_id: v.id,
+            rating: existingVendorReview?.rating || 0,
+            text: existingVendorReview?.comment || '',
+          };
+        }),
+      });
+      setShowVendorReviews(!!initialData?.vendorReviews?.length);
+      setMediaFiles([]);
+      setMediaPreviews(initialData?.media?.map((m: any) => m.file) || []);
+    }
+  }, [isOpen, initialData, participatingVendors, form]);
 
   return (
     <Dialog
@@ -146,9 +194,10 @@ export function ReviewComposer({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Review {eventName}</DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Review' : `Review ${eventName}`}</DialogTitle>
           <DialogDescription>
             Share your experience, add photos or videos, and optionally review
+
             individual vendors.
           </DialogDescription>
         </DialogHeader>
@@ -421,18 +470,18 @@ export function ReviewComposer({
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                disabled={addReview.isPending}
+                disabled={addReview.isPending || updateReview.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={addReview.isPending}>
-                {addReview.isPending ? (
+              <Button type="submit" disabled={addReview.isPending || updateReview.isPending}>
+                {addReview.isPending || updateReview.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    {initialData ? 'Updating...' : 'Submitting...'}
                   </>
                 ) : (
-                  'Submit Review'
+                  initialData ? 'Update Review' : 'Submit Review'
                 )}
               </Button>
             </div>

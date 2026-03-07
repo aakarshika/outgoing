@@ -15,6 +15,9 @@ from .views import (
     EventLifecycleTransitionView,
     EventListCreateView,
     EventReviewCreateView,
+    EventReviewDetailView,
+    EventReviewLikeToggleView,
+    EventReviewCommentCreateListView,
     EventTicketTierListView,
     EventViewView,
     MyEventsView,
@@ -72,4 +75,7 @@ urlpatterns = [
         EventHighlightCommentCreateListView.as_view(),
         name="highlight_comments",
     ),
+    path("reviews/<int:review_id>/", EventReviewDetailView.as_view(), name="review_detail"),
+    path("reviews/<int:review_id>/like/", EventReviewLikeToggleView.as_view(), name="review_like_toggle"),
+    path("reviews/<int:review_id>/comments/", EventReviewCommentCreateListView.as_view(), name="review_comments"),
 ]

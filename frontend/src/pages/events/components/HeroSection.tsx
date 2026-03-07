@@ -455,36 +455,34 @@ const TinyHostCard = ({
     host,
     rating,
     tag,
+    onClick,
 }: {
     host: any;
     rating?: number;
     tag: string;
+    onClick?: () => void;
 }) => {
-    const [expanded, setExpanded] = useState(false);
-
     return (
         <Box
-            onClick={() => setExpanded(!expanded)}
+            onClick={onClick}
+
             sx={{
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                transform: expanded ? 'rotate(0deg)' : 'rotate(-1deg)',
+                transform: 'rotate(-1deg)',
             }}
         >
-            <Collapse in={!expanded}>
+            <>
                 <Paper
                     elevation={0}
                     sx={{
                         display: 'inline-flex',
                         alignItems: 'center',
+                        background: 'transparent',
                         gap: 1.5,
                         px: 2,
                         py: 1,
-                        bgcolor: '#fff9e6',
-                        border: '1.5px solid #e0d8c0',
-                        borderRadius: '20px',
                         '&:hover': {
-                            boxShadow: '2px 3px 8px rgba(0,0,0,0.1)',
                             transform: 'scale(1.03)',
                         },
                     }}
@@ -495,9 +493,6 @@ const TinyHostCard = ({
                             height: 28,
                             borderRadius: '50%',
                             overflow: 'hidden',
-                            border: '2px solid white',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                            bgcolor: '#eee',
                             flexShrink: 0,
                         }}
                     >
@@ -515,31 +510,11 @@ const TinyHostCard = ({
                             color: 'text.secondary',
                         }}
                     >
-                        hosted by @{host.username}
+                        hosted ss by @{host.username}
                     </Typography>
-                    <ChevronDown size={14} style={{ opacity: 0.4 }} />
                 </Paper>
-            </Collapse>
+            </>
 
-            <Collapse in={expanded}>
-                <Box onClick={(e) => e.stopPropagation()}>
-                    <HostCard host={host} rating={rating} tag={tag} />
-                    <Typography
-                        onClick={() => setExpanded(false)}
-                        sx={{
-                            fontFamily: '"Caveat", cursive',
-                            fontSize: '0.8rem',
-                            color: 'text.disabled',
-                            textAlign: 'center',
-                            mt: 0.5,
-                            cursor: 'pointer',
-                            '&:hover': { color: 'text.secondary' },
-                        }}
-                    >
-                        tap to collapse
-                    </Typography>
-                </Box>
-            </Collapse>
         </Box>
     );
 };
@@ -704,6 +679,10 @@ export const HeroSection = ({
                                         ? 'Photographer'
                                         : 'Vibe Architect'
                                 }
+                                onClick={() => {
+                                    navigate(`/events/${event.id}#services`);
+                                    window.dispatchEvent(new CustomEvent('section-scroll', { detail: 'services' }));
+                                }}
                             />
                         </Box>
                     </Box>

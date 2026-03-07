@@ -1,8 +1,14 @@
-from datetime import timedelta
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
+from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -29,518 +35,703 @@ from apps.vendors.models import VendorReview, VendorService
 
 User = get_user_model()
 
-PLACEHOLDER_AVATAR = "https://placehold.co/150x150/png"
-PLACEHOLDER_COVER = "https://placehold.co/800x400/png"
-PLACEHOLDER_EVENT_IMG = "https://placehold.co/600x400/png"
-PLACEHOLDER_PORTFOLIO = "https://placehold.co/800x600/png"
+DEFAULT_JSON_FILE = Path(__file__).with_name("seed_minimal.json")
 
-CATEGORIES = [
-    {"id": 5, "name": "Arts & Culture", "slug": "arts-culture", "icon": "palette"},
-    {"id": 9, "name": "Comedy", "slug": "comedy", "icon": "laugh"},
-    {"id": 12, "name": "Community", "slug": "community", "icon": "heart-handshake"},
-    {"id": 11, "name": "Festivals", "slug": "festivals", "icon": "party-popper"},
-    {"id": 2, "name": "Food & Drink", "slug": "food-drink", "icon": "utensils"},
-    {"id": 1, "name": "Music", "slug": "music", "icon": "music"},
-    {
-        "id": 10,
-        "name": "Networking & Social",
-        "slug": "networking-social",
-        "icon": "users",
-    },
-    {"id": 3, "name": "Nightlife", "slug": "nightlife", "icon": "moon"},
-    {
-        "id": 8,
-        "name": "Outdoors & Adventure",
-        "slug": "outdoors-adventure",
-        "icon": "mountain",
-    },
-    {"id": 4, "name": "Sports & Fitness", "slug": "sports-fitness", "icon": "dumbbell"},
-    {"id": 6, "name": "Tech & Innovation", "slug": "tech-innovation", "icon": "cpu"},
-    {
-        "id": 7,
-        "name": "Workshops & Classes",
-        "slug": "workshops-classes",
-        "icon": "book-open",
-    },
-]
+
+def _choice_values(choices: list[tuple[str, str]]) -> set[str]:
+    return {value for value, _ in choices}
+
+
+@dataclass
+class SeedContext:
+    users: dict[str, Any] = field(default_factory=dict)
+    categories: dict[str, EventCategory] = field(default_factory=dict)
+    services: dict[str, VendorService] = field(default_factory=dict)
+    series: dict[str, EventSeries] = field(default_factory=dict)
+    events: dict[str, Event] = field(default_factory=dict)
+    tiers: dict[str, EventTicketTier] = field(default_factory=dict)
+    needs: dict[str, EventNeed] = field(default_factory=dict)
+    applications: dict[str, NeedApplication] = field(default_factory=dict)
+    reviews: dict[str, EventReview] = field(default_factory=dict)
+    requests: dict[str, EventRequest] = field(default_factory=dict)
 
 
 class Command(BaseCommand):
-    help = "Wipes and re-seeds the database with comprehensive sample data."
+    help = "JSON-driven seeding with strict relationship and constraint validation."
 
     def add_arguments(self, parser):
         parser.add_argument(
+            "--data-file",
+            type=str,
+            default=str(DEFAULT_JSON_FILE),
+            help="Path to seed JSON file.",
+        )
+        parser.add_argument(
             "--no-wipe",
             action="store_true",
-            help="Do not wipe existing data (may cause duplicates/errors).",
+            help="Do not wipe existing data before seeding.",
         )
+
+    def _fail(self, message: str):
+        raise CommandError(message)
+
+    def _parse_decimal(self, value: Any, field_name: str) -> Decimal | None:
+        if value is None or value == "":
+            return None
+        try:
+            return Decimal(str(value))
+        except Exception as exc:
+            self._fail(f"Invalid decimal for '{field_name}': {value} ({exc})")
+
+    def _parse_dt(self, value: str, field_name: str) -> datetime:
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except Exception as exc:
+            self._fail(f"Invalid datetime for '{field_name}': {value} ({exc})")
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        return dt
+
+    def _expect(self, payload: dict[str, Any], required: list[str], path: str):
+        for key in required:
+            if key not in payload:
+                self._fail(f"Missing required key '{key}' at {path}")
+
+    def _expect_choice(self, value: str, allowed: set[str], path: str):
+        if value not in allowed:
+            self._fail(
+                f"Invalid value '{value}' at {path}. Allowed: {sorted(allowed)}"
+            )
+
+    def _resolve(self, mapping: dict[str, Any], key: str, path: str):
+        obj = mapping.get(key)
+        if obj is None:
+            self._fail(f"Unknown reference '{key}' at {path}")
+        return obj
+
+    def _set_file_field(self, model_cls: Any, obj_id: int, field_name: str, value: str | None):
+        if value:
+            model_cls.objects.filter(pk=obj_id).update(**{field_name: value})
 
     def wipe_data(self):
         self.stdout.write("Wiping existing data...")
+        RequestWishlist.objects.all().delete()
+        RequestUpvote.objects.all().delete()
         EventRequest.objects.all().delete()
-        VendorService.objects.all().delete()
-        EventSeries.objects.all().delete()
-        Event.objects.all().delete()
+
+        VendorReview.objects.all().delete()
+        EventVendorReview.objects.all().delete()
+        EventReviewMedia.objects.all().delete()
+        EventReview.objects.all().delete()
+
+        EventHighlight.objects.all().delete()
+        EventMedia.objects.all().delete()
+        EventLifecycleTransition.objects.all().delete()
+        EventInterest.objects.all().delete()
+        EventView.objects.all().delete()
+
+        Ticket.objects.all().delete()
+        NeedInvite.objects.all().delete()
+        NeedApplication.objects.all().delete()
+        EventNeed.objects.all().delete()
         EventTicketTier.objects.all().delete()
+
+        Event.objects.all().delete()
+        EventSeriesNeedTemplate.objects.all().delete()
+        EventSeries.objects.all().delete()
+        VendorService.objects.all().delete()
+
         UserProfile.objects.all().delete()
         User.objects.filter(is_superuser=False).delete()
-        # Note: Categories are not wiped by default unless needed, but we can leave them
+        EventCategory.objects.all().delete()
         self.stdout.write(self.style.SUCCESS("Data wiped successfully."))
 
+    def _load_json(self, path: Path) -> dict[str, Any]:
+        if not path.exists():
+            self._fail(f"Seed file not found: {path}")
+        try:
+            return json.loads(path.read_text())
+        except json.JSONDecodeError as exc:
+            self._fail(f"Invalid JSON in {path}: {exc}")
+
+    def _seed_users(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("users", [])):
+            path = f"users[{index}]"
+            self._expect(row, ["username", "email", "password"], path)
+            user, _ = User.objects.update_or_create(
+                username=row["username"],
+                defaults={
+                    "email": row["email"],
+                    "first_name": row.get("first_name", ""),
+                    "last_name": row.get("last_name", ""),
+                    "is_staff": bool(row.get("is_staff", False)),
+                    "is_superuser": bool(row.get("is_superuser", False)),
+                    "is_active": bool(row.get("is_active", True)),
+                },
+            )
+            user.set_password(row["password"])
+            user.save()
+            ctx.users[user.username] = user
+
+    def _seed_profiles(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("profiles", [])):
+            path = f"profiles[{index}]"
+            self._expect(row, ["user"], path)
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.phone_number = row.get("phone_number", "")
+            profile.bio = row.get("bio", "")
+            profile.headline = row.get("headline", "")
+            profile.showcase_bio = row.get("showcase_bio", "")
+            profile.aadhar_number = row.get("aadhar_number", "")
+            profile.location_city = row.get("location_city", "")
+            profile.save()
+            self._set_file_field(UserProfile, profile.pk, "avatar", row.get("avatar"))
+            self._set_file_field(
+                UserProfile, profile.pk, "cover_photo", row.get("cover_photo")
+            )
+            self._set_file_field(
+                UserProfile, profile.pk, "aadhar_image", row.get("aadhar_image")
+            )
+
+    def _seed_categories(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("categories", [])):
+            path = f"categories[{index}]"
+            self._expect(row, ["slug", "name", "icon"], path)
+            category, _ = EventCategory.objects.update_or_create(
+                slug=row["slug"],
+                defaults={"name": row["name"], "icon": row["icon"]},
+            )
+            ctx.categories[category.slug] = category
+
+    def _seed_services(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("services", [])):
+            path = f"services[{index}]"
+            self._expect(row, ["key", "vendor", "title", "description", "category"], path)
+            vendor = self._resolve(ctx.users, row["vendor"], f"{path}.vendor")
+            service, _ = VendorService.objects.update_or_create(
+                vendor=vendor,
+                title=row["title"],
+                defaults={
+                    "description": row["description"],
+                    "category": row["category"],
+                    "visibility": row.get("visibility", "customer_facing"),
+                    "base_price": self._parse_decimal(row.get("base_price"), f"{path}.base_price"),
+                    "location_city": row.get("location_city", ""),
+                    "is_active": bool(row.get("is_active", True)),
+                },
+            )
+            self._set_file_field(
+                VendorService, service.pk, "portfolio_image", row.get("portfolio_image")
+            )
+            ctx.services[row["key"]] = service
+
+    def _seed_series(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("series", [])):
+            path = f"series[{index}]"
+            self._expect(row, ["key", "host", "name"], path)
+            host = self._resolve(ctx.users, row["host"], f"{path}.host")
+            series, _ = EventSeries.objects.update_or_create(
+                host=host,
+                name=row["name"],
+                defaults={
+                    "description": row.get("description", ""),
+                    "recurrence_rule": row.get("recurrence_rule", ""),
+                    "timezone": row.get("timezone", "UTC"),
+                    "default_location_name": row.get("default_location_name", ""),
+                    "default_location_address": row.get("default_location_address", ""),
+                    "default_capacity": row.get("default_capacity"),
+                    "default_ticket_price_standard": self._parse_decimal(
+                        row.get("default_ticket_price_standard"),
+                        f"{path}.default_ticket_price_standard",
+                    ),
+                    "default_ticket_price_flexible": self._parse_decimal(
+                        row.get("default_ticket_price_flexible"),
+                        f"{path}.default_ticket_price_flexible",
+                    ),
+                },
+            )
+            ctx.series[row["key"]] = series
+
+    def _seed_series_need_templates(self, data: dict[str, Any], ctx: SeedContext):
+        criticality_allowed = _choice_values(EventSeriesNeedTemplate.CRITICALITY_CHOICES)
+        for index, row in enumerate(data.get("series_need_templates", [])):
+            path = f"series_need_templates[{index}]"
+            self._expect(row, ["series", "title"], path)
+            series = self._resolve(ctx.series, row["series"], f"{path}.series")
+            criticality = row.get("criticality", "replaceable")
+            self._expect_choice(criticality, criticality_allowed, f"{path}.criticality")
+            EventSeriesNeedTemplate.objects.update_or_create(
+                series=series,
+                title=row["title"],
+                defaults={
+                    "description": row.get("description", ""),
+                    "category": row.get("category", "other"),
+                    "criticality": criticality,
+                    "budget_min": self._parse_decimal(row.get("budget_min"), f"{path}.budget_min"),
+                    "budget_max": self._parse_decimal(row.get("budget_max"), f"{path}.budget_max"),
+                },
+            )
+
+    def _seed_events(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(Event.STATUS_CHOICES)
+        lifecycle_allowed = _choice_values(Event.LIFECYCLE_CHOICES)
+        for index, row in enumerate(data.get("events", [])):
+            path = f"events[{index}]"
+            self._expect(
+                row,
+                [
+                    "key",
+                    "host",
+                    "category",
+                    "title",
+                    "description",
+                    "location_name",
+                    "start_time",
+                    "end_time",
+                ],
+                path,
+            )
+            host = self._resolve(ctx.users, row["host"], f"{path}.host")
+            category = self._resolve(ctx.categories, row["category"], f"{path}.category")
+            series = None
+            if row.get("series"):
+                series = self._resolve(ctx.series, row["series"], f"{path}.series")
+
+            status = row.get("status", "draft")
+            lifecycle_state = row.get("lifecycle_state", status)
+            self._expect_choice(status, status_allowed, f"{path}.status")
+            self._expect_choice(lifecycle_state, lifecycle_allowed, f"{path}.lifecycle_state")
+
+            slug = row.get("slug") or row["key"].replace("_", "-")
+            event, _ = Event.objects.update_or_create(
+                slug=slug,
+                defaults={
+                    "host": host,
+                    "title": row["title"],
+                    "description": row["description"],
+                    "category": category,
+                    "series": series,
+                    "occurrence_index": row.get("occurrence_index"),
+                    "location_name": row["location_name"],
+                    "location_address": row.get("location_address", ""),
+                    "check_in_instructions": row.get("check_in_instructions", ""),
+                    "event_ready_message": row.get("event_ready_message", ""),
+                    "latitude": self._parse_decimal(row.get("latitude"), f"{path}.latitude"),
+                    "longitude": self._parse_decimal(row.get("longitude"), f"{path}.longitude"),
+                    "start_time": self._parse_dt(row["start_time"], f"{path}.start_time"),
+                    "end_time": self._parse_dt(row["end_time"], f"{path}.end_time"),
+                    "capacity": row.get("capacity"),
+                    "ticket_price_standard": self._parse_decimal(
+                        row.get("ticket_price_standard"), f"{path}.ticket_price_standard"
+                    ),
+                    "ticket_price_flexible": self._parse_decimal(
+                        row.get("ticket_price_flexible"), f"{path}.ticket_price_flexible"
+                    ),
+                    "refund_window_hours": int(row.get("refund_window_hours", 24)),
+                    "status": status,
+                    "lifecycle_state": lifecycle_state,
+                    "tags": row.get("tags", []),
+                    "features": row.get("features", []),
+                },
+            )
+            self._set_file_field(Event, event.pk, "cover_image", row.get("cover_image"))
+            ctx.events[row["key"]] = event
+
+    def _seed_lifecycle_transitions(self, data: dict[str, Any], ctx: SeedContext):
+        lifecycle_allowed = _choice_values(Event.LIFECYCLE_CHOICES)
+        for index, row in enumerate(data.get("event_lifecycle_transitions", [])):
+            path = f"event_lifecycle_transitions[{index}]"
+            self._expect(row, ["event", "from_state", "to_state"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            actor = None
+            if row.get("actor"):
+                actor = self._resolve(ctx.users, row["actor"], f"{path}.actor")
+            self._expect_choice(row["from_state"], lifecycle_allowed, f"{path}.from_state")
+            self._expect_choice(row["to_state"], lifecycle_allowed, f"{path}.to_state")
+            EventLifecycleTransition.objects.get_or_create(
+                event=event,
+                actor=actor,
+                from_state=row["from_state"],
+                to_state=row["to_state"],
+                reason=row.get("reason", ""),
+                defaults={"metadata": row.get("metadata", {})},
+            )
+
+    def _seed_ticket_tiers(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_ticket_tiers", [])):
+            path = f"event_ticket_tiers[{index}]"
+            self._expect(row, ["key", "event", "name", "price"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            tier, _ = EventTicketTier.objects.update_or_create(
+                event=event,
+                name=row["name"],
+                defaults={
+                    "description": row.get("description", ""),
+                    "admits": int(row.get("admits", 1)),
+                    "color": row.get("color", "gray"),
+                    "price": self._parse_decimal(row["price"], f"{path}.price") or Decimal("0"),
+                    "capacity": row.get("capacity"),
+                    "is_refundable": bool(row.get("is_refundable", False)),
+                    "refund_percentage": int(row.get("refund_percentage", 100)),
+                },
+            )
+            if tier.refund_percentage < 0 or tier.refund_percentage > 100:
+                self._fail(f"refund_percentage must be 0..100 at {path}.refund_percentage")
+            ctx.tiers[row["key"]] = tier
+
+    def _seed_needs(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(EventNeed.STATUS_CHOICES)
+        criticality_allowed = _choice_values(EventNeed.CRITICALITY_CHOICES)
+        for index, row in enumerate(data.get("event_needs", [])):
+            path = f"event_needs[{index}]"
+            self._expect(row, ["key", "event", "title"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            status = row.get("status", "open")
+            criticality = row.get("criticality", "replaceable")
+            self._expect_choice(status, status_allowed, f"{path}.status")
+            self._expect_choice(criticality, criticality_allowed, f"{path}.criticality")
+
+            assigned_vendor = None
+            if row.get("assigned_vendor"):
+                assigned_vendor = self._resolve(
+                    ctx.users, row["assigned_vendor"], f"{path}.assigned_vendor"
+                )
+
+            need, _ = EventNeed.objects.update_or_create(
+                event=event,
+                title=row["title"],
+                defaults={
+                    "description": row.get("description", ""),
+                    "category": row.get("category", "other"),
+                    "criticality": criticality,
+                    "budget_min": self._parse_decimal(row.get("budget_min"), f"{path}.budget_min"),
+                    "budget_max": self._parse_decimal(row.get("budget_max"), f"{path}.budget_max"),
+                    "status": status,
+                    "assigned_vendor": assigned_vendor,
+                },
+            )
+            ctx.needs[row["key"]] = need
+
+    def _seed_need_applications(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(NeedApplication.STATUS_CHOICES)
+        for index, row in enumerate(data.get("need_applications", [])):
+            path = f"need_applications[{index}]"
+            self._expect(row, ["key", "need", "vendor"], path)
+            need = self._resolve(ctx.needs, row["need"], f"{path}.need")
+            vendor = self._resolve(ctx.users, row["vendor"], f"{path}.vendor")
+            service = None
+            if row.get("service"):
+                service = self._resolve(ctx.services, row["service"], f"{path}.service")
+            status = row.get("status", "pending")
+            self._expect_choice(status, status_allowed, f"{path}.status")
+
+            application, _ = NeedApplication.objects.update_or_create(
+                need=need,
+                vendor=vendor,
+                defaults={
+                    "service": service,
+                    "message": row.get("message", ""),
+                    "proposed_price": self._parse_decimal(
+                        row.get("proposed_price"), f"{path}.proposed_price"
+                    ),
+                    "status": status,
+                },
+            )
+            ctx.applications[row["key"]] = application
+
+    def _seed_need_invites(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(NeedInvite.STATUS_CHOICES)
+        for index, row in enumerate(data.get("need_invites", [])):
+            path = f"need_invites[{index}]"
+            self._expect(row, ["need", "vendor", "invited_by"], path)
+            need = self._resolve(ctx.needs, row["need"], f"{path}.need")
+            vendor = self._resolve(ctx.users, row["vendor"], f"{path}.vendor")
+            invited_by = self._resolve(ctx.users, row["invited_by"], f"{path}.invited_by")
+            status = row.get("status", "pending")
+            self._expect_choice(status, status_allowed, f"{path}.status")
+
+            NeedInvite.objects.update_or_create(
+                need=need,
+                vendor=vendor,
+                defaults={
+                    "invited_by": invited_by,
+                    "message": row.get("message", ""),
+                    "status": status,
+                },
+            )
+
+    def _seed_tickets(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(Ticket.STATUS_CHOICES)
+        for index, row in enumerate(data.get("tickets", [])):
+            path = f"tickets[{index}]"
+            self._expect(row, ["event", "goer"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            goer = self._resolve(ctx.users, row["goer"], f"{path}.goer")
+            tier = None
+            if row.get("tier"):
+                tier = self._resolve(ctx.tiers, row["tier"], f"{path}.tier")
+            status = row.get("status", "active")
+            self._expect_choice(status, status_allowed, f"{path}.status")
+
+            unique_filters: dict[str, Any]
+            if row.get("barcode"):
+                unique_filters = {"barcode": row["barcode"]}
+            else:
+                unique_filters = {
+                    "event": event,
+                    "goer": goer,
+                    "tier": tier,
+                    "guest_name": row.get("guest_name", ""),
+                }
+
+            ticket, _ = Ticket.objects.update_or_create(
+                **unique_filters,
+                defaults={
+                    "event": event,
+                    "goer": goer,
+                    "tier": tier,
+                    "ticket_type": row.get("ticket_type", tier.name if tier else "standard"),
+                    "color": row.get("color", tier.color if tier else "gray"),
+                    "guest_name": row.get("guest_name", ""),
+                    "is_18_plus": bool(row.get("is_18_plus", True)),
+                    "is_refundable": bool(row.get("is_refundable", False)),
+                    "refund_percentage": int(row.get("refund_percentage", 100)),
+                    "price_paid": self._parse_decimal(row.get("price_paid"), f"{path}.price_paid")
+                    or (tier.price if tier else Decimal("0")),
+                    "status": status,
+                },
+            )
+            if row.get("refund_deadline"):
+                ticket.refund_deadline = self._parse_dt(
+                    row["refund_deadline"], f"{path}.refund_deadline"
+                )
+                ticket.save(update_fields=["refund_deadline", "updated_at"])
+
+    def _seed_event_media(self, data: dict[str, Any], ctx: SeedContext):
+        media_type_allowed = _choice_values(EventMedia.MEDIA_TYPE_CHOICES)
+        category_allowed = _choice_values(EventMedia.CATEGORY_CHOICES)
+        for index, row in enumerate(data.get("event_media", [])):
+            path = f"event_media[{index}]"
+            self._expect(row, ["event", "file"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            media_type = row.get("media_type", "image")
+            category = row.get("category", "gallery")
+            self._expect_choice(media_type, media_type_allowed, f"{path}.media_type")
+            self._expect_choice(category, category_allowed, f"{path}.category")
+            order = int(row.get("order", 0))
+            media, _ = EventMedia.objects.get_or_create(
+                event=event,
+                media_type=media_type,
+                category=category,
+                order=order,
+            )
+            self._set_file_field(EventMedia, media.pk, "file", row.get("file"))
+
+    def _seed_event_highlights(self, data: dict[str, Any], ctx: SeedContext):
+        role_allowed = _choice_values(EventHighlight.ROLE_CHOICES)
+        moderation_allowed = _choice_values(EventHighlight.MODERATION_CHOICES)
+        for index, row in enumerate(data.get("event_highlights", [])):
+            path = f"event_highlights[{index}]"
+            self._expect(row, ["event", "author"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            author = self._resolve(ctx.users, row["author"], f"{path}.author")
+            role = row.get("role", "goer")
+            moderation = row.get("moderation_status", "approved")
+            self._expect_choice(role, role_allowed, f"{path}.role")
+            self._expect_choice(moderation, moderation_allowed, f"{path}.moderation_status")
+            highlight = EventHighlight.objects.create(
+                event=event,
+                author=author,
+                role=role,
+                text=row.get("text", ""),
+                moderation_status=moderation,
+            )
+            self._set_file_field(
+                EventHighlight, highlight.pk, "media_file", row.get("media_file")
+            )
+
+    def _seed_event_reviews(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_reviews", [])):
+            path = f"event_reviews[{index}]"
+            self._expect(row, ["key", "event", "reviewer", "rating"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            reviewer = self._resolve(ctx.users, row["reviewer"], f"{path}.reviewer")
+            rating = int(row["rating"])
+            if rating < 1 or rating > 5:
+                self._fail(f"rating must be 1..5 at {path}.rating")
+            review, _ = EventReview.objects.update_or_create(
+                event=event,
+                reviewer=reviewer,
+                defaults={
+                    "rating": rating,
+                    "text": row.get("text", ""),
+                    "is_public": bool(row.get("is_public", True)),
+                },
+            )
+            ctx.reviews[row["key"]] = review
+
+    def _seed_event_review_media(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_review_media", [])):
+            path = f"event_review_media[{index}]"
+            self._expect(row, ["review", "file"], path)
+            review = self._resolve(ctx.reviews, row["review"], f"{path}.review")
+            media, _ = EventReviewMedia.objects.get_or_create(review=review)
+            self._set_file_field(EventReviewMedia, media.pk, "file", row.get("file"))
+
+    def _seed_event_vendor_reviews(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_vendor_reviews", [])):
+            path = f"event_vendor_reviews[{index}]"
+            self._expect(row, ["event_review", "vendor_service", "rating"], path)
+            event_review = self._resolve(ctx.reviews, row["event_review"], f"{path}.event_review")
+            vendor_service = self._resolve(
+                ctx.services, row["vendor_service"], f"{path}.vendor_service"
+            )
+            rating = int(row["rating"])
+            if rating < 1 or rating > 5:
+                self._fail(f"rating must be 1..5 at {path}.rating")
+            EventVendorReview.objects.update_or_create(
+                event_review=event_review,
+                vendor=vendor_service,
+                defaults={"rating": rating, "text": row.get("text", "")},
+            )
+
+    def _seed_vendor_reviews(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("vendor_reviews", [])):
+            path = f"vendor_reviews[{index}]"
+            self._expect(row, ["vendor_service", "reviewer", "rating"], path)
+            vendor_service = self._resolve(
+                ctx.services, row["vendor_service"], f"{path}.vendor_service"
+            )
+            reviewer = self._resolve(ctx.users, row["reviewer"], f"{path}.reviewer")
+            event = None
+            if row.get("event"):
+                event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            rating = int(row["rating"])
+            if rating < 1 or rating > 5:
+                self._fail(f"rating must be 1..5 at {path}.rating")
+            VendorReview.objects.get_or_create(
+                vendor_service=vendor_service,
+                reviewer=reviewer,
+                event=event,
+                rating=rating,
+                text=row.get("text", ""),
+            )
+
+    def _seed_interests_views(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_interests", [])):
+            path = f"event_interests[{index}]"
+            self._expect(row, ["event", "user"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            EventInterest.objects.get_or_create(event=event, user=user)
+
+        for index, row in enumerate(data.get("event_views", [])):
+            path = f"event_views[{index}]"
+            self._expect(row, ["event", "user"], path)
+            event = self._resolve(ctx.events, row["event"], f"{path}.event")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            EventView.objects.get_or_create(event=event, user=user)
+
+    def _seed_requests(self, data: dict[str, Any], ctx: SeedContext):
+        status_allowed = _choice_values(EventRequest.STATUS_CHOICES)
+        for index, row in enumerate(data.get("event_requests", [])):
+            path = f"event_requests[{index}]"
+            self._expect(row, ["key", "requester", "title", "description"], path)
+            requester = self._resolve(ctx.users, row["requester"], f"{path}.requester")
+            category = None
+            if row.get("category"):
+                category = self._resolve(ctx.categories, row["category"], f"{path}.category")
+            fulfilled_event = None
+            if row.get("fulfilled_event"):
+                fulfilled_event = self._resolve(
+                    ctx.events, row["fulfilled_event"], f"{path}.fulfilled_event"
+                )
+            status = row.get("status", "open")
+            self._expect_choice(status, status_allowed, f"{path}.status")
+
+            req, _ = EventRequest.objects.update_or_create(
+                requester=requester,
+                title=row["title"],
+                defaults={
+                    "description": row["description"],
+                    "category": category,
+                    "location_city": row.get("location_city", ""),
+                    "status": status,
+                    "fulfilled_event": fulfilled_event,
+                },
+            )
+            ctx.requests[row["key"]] = req
+
+        wishlist_allowed = _choice_values(RequestWishlist.WISHLIST_AS_CHOICES)
+
+        for index, row in enumerate(data.get("request_upvotes", [])):
+            path = f"request_upvotes[{index}]"
+            self._expect(row, ["request", "user"], path)
+            request = self._resolve(ctx.requests, row["request"], f"{path}.request")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            RequestUpvote.objects.get_or_create(request=request, user=user)
+
+        for index, row in enumerate(data.get("request_wishlists", [])):
+            path = f"request_wishlists[{index}]"
+            self._expect(row, ["request", "user", "wishlist_as"], path)
+            request = self._resolve(ctx.requests, row["request"], f"{path}.request")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            wishlist_as = row["wishlist_as"]
+            self._expect_choice(wishlist_as, wishlist_allowed, f"{path}.wishlist_as")
+            RequestWishlist.objects.update_or_create(
+                request=request,
+                user=user,
+                defaults={"wishlist_as": wishlist_as},
+            )
+
+    def _sync_counters(self, ctx: SeedContext):
+        for event in ctx.events.values():
+            event.interest_count = EventInterest.objects.filter(event=event).count()
+            event.ticket_count = Ticket.objects.filter(event=event).count()
+            event.save(update_fields=["interest_count", "ticket_count", "updated_at"])
+
+        for need in ctx.needs.values():
+            need.application_count = NeedApplication.objects.filter(need=need).count()
+            need.save(update_fields=["application_count"])
+
+        for req in ctx.requests.values():
+            req.upvote_count = RequestUpvote.objects.filter(request=req).count()
+            req.save(update_fields=["upvote_count"])
+
     @transaction.atomic
-    def handle(self, *args, **options):  # noqa: C901
+    def handle(self, *args, **options):
+        data_file = Path(options["data_file"]).expanduser().resolve()
+        payload = self._load_json(data_file)
+
         if not options["no_wipe"]:
             self.wipe_data()
 
-        now = timezone.now()
+        ctx = SeedContext()
 
-        # 1. Categories
-        db_categories = {}
-        for cat_data in CATEGORIES:
-            cat, _ = EventCategory.objects.update_or_create(
-                slug=cat_data["slug"],
-                defaults={
-                    "name": cat_data["name"],
-                    "icon": cat_data["icon"],
-                },
-            )
-            db_categories[cat.slug] = cat
+        self.stdout.write(f"Seeding from {data_file} ...")
 
-        # 2. Users & Profiles
-        self.stdout.write("Setting up superuser...")
-        if not User.objects.filter(username="root").exists():
-            User.objects.create_superuser("root", "root@example.com", "root")
-        else:
-            su = User.objects.get(username="root")
-            su.set_password("root")
-            su.save()
+        self._seed_users(payload, ctx)
+        self._seed_profiles(payload, ctx)
+        self._seed_categories(payload, ctx)
+        self._seed_services(payload, ctx)
+        self._seed_series(payload, ctx)
+        self._seed_series_need_templates(payload, ctx)
+        self._seed_events(payload, ctx)
+        self._seed_lifecycle_transitions(payload, ctx)
+        self._seed_ticket_tiers(payload, ctx)
+        self._seed_needs(payload, ctx)
+        self._seed_need_applications(payload, ctx)
+        self._seed_need_invites(payload, ctx)
+        self._seed_tickets(payload, ctx)
+        self._seed_event_media(payload, ctx)
+        self._seed_event_highlights(payload, ctx)
+        self._seed_event_reviews(payload, ctx)
+        self._seed_event_review_media(payload, ctx)
+        self._seed_event_vendor_reviews(payload, ctx)
+        self._seed_vendor_reviews(payload, ctx)
+        self._seed_interests_views(payload, ctx)
+        self._seed_requests(payload, ctx)
+        self._sync_counters(ctx)
 
-        # Diverse users including mixed roles
-        self.stdout.write("Creating users...")
-        users = {}
-        user_data = []
-
-        # Pure Goers
-        for i in range(1, 11):
-            user_data.append((f"goer{i}", f"Goer{i}", "Lastname", "goer"))
-
-        # Pure Hosts
-        for i in range(1, 4):
-            user_data.append((f"host{i}", f"Host{i}", "Lastname", "host"))
-
-        # Pure Vendors
-        for i in range(1, 6):
-            user_data.append((f"vendor{i}", f"Vendor{i}", "Lastname", "vendor"))
-
-        # Host + Goer
-        for i in range(1, 4):
-            user_data.append(
-                (f"hostgoer{i}", f"HostGoer{i}", "Lastname", "host and goer")
-            )
-
-        # Vendor + Goer
-        for i in range(1, 4):
-            user_data.append(
-                (f"vendorgoer{i}", f"VendorGoer{i}", "Lastname", "vendor and goer")
-            )
-
-        # Host + Vendor
-        for i in range(1, 3):
-            user_data.append(
-                (f"hostvendor{i}", f"HostVendor{i}", "Lastname", "host and vendor")
-            )
-
-        # All three
-        for i in range(1, 4):
-            user_data.append((f"omni{i}", f"Omni{i}", "Lastname", "event enthusiast"))
-
-        for username, first, last, role in user_data:
-            user = User.objects.create_user(
-                username=username,
-                email=f"{username}@example.com",
-                password="password123",
-                first_name=first,
-                last_name=last,
-            )
-            profile, _ = UserProfile.objects.get_or_create(user=user)
-            profile.bio = f"Hi, I'm {first} and I'm a passionate {role}."
-            profile.headline = f"Professional {role.capitalize()}"
-            profile.location_city = "New York" if i % 2 == 0 else "Los Angeles"
-            profile.phone_number = f"555-01{i:02d}"
-            profile.showcase_bio = f"Detailed showcase bio for {first}. This {role} has a lot of experience in the event industry and loves connecting with others."
-
-            # Using update to bypass ImageField validation for string URL
-            UserProfile.objects.filter(pk=profile.pk).update(
-                avatar=PLACEHOLDER_AVATAR, cover_photo=PLACEHOLDER_COVER
-            )
-            users[username] = user
-
-        all_hosts = [
-            u
-            for u in users.values()
-            if any(role in u.username for role in ["host", "omni"])
-        ]
-        all_vendors = [
-            u
-            for u in users.values()
-            if any(role in u.username for role in ["vendor", "omni"])
-        ]
-        all_goers = [
-            u
-            for u in users.values()
-            if any(role in u.username for role in ["goer", "omni"])
-        ]
-
-        # Vendor services: ensure every vendor-capable user has at least one service
-        self.stdout.write("Creating vendor services...")
-        services = []
-        vendor_types = [
-            ("dj", "Beats & Rhythms", "Premium audio experiences."),
-            ("photography", "Lens & Light", "Capturing every moment."),
-            ("catering", "Gourmet Bites", "Exquisite culinary delights."),
-            ("staffing", "Safe Guard", "Professional security & staffing services."),
-            (
-                "decor_floristry",
-                "Ambient Designs",
-                "Transforming spaces with stunning decor.",
-            ),
-            ("lighting_audio", "Bright Star", "Dynamic event lighting & AV."),
-            ("videography", "Visual Tech", "State-of-the-art video production."),
-            ("food_truck", "Street Flavor", "Delicious food truck experiences."),
-            ("bartending", "Mix Master", "Craft cocktails and bar service."),
-            (
-                "event_planning",
-                "Plan Perfect",
-                "Full-service event planning & coordination.",
-            ),
-        ]
-        service_count = max(len(all_vendors), len(vendor_types))
-        for i in range(service_count):
-            cat, title_prefix, desc = vendor_types[i % len(vendor_types)]
-            vendor_user = all_vendors[i % len(all_vendors)]
-            service = VendorService.objects.create(
-                vendor=vendor_user,
-                title=f"{title_prefix} by {vendor_user.first_name}",
-                description=desc,
-                category=cat,
-                base_price=Decimal(str(100 * (i + 1))),
-                location_city="New York" if (i + 1) % 2 == 0 else "Los Angeles",
-            )
-            VendorService.objects.filter(pk=service.pk).update(
-                portfolio_image=PLACEHOLDER_PORTFOLIO
-            )
-            services.append(service)
-
-        # 4. Recurring Series
-        self.stdout.write("Creating event series...")
-        series1 = EventSeries.objects.create(
-            host=all_hosts[0],
-            name="Weekly Tech Meetup",
-            description="Learn tech every week.",
-            recurrence_rule="FREQ=WEEKLY;BYDAY=WE",
-            default_location_name="Tech Hub",
-            default_capacity=50,
-        )
-        EventSeriesNeedTemplate.objects.create(
-            series=series1,
-            title="Guest Speaker",
-            category="mc_host",
-            criticality="essential",
-        )
-
-        # 5. Events - Single & Recurrences representing all lifecycle states
-        self.stdout.write("Creating events...")
-
-        def create_event(
-            title, host, status, l_state, start_offset_days, cat, series=None
-        ):
-            start = now + timedelta(days=start_offset_days)
-            end = start + timedelta(hours=3)
-            e = Event.objects.create(
-                host=host,
-                title=title,
-                description=f"A spectacular {cat.name} event. {title} features top-tier entertainment and a great atmosphere.",
-                category=cat,
-                location_name=f"{title} Venue",
-                location_address=f"{100 + start_offset_days} Event Ave",
-                start_time=start,
-                end_time=end,
-                capacity=100 + abs(start_offset_days),
-                status=status,
-                lifecycle_state=l_state,
-                series=series,
-                latitude=Decimal("40.7128") + Decimal(str(start_offset_days * 0.001)),
-                longitude=Decimal("-74.0060") + Decimal(str(start_offset_days * 0.001)),
-                tags=["exciting", cat.slug, "featured"],
-                check_in_instructions="Please have your digital ticket ready at the entrance.",
-                event_ready_message="The event is starting soon! Get ready for an amazing experience.",
-            )
-            Event.objects.filter(pk=e.pk).update(cover_image=PLACEHOLDER_EVENT_IMG)
-            
-            # Create standard tiers for every event
-            EventTicketTier.objects.create(
-                event=e,
-                name="Early Bird",
-                description="Limited early bird tickets.",
-                price=Decimal("15.00"),
-                capacity=20,
-                color="#e0f2fe", # light blue
-                is_refundable=False
-            )
-            EventTicketTier.objects.create(
-                event=e,
-                name="General Admission",
-                description="Standard entry to the event.",
-                price=Decimal("25.00"),
-                capacity=None,
-                color="#fef3c7", # amber
-                is_refundable=True,
-                refund_percentage=100
-            )
-            EventTicketTier.objects.create(
-                event=e,
-                name="VIP Lounge",
-                description="Exclusive access to the VIP lounge and perks.",
-                price=Decimal("75.00"),
-                capacity=10,
-                color="#fae8ff", # fuchsia
-                is_refundable=True,
-                refund_percentage=50
-            )
-            return e
-
-        events = {}
-        # Create events for each category and various lifecycle states
-        cat_list = [db_categories[cat_data["slug"]] for cat_data in CATEGORIES]
-        for i, cat in enumerate(cat_list):
-            host = all_hosts[i % len(all_hosts)]
-
-            # Mix up statuses and offsets
-            if i % 7 == 0:
-                state, status, offset = "draft", "draft", 30 + i
-            elif i % 7 == 1:
-                state, status, offset = "published", "published", 15 + i
-            elif i % 7 == 2:
-                state, status, offset = "at_risk", "published", 2 + i
-            elif i % 7 == 3:
-                state, status, offset = "postponed", "published", 45 + i
-            elif i % 7 == 4:
-                state, status, offset = "event_ready", "published", 1 + i
-            elif i % 7 == 5:
-                state, status, offset = "live", "published", 0
-            else:
-                state, status, offset = "completed", "completed", -10 - i
-
-            event_key = f"event_{i}"
-            events[event_key] = create_event(
-                f"Big {cat.name} Bash {i}", host, status, state, offset, cat
-            )
-
-        # Add a couple of series events
-        events["series_past"] = create_event(
-            "Weekly Tech Meetup #1",
-            all_hosts[0],
-            "completed",
-            "completed",
-            -7,
-            db_categories["tech-innovation"],
-            series1,
-        )
-        events["series_upcoming"] = create_event(
-            "Weekly Tech Meetup #2",
-            all_hosts[0],
-            "published",
-            "published",
-            7,
-            db_categories["tech-innovation"],
-            series1,
-        )
-
-        # Event Lifecycle Transitions
-        for e in events.values():
-            if e.lifecycle_state != "draft":
-                EventLifecycleTransition.objects.create(
-                    event=e,
-                    from_state="draft",
-                    to_state=e.lifecycle_state,
-                    actor=e.host,
-                    reason="Testing",
-                )
-
-        # 6. Needs, Applications, Invites
-        self.stdout.write("Creating needs and applications...")
-        # Add needs to diverse events
-        needs_list = []
-        for i, e in enumerate(list(events.values())[:10]):
-            vendor_user = all_vendors[i % len(all_vendors)]
-            service = services[i % len(services)]
-
-            need = EventNeed.objects.create(
-                event=e,
-                title=f"Need for {service.category}",
-                category=service.category,
-                budget_max=service.base_price * Decimal("1.2"),
-                status="filled" if i % 2 == 0 else "open",
-            )
-            needs_list.append(need)
-
-            if need.status == "filled":
-                NeedApplication.objects.create(
-                    need=need,
-                    vendor=vendor_user,
-                    service=service,
-                    proposed_price=service.base_price,
-                    status="accepted",
-                )
-                need.assigned_vendor = vendor_user
-                need.save()
-            else:
-                # Add a few applications and invites for open needs
-                for j in range(1, 3):
-                    v_idx = (i + j) % len(all_vendors)
-                    NeedApplication.objects.create(
-                        need=need,
-                        vendor=all_vendors[v_idx],
-                        service=services[(i + j) % len(services)],
-                        status="pending",
-                    )
-                    NeedInvite.objects.create(
-                        need=need,
-                        vendor=all_vendors[v_idx],
-                        invited_by=e.host,
-                        message=f"Hey vendor, we'd love for you to join {e.title}!",
-                    )
-
-        # 7. Tickets
-        self.stdout.write("Creating tickets...")
-        for i, (key, e) in enumerate(events.items()):
-            if e.status in ["published", "completed", "live"]:
-                # Each event gets 5-10 tickets
-                num_tickets = 5 + (i % 6)
-                tiers = list(e.ticket_tiers.all())
-                for j in range(num_tickets):
-                    goer = all_goers[(i + j) % len(all_goers)]
-                    tier = tiers[j % len(tiers)]
-                    Ticket.objects.get_or_create(
-                        event=e,
-                        goer=goer,
-                        tier=tier,
-                        defaults={
-                            "ticket_type": tier.name,
-                            "price_paid": tier.price,
-                            "color": tier.color,
-                            "is_refundable": tier.is_refundable,
-                            "refund_percentage": tier.refund_percentage,
-                        },
-                    )
-                e.ticket_count = num_tickets
-                e.save()
-
-        # 9. Reviews (Many reviews for completed events)
-        self.stdout.write("Creating reviews and highlights...")
-        completed_events = [e for e in events.values() if e.status == "completed"]
-        for i, e in enumerate(completed_events):
-            # Highlights
-            for j in range(1, 4):
-                author = all_goers[(j + i) % len(all_goers)]
-                h = EventHighlight.objects.create(
-                    event=e,
-                    author=author,
-                    role="goer",
-                    text=f"Check out this moment from {e.title}! Highlight #{j}",
-                    moderation_status="approved",
-                )
-                EventHighlight.objects.filter(pk=h.pk).update(
-                    media_file=PLACEHOLDER_EVENT_IMG
-                )
-
-            # Event Media Gallery
-            for j in range(1, 5):
-                m = EventMedia.objects.create(
-                    event=e,
-                    media_type="image" if j % 2 == 0 else "video",
-                    category="gallery",
-                    order=j,
-                )
-                EventMedia.objects.filter(pk=m.pk).update(file=PLACEHOLDER_EVENT_IMG)
-
-        def random_rating(seed):
-            return 3 + (seed % 3)
-
-        # Reviews
-        for i, e in enumerate(completed_events):
-            for j in range(1, 6):
-                reviewer = all_goers[(j + i * 5) % len(all_goers)]
-                rev = EventReview.objects.create(
-                    event=e,
-                    reviewer=reviewer,
-                    rating=random_rating(j),
-                    text=f"Review #{j} for {e.title}: An absolutely wonderful experience!",
-                )
-                rev_m = EventReviewMedia.objects.create(review=rev)
-                EventReviewMedia.objects.filter(pk=rev_m.pk).update(
-                    file=PLACEHOLDER_EVENT_IMG
-                )
-
-                # Vendor review for the service provided at this event (if any needs were filled)
-                for need in e.needs.filter(status="filled"):
-                    EventVendorReview.objects.create(
-                        event_review=rev,
-                        vendor=need.applications.filter(status="accepted")
-                        .first()
-                        .service,
-                        rating=random_rating(j),
-                        text="The vendor did a great job!",
-                    )
-
-        # Standalone Vendor Reviews
-        for i, s in enumerate(services):
-            for j in range(1, 4):
-                reviewer = all_goers[(j + i * 3) % len(all_goers)]
-                VendorReview.objects.create(
-                    vendor_service=s,
-                    reviewer=reviewer,
-                    rating=random_rating(j),
-                    text=f"Service review for {s.title}: Highly professional and recommended.",
-                )
-
-        # 10. Interests and Views
-        self.stdout.write("Creating interests and views...")
-        for i, (key, e) in enumerate(events.items()):
-            # Each event gets some views and interests
-            for j in range(1, 6):
-                user = all_goers[(i + j) % len(all_goers)]
-                if j % 2 == 0:
-                    EventInterest.objects.get_or_create(event=e, user=user)
-                    e.interest_count += 1
-                EventView.objects.get_or_create(event=e, user=user)
-            e.save()
-
-        # 11. Requests
-        self.stdout.write("Creating requests...")
-        for i in range(1, 6):
-            cat = cat_list[i % len(cat_list)]
-            req = EventRequest.objects.create(
-                requester=all_goers[i % len(all_goers)],
-                title=f"Request for more {cat.name} events in the city!",
-                description=f"I really love {cat.name} and we need more of them. Specifically, events that are {cat.slug} focused.",
-                category=cat,
-                location_city="New York" if i % 2 == 0 else "Los Angeles",
-                status="open" if i < 4 else "fulfilled",
-                fulfilled_event=events[f"event_{i}"] if i >= 4 else None,
-            )
-            # Add upvotes
-            for j in range(1, 5):
-                upvoter = all_goers[(i + j) % len(all_goers)]
-                RequestUpvote.objects.get_or_create(request=req, user=upvoter)
-                req.upvote_count += 1
-
-            # Add wishlist
-            RequestWishlist.objects.create(
-                request=req,
-                user=all_vendors[i % len(all_vendors)],
-                wishlist_as="vendor",
-            )
-            req.save()
-
-        self.stdout.write(self.style.SUCCESS("Database seeded successfully!"))
+        self.stdout.write(self.style.SUCCESS("Database seeded successfully from JSON."))

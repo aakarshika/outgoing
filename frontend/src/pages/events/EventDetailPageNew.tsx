@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
@@ -25,6 +25,7 @@ import {
   usePurchaseTicket,
   useRecordEventView,
   useToggleInterest,
+  useDeleteEventReview,
 } from '@/features/events/hooks';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
@@ -38,6 +39,7 @@ import { MemoryBoxSection } from './components/MemoryBoxSection';
 import { ReviewsSection } from './components/ReviewsSection';
 import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
+import { getDaysAgo } from './components/scrapbookHelpers';
 
 import {
   Button as MuiButton,
@@ -50,6 +52,7 @@ import {
 export default function EventDetailPageNew() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { data: eventResponse, isLoading } = useEvent(Number(id));
   const { data: needsResponse } = useEventNeeds(Number(id));
@@ -80,12 +83,9 @@ export default function EventDetailPageNew() {
   const [manageInitialIndex, setManageInitialIndex] = useState(0);
   const [quickBuyData, setQuickBuyData] = useState<{ tierId: number; quantity: number } | null>(null);
   const [oneClickStatus, setOneClickStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [editReviewData, setEditReviewData] = useState<any>(null);
 
-  useEffect(() => {
-    if (isAuthenticated && Number(id)) {
-      recordView.mutate();
-    }
-  }, [id, isAuthenticated]);
+  const deleteReview = useDeleteEventReview();
 
   const event = eventResponse?.data;
   const story = storyResponse?.data;
@@ -98,6 +98,47 @@ export default function EventDetailPageNew() {
   }, [occurrencesResponse]);
   const highlights = story?.highlights || event?.highlights || [];
 
+  useEffect(() => {
+    if (isAuthenticated && Number(id)) {
+      recordView.mutate();
+    }
+  }, [id, isAuthenticated]);
+
+  useEffect(() => {
+    const handleScroll = (e: any) => {
+      const sectionId = e.detail;
+      const element = document.getElementById(sectionId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor && anchor.hash && anchor.origin === window.location.origin) {
+        const sectionId = anchor.hash.replace('#', '');
+        window.dispatchEvent(new CustomEvent('section-scroll', { detail: sectionId }));
+      }
+    };
+
+    window.addEventListener('section-scroll', handleScroll as any);
+    document.addEventListener('click', handleGlobalClick);
+
+    // Initial load scroll
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      window.dispatchEvent(new CustomEvent('section-scroll', { detail: id }));
+    }
+
+    return () => {
+      window.removeEventListener('section-scroll', handleScroll as any);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [location.hash, event]);
+
   const reviews = useMemo(() => {
     const baseReviews = story?.reviews || event?.reviews || [];
     return baseReviews.map((rev: any) => ({
@@ -106,6 +147,10 @@ export default function EventDetailPageNew() {
       rating: rev.rating,
       comment: rev.text,
       avatar: rev.reviewer_avatar,
+      likesCount: rev.likes_count || 0,
+      commentsCount: rev.comments_count || 0,
+      userHasLiked: rev.user_has_liked || false,
+      datetime: rev.created_at ? getDaysAgo(rev.created_at) : undefined,
       vendorReviews: (rev.vendor_reviews || []).map((vRev: any) => {
         const vendorInfo = event?.participating_vendors?.find(
           (v: any) => v.id === vRev.vendor_id,
@@ -263,7 +308,6 @@ export default function EventDetailPageNew() {
             {/* Section 1: Status Banner & Top Bar */}
             <StatusBannerSection
               event={event}
-              isHost={isHost}
               isAuthenticated={isAuthenticated}
               navigate={navigate}
               toggleInterest={toggleInterest}
@@ -324,7 +368,6 @@ export default function EventDetailPageNew() {
                   displayNeeds={displayNeeds}
                   myServicesResponse={myServicesResponse}
                   isAuthenticated={isAuthenticated}
-                  navigate={navigate}
                   setSelectedNeed={setSelectedNeed}
                   setIsApplyModalOpen={setIsApplyModalOpen}
                   highlights={highlights}
@@ -341,7 +384,22 @@ export default function EventDetailPageNew() {
               <Box id="reviews">
                 <ReviewsSection
                   reviews={reviews}
-                  setIsReviewOpen={setIsReviewOpen}
+                  currentUser={user}
+                  userHasPurchased={event?.user_has_ticket || false}
+                  setIsReviewOpen={(open) => {
+                    setEditReviewData(null);
+                    setIsReviewOpen(open);
+                  }}
+                  onEditReview={(review) => {
+                    setEditReviewData(review);
+                    setIsReviewOpen(true);
+                  }}
+                  onDeleteReview={(reviewId) => {
+                    deleteReview.mutate(reviewId, {
+                      onSuccess: () => toast.success("Review deleted successfully."),
+                      onError: () => toast.error("Failed to delete review.")
+                    });
+                  }}
                 />
               </Box>
             </Box>
@@ -371,7 +429,13 @@ export default function EventDetailPageNew() {
             eventName={event.title}
             participatingVendors={event.participating_vendors}
             isOpen={isReviewOpen}
-            onOpenChange={setIsReviewOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setTimeout(() => setEditReviewData(null), 200);
+              }
+              setIsReviewOpen(open);
+            }}
+            initialData={editReviewData}
           />
         )}
         <TicketingServiceModal

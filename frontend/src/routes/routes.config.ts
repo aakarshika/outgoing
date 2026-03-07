@@ -47,6 +47,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/events/:id/gallery/:highlightId',
+    componentName: 'Gallery',
+    isPublic: true,
+  },
+  {
     path: '/dashboard',
     componentName: 'Dashboard',
     roles: [UserRole.USER, UserRole.ADMIN],

@@ -2,9 +2,11 @@ import {
   Bell,
   Briefcase,
   CalendarDays,
+  FileEdit,
   LayoutDashboard,
   Menu,
   Moon,
+  Pencil,
   Plus,
   Search,
   Sun,
@@ -12,13 +14,12 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAlerts } from '@/features/alerts/hooks';
 import { useAuth } from '@/features/auth/hooks';
-import { useEventAutocomplete } from '@/features/events/hooks';
+import { useEvent, useEventAutocomplete } from '@/features/events/hooks';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
 
@@ -37,6 +38,14 @@ export function Navbar() {
 
   const { data: response } = useAlerts({ enabled: isAuthenticated });
   const alertsCount = response?.data?.length || 0;
+
+  const eventMatch = matchPath('/events/:id', location.pathname);
+  const eventId = eventMatch?.params.id;
+  const { data: eventResponse } = useEvent(Number(eventId));
+  const event = eventResponse?.data;
+  const { user } = useAuth();
+  const isEventHost = isAuthenticated && user && event && user.username === event.host?.username;
+  const isNotOnManagePage = !location.pathname.endsWith('/manage');
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -152,6 +161,35 @@ export function Navbar() {
                       <Plus className="h-4 w-4" /> Create Event
                     </Link>
                   </Button>
+
+                  {isEventHost && isNotOnManagePage && (
+                    <>
+                      {/* Desktop Button */}
+                      <Button
+                        variant="default"
+                        size="sm"
+                        asChild
+                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all font-bold"
+                        style={{ fontFamily: '"Permanent Marker"' }}
+                      >
+                        <Link to={`/events/${eventId}/manage`}>
+                          <FileEdit className="h-4 w-4" /> Edit the event
+                        </Link>
+                      </Button>
+
+                      {/* Small screens Pencil Icon */}
+                      <Button
+                        variant="default"
+                        size="icon"
+                        asChild
+                        className="inline-flex md:hidden rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all"
+                      >
+                        <Link to={`/events/${eventId}/manage`} aria-label="Edit the event">
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="hidden gap-2 sm:flex">

@@ -1,15 +1,13 @@
-import { Box, Typography, IconButton, Collapse, Avatar, Rating, Stack } from '@mui/material';
-import { ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { Box, Typography, IconButton, Collapse, Grid } from '@mui/material';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { ClassifiedAd } from './scrapbookHelpers';
-import { Grid } from '@mui/material';
+import { ClassifiedAd, HostBusinessCard, MiniBusinessCard } from './scrapbookHelpers';
 
 export const ServicesSection = ({
     event,
     displayNeeds,
     myServicesResponse,
     isAuthenticated,
-    navigate,
     setSelectedNeed,
     setIsApplyModalOpen,
     highlights = []
@@ -18,7 +16,6 @@ export const ServicesSection = ({
     displayNeeds: any[];
     myServicesResponse: any;
     isAuthenticated: boolean;
-    navigate: any;
     setSelectedNeed: (n: any) => void;
     setIsApplyModalOpen: (v: boolean) => void;
     highlights?: any[];
@@ -31,6 +28,16 @@ export const ServicesSection = ({
     useEffect(() => {
         localStorage.setItem('services_section_expanded', JSON.stringify(isExpanded));
     }, [isExpanded]);
+
+    useEffect(() => {
+        const handleScroll = (e: any) => {
+            if (e.detail === 'services') {
+                setIsExpanded(true);
+            }
+        };
+        window.addEventListener('section-scroll', handleScroll);
+        return () => window.removeEventListener('section-scroll', handleScroll);
+    }, []);
 
     const participatingVendors = event?.participating_vendors || [];
 
@@ -63,7 +70,7 @@ export const ServicesSection = ({
                         fontSize: '1rem',
                     }}
                 >
-                    Service Providers
+                    Meet the planners
                 </Typography>
                 <IconButton size="small">
                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -72,89 +79,84 @@ export const ServicesSection = ({
 
             <Collapse in={isExpanded}>
                 <Box>
-                    {displayNeeds.length > 0 && (
-                        <Grid container spacing={2}>
-                            {displayNeeds.map((need: any) => {
-                                const isEligible = myServices.some(
-                                    (s: any) =>
-                                        s.category.toLowerCase().includes(need.category.toLowerCase()) ||
-                                        need.category.toLowerCase().includes(s.category.toLowerCase()),
-                                );
-                                const isOpportunity = isAuthenticated && !isEligible && need.status === 'open';
-                                return (
-                                    <Grid size={{ xs: 12, md: 6 }} key={need.id}>
-                                        <ClassifiedAd
-                                            need={need}
-                                            isEligible={isEligible}
-                                            isOpportunity={isOpportunity}
-                                            onInquire={(n) => {
-                                                setSelectedNeed(n);
-                                                setIsApplyModalOpen(true);
-                                            }}
-                                            navigate={navigate}
-                                        />
-                                    </Grid>
-                                );
-                            })}
+                    <Grid container spacing={2}>
+                        {/* Host Card is always first */}
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <HostBusinessCard host={event.host} />
                         </Grid>
-                    )}
+
+                        {displayNeeds.length > 0 && (
+                            <>
+                                {displayNeeds.map((need: any) => {
+                                    const isEligible = myServices.some(
+                                        (s: any) =>
+                                            s.category.toLowerCase().includes(need.category.toLowerCase()) ||
+                                            need.category.toLowerCase().includes(s.category.toLowerCase()),
+                                    );
+                                    const isOpportunity = isAuthenticated && !isEligible && need.status === 'open';
+                                    return (
+                                        <Grid size={{ xs: 12, md: 6 }} key={need.id}>
+                                            <ClassifiedAd
+                                                need={need}
+                                                isEligible={isEligible}
+                                                isOpportunity={isOpportunity}
+                                                onInquire={(n) => {
+                                                    setSelectedNeed(n);
+                                                    setIsApplyModalOpen(true);
+                                                }}
+                                            />
+                                        </Grid>
+                                    );
+                                })}
+                            </>
+                        )}
+                    </Grid>
                 </Box>
             </Collapse>
 
             <Collapse in={!isExpanded}>
-                <Box>
-                    {participatingVendors.length > 0 ? (
-                        <Grid container spacing={2}>
-                            {participatingVendors.map((vendor: any) => (
-                                <Grid size={{ xs: 12, md: 6 }} key={vendor.id}>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 2,
-                                            p: 1.5,
-                                            bgcolor: 'rgba(255,255,255,0.6)',
-                                            borderRadius: 2,
-                                            border: '1px dashed #ccc',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': { transform: 'scale(1.02)' }
-                                        }}
-                                    >
-                                        <Avatar
-                                            src={vendor.vendor_avatar}
-                                            sx={{ width: 40, height: 40, border: '1px solid #ddd' }}
-                                        >
-                                            {vendor.vendor_name?.[0]}
-                                        </Avatar>
-                                        <Box sx={{ flex: 1 }}>
-                                            <Typography sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                                                {vendor.vendor_name}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <Rating
-                                                    value={vendor.rating}
-                                                    readOnly
-                                                    size="small"
-                                                    icon={<Star size={12} fill="currentColor" />}
-                                                    emptyIcon={<Star size={12} />}
-                                                />
-                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                                    ({vendor.rating})
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Box>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    ) : (
-                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.disabled', textAlign: isCenter ? 'center' : 'left' }}>
-                            No services active yet...
-                        </Typography>
-                    )}
+                <Box sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1.5,
+                    alignItems: "center"
+                }}>
+                    <MiniBusinessCard
+                        name={event.host.username}
+                        avatar={event.host.avatar}
+                        rating={5.0}
+                        service="Host & Curator"
+                        type="host"
+                    />
+
+                    {participatingVendors.map((vendor: any) => (
+                        <MiniBusinessCard
+                            key={vendor.id}
+                            name={vendor.vendor_name}
+                            avatar={vendor.vendor_avatar}
+                            rating={vendor.rating || 5.0}
+                            service={vendor.category || "Service Specialist"}
+                            onClick={() => {
+                                if (vendor.service) {
+                                    window.location.href = `/services/${vendor.service}`;
+                                }
+                            }}
+                        />
+                    ))}
+
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontFamily: "\"Permanent Marker\"",
+                            color: "text.secondary",
+                            ml: 1,
+                            fontSize: "0.75rem"
+                        }}
+                    >
+                        {participatingVendors.length} of {displayNeeds.length} need{displayNeeds.length > 1 ? 's' : ''} met
+                    </Typography>
                 </Box>
             </Collapse>
         </Box>
     );
 };
-

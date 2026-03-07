@@ -333,3 +333,41 @@ export async function generateEventSeriesOccurrences(seriesId: number, payload: 
   );
   return data;
 }
+
+export async function updateEventReview(reviewId: number, formData: FormData) {
+  const { data } = await client.patch<ApiResponse<any>>(
+    `/events/reviews/${reviewId}/`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
+  return data;
+}
+
+export async function deleteEventReview(reviewId: number) {
+  const { data } = await client.delete<ApiResponse<any>>(`/events/reviews/${reviewId}/`);
+  return data;
+}
+
+export async function toggleReviewLike(reviewId: number) {
+  const { data } = await client.post<ApiResponse<{ liked: boolean; likes_count: number }>>(
+    `/events/reviews/${reviewId}/like/`,
+  );
+  return data;
+}
+
+export async function fetchReviewComments(reviewId: number) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/reviews/${reviewId}/comments/`,
+  );
+  return data;
+}
+
+export async function addReviewComment(reviewId: number, payload: { text: string; parent?: number }) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/reviews/${reviewId}/comments/`,
+    payload,
+  );
+  return data;
+}

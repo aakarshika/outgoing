@@ -1,23 +1,20 @@
 import {
     Box,
-    Button as MuiButton,
     IconButton,
     Typography,
 } from '@mui/material';
-import { ArrowLeft, FileEdit, Heart } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 
 import { CuteTimer, getDaysAgo, Highlighter } from './scrapbookHelpers';
 
 export const StatusBannerSection = ({
     event,
-    isHost,
     isAuthenticated,
     navigate,
     toggleInterest,
     occurrences = [],
 }: {
     event: any;
-    isHost: boolean;
     isAuthenticated: boolean;
     navigate: any;
     toggleInterest: any;
@@ -193,25 +190,6 @@ export const StatusBannerSection = ({
                                 color={event.user_is_interested ? '#ef4444' : '#999'}
                             />
                         </IconButton>
-                    )}
-                    {isHost && (
-                        <MuiButton
-                            variant="contained"
-                            startIcon={<FileEdit size={18} />}
-                            onClick={() => navigate(`/events/${event.id}/manage`)}
-                            sx={{
-                                bgcolor: 'white',
-                                color: 'black',
-                                '&:hover': { bgcolor: '#f0f0f0' },
-                                boxShadow: 2,
-                                textTransform: 'none',
-                                fontWeight: 'bold',
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                                px: { xs: 1, sm: 2 },
-                            }}
-                        >
-                            Manage Event
-                        </MuiButton>
                     )}
                 </Box>
             </Box>

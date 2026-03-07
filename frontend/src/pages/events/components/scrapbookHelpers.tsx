@@ -10,14 +10,16 @@ import {
     DialogContent,
     IconButton,
     Divider,
+    Avatar,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Plus, X, Star } from 'lucide-react';
 
 import { Media } from '@/components/ui/media';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { CapacityInfographic } from '@/components/ui/CapacityInfographic';
+import { Hostname } from '@/components/ui/Hostname';
 
 export const LIFECYCLE_LABELS: Record<string, string> = {
     draft: 'Draft',
@@ -31,6 +33,76 @@ export const LIFECYCLE_LABELS: Record<string, string> = {
 };
 
 // --- Scrapbook Components ---
+
+export const DoodleStar = ({ size = 40, color = "#fbbf24", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <path d="M50 5 L63 38 L95 38 L68 58 L78 91 L50 71 L22 91 L32 58 L5 38 L37 38 Z" />
+    </svg>
+);
+
+export const DoodleHeart = ({ size = 40, color = "#f87171", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <path d="M50 30 C50 10, 90 10, 90 40 C90 70, 50 90, 50 90 C50 90, 10 70, 10 40 C10 10, 50 10, 50 30" />
+    </svg>
+);
+
+export const DoodleArrow = ({ size = 60, color = "#60a5fa", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <path d="M10 50 Q 50 10, 90 50 M 90 50 L 70 30 M 90 50 L 70 70" />
+    </svg>
+);
+
+export const DoodleSwirl = ({ size = 50, color = "#a78bfa", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <path d="M50 50 C 70 30, 90 50, 70 70 C 50 90, 30 70, 50 50 C 70 30, 50 10, 30 30 C 10 50, 30 70, 50 50" />
+    </svg>
+);
+
+export const DoodleCloud = ({ size = 50, color = "#94a3b8", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <path d="M25 60 C 15 60, 15 45, 25 45 C 25 30, 45 30, 50 40 C 60 30, 80 30, 80 45 C 90 45, 90 60, 80 60 Z" />
+    </svg>
+);
+
+export const DoodleFlower = ({ size = 40, color = "#f472b6", rotate = 0 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ transform: `rotate(${rotate}deg)`, fill: 'none', stroke: color, strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+    >
+        <circle cx="50" cy="50" r="10" />
+        <path d="M50 40 C 60 20, 80 20, 80 40 C 80 60, 60 60, 50 50" />
+        <path d="M60 50 C 80 60, 80 80, 60 80 C 40 80, 40 60, 50 50" />
+        <path d="M50 60 C 40 80, 20 80, 20 60 C 20 40, 40 40, 50 50" />
+        <path d="M40 50 C 20 40, 20 20, 40 20 C 60 20, 60 40, 50 50" />
+    </svg>
+);
 
 export const WashiTape = ({ color = 'rgba(251, 191, 36, 0.5)', rotate = '3deg' }) => (
     <Box
@@ -280,9 +352,9 @@ export const PolaroidFrame = ({
             {author && (
                 <Typography
                     variant="caption"
-                    sx={{ display: 'block', textAlign: 'right', mt: 1, color: 'text.secondary' }}
+                    sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, color: 'text.secondary' }}
                 >
-                    — @{author}
+                    — <Hostname username={author} mode="simple" />
                 </Typography>
             )}
         </Paper>
@@ -780,6 +852,239 @@ export const ClassifiedAd = ({
                     </Box>
                 </Box>
             )}
+        </Box>
+    );
+};
+
+export const HostBusinessCard = ({
+    host,
+}: {
+    host: any;
+}) => {
+    return (
+        <Box
+            sx={{
+                width: '100%',
+                maxWidth: 320,
+                aspectRatio: '1.75 / 1',
+                bgcolor: '#f5f5f0', // Linen/Off-white (matches Vendor card)
+                backgroundImage:
+                    'repeating-linear-gradient(45deg, rgba(0,0,0,0.01) 0px, rgba(0,0,0,0.01) 2px, transparent 2px, transparent 4px)',
+                border: '1px solid #d1d5db',
+                boxShadow: '3px 3px 10px rgba(0,0,0,0.1)',
+                position: 'relative',
+                p: 2.5,
+                mb: 2, // Match ClassifiedAd margin
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                transform: 'rotate(-3deg) scale(0.95)', // Match "filled" ad positioning
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                    transform: 'rotate(0deg) scale(1) translateY(-5px)',
+                    boxShadow: '5px 5px 15px rgba(0,0,0,0.15)',
+                },
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 4,
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    pointerEvents: 'none',
+                },
+            }}
+        >
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box
+                    sx={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: '50%',
+                        bgcolor: '#ddd',
+                        flexShrink: 0,
+                        border: '1px solid #ccc',
+                        overflow: 'hidden',
+                        boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)',
+                        position: 'relative',
+                    }}
+                >
+                    {host.avatar ? (
+                        <Media src={host.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: '1.5rem' }}>
+                            👤
+                        </Box>
+                    )}
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        sx={{
+                            fontFamily: '"Lora", serif',
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            color: '#1a1a1a',
+                            lineHeight: 1.2,
+                            mb: 0.5,
+                            letterSpacing: '0.5px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        }}
+                    >
+                        {host.username}
+                    </Typography>
+                    <Typography
+                        sx={{
+                            fontFamily: '"Permanent Marker"',
+                            fontSize: '0.75rem',
+                            color: '#ef4444',
+                            textTransform: 'uppercase',
+                            mb: 1,
+                        }}
+                    >
+                        Host & Curator
+                    </Typography>
+                    <Typography
+                        sx={{ fontSize: '0.6rem', color: '#888', fontFamily: 'monospace' }}
+                    >
+                        JOI. 2026 - 11 EVENTS
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Box
+                sx={{
+                    mt: 'auto',
+                    borderTop: '1px solid rgba(0,0,0,0.05)',
+                    pt: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-end',
+                }}
+            >
+                <Box>
+                    <Typography sx={{ fontSize: '0.65rem', color: '#888', fontStyle: 'italic' }}>
+                        Verified Outgoing™ Host
+                    </Typography>
+                    <Box sx={{ display: 'flex', color: '#fbbf24', fontSize: '1rem' }}>
+                        {'★'.repeat(5)}
+                    </Box>
+                </Box>
+                <Box
+                    sx={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.4,
+                        background: 'radial-gradient(circle, transparent 70%, rgba(0,0,0,0.05) 100%)',
+                    }}
+                >
+                    <Typography
+                        sx={{ fontSize: '0.45rem', fontWeight: 'bold', textAlign: 'center', color: '#ef4444' }}
+                    >
+                        HOST
+                        <br />
+                        SEAL
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export const MiniBusinessCard = ({
+    name,
+    avatar,
+    rating,
+    service,
+    type = 'vendor',
+    onClick
+}: {
+    name: string;
+    avatar?: string;
+    rating: number;
+    service: string;
+    type?: 'host' | 'vendor';
+    onClick?: () => void;
+}) => {
+    return (
+        <Box
+            onClick={onClick}
+            sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 0.75,
+                pr: 1.5,
+                bgcolor: '#f5f5f0',
+                borderRadius: '2px',
+                border: '1px solid #d1d5db',
+                boxShadow: '1px 1px 3px rgba(0,0,0,0.05)',
+                cursor: onClick ? 'pointer' : 'default',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': onClick ? {
+                    transform: 'translateY(-1px)',
+                    boxShadow: '2px 2px 6px rgba(0,0,0,0.1)'
+                } : {},
+                position: 'relative',
+                overflow: 'hidden',
+                width: 'fit-content',
+                maxWidth: 240,
+                flexShrink: 0,
+            }}
+        >
+            <Avatar
+                src={avatar}
+                sx={{
+                    width: 28,
+                    height: 28,
+                    border: '1px solid #ddd',
+                    bgcolor: type === 'host' ? '#fee2e2' : '#f0f0f0',
+                    color: type === 'host' ? '#ef4444' : '#666',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold'
+                }}
+            >
+                {name?.[0]}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                    sx={{
+                        fontFamily: '"Lora", serif',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        color: '#1a1a1a',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: 1,
+                    }}
+                >
+                    {name}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                    <Typography
+                        sx={{
+                            fontFamily: '"Permanent Marker"',
+                            fontSize: '0.55rem',
+                            color: type === 'host' ? '#ef4444' : '#d97706',
+                            textTransform: 'uppercase',
+                            lineHeight: 1,
+                        }}
+                    >
+                        {service}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2, ml: 0.5 }}>
+                        <Star size={8} fill="#fbbf24" stroke="#fbbf24" />
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.55rem', fontWeight: 'bold' }}>
+                            {rating}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
         </Box>
     );
 };

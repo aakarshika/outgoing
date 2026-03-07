@@ -1,7 +1,8 @@
-import { Box, Typography } from '@mui/material';
-import { Star } from 'lucide-react';
+import { Box, Typography, IconButton } from '@mui/material';
+import { Star, Heart, MessageCircle } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { Hostname } from './Hostname';
 import { UserAvatar } from './UserAvatar';
 
 interface VendorReview {
@@ -19,6 +20,12 @@ interface PostItNoteProps {
   vendorReviews?: VendorReview[];
   color?: string;
   rotation?: string;
+  datetime?: string;
+  likesCount?: number;
+  commentsCount?: number;
+  userHasLiked?: boolean;
+  onLike?: () => void;
+  onComment?: () => void;
 }
 
 export const PostItNote = ({
@@ -29,6 +36,12 @@ export const PostItNote = ({
   vendorReviews = [],
   color = '#fff740',
   rotation,
+  datetime,
+  likesCount = 0,
+  commentsCount = 0,
+  userHasLiked = false,
+  onLike,
+  onComment,
 }: PostItNoteProps) => {
   const rot = useMemo(() => rotation || (Math.random() * 6 - 3).toFixed(1), [rotation]);
 
@@ -61,10 +74,12 @@ export const PostItNote = ({
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-        <UserAvatar src={avatar} username={username} size="sm" />
-        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-          @{username}
-        </Typography>
+        <Hostname
+          username={username}
+          avatarSrc={avatar}
+          datetime={datetime}
+          mode="normal"
+        />
       </Box>
 
       <Box sx={{ display: 'flex', gap: 0.5, mb: 1, color: '#d4af37' }}>
@@ -148,6 +163,35 @@ export const PostItNote = ({
           ))}
         </Box>
       )}
+
+      {/* Interactions */}
+      <Box
+        sx={{
+          mt: vendorReviews.length > 0 ? 2 : 'auto',
+          pt: 1,
+          display: 'flex',
+          gap: 2,
+          alignItems: 'center',
+          color: 'text.secondary',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" onClick={onLike} sx={{ p: 0.5, color: userHasLiked ? 'error.main' : 'inherit' }}>
+            <Heart size={18} fill={userHasLiked ? 'currentColor' : 'none'} />
+          </IconButton>
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            {likesCount}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" onClick={onComment} sx={{ p: 0.5, color: 'inherit' }}>
+            <MessageCircle size={18} />
+          </IconButton>
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            {commentsCount}
+          </Typography>
+        </Box>
+      </Box>
     </Box>
   );
 };
