@@ -22,6 +22,18 @@ export interface EventMedia {
   created_at: string;
 }
 
+export interface EventTicketTier {
+  id: number;
+  name: string;
+  color: string;
+  price: string;
+  capacity: number | null;
+  is_refundable: boolean;
+  refund_percentage: number;
+  description: string;
+  admits: number;
+}
+
 export interface EventListItem {
   id: number;
   host: EventHost;
@@ -47,6 +59,7 @@ export interface EventListItem {
   description?: string;
   reviews?: any[];
   average_rating?: number | null;
+  ticket_tiers?: EventTicketTier[];
 }
 
 export interface EventSeriesNeedTemplate {
@@ -88,6 +101,7 @@ export interface EventDetail extends EventListItem {
   longitude: number | null;
   refund_window_hours: number;
   tags: string[];
+  features?: { name: string; tag: 'featured' | 'additional' | 'extra' }[];
   tickets_remaining: number | null;
   created_at: string;
   highlights?: any[];
@@ -95,6 +109,7 @@ export interface EventDetail extends EventListItem {
   average_rating?: number | null;
   participating_vendors?: any[];
   host_events_count?: number;
+  user_tickets?: TicketInfo[];
 }
 
 export type EventLifecycleState =
@@ -125,12 +140,14 @@ export interface TicketInfo {
     start_time: string;
     location_name: string;
   };
-  ticket_type: 'standard' | 'flexible';
+  ticket_type: string;
+  guest_name?: string;
   is_refundable: boolean;
   refund_deadline: string | null;
   price_paid: string;
   status: string;
   purchased_at: string;
+  needs_aadhar_verification?: boolean;
 }
 
 export interface EventAttendee {

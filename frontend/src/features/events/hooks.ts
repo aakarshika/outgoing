@@ -31,6 +31,9 @@ import {
   fetchUpcomingFeed,
   generateEventSeriesOccurrences,
   purchaseTicket,
+  updateEventTicketTiers,
+  updateTicket,
+  cancelTicket,
   recordEventView,
   toggleInterest,
   transitionEventLifecycle,
@@ -212,20 +215,54 @@ export function useDeleteEvent() {
   });
 }
 
+export function useUpdateTicketTiers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, tiers }: { eventId: number; tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }> }) =>
+      updateEventTicketTiers(eventId, tiers),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+}
+
 export function usePurchaseTicket() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       eventId,
-      ticketType,
+      tickets,
     }: {
       eventId: number;
-      ticketType: 'standard' | 'flexible';
-    }) => purchaseTicket(eventId, ticketType),
+      tickets: Array<{ tier_id?: number | null, guest_name?: string, is_18_plus: boolean }>;
+    }) => purchaseTicket(eventId, { tickets }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['event'] });
       queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+    },
+  });
+}
+
+export function useUpdateTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, guestName }: { ticketId: number; guestName: string }) =>
+      updateTicket(ticketId, guestName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+    },
+  });
+}
+
+export function useCancelTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ticketId: number) => cancelTicket(ticketId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+      queryClient.invalidateQueries({ queryKey: ['event'] });
     },
   });
 }
@@ -266,6 +303,7 @@ export function useAddEventHighlight() {
       addEventHighlight(eventId, formData),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
     },
   });
 }
@@ -277,6 +315,7 @@ export function useAddEventReview() {
       addEventReview(eventId, formData),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
     },
   });
 }

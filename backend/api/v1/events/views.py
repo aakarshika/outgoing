@@ -2,6 +2,7 @@
 
 import json
 
+from django.db import transaction
 from django.db.models import F, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -14,6 +15,7 @@ from apps.events.models import (
     EventInterest,
     EventReview,
     EventView,
+    EventTicketTier,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -28,6 +30,7 @@ from .serializers import (
     EventListSerializer,
     EventReviewSerializer,
     EventTransitionRequestSerializer,
+    EventTicketTierSerializer,
 )
 
 
@@ -143,7 +146,17 @@ class EventDetailView(APIView):
         if event.host != request.user:
             return error_response(message="Not authorized", status=403)
 
-        serializer = EventCreateSerializer(event, data=request.data, partial=True)
+        # Parse JSON string fields from multipart form data
+        data = request.data.copy()
+        for json_field in ("features", "tags"):
+            val = data.get(json_field)
+            if isinstance(val, str):
+                try:
+                    data[json_field] = json.loads(val)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
+        serializer = EventCreateSerializer(event, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             detail = EventDetailSerializer(event, context={"request": request})
@@ -170,6 +183,65 @@ class EventDetailView(APIView):
         except ValueError as exc:
             return error_response(message=str(exc), status=400)
         return success_response(message="Event cancelled")
+
+
+class EventTicketTierListView(APIView):
+    """List or bulk update ticket tiers for an event."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        tiers = event.ticket_tiers.all()
+        serializer = EventTicketTierSerializer(tiers, many=True)
+        return success_response(data=serializer.data)
+
+    def put(self, request, event_id):
+        """Bulk replace ticket tiers."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        tiers_data = request.data
+        if not isinstance(tiers_data, list):
+            return error_response(message="Expected a list of tiers", status=400)
+            
+        color_palette = ["#f59e0b", "#94a3b8", "#eab308", "#10b981", "#8b5cf6"] # Bronze, Silver, Gold, Emerald, Purple
+            
+        with transaction.atomic():
+            event.ticket_tiers.all().delete()
+            
+            # Sort tiers by price for color assignment
+            sorted_tiers = sorted(tiers_data, key=lambda x: float(x.get("price", 0)))
+            
+            for index, tier_data in enumerate(sorted_tiers):
+                tier_data["event"] = event.id
+                if not tier_data.get("color"):
+                    tier_data["color"] = color_palette[index % len(color_palette)]
+                    
+                serializer = EventTicketTierSerializer(data=tier_data)
+                if serializer.is_valid():
+                    serializer.save(event=event)
+                else:
+                    return error_response(
+                        message=f"Validation error in tier '{tier_data.get('name', 'unknown')}'", 
+                        errors=serializer.errors,
+                        status=400
+                    )
+                    
+        updated_tiers = event.ticket_tiers.all()
+        return success_response(
+            data=EventTicketTierSerializer(updated_tiers, many=True).data,
+            message="Ticket tiers updated"
+        )
 
 
 class EventInterestView(APIView):

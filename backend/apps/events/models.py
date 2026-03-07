@@ -44,10 +44,10 @@ class EventSeries(models.Model):
     default_location_address = models.CharField(max_length=300, blank=True)
     default_capacity = models.PositiveIntegerField(null=True, blank=True)
     default_ticket_price_standard = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
+        max_digits=10, decimal_places=2, null=True, blank=True, help_text="Legacy. Use Tier templates."
     )
     default_ticket_price_flexible = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
+        max_digits=10, decimal_places=2, null=True, blank=True, help_text="Legacy. Use Tier templates."
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -177,14 +177,14 @@ class Event(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Non-refundable ticket price. Null means free.",
+        help_text="Legacy field. Use TicketTiers instead. Null means free.",
     )
     ticket_price_flexible = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Refundable ticket price (premium tier).",
+        help_text="Legacy field. Use TicketTiers instead.",
     )
     refund_window_hours = models.PositiveIntegerField(
         default=24,
@@ -201,6 +201,11 @@ class Event(models.Model):
         max_length=20, choices=LIFECYCLE_CHOICES, default="draft"
     )
     tags = models.JSONField(default=list, blank=True)
+    features = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of {name, tag} dicts for event features (e.g. food, music).",
+    )
     interest_count = models.PositiveIntegerField(default=0)
     ticket_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -278,6 +283,26 @@ class Event(models.Model):
     def __str__(self):
         """String representation of the Event."""
         return str(self.title)
+
+
+class EventTicketTier(models.Model):
+    """Custom ticket levels created by the host for an event."""
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="ticket_tiers")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, default="")
+    admits = models.PositiveIntegerField(default=1, help_text="Number of people this ticket admits")
+    color = models.CharField(max_length=50, default="gray")
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    capacity = models.PositiveIntegerField(null=True, blank=True, help_text="Null means unlimited for this tier")
+    is_refundable = models.BooleanField(default=False)
+    refund_percentage = models.PositiveIntegerField(default=100)
+    
+    class Meta:
+        ordering = ["price", "name"]
+
+    def __str__(self):
+        return f"{self.name} for {self.event.title}"
 
 
 class EventMedia(models.Model):

@@ -18,6 +18,8 @@ import { EventLocationMap } from '@/components/events/EventLocationMap';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
+import { TicketManagementModal } from '@/components/events/TicketManagementModal';
+import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { CapacityInfographic } from '@/components/ui/CapacityInfographic';
 import { CheckInMemo } from '@/components/ui/CheckInMemo';
 import { HostCard } from '@/components/ui/HostCard';
@@ -31,6 +33,7 @@ import {
 } from '@/features/events/CategoricalBackground';
 import {
   useEvent,
+  useEventStory,
   usePurchaseTicket,
   useRecordEventView,
   useToggleInterest,
@@ -291,15 +294,15 @@ const PolaroidFrame = ({
 const TicketStub = ({
   type,
   price,
+  color,
   onBuy,
   isLoading,
-  hasTicket,
 }: {
   type: string;
   price: number;
+  color?: string;
   onBuy: () => void;
   isLoading?: boolean;
-  hasTicket?: boolean;
 }) => (
   <Paper
     elevation={2}
@@ -313,7 +316,7 @@ const TicketStub = ({
       overflow: 'visible',
     }}
   >
-    <WashiTape color="rgba(0,0,0,0.1)" />
+    <WashiTape color={color ? `${color}44` : "rgba(0,0,0,0.1)"} />
     <Box
       sx={{
         p: 2,
@@ -323,17 +326,19 @@ const TicketStub = ({
         justifyContent: 'center',
         alignItems: 'center',
         minWidth: 100,
+        bgcolor: color || 'transparent',
+        color: color ? 'white' : 'inherit',
       }}
     >
       <Typography
         variant="caption"
-        sx={{ fontWeight: 'bold', color: 'text.secondary', letterSpacing: 1 }}
+        sx={{ fontWeight: 'bold', color: color ? 'white' : 'text.secondary', letterSpacing: 1 }}
       >
         ADMIT ONE
       </Typography>
       <Typography
         variant="h5"
-        sx={{ fontFamily: '"Permanent Marker"', color: 'primary.main', mt: 1 }}
+        sx={{ fontFamily: '"Permanent Marker"', color: color ? 'white' : 'primary.main', mt: 1 }}
       >
         ${price}
       </Typography>
@@ -356,40 +361,131 @@ const TicketStub = ({
       <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7 }}>
         Valid for one person. No refunds.
       </Typography>
-      {!hasTicket ? (
-        <MuiButton
-          variant="contained"
-          size="small"
-          onClick={onBuy}
-          disabled={isLoading}
-          sx={{
-            mt: 1.5,
-            borderRadius: 0,
-            bgcolor: '#333',
-            '&:hover': { bgcolor: '#000' },
-          }}
-        >
-          {isLoading ? 'Processing...' : 'BUY TICKET'}
-        </MuiButton>
-      ) : (
-        <Box
-          sx={{
-            mt: 1.5,
-            p: 0.5,
-            border: '2px solid #16a34a',
-            color: '#16a34a',
-            textAlign: 'center',
-            transform: 'rotate(-3deg)',
-            fontWeight: 'bold',
-            fontFamily: '"Permanent Marker"',
-          }}
-        >
-          PAID / ARCHIVED
-        </Box>
-      )}
+      <MuiButton
+        variant="contained"
+        size="small"
+        onClick={onBuy}
+        disabled={isLoading}
+        sx={{
+          mt: 1.5,
+          borderRadius: 0,
+          bgcolor: '#333',
+          '&:hover': { bgcolor: '#000' },
+        }}
+      >
+        {isLoading ? 'Processing...' : 'BUY TICKET'}
+      </MuiButton>
     </Box>
   </Paper>
 );
+
+const PurchasedTicketStack = ({
+  tickets,
+  onBuyMore,
+  onManage,
+  isLoading
+}: {
+  tickets: any[],
+  onBuyMore: () => void,
+  onManage: (ticketId: number) => void,
+  isLoading?: boolean
+}) => {
+  if (tickets.length === 0) return null;
+
+  return (
+    <Box sx={{ position: 'relative', mb: 4, pt: tickets.length > 1 ? (tickets.length - 1) * 2 : 0 }}>
+      {tickets.map((t, idx) => {
+        const isTop = idx === tickets.length - 1;
+        const offset = (tickets.length - 1 - idx) * 16; // 16px offset for each layer
+
+        return (
+          <Paper
+            key={t.id}
+            elevation={isTop ? 2 : 1}
+            onClick={() => onManage(t.id)}
+            sx={{
+              display: 'flex',
+              position: isTop ? 'relative' : 'absolute',
+              top: isTop ? 0 : -offset,
+              left: isTop ? 0 : offset / 2,
+              width: '100%',
+              bgcolor: '#fff9e6',
+              border: '1px solid #e0d8c0',
+              transform: `rotate(${isTop ? 1 : (idx % 2 === 0 ? -1 : 1)}deg)`,
+              zIndex: idx,
+              overflow: 'visible',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              opacity: isTop ? 1 : 0.8,
+              '&:hover': isTop ? { transform: 'rotate(0deg) translateY(-4px)', zIndex: 100 } : {},
+              visibility: !isTop && idx < tickets.length - 5 ? 'hidden' : 'visible' // Max 5 visible in stack
+            }}
+          >
+            <WashiTape color={t.color ? `${t.color}44` : "rgba(22, 163, 74, 0.2)"} />
+            <Box
+              sx={{
+                p: 2,
+                borderRight: '2px dashed #e0d8c0',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minWidth: 100,
+                bgcolor: t.color || '#22c55e',
+                color: 'white',
+              }}
+            >
+              <Typography variant="caption" sx={{ fontWeight: 'bold', letterSpacing: 1 }}>
+                {t.status === 'cancelled' ? 'void' : 'PAID'}
+              </Typography>
+              <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mt: 1 }}>
+                ${parseFloat(t.price_paid).toFixed(2)}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                p: 2,
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.2rem' }}>
+                {t.ticket_type} Pass
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                Guest: {t.guest_name || 'Self'} {tickets.length > 1 && isTop && `(+${tickets.length - 1} more)`}
+              </Typography>
+
+              {isTop && (
+                <MuiButton
+                  variant="outlined"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBuyMore();
+                  }}
+                  disabled={isLoading}
+                  sx={{
+                    mt: 1.5,
+                    borderRadius: 0,
+                    border: '1px solid #333',
+                    color: '#333',
+                    alignSelf: 'flex-start',
+                    '&:hover': { border: '1px solid #000', bgcolor: 'rgba(0,0,0,0.05)' },
+                  }}
+                >
+                  BUY MORE
+                </MuiButton>
+              )}
+            </Box>
+          </Paper>
+        );
+      })}
+    </Box>
+  );
+};
 
 const ClassifiedAd = ({
   need,
@@ -551,7 +647,7 @@ const ClassifiedAd = ({
           >
             <VendorBusinessCard
               vendor={{
-                vendor_name: assigned_vendor.vendor_name || 'Assigned Vendor',
+                vendor_name: assigned_vendor?.vendor_name || 'Assigned Vendor',
                 category: need.category,
                 avg_rating: 4.8,
                 event_count: 12,
@@ -594,6 +690,7 @@ export default function EventDetailPageNew() {
   const { data: myServicesResponse } = useMyServices({ enabled: !!isAuthenticated });
   const purchaseTicket = usePurchaseTicket();
   const toggleInterest = useToggleInterest();
+  const { data: storyResponse } = useEventStory(Number(id));
   const recordView = useRecordEventView(Number(id));
 
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -606,7 +703,11 @@ export default function EventDetailPageNew() {
   const [confirmedTicket, setConfirmedTicket] = useState<{
     type: string;
     price: string;
+    needsAadharVerification?: boolean;
   } | null>(null);
+  const [isTicketingModalOpen, setIsTicketingModalOpen] = useState(false);
+  const [isManageTicketOpen, setIsManageTicketOpen] = useState(false);
+  const [manageInitialIndex, setManageInitialIndex] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated && Number(id)) {
@@ -615,11 +716,12 @@ export default function EventDetailPageNew() {
   }, [id, isAuthenticated]);
 
   const event = eventResponse?.data;
+  const story = storyResponse?.data;
   const needs = needsResponse?.data || [];
-  const highlights = event?.highlights || [];
+  const highlights = story?.highlights || event?.highlights || [];
 
   const reviews = useMemo(() => {
-    const baseReviews = event?.reviews || [];
+    const baseReviews = story?.reviews || event?.reviews || [];
     return baseReviews.map((rev: any) => ({
       id: rev.id,
       username: rev.reviewer_username,
@@ -638,7 +740,7 @@ export default function EventDetailPageNew() {
         };
       }),
     }));
-  }, [event]);
+  }, [event, story]);
 
   if (isLoading) {
     return <Box sx={{ p: 4 }}>Loading...</Box>; // Simple loader for now
@@ -664,23 +766,31 @@ export default function EventDetailPageNew() {
   const isHost = user?.username === event.host.username;
   const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
 
-  const handleBuyTicket = (tier: 'standard' | 'flexible') => {
+  const handleBuyTicket = () => {
     if (!isAuthenticated) return navigate('/signin');
-    const price =
-      tier === 'standard'
-        ? event.ticket_price_standard || '0'
-        : event.ticket_price_flexible || '0';
-    purchaseTicket.mutate(
-      { eventId: event.id, ticketType: tier },
-      {
-        onSuccess: () => {
-          toast.success('Ticket purchased!');
-          setConfirmedTicket({ type: tier, price });
-        },
-        onError: (err: any) =>
-          toast.error(err?.response?.data?.message || 'Failed to purchase ticket'),
-      },
-    );
+    setIsTicketingModalOpen(true);
+  };
+
+  const handleManageTicket = (ticketId?: number) => {
+    if (ticketId && event?.user_tickets) {
+      const idx = event.user_tickets.findIndex((t: any) => t.id === ticketId);
+      setManageInitialIndex(idx >= 0 ? idx : 0);
+    } else {
+      setManageInitialIndex(0);
+    }
+    setIsManageTicketOpen(true);
+  };
+
+  const handleTicketingSuccess = (ticketsData: any[]) => {
+    setIsTicketingModalOpen(false);
+    toast.success('Tickets purchased successfully!');
+    if (ticketsData.length > 0) {
+      setConfirmedTicket({
+        type: ticketsData.length > 1 ? 'Multiple' : ticketsData[0].ticket_type,
+        price: ticketsData.reduce((sum, t) => sum + Number(t.price_paid), 0).toString(),
+        needsAadharVerification: ticketsData[0]?.needs_aadhar_verification,
+      });
+    }
   };
 
   return (
@@ -1197,6 +1307,82 @@ export default function EventDetailPageNew() {
                     )}
                   </Paper>
 
+                  {/* ═══ Tablets Section — Event Features ═══ */}
+                  {(() => {
+                    const TAG_DISPLAY: Record<string, { label: string; emoji: string; bg: string; border: string; text: string; chipBg: string }> = {
+                      featured: { label: 'Featured', emoji: '⭐', bg: '#fef3c7', border: '#f59e0b', text: '#92400e', chipBg: '#fef9c3' },
+                      additional: { label: 'Additional', emoji: '➕', bg: '#dbeafe', border: '#3b82f6', text: '#1e40af', chipBg: '#eff6ff' },
+                      extra: { label: 'Extra', emoji: '🎁', bg: '#d1fae5', border: '#10b981', text: '#065f46', chipBg: '#ecfdf5' },
+                    };
+                    const FEATURE_EMOJI_MAP: Record<string, string> = {
+                      'Food': '🍕', 'Non-Alcoholic Drinks': '🧃', 'Alcoholic Drinks': '🍷',
+                      'Music': '🎵', 'DJ': '🎧', 'Live Band': '🎸', 'Games': '🎮',
+                      'Photo Booth': '📸', 'Surprise Gifts': '🎁', 'Educational Activities': '📚',
+                      'Group Activities': '👥', 'Networking': '🤝', 'Dance Floor': '💃',
+                      'Workshops': '🔧', 'Art': '🎨', 'Karaoke': '🎤', 'Bonfire': '🔥',
+                      'Fireworks': '🎆', 'Pool': '🏊', 'Outdoor Seating': '⛱️',
+                      'Indoor Seating': '🪑', 'Decorations': '🎀', 'Themed Costumes': '🎭',
+                      'Raffle': '🎟️', 'Trivia': '🧠', 'Kids Zone': '🧒', 'Pet-Friendly': '🐾',
+                      'Open Bar': '🍹', 'VIP Lounge': '✨', 'Parking': '🅿️',
+                    };
+                    const features = event.features || [];
+                    const grouped: Record<string, { name: string; tag: string }[]> = {};
+                    features.forEach((f: { name: string; tag: string }) => {
+                      if (!grouped[f.tag]) grouped[f.tag] = [];
+                      grouped[f.tag].push(f);
+                    });
+                    const tagOrder = ['featured', 'additional', 'extra'];
+
+                    const allChips = tagOrder.flatMap(tag => {
+                      const items = grouped[tag];
+                      if (!items || items.length === 0) return [];
+                      const cfg = TAG_DISPLAY[tag];
+                      return items.map((f: { name: string; tag: string }, idx: number) => ({
+                        ...f, cfg, idx,
+                      }));
+                    });
+
+                    return (
+                      <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                        {allChips.length === 0 ? (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: '"Caveat", cursive',
+                              fontSize: '1.1rem',
+                              color: 'text.disabled',
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            No features listed yet — stay tuned! ✨
+                          </Typography>
+                        ) : (
+                          allChips.map(({ name, cfg, idx }) => (
+                            <Chip
+                              key={name}
+                              label={`${FEATURE_EMOJI_MAP[name] || '🏷️'} ${name}`}
+                              sx={{
+                                bgcolor: cfg.chipBg,
+                                border: `1.5px solid ${cfg.border}`,
+                                color: cfg.text,
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                height: 'auto',
+                                py: 0.5,
+                                transform: `rotate(${(idx % 2 === 0 ? -0.5 : 0.5)}deg)`,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  transform: 'rotate(0deg) scale(1.05)',
+                                  boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+                                },
+                              }}
+                            />
+                          ))
+                        )}
+                      </Box>
+                    );
+                  })()}
+
                   {/* Capacity Infographic - Only if highlights exist, otherwise move to right */}
                   {event.capacity && highlights.length > 0 && (
                     <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
@@ -1208,65 +1394,69 @@ export default function EventDetailPageNew() {
                     </Box>
                   )}
 
-                  {/* Ticket Stubs (if applicable) - Always on Left */}
-                  {['published', 'at_risk', 'event_ready'].includes(
-                    event.lifecycle_state,
-                  ) &&
-                    !event.user_has_ticket &&
-                    !isHost && (
-                      <Box sx={{ mt: 6 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontFamily: '"Permanent Marker"', mb: 3 }}
-                        >
-                          Get Your Tickets
-                        </Typography>
-                        <TicketStub
-                          type="Standard"
-                          price={parseFloat(event.ticket_price_standard || '0')}
-                          onBuy={() => handleBuyTicket('standard')}
-                          isLoading={purchaseTicket.isPending}
-                        />
-                        {event.ticket_price_flexible && (
-                          <TicketStub
-                            type="Flexible"
-                            price={parseFloat(event.ticket_price_flexible)}
-                            onBuy={() => handleBuyTicket('flexible')}
-                            isLoading={purchaseTicket.isPending}
-                          />
-                        )}
-                      </Box>
-                    )}
+                  {/* Purchased Tickets (if applicable) */}
+                  {event.user_tickets && event.user_tickets.length > 0 && (
+                    <Box sx={{ mt: 6 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{ fontFamily: '"Permanent Marker"', mb: 3 }}
+                      >
+                        Your Purchased Tickets
+                      </Typography>
+                      {(() => {
+                        // Group tickets by type
+                        const groups: Record<string, any[]> = {};
+                        event.user_tickets.forEach((t: any) => {
+                          if (!groups[t.ticket_type]) groups[t.ticket_type] = [];
+                          groups[t.ticket_type].push(t);
+                        });
 
-                  {['published', 'at_risk', 'event_ready'].includes(
-                    event.lifecycle_state,
-                  ) &&
-                    (event.user_has_ticket || isHost) && (
-                      <Box sx={{ mt: 6 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontFamily: '"Permanent Marker"', mb: 3 }}
-                        >
-                          Get Your Tickets
-                        </Typography>
-                        <TicketStub
-                          type="Standard"
-                          price={parseFloat(event.ticket_price_standard || '0')}
-                          onBuy={() => handleBuyTicket('standard')}
-                          isLoading={purchaseTicket.isPending}
-                          hasTicket={event.user_has_ticket || isHost}
-                        />
-                        {event.ticket_price_flexible && (
-                          <TicketStub
-                            type="Flexible"
-                            price={parseFloat(event.ticket_price_flexible)}
-                            onBuy={() => handleBuyTicket('flexible')}
+                        return Object.entries(groups).map(([type, tickets]) => (
+                          <PurchasedTicketStack
+                            key={type}
+                            tickets={tickets}
+                            onBuyMore={() => handleBuyTicket()}
+                            onManage={(tid) => handleManageTicket(tid)}
                             isLoading={purchaseTicket.isPending}
-                            hasTicket={event.user_has_ticket || isHost}
                           />
-                        )}
-                      </Box>
-                    )}
+                        ));
+                      })()}
+                    </Box>
+                  )}
+
+                  {/* Ticket Stubs (if applicable) - Always on Left */}
+                  {event.ticket_tiers && event.ticket_tiers.length > 0 && (
+                    <Box sx={{ mt: 6 }}>
+                      {/* Only show tiers that have NOT been purchased yet */}
+                      {(() => {
+                        const boughtTypes = new Set(event.user_tickets?.map((t: any) => t.ticket_type) || []);
+                        const availableTiers = event.ticket_tiers.filter((tier: any) => !boughtTypes.has(tier.name));
+
+                        if (availableTiers.length === 0) return null;
+
+                        return (
+                          <>
+                            <Typography
+                              variant="h6"
+                              sx={{ fontFamily: '"Permanent Marker"', mb: 3 }}
+                            >
+                              {(event.user_tickets?.length || 0) > 0 ? 'Get Additional Tickets' : 'Get Your Tickets'}
+                            </Typography>
+                            {availableTiers.map((tier: any) => (
+                              <TicketStub
+                                key={tier.id}
+                                type={tier.name}
+                                price={parseFloat(tier.price)}
+                                color={tier.color}
+                                onBuy={() => handleBuyTicket()}
+                                isLoading={purchaseTicket.isPending}
+                              />
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </Box>
+                  )}
 
                   {/* Vendor Needs - Classified Ads - Only if highlights exist, otherwise move to right */}
                   {displayNeeds.length > 0 && highlights.length > 0 && (
@@ -1374,89 +1564,85 @@ export default function EventDetailPageNew() {
                     </Box>
                   )}
 
-                {['live', 'completed'].includes(event.lifecycle_state) && (
-                  <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
-                    <Typography variant="h2" sx={{ mb: 4, textAlign: 'center' }}>
-                      Memory Box
-                    </Typography>
+                <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
+                  <Typography variant="h2" sx={{ mb: 4, textAlign: 'center' }}>
+                    Memory Box
+                  </Typography>
 
-                    {/* Highlights */}
-                    {highlights.length > 0 && (
-                      <Grid container spacing={3} sx={{ mb: 6 }}>
-                        {highlights.map((h: any) => (
-                          <Grid size={{ xs: 6 }} key={h.id}>
-                            <PolaroidFrame
-                              src={h.media_file}
-                              caption={h.text}
-                              author={h.author_username}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
+                  {/* Highlights */}
+                  {highlights.length > 0 && (
+                    <Grid container spacing={3} sx={{ mb: 6 }}>
+                      {highlights.map((h: any) => (
+                        <Grid size={{ xs: 6 }} key={h.id}>
+                          <PolaroidFrame
+                            src={h.media_file}
+                            caption={h.text}
+                            author={h.author_username}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  )}
+
+                  <MuiButton
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => setIsHighlightOpen(true)}
+                    sx={{
+                      fontFamily: '"Permanent Marker"',
+                      p: 2,
+                      border: '2px dashed #ccc',
+                      mb: 6,
+                    }}
+                  >
+                    + Add to the pile
+                  </MuiButton>
+
+                  {/* Reviews */}
+                  <Box>
+                    <Typography variant="h3" sx={{ mb: 4 }}>
+                      What people said
+                    </Typography>
+                    {reviews.length > 0 ? (
+                      reviews.map((rev: any, idx: number) => (
+                        <PostItNote
+                          key={rev.id}
+                          username={rev.username}
+                          rating={rev.rating}
+                          comment={rev.comment}
+                          avatar={rev.avatar}
+                          vendorReviews={rev.vendorReviews}
+                          color={['#fff740', '#ff7eb9', '#7afcff'][idx % 3]}
+                        />
+                      ))
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontStyle: 'italic',
+                          color: 'text.secondary',
+                          textAlign: 'center',
+                        }}
+                      >
+                        No sticky notes yet.
+                      </Typography>
                     )}
 
                     <MuiButton
                       fullWidth
-                      variant="outlined"
-                      onClick={() => setIsHighlightOpen(true)}
+                      variant="contained"
+                      onClick={() => setIsReviewOpen(true)}
                       sx={{
-                        fontFamily: '"Permanent Marker"',
-                        p: 2,
-                        border: '2px dashed #ccc',
-                        mb: 6,
+                        bgcolor: 'warning.main',
+                        color: 'black',
+                        fontWeight: 'bold',
+                        '&:hover': { bgcolor: '#f59e0b' },
+                        mt: 2,
                       }}
                     >
-                      + Add to the pile
+                      Leave a Review
                     </MuiButton>
-
-                    {/* Reviews */}
-                    {event.lifecycle_state === 'completed' && (
-                      <Box>
-                        <Typography variant="h3" sx={{ mb: 4 }}>
-                          What people said
-                        </Typography>
-                        {reviews.length > 0 ? (
-                          reviews.map((rev: any, idx: number) => (
-                            <PostItNote
-                              key={rev.id}
-                              username={rev.username}
-                              rating={rev.rating}
-                              comment={rev.comment}
-                              avatar={rev.avatar}
-                              vendorReviews={rev.vendorReviews}
-                              color={['#fff740', '#ff7eb9', '#7afcff'][idx % 3]}
-                            />
-                          ))
-                        ) : (
-                          <Typography
-                            sx={{
-                              fontStyle: 'italic',
-                              color: 'text.secondary',
-                              textAlign: 'center',
-                            }}
-                          >
-                            No sticky notes yet.
-                          </Typography>
-                        )}
-
-                        <MuiButton
-                          fullWidth
-                          variant="contained"
-                          onClick={() => setIsReviewOpen(true)}
-                          sx={{
-                            bgcolor: 'warning.main',
-                            color: 'black',
-                            fontWeight: 'bold',
-                            '&:hover': { bgcolor: '#f59e0b' },
-                            mt: 2,
-                          }}
-                        >
-                          Leave a Review
-                        </MuiButton>
-                      </Box>
-                    )}
                   </Box>
-                )}
+                </Box>
               </Grid>
             </Grid>
           </CategoricalBackground>
@@ -1488,12 +1674,25 @@ export default function EventDetailPageNew() {
             onOpenChange={setIsReviewOpen}
           />
         )}
+        <TicketingServiceModal
+          isOpen={isTicketingModalOpen}
+          onClose={() => setIsTicketingModalOpen(false)}
+          event={event}
+          onSuccess={handleTicketingSuccess}
+        />
+        <TicketManagementModal
+          isOpen={isManageTicketOpen}
+          onClose={() => setIsManageTicketOpen(false)}
+          tickets={event?.user_tickets || []}
+          initialIndex={manageInitialIndex}
+        />
         <TicketConfirmationModal
           isOpen={!!confirmedTicket}
           onClose={() => setConfirmedTicket(null)}
           eventTitle={event?.title || ''}
           ticketType={confirmedTicket?.type || ''}
           price={confirmedTicket?.price || '0'}
+          needsAadharVerification={confirmedTicket?.needsAadharVerification}
         />
       </Box>
     </ThemeProvider>

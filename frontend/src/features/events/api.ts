@@ -201,6 +201,11 @@ export async function deleteEvent(eventId: number) {
   return data;
 }
 
+export async function updateEventTicketTiers(eventId: number, tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>) {
+  const { data } = await client.put<ApiResponse<any>>(`/events/${eventId}/ticket_tiers/`, tiers);
+  return data;
+}
+
 // --- Interest ---
 
 export async function toggleInterest(eventId: number, isInterested: boolean) {
@@ -220,11 +225,19 @@ export async function toggleInterest(eventId: number, isInterested: boolean) {
 
 export async function purchaseTicket(
   eventId: number,
-  ticketType: 'standard' | 'flexible',
+  payload: { tickets: Array<{ tier_id?: number | null, guest_name?: string, is_18_plus: boolean }> }
 ) {
-  const { data } = await client.post(`/tickets/events/${eventId}/`, {
-    ticket_type: ticketType,
-  });
+  const { data } = await client.post(`/tickets/events/${eventId}/`, payload);
+  return data;
+}
+
+export async function updateTicket(ticketId: number, guestName: string) {
+  const { data } = await client.patch(`/tickets/${ticketId}/`, { guest_name: guestName });
+  return data;
+}
+
+export async function cancelTicket(ticketId: number) {
+  const { data } = await client.delete(`/tickets/${ticketId}/`);
   return data;
 }
 

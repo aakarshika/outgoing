@@ -8,6 +8,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { EditApplicationModal } from '@/components/events/EditApplicationModal';
 import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
+import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { Media } from '@/components/ui/media';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { useMyEvents, useMyTickets } from '@/features/events/hooks';
@@ -69,6 +70,7 @@ export default function DashboardPage() {
   };
 
   const [editingApplication, setEditingApplication] = useState<any | null>(null);
+  const [managingTicket, setManagingTicket] = useState<any | null>(null);
   const { data: eventsResponse, isLoading: eventsLoading } = useMyEvents();
   const { data: ticketsResponse, isLoading: ticketsLoading } = useMyTickets();
   const { data: servicesResponse, isLoading: servicesLoading } = useMyServices();
@@ -249,10 +251,10 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {tickets.map((ticket: any, idx: number) => (
-                  <Link
+                  <button
                     key={ticket.id}
-                    to={`/events/${ticket.event_summary.id}`}
-                    className="relative group"
+                    onClick={() => setManagingTicket(ticket)}
+                    className="relative group text-left"
                   >
                     {/* Event card (background) */}
                     <div
@@ -318,7 +320,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </Link>
+                  </button>
                 ))}
               </div>
             )}
@@ -588,6 +590,12 @@ export default function DashboardPage() {
         open={!!editingApplication}
         onClose={() => setEditingApplication(null)}
         application={editingApplication}
+      />
+      <TicketManagementModal
+        isOpen={!!managingTicket}
+        onClose={() => setManagingTicket(null)}
+        tickets={managingTicket ? tickets.filter((t: any) => t.event_summary.id === managingTicket.event_summary.id) : []}
+        initialIndex={managingTicket ? tickets.filter((t: any) => t.event_summary.id === managingTicket.event_summary.id).findIndex((t: any) => t.id === managingTicket.id) : 0}
       />
     </div>
   );

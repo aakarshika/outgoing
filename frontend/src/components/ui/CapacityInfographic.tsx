@@ -1,6 +1,6 @@
 import { Typography, Box } from '@mui/material';
 import React, { useMemo } from 'react';
-import UserIcon from 'lucide-react/dist/esm/icons/user';
+import { UserIcon } from 'lucide-react';
 
 interface CapacityInfographicProps {
   capacity: number;

@@ -9,6 +9,7 @@ class TicketSerializer(serializers.ModelSerializer):
     """Serializer for the Ticket model."""
 
     event_summary = serializers.SerializerMethodField()
+    needs_aadhar_verification = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for TicketSerializer."""
@@ -17,12 +18,19 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "event_summary",
+            "tier_id",
             "ticket_type",
+            "color",
+            "guest_name",
+            "is_18_plus",
+            "barcode",
             "is_refundable",
+            "refund_percentage",
             "refund_deadline",
             "price_paid",
             "status",
             "purchased_at",
+            "needs_aadhar_verification",
         ]
         read_only_fields = [
             "id",
@@ -42,10 +50,19 @@ class TicketSerializer(serializers.ModelSerializer):
             "location_name": obj.event.location_name,
         }
 
+    def get_needs_aadhar_verification(self, obj):
+        profile = getattr(obj.goer, "profile", None)
+        if not profile:
+            return True
+        return not bool(profile.aadhar_number or profile.aadhar_image)
+
+
+class GuestDetailSerializer(serializers.Serializer):
+    tier_id = serializers.IntegerField(required=False, allow_null=True)
+    guest_name = serializers.CharField(allow_blank=True, required=False)
+    is_18_plus = serializers.BooleanField(default=False)
 
 class TicketPurchaseSerializer(serializers.Serializer):
     """Serializer for ticket purchase requests."""
 
-    ticket_type = serializers.ChoiceField(
-        choices=["standard", "flexible"], default="standard"
-    )
+    tickets = GuestDetailSerializer(many=True, min_length=1, max_length=5)

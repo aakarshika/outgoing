@@ -17,6 +17,7 @@ from apps.events.models import (
     EventSeries,
     EventSeriesNeedTemplate,
     EventVendorReview,
+    EventTicketTier,
 )
 from apps.tickets.models import Ticket
 
@@ -29,6 +30,12 @@ class EventCategorySerializer(serializers.ModelSerializer):
 
         model = EventCategory
         fields = ["id", "name", "slug", "icon"]
+
+
+class EventTicketTierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventTicketTier
+        fields = ["id", "name", "color", "price", "capacity", "is_refundable", "refund_percentage"]
 
 
 class EventHostSerializer(serializers.Serializer):
@@ -64,6 +71,7 @@ class EventListSerializer(serializers.ModelSerializer):
     user_is_interested = serializers.SerializerMethodField()
     user_has_ticket = serializers.SerializerMethodField()
     media = EventMediaSerializer(many=True, read_only=True)
+    ticket_tiers = EventTicketTierSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
 
@@ -91,6 +99,7 @@ class EventListSerializer(serializers.ModelSerializer):
             "interest_count",
             "ticket_count",
             "media",
+            "ticket_tiers",
             "description",
             "reviews",
             "average_rating",
@@ -192,6 +201,7 @@ class EventDetailSerializer(EventListSerializer):
     average_rating = serializers.SerializerMethodField()
     participating_vendors = serializers.SerializerMethodField()
     host_events_count = serializers.SerializerMethodField()
+    user_tickets = serializers.SerializerMethodField()
 
     class Meta(EventListSerializer.Meta):
         """Meta configuration for EventDetailSerializer."""
@@ -205,6 +215,7 @@ class EventDetailSerializer(EventListSerializer):
             "longitude",
             "refund_window_hours",
             "tags",
+            "features",
             "tickets_remaining",
             "created_at",
             "highlights",
@@ -212,7 +223,17 @@ class EventDetailSerializer(EventListSerializer):
             "average_rating",
             "participating_vendors",
             "host_events_count",
+            "user_tickets",
         ]
+
+    def get_user_tickets(self, obj):
+        """Get the specific tickets the current user has for this event."""
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            tickets = obj.tickets.filter(goer=request.user, status="active")
+            from api.v1.tickets.serializers import TicketSerializer
+            return TicketSerializer(tickets, many=True, context=self.context).data
+        return []
 
     def get_tickets_remaining(self, obj):
         """Calculate remaining tickets."""
@@ -253,22 +274,18 @@ class EventDetailSerializer(EventListSerializer):
         return []
 
     def get_reviews(self, obj):
-        """Return full reviews only if completed."""
-        if obj.lifecycle_state == "completed":
-            reviews = getattr(obj, "prefetched_reviews", obj.reviews.all())
-            return EventReviewSerializer(reviews, many=True, context=self.context).data
-        return []
+        """Return full reviews."""
+        reviews = getattr(obj, "prefetched_reviews", obj.reviews.all())
+        return EventReviewSerializer(reviews, many=True, context=self.context).data
 
     def get_average_rating(self, obj):
-        """Calculate average rating if completed."""
-        if obj.lifecycle_state == "completed":
-            reviews = getattr(
-                obj, "prefetched_reviews", obj.reviews.filter(is_public=True)
-            )
-            if not reviews:
-                return None
-            return sum(r.rating for r in reviews) / len(reviews)
-        return None
+        """Calculate average rating."""
+        reviews = getattr(
+            obj, "prefetched_reviews", obj.reviews.filter(is_public=True)
+        )
+        if not reviews:
+            return None
+        return sum(r.rating for r in reviews) / len(reviews)
 
     def get_participating_vendors(self, obj):
         """Return vendors whose needs were filled."""
@@ -344,12 +361,15 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "status",
             "lifecycle_state",
             "tags",
+            "features",
             "is_recurring",
             "recurrence_rule",
             "generate_count",
+            "ticket_tiers",
         ]
         read_only_fields = ["lifecycle_state", "occurrence_index"]
 
+    ticket_tiers = EventTicketTierSerializer(many=True, required=False)
     is_recurring = serializers.BooleanField(
         required=False, write_only=True, default=False
     )
@@ -374,8 +394,13 @@ class EventCreateSerializer(serializers.ModelSerializer):
         is_recurring = validated_data.pop("is_recurring", False)
         recurrence_rule = validated_data.pop("recurrence_rule", None)
         generate_count = validated_data.pop("generate_count", 4)
+        ticket_tiers_data = validated_data.pop("ticket_tiers", [])
 
         event = super().create(validated_data)
+
+        # Create ticket tiers
+        for tier_data in ticket_tiers_data:
+            EventTicketTier.objects.create(event=event, **tier_data)
 
         if is_recurring and recurrence_rule:
             # Create the internal EventSeries
@@ -473,7 +498,7 @@ class EventAttendeeSerializer(serializers.ModelSerializer):
         """Meta configuration for EventAttendeeSerializer."""
 
         model = Ticket
-        fields = ["id", "user", "ticket_type", "status", "purchased_at"]
+        fields = ["id", "user", "tier_id", "ticket_type", "status", "purchased_at"]
 
 
 class EventHighlightSerializer(serializers.ModelSerializer):

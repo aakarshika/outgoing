@@ -13,6 +13,7 @@ from .views import (
     EventLifecycleTransitionView,
     EventListCreateView,
     EventReviewCreateView,
+    EventTicketTierListView,
     EventViewView,
     MyEventsView,
     MyInterestedEventsView,
@@ -54,4 +55,9 @@ urlpatterns = [
         "<int:event_id>/reviews/", EventReviewCreateView.as_view(), name="event_reviews"
     ),
     path("<int:event_id>/view/", EventViewView.as_view(), name="event_view"),
+    path(
+        "<int:event_id>/ticket_tiers/",
+        EventTicketTierListView.as_view(),
+        name="event_ticket_tiers",
+    ),
 ]

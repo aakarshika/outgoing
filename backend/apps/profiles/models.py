@@ -32,6 +32,16 @@ class UserProfile(models.Model):
         blank=True,
         validators=[validate_image_upload],
     )
+    aadhar_number = models.CharField(
+        max_length=20, blank=True, help_text="Aadhar Card ID number"
+    )
+    aadhar_image = models.ImageField(
+        upload_to="aadhar/",
+        null=True,
+        blank=True,
+        validators=[validate_image_upload],
+        help_text="Optional Aadhar Card image upload",
+    )
     location_city = models.CharField(
         max_length=100, blank=True, help_text="City for discovery features"
     )

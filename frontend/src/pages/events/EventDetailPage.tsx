@@ -110,15 +110,17 @@ export default function EventDetailPage() {
     );
   }
 
-  const handleBuyTicket = (tier: 'standard' | 'flexible') => {
+  const handleBuyTicket = () => {
     if (!isAuthenticated) {
       navigate('/signin');
       return;
     }
     purchaseTicket.mutate(
-      { eventId: event.id, ticketType: tier },
+      { eventId: event.id, tickets: [{ is_18_plus: true, guest_name: '' }] },
       {
-        onSuccess: () => toast.success('Ticket purchased!'),
+        onSuccess: () => {
+          toast.success('Ticket purchased!');
+        },
         onError: (err: any) =>
           toast.error(err?.response?.data?.message || 'Failed to purchase ticket'),
       },

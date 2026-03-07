@@ -17,6 +17,7 @@ from apps.events.models import (
     EventReviewMedia,
     EventSeries,
     EventSeriesNeedTemplate,
+    EventTicketTier,
     EventVendorReview,
     EventView,
 )
@@ -80,6 +81,7 @@ class Command(BaseCommand):
         VendorService.objects.all().delete()
         EventSeries.objects.all().delete()
         Event.objects.all().delete()
+        EventTicketTier.objects.all().delete()
         UserProfile.objects.all().delete()
         User.objects.filter(is_superuser=False).delete()
         # Note: Categories are not wiped by default unless needed, but we can leave them
@@ -238,7 +240,6 @@ class Command(BaseCommand):
             recurrence_rule="FREQ=WEEKLY;BYDAY=WE",
             default_location_name="Tech Hub",
             default_capacity=50,
-            default_ticket_price_standard=Decimal("10.00"),
         )
         EventSeriesNeedTemplate.objects.create(
             series=series1,
@@ -265,8 +266,6 @@ class Command(BaseCommand):
                 start_time=start,
                 end_time=end,
                 capacity=100 + abs(start_offset_days),
-                ticket_price_standard=Decimal("25.00") if status != "draft" else None,
-                ticket_price_flexible=Decimal("40.00") if status != "draft" else None,
                 status=status,
                 lifecycle_state=l_state,
                 series=series,
@@ -277,6 +276,37 @@ class Command(BaseCommand):
                 event_ready_message="The event is starting soon! Get ready for an amazing experience.",
             )
             Event.objects.filter(pk=e.pk).update(cover_image=PLACEHOLDER_EVENT_IMG)
+            
+            # Create standard tiers for every event
+            EventTicketTier.objects.create(
+                event=e,
+                name="Early Bird",
+                description="Limited early bird tickets.",
+                price=Decimal("15.00"),
+                capacity=20,
+                color="#e0f2fe", # light blue
+                is_refundable=False
+            )
+            EventTicketTier.objects.create(
+                event=e,
+                name="General Admission",
+                description="Standard entry to the event.",
+                price=Decimal("25.00"),
+                capacity=None,
+                color="#fef3c7", # amber
+                is_refundable=True,
+                refund_percentage=100
+            )
+            EventTicketTier.objects.create(
+                event=e,
+                name="VIP Lounge",
+                description="Exclusive access to the VIP lounge and perks.",
+                price=Decimal("75.00"),
+                capacity=10,
+                color="#fae8ff", # fuchsia
+                is_refundable=True,
+                refund_percentage=50
+            )
             return e
 
         events = {}
@@ -387,16 +417,20 @@ class Command(BaseCommand):
             if e.status in ["published", "completed", "live"]:
                 # Each event gets 5-10 tickets
                 num_tickets = 5 + (i % 6)
+                tiers = list(e.ticket_tiers.all())
                 for j in range(num_tickets):
                     goer = all_goers[(i + j) % len(all_goers)]
+                    tier = tiers[j % len(tiers)]
                     Ticket.objects.get_or_create(
                         event=e,
                         goer=goer,
+                        tier=tier,
                         defaults={
-                            "ticket_type": "standard" if j % 3 != 0 else "flexible",
-                            "price_paid": e.ticket_price_standard
-                            if j % 3 != 0
-                            else e.ticket_price_flexible,
+                            "ticket_type": tier.name,
+                            "price_paid": tier.price,
+                            "color": tier.color,
+                            "is_refundable": tier.is_refundable,
+                            "refund_percentage": tier.refund_percentage,
                         },
                     )
                 e.ticket_count = num_tickets

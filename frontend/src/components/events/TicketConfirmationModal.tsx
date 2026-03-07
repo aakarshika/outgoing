@@ -9,6 +9,7 @@ interface TicketConfirmationModalProps {
   eventTitle: string;
   ticketType: string;
   price: string;
+  needsAadharVerification?: boolean;
 }
 
 export function TicketConfirmationModal({
@@ -17,6 +18,7 @@ export function TicketConfirmationModal({
   eventTitle,
   ticketType,
   price,
+  needsAadharVerification,
 }: TicketConfirmationModalProps) {
   if (!isOpen) return null;
 
@@ -129,11 +131,22 @@ export function TicketConfirmationModal({
             </div>
 
             <p
-              className="text-gray-400 text-xs mb-5"
+              className="text-gray-400 text-xs mb-3"
               style={{ fontFamily: 'monospace' }}
             >
               Valid for one person · No refunds
             </p>
+
+            {needsAadharVerification && (
+              <div
+                className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded relative mb-4 flex items-center gap-2"
+                role="alert"
+                style={{ fontFamily: '"Inter", sans-serif', fontSize: '0.8rem' }}
+              >
+                <strong className="font-bold">Important:</strong>
+                <span className="block sm:inline">Add your Aadhar to complete ticket purchase.</span>
+              </div>
+            )}
 
             <button
               onClick={onClose}
