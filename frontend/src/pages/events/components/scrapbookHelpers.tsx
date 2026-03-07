@@ -371,6 +371,8 @@ export const TicketStub = ({
     onOneClickBuy,
     isLoading,
     disabled,
+    userPurchasedCount = 0,
+    clearTicketformTrigger,
 }: {
     type: string;
     price: number;
@@ -381,16 +383,28 @@ export const TicketStub = ({
     onOneClickBuy: (quantity: number) => void;
     isLoading?: boolean;
     disabled?: boolean;
+    userPurchasedCount?: number;
+    clearTicketformTrigger?: number;
 }) => {
     const [quantity, setQuantity] = useState(0);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
 
+    useEffect(() => {
+        if (clearTicketformTrigger) {
+            setQuantity(0);
+            setTermsAccepted(false);
+        }
+    }, [clearTicketformTrigger]);
+
     const isSoldOut = capacity !== null && capacity !== undefined && soldCount !== undefined && soldCount >= capacity;
     const total = (price * quantity);
 
+    // For leaflet illusion
+    const visualPages = Math.min(userPurchasedCount, 5); // show up to 5 background pages
+
     return (
-        <>
+        <Box sx={{ mb: 2 }}>
             <Paper
                 elevation={2}
                 sx={{
@@ -403,8 +417,63 @@ export const TicketStub = ({
                     transform: 'rotate(-0.5deg)',
                     overflow: 'visible',
                     opacity: isSoldOut ? 0.8 : 1,
+                    zIndex: 1,
                 }}
             >
+                {/* purchased bookmark tag */}
+                {userPurchasedCount > 0 && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: -12,
+                            right: 24,
+                            zIndex: 50,
+                            transform: 'rotate(2deg)',
+                        }}
+                    >
+                        {/* Leaflet illusion for bookmark */}
+                        {Array.from({ length: visualPages }).map((_, idx) => (
+                            <Box
+                                key={`bookmark-bg-${idx}`}
+                                sx={{
+                                    position: 'absolute',
+                                    top: -(visualPages - idx) * 2,
+                                    right: (visualPages - idx) * 2,
+                                    bgcolor: color || '#16a34a',
+                                    width: '100%',
+                                    height: '100%',
+                                    clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)',
+                                    boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
+                                    transform: `rotate(${(idx % 2 === 0 ? -4 : 4)}deg)`,
+                                    zIndex: 40 + idx,
+                                    opacity: 0.7 + (idx * 0.05),
+                                }}
+                            />
+                        ))}
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                bgcolor: color || '#16a34a',
+                                color: 'white',
+                                px: 1.5,
+                                py: 3,
+                                pt: 1,
+                                pb: 3,
+                                fontWeight: 'bold',
+                                fontFamily: '"Permanent Marker"',
+                                fontSize: '0.8rem',
+                                zIndex: 50,
+                                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', // Bookmark shape
+                                boxShadow: '0px 4px 6px rgba(0,0,0,0.2)',
+                                textAlign: 'center',
+                                minWidth: 40,
+                            }}
+                        >
+                            {userPurchasedCount}<br />
+                            <span style={{ fontSize: '0.6rem' }}>purchased</span>
+                        </Box>
+                    </Box>
+                )}
                 {isSoldOut && (
                     <Box
                         sx={{
@@ -514,7 +583,7 @@ export const TicketStub = ({
                     <CapacityInfographic variant="mini" capacity={capacity} filled={soldCount || 0} />
                 </Box>
             )}
-        </>
+        </Box>
     );
 };
 

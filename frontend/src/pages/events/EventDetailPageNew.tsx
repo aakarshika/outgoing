@@ -79,11 +79,13 @@ export default function EventDetailPageNew() {
   } | null>(null);
   const [isTicketingModalOpen, setIsTicketingModalOpen] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [isManageTicketOpen, setIsManageTicketOpen] = useState(false);
   const [manageInitialIndex, setManageInitialIndex] = useState(0);
   const [quickBuyData, setQuickBuyData] = useState<{ tierId: number; quantity: number } | null>(null);
   const [oneClickStatus, setOneClickStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [editReviewData, setEditReviewData] = useState<any>(null);
+  const [clearTicketformTrigger, setClearTicketformTrigger] = useState(0);
 
   const deleteReview = useDeleteEventReview();
 
@@ -192,6 +194,7 @@ export default function EventDetailPageNew() {
   const handleBuyTicket = (tierId: number, _quantity: number) => {
     if (!isAuthenticated) return navigate('/signin');
     setSelectedTierId(tierId);
+    setSelectedQuantity(_quantity);
     // Modal will handle quantity internally based on initial state, 
     // but we can pass it if we update the modal props. 
     // For now, let's just open it with the tier selected.
@@ -223,6 +226,7 @@ export default function EventDetailPageNew() {
           setTimeout(() => {
             setOneClickStatus('idle');
             setQuickBuyData(null);
+            setClearTicketformTrigger(prev => prev + 1);
           }, 3000);
         },
         onError: () => {
@@ -247,6 +251,7 @@ export default function EventDetailPageNew() {
   const handleTicketingSuccess = (ticketsData: any[]) => {
     setIsTicketingModalOpen(false);
     toast.success('Tickets purchased successfully!');
+    setClearTicketformTrigger(prev => prev + 1);
     if (ticketsData.length > 0) {
       setConfirmedTicket({
         type: ticketsData.length > 1 ? 'Multiple' : ticketsData[0].ticket_type,
@@ -345,7 +350,8 @@ export default function EventDetailPageNew() {
                     purchaseTicket={purchaseTicket}
                     handleBuyTicket={handleBuyTicket}
                     handleOneClickBuy={handleOneClickBuy}
-                    handleManageTicket={handleManageTicket}
+                    clearTicketformTrigger={clearTicketformTrigger}
+                  // handleManageTicket={handleManageTicket}
                   />
                 </Box>
 
@@ -440,9 +446,13 @@ export default function EventDetailPageNew() {
         )}
         <TicketingServiceModal
           isOpen={isTicketingModalOpen}
-          onClose={() => setIsTicketingModalOpen(false)}
+          onClose={() => {
+            setIsTicketingModalOpen(false);
+            setSelectedQuantity(null);
+          }}
           event={event}
           user={user}
+          selectedQuantity={selectedQuantity}
           selectedTierId={selectedTierId}
           onSuccess={handleTicketingSuccess}
         />
@@ -454,7 +464,10 @@ export default function EventDetailPageNew() {
         />
         <TicketConfirmationModal
           isOpen={!!confirmedTicket}
-          onClose={() => setConfirmedTicket(null)}
+          onClose={() => {
+            setConfirmedTicket(null);
+            setSelectedQuantity(null);
+          }}
           eventTitle={event?.title || ''}
           ticketType={confirmedTicket?.type || ''}
           price={confirmedTicket?.price || '0'}
@@ -465,6 +478,7 @@ export default function EventDetailPageNew() {
           onClose={() => {
             setQuickBuyData(null);
             setOneClickStatus('idle');
+            setSelectedQuantity(null);
           }}
           event={event}
           tierId={quickBuyData?.tierId ?? null}

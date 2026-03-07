@@ -29,6 +29,7 @@ interface TicketingServiceModalProps {
   event: any;
   user: User | null;
   selectedTierId: number | null;
+  selectedQuantity: number | null;
   onSuccess: (ticketsData: any[]) => void;
 }
 
@@ -38,6 +39,7 @@ export function TicketingServiceModal({
   event,
   user,
   selectedTierId,
+  selectedQuantity,
   onSuccess,
 }: TicketingServiceModalProps) {
   const navigate = useNavigate();
@@ -55,19 +57,18 @@ export function TicketingServiceModal({
   // Initialize guests when modal opens or ticket count changes
   useEffect(() => {
     if (isOpen && guests.length === 0) {
-      const initialGuests = [
-        {
-          tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
-          guest_name: user ? `${user.first_name} ${user.last_name}`.trim() : '',
-          is_18_plus: true, // Default to adult as requested
-        },
-      ];
+      const initialCount = selectedQuantity || 1;
+      const initialGuests = Array.from({ length: initialCount }).map((_, i) => ({
+        tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
+        guest_name: i === 0 && user ? `${user.first_name} ${user.last_name}`.trim() : '',
+        is_18_plus: true, // Default to adult as requested
+      }));
       setGuests(initialGuests);
-      setTicketCount(1);
+      setTicketCount(initialCount);
       setTabValue(0);
       setPurchaseSummary(null);
     }
-  }, [isOpen, selectedTierId, event.ticket_tiers, user]);
+  }, [isOpen, selectedTierId, selectedQuantity, event.ticket_tiers, user]);
 
   const handleTicketCountChange = (delta: number) => {
     const newCount = Math.max(1, Math.min(10, ticketCount + delta));
@@ -309,9 +310,9 @@ export function TicketingServiceModal({
                       '&:hover':
                         guests[0]?.tier_id !== tier.id
                           ? {
-                              transform: 'translate(-2px, -2px)',
-                              boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                            }
+                            transform: 'translate(-2px, -2px)',
+                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                          }
                           : {},
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -596,9 +597,9 @@ export function TicketingServiceModal({
                     '&:hover':
                       paymentMethod !== 'card'
                         ? {
-                            transform: 'translate(-2px, -2px)',
-                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                          }
+                          transform: 'translate(-2px, -2px)',
+                          boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                        }
                         : {},
                   }}
                 >
@@ -628,9 +629,9 @@ export function TicketingServiceModal({
                     '&:hover':
                       paymentMethod !== 'upi'
                         ? {
-                            transform: 'translate(-2px, -2px)',
-                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                          }
+                          transform: 'translate(-2px, -2px)',
+                          boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                        }
                         : {},
                   }}
                 >
