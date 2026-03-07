@@ -54,56 +54,112 @@ export const StatusBannerSection = ({
                     {['live', 'completed', 'published', 'event_ready'].includes(event.lifecycle_state) && (
                         <Box sx={{ mr: { xs: 0.5, sm: 1 } }}>
                             {event.lifecycle_state === 'live' ? (
-                                <Typography
-                                    sx={{
-                                        fontFamily: '"Permanent Marker", cursive',
-                                        fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                                        color: '#92400e',
-                                        transform: 'rotate(-2deg)',
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <Highlighter color="rgba(251, 191, 36, 0.7)">happening now!</Highlighter>
-                                </Typography>
+                                <Box sx={{ textAlign: 'right', transform: 'rotate(-2deg)' }}>
+                                    <Typography
+                                        sx={{
+                                            fontFamily: '"Permanent Marker", cursive',
+                                            fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                                            color: '#92400e',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        <Highlighter color="rgba(251, 191, 36, 0.7)">happening now!</Highlighter>
+                                    </Typography>
+                                    <Typography
+                                        component="a"
+                                        href="#highlights"
+                                        sx={{
+                                            fontFamily: '"Caveat", cursive',
+                                            fontSize: { xs: '0.8rem', sm: '1rem' },
+                                            color: '#92400e',
+                                            textDecoration: 'none',
+                                            '&:hover': { textDecoration: 'underline' },
+                                            display: 'block',
+                                            mt: -0.5,
+                                        }}
+                                    >
+                                        check out the highlights
+                                    </Typography>
+                                </Box>
                             ) : event.lifecycle_state === 'completed' ? (
                                 <Box sx={{ textAlign: 'right', transform: 'rotate(1deg)' }}>
                                     <Typography
+                                        component="a"
+                                        href="#highlights"
                                         sx={{
                                             fontFamily: '"Permanent Marker", cursive',
                                             fontSize: { xs: '0.8rem', sm: '1.1rem', md: '1.3rem' },
                                             color: 'text.secondary',
                                             whiteSpace: 'nowrap',
+                                            textDecoration: 'none',
+                                            '&:hover': { color: 'text.primary' },
                                         }}
                                     >
                                         check out the highlights
                                     </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            fontFamily: 'serif',
-                                            fontStyle: 'italic',
-                                            color: 'text.disabled',
-                                            fontWeight: 'bold',
-                                            display: 'block',
-                                        }}
-                                    >
-                                        {getDaysAgo(event.start_time)}
-                                    </Typography>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, alignItems: 'baseline' }}>
+                                        <Typography
+                                            component="a"
+                                            href="#reviews"
+                                            sx={{
+                                                fontFamily: '"Caveat", cursive',
+                                                fontSize: { xs: '0.8rem', sm: '1rem' },
+                                                color: '#16a34a', // Using a green for reviews link
+                                                textDecoration: 'none',
+                                                '&:hover': { textDecoration: 'underline' },
+                                            }}
+                                        >
+                                            {event.reviews?.length || 0} reviews
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                fontFamily: 'serif',
+                                                fontStyle: 'italic',
+                                                color: 'text.disabled',
+                                                fontWeight: 'bold',
+                                            }}
+                                        >
+                                            {getDaysAgo(event.start_time)}
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             ) : event.lifecycle_state === 'event_ready' || event.lifecycle_state === 'published' ? (
-                                <Typography
-                                    sx={{
-                                        fontFamily: '"Permanent Marker", cursive',
-                                        fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                                        color: '#16a34a',
-                                        transform: 'rotate(2deg)',
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    Live in...
-                                </Typography>
+                                <Box sx={{ textAlign: 'right' }}>
+                                    <Typography
+                                        sx={{
+                                            fontFamily: '"Permanent Marker", cursive',
+                                            fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                                            color: '#16a34a',
+                                            transform: 'rotate(2deg)',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        Live in...
+                                    </Typography>
+                                </Box>
                             ) : null}
                         </Box>
+                    )}
+
+                    {['published', 'event_ready'].includes(event.lifecycle_state) && (
+                        <Typography
+                            component="a"
+                            href="#tickets"
+                            sx={{
+                                mr: 1,
+                                fontFamily: '"Caveat", cursive',
+                                fontSize: { xs: '0.8rem', sm: '1rem' },
+                                color: '#2563eb', // Blue for tickets
+                                textDecoration: 'none',
+                                '&:hover': { textDecoration: 'underline' },
+                                textAlign: 'right',
+                                lineHeight: 1.1,
+                            }}
+                        >
+                            {event.capacity ? <>{event.ticket_count}/{event.capacity} filled,<br /></> : null}
+                            buy tickets
+                        </Typography>
                     )}
 
                     {isAuthenticated && (

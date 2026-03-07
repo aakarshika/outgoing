@@ -182,10 +182,12 @@ export function TicketManagementModal({
                                 <Box sx={{ p: 3, flexGrow: 1, position: 'relative' }}>
                                     {t.status === 'cancelled' && (
                                         <Box sx={{
-                                            position: 'absolute', inset: 0, bgcolor: 'rgba(255,255,255,0.7)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10
+                                            position: 'absolute', inset: 0, bgcolor: 'rgba(255,255,255,0.85)',
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10
                                         }}>
-                                            <Typography variant="h4" sx={{ color: 'red', fontWeight: 'bold', border: '4px solid red', px: 2, transform: 'rotate(-15deg)', fontFamily: '"Permanent Marker"' }}>CANCELLED</Typography>
+                                            <Typography variant="h4" sx={{ color: 'red', fontWeight: 'bold', border: '4px solid red', px: 2, transform: 'rotate(-15deg)', fontFamily: '"Permanent Marker"', mb: 2 }}>CANCELLED</Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 'bold', fontFamily: '"Permanent Marker", cursive' }}>On {new Date(t.updated_at).toLocaleDateString()}</Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 'bold', fontFamily: '"Permanent Marker", cursive' }}>Refunded: ${(parseFloat(t.price_paid) * (t.is_refundable && t.refund_percentage ? t.refund_percentage / 100 : 0)).toFixed(2)}</Typography>
                                         </Box>
                                     )}
                                     <Typography variant="subtitle2" color="text.secondary">Event</Typography>

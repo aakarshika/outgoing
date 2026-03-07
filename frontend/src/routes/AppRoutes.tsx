@@ -25,6 +25,7 @@ const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage')
 const EditServicePage = lazy(() => import('@/pages/vendors/EditServicePage'));
 const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
+const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignUp: SignUpPage,
@@ -46,6 +47,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   EditService: EditServicePage,
   Requests: RequestsPage,
   Alerts: AlertsPage,
+  Gallery: GalleryPage,
 };
 
 import { useAuth } from '@/features/auth/AuthContext';

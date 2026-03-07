@@ -125,6 +125,14 @@ export async function fetchEventStory(eventId: number) {
   return data;
 }
 
+export async function fetchEventHighlights(eventId: number, series = false) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/${eventId}/highlights/`,
+    { params: { series } },
+  );
+  return data;
+}
+
 export async function addEventHighlight(eventId: number, formData: FormData) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/${eventId}/highlights/`,
@@ -132,6 +140,28 @@ export async function addEventHighlight(eventId: number, formData: FormData) {
     {
       headers: { 'Content-Type': 'multipart/form-data' },
     },
+  );
+  return data;
+}
+
+export async function toggleHighlightLike(highlightId: number) {
+  const { data } = await client.post<ApiResponse<{ liked: boolean; likes_count: number }>>(
+    `/events/highlights/${highlightId}/like/`,
+  );
+  return data;
+}
+
+export async function fetchHighlightComments(highlightId: number) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/highlights/${highlightId}/comments/`,
+  );
+  return data;
+}
+
+export async function addHighlightComment(highlightId: number, payload: { text: string; parent?: number }) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/highlights/${highlightId}/comments/`,
+    payload,
   );
   return data;
 }

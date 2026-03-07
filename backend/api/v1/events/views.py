@@ -16,6 +16,9 @@ from apps.events.models import (
     EventReview,
     EventView,
     EventTicketTier,
+    EventHighlight,
+    EventHighlightLike,
+    EventHighlightComment,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -31,6 +34,7 @@ from .serializers import (
     EventReviewSerializer,
     EventTransitionRequestSerializer,
     EventTicketTierSerializer,
+    EventHighlightCommentSerializer,
 )
 
 
@@ -542,6 +546,83 @@ class EventHighlightListCreateView(APIView):
                 ).data,
                 status=201,
             )
+        return error_response(message="Validation Error", errors=serializer.errors)
+
+    def get(self, request, event_id):
+        """Get highlights for an event, or its entire series if requested."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        include_series = request.query_params.get("series") == "true"
+        if include_series and event.series_id:
+            highlights = EventHighlight.objects.filter(
+                event__series_id=event.series_id, moderation_status="approved"
+            ).order_by("-created_at")
+        else:
+            highlights = event.highlights.filter(moderation_status="approved").order_by("-created_at")
+
+        serializer = EventHighlightSerializer(
+            highlights, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+
+class EventHighlightLikeToggleView(APIView):
+    """Toggle like on an event highlight."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, highlight_id):
+        try:
+            highlight = EventHighlight.objects.get(pk=highlight_id)
+        except EventHighlight.DoesNotExist:
+            return error_response(message="Highlight not found", status=404)
+
+        like, created = EventHighlightLike.objects.get_or_create(
+            highlight=highlight, user=request.user
+        )
+        if not created:
+            like.delete()
+            return success_response(data={"liked": False, "likes_count": highlight.likes.count()})
+
+        return success_response(
+            data={"liked": True, "likes_count": highlight.likes.count()}, status=201
+        )
+
+
+class EventHighlightCommentCreateListView(APIView):
+    """List or create comments for an event highlight."""
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request, highlight_id):
+        try:
+            highlight = EventHighlight.objects.get(pk=highlight_id)
+        except EventHighlight.DoesNotExist:
+            return error_response(message="Highlight not found", status=404)
+
+        # Only return top-level comments; serializer will handle nesting
+        comments = highlight.comments.filter(parent__isnull=True).select_related("author", "author__profile")
+        serializer = EventHighlightCommentSerializer(
+            comments, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+    def post(self, request, highlight_id):
+        try:
+            highlight = EventHighlight.objects.get(pk=highlight_id)
+        except EventHighlight.DoesNotExist:
+            return error_response(message="Highlight not found", status=404)
+
+        serializer = EventHighlightCommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(highlight=highlight, author=request.user)
+            return success_response(data=serializer.data, status=201)
         return error_response(message="Validation Error", errors=serializer.errors)
 
 

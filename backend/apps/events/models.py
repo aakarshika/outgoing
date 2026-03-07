@@ -237,7 +237,25 @@ class Event(models.Model):
             self.lifecycle_state = "draft"
         elif self.status == "published" and self.lifecycle_state == "draft":
             self.lifecycle_state = "published"
+            
         super().save(*args, **kwargs)
+
+    def update_capacity_from_tiers(self):
+        """Update total event capacity based on the sum of ticket tier capacities."""
+        tiers = self.ticket_tiers.all()
+        if not tiers.exists():
+            return
+        
+        total = 0
+        for tier in tiers:
+            if tier.capacity is None:
+                total = None
+                break
+            total += tier.capacity
+        
+        if self.capacity != total:
+            self.capacity = total
+            self.save(update_fields=["capacity"])
 
     def can_transition_to(self, to_state):
         """Return True if lifecycle transition is allowed."""
@@ -518,3 +536,52 @@ class EventView(models.Model):
     def __str__(self):
         """String representation of the EventView."""
         return f"{self.user.username} viewed {self.event.title}"
+
+
+class EventHighlightLike(models.Model):
+    """User likes on an event highlight."""
+
+    highlight = models.ForeignKey(
+        EventHighlight, on_delete=models.CASCADE, related_name="likes"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="highlight_likes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["highlight", "user"]
+
+    def __str__(self):
+        return f"{self.user.username} liked highlight {self.highlight.id}"
+
+
+class EventHighlightComment(models.Model):
+    """Comments on an event highlight with nested (Reddit-like) support."""
+
+    highlight = models.ForeignKey(
+        EventHighlight, on_delete=models.CASCADE, related_name="comments"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="highlight_comments",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on highlight {self.highlight.id}"

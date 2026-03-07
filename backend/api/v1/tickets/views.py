@@ -80,9 +80,6 @@ class TicketPurchaseView(APIView):
                 ticket.save()
                 purchased_tickets.append(ticket)
 
-                # Update denormalized count on event
-                Event.objects.filter(pk=event_id).update(ticket_count=F("ticket_count") + 1)
-
         result = TicketSerializer(purchased_tickets, many=True)
         return success_response(
             data=result.data, message=f"{len(purchased_tickets)} tickets purchased successfully", status=201
@@ -131,9 +128,6 @@ class TicketDetailView(APIView):
         
         ticket.status = "cancelled"
         ticket.save()
-
-        # Update event ticket count
-        Event.objects.filter(pk=ticket.event_id).update(ticket_count=F("ticket_count") - 1)
 
         refund_amount = 0
         if ticket.is_refundable and ticket.refund_percentage:

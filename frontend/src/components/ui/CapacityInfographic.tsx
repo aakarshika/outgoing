@@ -108,7 +108,7 @@ export const CapacityInfographic = ({
             {isMini ? 'SOLD' : 'ATTENDANCE'}
           </Typography>
 
-          {percentage >= 100 && (
+          {!isMini && percentage >= 100 && (
             <Box
               sx={{
                 position: 'absolute',
@@ -123,7 +123,7 @@ export const CapacityInfographic = ({
                 fontFamily: '"Permanent Marker"',
                 fontSize: isMini ? '0.8rem' : '1.4rem',
                 whiteSpace: 'nowrap',
-                zIndex: 10,
+                zIndex: 50,
                 pointerEvents: 'none',
                 letterSpacing: 1,
               }}
@@ -139,15 +139,16 @@ export const CapacityInfographic = ({
                 sx={{
                   width: isMini ? 12 : 24,
                   height: isMini ? 12 : 24,
-                  borderRadius: '50%',
+                  mt: isMini ? 0.5 : 1,
+                  borderRadius: '40%',
                   bgcolor: isFilled ? '#3b82f6' : '#e5e7eb',
                   border: isMini ? '1px solid' : '2px solid',
-                  borderColor: isFilled ? '#1d4ed8' : '#9ca3af',
+                  borderColor: isFilled ? '#1d4ed8' : '#b6bbc2ff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   transform: isMini ? 'none' : `rotate(${Math.random() * 20 - 10}deg)`,
-                  boxShadow: !isMini && isFilled ? '1px 1px 0px rgba(0,0,0,0.2)' : 'none',
+                  boxShadow: !isMini && isFilled ? '1px 1px 0px rgba(211, 205, 205, 0.2)' : 'none',
                 }}
               >
                 <UserIcon

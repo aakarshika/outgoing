@@ -30,6 +30,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "price_paid",
             "status",
             "purchased_at",
+            "updated_at",
             "needs_aadhar_verification",
         ]
         read_only_fields = [
@@ -39,6 +40,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "price_paid",
             "status",
             "purchased_at",
+            "updated_at",
         ]
 
     def get_event_summary(self, obj):

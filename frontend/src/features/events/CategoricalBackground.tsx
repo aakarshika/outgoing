@@ -64,6 +64,14 @@ export const CATEGORY_THEMES: Record<
     tape: 'rgba(249, 115, 22, 0.4)',
     icon: 'party-popper',
   },
+  'outdoors-adventure': {
+    bg: '#f0fdf4',
+    pattern:
+      'repeating-linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0, rgba(34, 197, 94, 0.08) 2px, transparent 2px, transparent 12px)',
+    accent: '#16a34a',
+    tape: 'rgba(22, 163, 74, 0.35)',
+    icon: 'mountain',
+  },
   'business-tech': {
     bg: '#f8fafc',
     pattern:
@@ -238,6 +246,20 @@ const CategoryDecoration = ({ icon }: { icon: string }) => {
               backgroundSize: '10px 10px',
             }}
           />
+        </Box>
+      );
+    case 'mountain':
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            right: 10,
+            bottom: 8,
+            opacity: 0.2,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: '1.2rem' }}>⛰</Typography>
         </Box>
       );
     default:

@@ -60,10 +60,10 @@ export const ServicesSection = ({
                     variant="h6"
                     sx={{
                         fontFamily: '"Permanent Marker"',
-                        fontSize: '1.4rem',
+                        fontSize: '1rem',
                     }}
                 >
-                    Host is Looking For...
+                    Service Providers
                 </Typography>
                 <IconButton size="small">
                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}

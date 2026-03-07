@@ -8,6 +8,7 @@ import { Media } from '@/components/ui/media';
 import { useAuth } from '@/features/auth/hooks';
 import type { EventListItem } from '@/types/events';
 
+import { CATEGORY_THEMES } from './CategoricalBackground';
 import { useToggleInterest } from './hooks';
 
 function formatDate(dateStr: string) {
@@ -38,6 +39,27 @@ export function EventCard({ event }: EventCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const highlights = event.media?.filter((m) => m.category === 'highlight') || [];
+  const highlightImages =
+    event.media?.filter(
+      (m) => m.category === 'highlight' && m.media_type === 'image',
+    ) || [];
+  const isNoImageCard = !event.cover_image && highlightImages.length === 0;
+  const categorySlug =
+    event.category?.slug ||
+    event.category?.name
+      ?.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') ||
+    '';
+  const noImageTheme = CATEGORY_THEMES[categorySlug] || {
+    bg: '#f8fafc',
+    pattern:
+      'linear-gradient(rgba(71, 85, 105, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(71, 85, 105, 0.08) 1px, transparent 1px)',
+    accent: '#475569',
+    tape: 'rgba(71, 85, 105, 0.25)',
+    icon: 'pin',
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -60,6 +82,67 @@ export function EventCard({ event }: EventCardProps) {
       isInterested: event.user_is_interested,
     });
   };
+
+  if (isNoImageCard) {
+    return (
+      <Link
+        to={`/events/${event.id}`}
+        className="group block rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        style={{
+          backgroundColor: noImageTheme.bg,
+          backgroundImage: noImageTheme.pattern,
+          backgroundSize: '20px 20px',
+          borderColor: `${noImageTheme.accent}33`,
+        }}
+      >
+        <div className="relative min-h-[216px] p-5">
+          <div
+            className="absolute top-0 left-1/2 h-5 w-20 -translate-x-1/2 rotate-[-3deg] rounded-b-sm"
+            style={{ background: noImageTheme.tape }}
+          />
+          <div className="flex h-full flex-col justify-between rounded-xl border border-white/60 bg-white/75 p-4 backdrop-blur-[1px]">
+            <div
+              className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
+              aria-hidden
+            >
+              <div
+                className="h-28 w-28"
+                style={{
+                  backgroundColor: noImageTheme.accent,
+                  opacity: 0.14,
+                  WebkitMaskImage: "url('/assets/go-symbol.png')",
+                  maskImage: "url('/assets/go-symbol.png')",
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                }}
+              />
+            </div>
+            <h3 className="font-semibold text-foreground line-clamp-2 leading-snug text-lg group-hover:text-primary transition-colors">
+              {event.title}
+            </h3>
+
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {formatDate(event.start_time)} · {formatTime(event.start_time)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{event.location_name}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
 
   if (event.lifecycle_state === 'completed') {
     return (

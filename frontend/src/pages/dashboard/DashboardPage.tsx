@@ -251,17 +251,16 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {tickets.map((ticket: any, idx: number) => (
-                  <button
+                  <div
                     key={ticket.id}
-                    onClick={() => setManagingTicket(ticket)}
-                    className="relative group text-left"
+                    className="relative group text-left block"
                   >
                     {/* Event card (background) */}
                     <div
-                      className="border-2 border-gray-800 bg-white p-3 shadow-[3px_4px_0px_#333] transition-all group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-[1px_1px_0px_#333]"
+                      className="border-2 border-gray-800 bg-white p-3 shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] flex flex-col h-full"
                       style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` }}
                     >
-                      <div className="aspect-[16/10] bg-gray-100 overflow-hidden border border-gray-200 mb-3">
+                      <div className="aspect-[16/10] bg-gray-100 overflow-hidden border border-gray-200 mb-3 relative cursor-pointer" onClick={() => setManagingTicket(ticket)}>
                         {ticket.event_summary.cover_image ? (
                           <Media
                             src={ticket.event_summary.cover_image}
@@ -276,25 +275,44 @@ export default function DashboardPage() {
                             <Calendar className="h-8 w-8 text-gray-300" />
                           </div>
                         )}
+                        {ticket.status === 'cancelled' && (
+                          <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center p-2 z-10">
+                            <span className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest" style={{ fontFamily: '"Permanent Marker", cursive' }}>CANCELLED</span>
+                            <span className="text-sm font-bold text-gray-800" style={{ fontFamily: '"Permanent Marker", cursive' }}>On {new Date(ticket.updated_at).toLocaleDateString()}</span>
+                            <span className="text-sm font-bold text-gray-800" style={{ fontFamily: '"Permanent Marker", cursive' }}>Refunded: ${(parseFloat(ticket.price_paid) * (ticket.is_refundable && ticket.refund_percentage ? ticket.refund_percentage / 100 : 0)).toFixed(2)}</span>
+                          </div>
+                        )}
                       </div>
-                      <h3
-                        className="font-bold text-gray-900 truncate"
-                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-                      >
-                        {ticket.event_summary.title}
-                      </h3>
-                      <p
-                        className="text-gray-500 text-sm flex items-center gap-1"
-                        style={{ fontFamily: '"Caveat", cursive' }}
-                      >
-                        <MapPin className="h-3 w-3" />{' '}
-                        {ticket.event_summary.location_name}
-                      </p>
+
+                      <div className="flex-1 cursor-pointer" onClick={() => setManagingTicket(ticket)}>
+                        <h3
+                          className="font-bold text-gray-900 truncate"
+                          style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+                        >
+                          {ticket.event_summary.title}
+                        </h3>
+                        <p
+                          className="text-gray-500 text-sm flex items-center gap-1"
+                          style={{ fontFamily: '"Caveat", cursive' }}
+                        >
+                          <MapPin className="h-3 w-3" />{' '}
+                          {ticket.event_summary.location_name}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 mt-4 justify-between">
+                        <Link to={`/events/${ticket.event_summary.id}`} className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1" style={{ fontFamily: '"Permanent Marker", cursive', boxShadow: '1px 1px 0px rgba(0,0,0,0.8)' }}>
+                          EVENT PAGE
+                        </Link>
+                        <button onClick={() => setManagingTicket(ticket)} className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1" style={{ fontFamily: '"Permanent Marker", cursive', boxShadow: '1px 1px 0px rgba(0,0,0,0.8)' }}>
+                          MANAGE TICKET
+                        </button>
+                      </div>
                     </div>
 
                     {/* Ticket stub overlay */}
                     <div
-                      className="absolute -top-2 -right-2 z-10 flex border-2 border-gray-800 bg-[#fff9e6] shadow-[2px_2px_0px_#333]"
+                      className="absolute -top-2 -right-2 z-10 flex border-2 border-gray-800 bg-[#fff9e6] shadow-[2px_2px_0px_#333] pointer-events-none"
                       style={{ transform: 'rotate(5deg)' }}
                     >
                       <div className="px-3 py-2 border-r-2 border-dashed border-gray-400 flex flex-col items-center justify-center">
@@ -320,7 +338,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -466,12 +484,8 @@ export default function DashboardPage() {
                             <div className="absolute -left-6 top-0 bottom-0 w-1 border-l-2 border-dashed border-gray-400 hidden sm:block" />
 
                             <div className="relative inline-block mb-3">
-                              <div
-                                className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-blue-300/60 rotate-2 z-10"
-                                style={{ mixBlendMode: 'multiply' }}
-                              />
                               <h3
-                                className="text-md font-bold text-gray-700 uppercase tracking-widest relative z-0 bg-white px-3 py-1 border-2 border-gray-800 transform rotate-1"
+                                className="text-md font-bold text-gray-700 uppercase tracking-widest relative z-0 bg-white px-3 border-2 border-gray-800 transform rotate-1"
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                               >
                                 My Applications ({serviceApps.length})

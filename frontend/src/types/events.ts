@@ -148,6 +148,7 @@ export interface TicketInfo {
   price_paid: string;
   status: string;
   purchased_at: string;
+  updated_at: string;
   needs_aadhar_verification?: boolean;
 }
 

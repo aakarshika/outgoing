@@ -69,7 +69,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b-2 border-dashed border-gray-300 bg-[#f4f1ea]/95 backdrop-blur-sm shadow-sm">
+      <nav className="sticky top-0 z-50 bg-[#f4f1ea]/95 ">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-4">
@@ -79,8 +79,8 @@ export function Navbar() {
               >
                 <div className="absolute -inset-1 bg-yellow-300 opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
                 <span
-                  className="text-2xl font-bold text-gray-900 relative z-10"
-                  style={{ fontFamily: '"Permanent Marker"' }}
+                  className="text-4xl font-bold text-gray-900 relative z-10"
+                  style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
                 >
                   Outgoing
                 </span>

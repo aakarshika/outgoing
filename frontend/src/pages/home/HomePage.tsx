@@ -3,11 +3,12 @@
 import { Box, Typography } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { CalendarDays, LocateFixed } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { HostCard } from '@/components/ui/HostCard';
+import { LocationPickerBox } from '@/components/ui/LocationPickerBox';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { BedroomHeroCarousel } from '@/features/events/BedroomHeroCarousel';
 import { CATEGORY_ICON_MAP } from '@/features/events/constants';
@@ -25,14 +26,37 @@ import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useRequests } from '@/features/requests/hooks';
 import { canUseBrowserGeolocation, getCurrentCoordinates } from '@/utils/geolocation';
 
+const NEAR_YOU_ENABLED_KEY = 'outgoing.nearYou.enabled';
+const NEAR_YOU_COORDS_KEY = 'outgoing.nearYou.coords';
+
+function readNearYouEnabled() {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(NEAR_YOU_ENABLED_KEY) === 'true';
+}
+
+function readNearYouCoords() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(NEAR_YOU_COORDS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { lat?: number; lng?: number };
+    if (typeof parsed.lat !== 'number' || typeof parsed.lng !== 'number') return null;
+    return { lat: parsed.lat, lng: parsed.lng };
+  } catch {
+    return null;
+  }
+}
+
 export default function HomePage() {
   const [searchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
   const navigate = useNavigate();
 
   const [weekendOnly, setWeekendOnly] = useState(false);
-  const [nearYouEnabled, setNearYouEnabled] = useState(false);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearYouEnabled, setNearYouEnabled] = useState(readNearYouEnabled);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    readNearYouCoords,
+  );
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
   const { data: categoriesResponse } = useCategories();
@@ -82,6 +106,15 @@ export default function HomePage() {
   });
   const trendingRequests = trendingRequestsResponse?.data || [];
 
+  useEffect(() => {
+    localStorage.setItem(NEAR_YOU_ENABLED_KEY, String(nearYouEnabled));
+    if (coords) {
+      localStorage.setItem(NEAR_YOU_COORDS_KEY, JSON.stringify(coords));
+      return;
+    }
+    localStorage.removeItem(NEAR_YOU_COORDS_KEY);
+  }, [nearYouEnabled, coords]);
+
   const toggleNearYou = async () => {
     if (nearYouEnabled) {
       setNearYouEnabled(false);
@@ -122,6 +155,53 @@ export default function HomePage() {
       >
         {/* Hero Section */}
         <section className="pt-6 pb-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Typography
+            align="right"
+            sx={{
+              fontFamily: '"Magnolia", "Great Vibes", cursive',
+              fontSize: { xs: '4rem', md: '6rem' },
+              color: '#4b5563',
+              pr: 2
+            }}
+          >
+            Start here,
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-block',
+                fontWeight: 'bold',
+                width: '1.5em',
+                height: '1.5em',
+                backgroundColor: 'currentColor',
+                maskImage: 'url(/assets/go-symbol.png)',
+                maskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskImage: 'url(/assets/go-symbol.png)',
+                WebkitMaskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                verticalAlign: 'middle',
+              }}
+            />
+            places..
+          </Typography>
+
+          {/* Location picker */}
+          <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', pr: 2 }}>
+            <LocationPickerBox
+              onChange={(loc) => {
+                if (loc) {
+                  setCoords({ lat: loc.lat, lng: loc.lng });
+                  setNearYouEnabled(true);
+                } else {
+                  setNearYouEnabled(false);
+                  setCoords(null);
+                }
+              }}
+            />
+          </Box>
+
           <BedroomHeroCarousel />
 
           {/* Quick Filters */}
@@ -662,6 +742,6 @@ export default function HomePage() {
           ))}
         </div>
       </Box>
-    </ThemeProvider>
+    </ThemeProvider >
   );
 }

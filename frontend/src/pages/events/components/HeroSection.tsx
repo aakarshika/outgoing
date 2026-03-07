@@ -782,6 +782,32 @@ export const HeroSection = ({
                         position: 'relative',
                     }}
                 >
+                    <Box sx={{
+                        padding: 12,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0
+                    }}>
+
+                        <Box
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                bgcolor: 'black',
+                                opacity: 0.14,
+                                WebkitMaskImage: "url('/assets/go-symbol.png')",
+                                maskImage: "url('/assets/go-symbol.png')",
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskPosition: 'center',
+                                maskPosition: 'center',
+                                WebkitMaskSize: 'contain',
+                                maskSize: 'contain',
+                            }}
+                        />
+                    </Box>
                     <Box sx={{ width: '100%' }}>
                         <HeroAutoGallery images={galleryImages} title={event.title} />
                     </Box>

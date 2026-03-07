@@ -3,8 +3,17 @@ import {
     Button as MuiButton,
     Paper,
     Typography,
+    Checkbox,
+    FormControlLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    IconButton,
+    Divider,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
+import { Minus, Plus, X } from 'lucide-react';
 
 import { Media } from '@/components/ui/media';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
@@ -76,7 +85,7 @@ export const Highlighter = ({
 
 export const getDaysAgo = (dateStr: string) => {
     const start = new Date(dateStr);
-    const now = new Date('2026-03-06T23:26:31-05:00'); // Updated timestamp
+    const now = new Date();
     const diffTime = Math.abs(now.getTime() - start.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'today';
@@ -159,7 +168,7 @@ export const CuteTimer = ({ targetDate }: { targetDate: string }) => {
                                 }
                             }}
                         >
-                            <Typography sx={{ fontFamily: '"Fredoka One", "Permanent Marker", cursive', fontSize: '1.2rem', color: color.text }}>
+                            <Typography sx={{ fontFamily: '"Fredoka One", cursive', fontSize: '1.2rem', color: color.text }}>
                                 {value}
                             </Typography>
                         </Box>
@@ -183,6 +192,26 @@ export const CuteTimer = ({ targetDate }: { targetDate: string }) => {
     );
 };
 
+export const TermsDialog = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => (
+    <Dialog open={isOpen} onClose={onClose} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontFamily: '"Permanent Marker"', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            Terms & Conditions
+            <IconButton onClick={onClose} size="small"><X size={20} /></IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pb: 4 }}>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+                1. No refunds unless event is cancelled or ticket is flexible. <br />
+                2. Identification card matching the purchasing profile may be verified at the venue. <br />
+                3. At least one person in the group must be 18+ and take responsibility for minors. <br />
+                4. Admission is subject to security check at the venue entrance.
+            </Typography>
+            <MuiButton fullWidth variant="contained" onClick={onClose} sx={{ borderRadius: 2, bgcolor: '#000' }}>
+                Got it
+            </MuiButton>
+        </DialogContent>
+    </Dialog>
+);
+
 export const PolaroidFrame = ({
     src,
     type = 'image',
@@ -197,6 +226,7 @@ export const PolaroidFrame = ({
     rotation?: number;
 }) => {
     const rot = rotation ?? Math.random() * 8 - 4;
+
     return (
         <Paper
             elevation={3}
@@ -214,7 +244,7 @@ export const PolaroidFrame = ({
         >
             <Box
                 sx={{
-                    aspectSquare: 1,
+                    aspectRatio: '1/1',
                     bgcolor: '#f0f0f0',
                     overflow: 'hidden',
                     position: 'relative',
@@ -236,7 +266,7 @@ export const PolaroidFrame = ({
                     sx={{
                         fontFamily: '"Permanent Marker", cursive',
                         fontSize: '1rem',
-                        mt: 2,
+                        mt: 0,
                         textAlign: 'center',
                         lineClamp: 2,
                         display: '-webkit-box',
@@ -266,101 +296,155 @@ export const TicketStub = ({
     capacity,
     soldCount,
     onBuy,
+    onOneClickBuy,
     isLoading,
+    disabled,
 }: {
     type: string;
     price: number;
     color?: string;
     capacity?: number | null;
     soldCount?: number;
-    onBuy: () => void;
+    onBuy: (quantity: number) => void;
+    onOneClickBuy: (quantity: number) => void;
     isLoading?: boolean;
-}) => (
-    <>
-        <Paper
-            elevation={2}
-            sx={{
-                display: 'flex',
-                position: 'relative',
-                bgcolor: '#fff9e6', // Aged paper
-                border: '1px solid #e0d8c0',
-                transform: 'rotate(-1.5deg)',
-                mb: 2,
-                overflow: 'visible',
-            }}
-        >
-            <WashiTape color={color ? `${color}44` : "rgba(0,0,0,0.1)"} />
-            <Box
+    disabled?: boolean;
+}) => {
+    const [quantity, setQuantity] = useState(0);
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+    const isSoldOut = capacity !== null && capacity !== undefined && soldCount !== undefined && soldCount >= capacity;
+    const total = (price * quantity);
+
+    return (
+        <>
+            <Paper
+                elevation={2}
                 sx={{
-                    p: 2,
-                    borderRight: '2px dashed #e0d8c0',
                     display: 'flex',
+                    my: 1,
                     flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minWidth: 100,
-                    bgcolor: color || 'transparent',
-                    color: color ? 'white' : 'inherit',
+                    position: 'relative',
+                    bgcolor: '#fff9e6',
+                    border: '1px solid #e0d8c0',
+                    transform: 'rotate(-0.5deg)',
+                    overflow: 'visible',
+                    opacity: isSoldOut ? 0.8 : 1,
                 }}
             >
-                <Typography
-                    variant="caption"
-                    sx={{ fontWeight: 'bold', color: color ? 'white' : 'text.secondary', letterSpacing: 1 }}
-                >
-                    ADMIT ONE
-                </Typography>
-                <Typography
-                    variant="h5"
-                    sx={{ fontFamily: '"Permanent Marker"', color: color ? 'white' : 'primary.main', mt: 1 }}
-                >
-                    ${price}
-                </Typography>
-            </Box>
-            <Box
-                sx={{
-                    p: 2,
-                    flexGrow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                }}
-            >
-                <Typography
-                    variant="h6"
-                    sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.2rem' }}
-                >
-                    {type} Access
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7 }}>
-                    Valid for one person. No refunds.
-                </Typography>
-                <MuiButton
-                    variant="contained"
-                    size="small"
-                    onClick={onBuy}
-                    disabled={isLoading}
-                    sx={{
-                        mt: 1.5,
-                        borderRadius: 0,
-                        bgcolor: '#333',
-                        '&:hover': { bgcolor: '#000' },
-                    }}
-                >
-                    {isLoading ? 'Processing...' : 'BUY TICKET'}
-                </MuiButton>
-            </Box>
-        </Paper>
-        {capacity && (
-            <Box sx={{ mt: 2 }}>
-                <CapacityInfographic
-                    variant="mini"
-                    capacity={capacity}
-                    filled={soldCount || 0}
-                />
-            </Box>
-        )}
-    </>
-);
+                {isSoldOut && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: '0%',
+                            transform: 'rotate(-10deg)',
+                            bgcolor: '#ef4444',
+                            color: 'white',
+                            px: 2,
+                            py: 0.5,
+                            border: '3px solid #fff',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                            fontFamily: '"Permanent Marker"',
+                            fontSize: '1.4rem',
+                            whiteSpace: 'nowrap',
+                            zIndex: 50,
+                            pointerEvents: 'none',
+                            letterSpacing: 1,
+                        }}
+                    >
+                        FULL HOUSE
+                    </Box>
+                )}
+                <Box sx={{ display: 'flex' }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRight: '2px dashed #e0d8c0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minWidth: 100,
+                            bgcolor: color || '#555',
+                            color: 'white',
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ fontWeight: 'bold', letterSpacing: 1 }}>ADMIT ONE</Typography>
+                        <Typography variant="h5" sx={{ fontFamily: '"Permanent Marker"', mt: 1 }}>${price}</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.1rem' }}>{type}</Typography>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1 }}>
+                            <Typography variant="h5" sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.7rem' }}></Typography>
+                            {(!isSoldOut && !disabled) && (
+                                <>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setQuantity(q => Math.max(0, q - 1))}
+                                        sx={{ border: '1px solid #ddd', p: 0.5 }}
+                                    ><Minus size={14} /></IconButton>
+                                    <Typography sx={{ fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{quantity}</Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                                        sx={{ border: '1px solid #ddd', p: 0.5 }}
+                                    ><Plus size={14} /></IconButton>
+                                    <Typography variant="caption" sx={{ ml: 'auto', fontWeight: 700 }}>Total: ${total}</Typography>
+                                </>)}
+                        </Box>
+                    </Box>
+                </Box>
+
+                {total > 0 && (<Box sx={{ px: 2, pb: 2 }}>
+                    <Divider sx={{ mb: 1, borderStyle: 'dashed' }} />
+                    <FormControlLabel
+                        control={<Checkbox size="small" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />}
+                        label={
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                I accept the <span
+                                    style={{ textDecoration: 'underline', cursor: 'pointer', color: '#000' }}
+                                    onClick={(e) => { e.preventDefault(); setIsTermsOpen(true); }}
+                                >terms & conditions</span>
+                            </Typography>
+                        }
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                        <MuiButton
+                            fullWidth
+                            variant="contained"
+                            size="small"
+                            onClick={() => onBuy(quantity)}
+                            disabled={disabled || isSoldOut || isLoading || !termsAccepted}
+                            sx={{ borderRadius: 1, bgcolor: '#333', '&:hover': { bgcolor: '#000' }, fontSize: '0.7rem' }}
+                        >
+                            {isLoading ? '...' : 'BUY TICKET'}
+                        </MuiButton>
+                        <MuiButton
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            onClick={() => onOneClickBuy(quantity)}
+                            disabled={disabled || isSoldOut || isLoading || !termsAccepted}
+                            sx={{ borderRadius: 1, borderColor: '#000', color: '#000', fontSize: '0.7rem' }}
+                        >
+                            Quick Buy
+                        </MuiButton>
+                    </Box>
+                </Box>)}
+            </Paper>
+            <TermsDialog isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+            {capacity && (
+                <Box sx={{ mt: -1, mb: 2 }}>
+                    <CapacityInfographic variant="mini" capacity={capacity} filled={soldCount || 0} />
+                </Box>
+            )}
+        </>
+    );
+};
 
 export const PurchasedTicketStack = ({
     tickets,
@@ -369,47 +453,75 @@ export const PurchasedTicketStack = ({
     isLoading,
     capacity,
     soldCount,
+    disabled,
 }: {
-    tickets: any[],
-    onBuyMore: () => void,
-    onManage: (ticketId: number) => void,
-    isLoading?: boolean,
-    capacity?: number | null,
-    soldCount?: number,
+    tickets: any[];
+    onBuyMore: (quantity: number) => void;
+    onManage: (ticketId: number) => void;
+    isLoading?: boolean;
+    capacity?: number | null;
+    soldCount?: number;
+    disabled?: boolean;
 }) => {
     if (tickets.length === 0) return null;
+    const isSoldOut = capacity !== null && capacity !== undefined && soldCount !== undefined && soldCount >= capacity;
 
     return (
-        <Box sx={{ position: 'relative', mb: 4, pt: tickets.length > 1 ? (tickets.length - 1) * 2 : 0 }}>
+        <Box sx={{ position: 'relative', pt: tickets.length > 1 ? (tickets.length - 1) * 2 : 0 }}>
             {tickets.map((t, idx) => {
-                const isTop = idx === tickets.length - 1;
-                const offset = (tickets.length - 1 - idx) * 16; // 16px offset for each layer
+                const isTop = idx === Math.max(tickets.length - 1, 0);
+                const offset = (-(idx + 4)) * 8;
 
                 return (
-                    <>
+                    <Box key={t.id} sx={{
+                        position: isTop ? 'relative' : 'absolute',
+                        top: isTop ? 0 : -offset,
+                        left: isTop ? 0 : offset / 2,
+                        width: '100%',
+                        zIndex: idx
+                    }}>
                         <Paper
-                            key={t.id}
-                            elevation={isTop ? 2 : 1}
+                            elevation={isTop ? 1 : 1}
                             onClick={() => onManage(t.id)}
                             sx={{
+                                position: 'relative',
                                 display: 'flex',
-                                position: isTop ? 'relative' : 'absolute',
-                                top: isTop ? 0 : -offset,
-                                left: isTop ? 0 : offset / 2,
                                 width: '100%',
                                 bgcolor: '#fff9e6',
                                 border: '1px solid #e0d8c0',
-                                transform: `rotate(${isTop ? 1 : (idx % 2 === 0 ? -1 : 1)}deg)`,
-                                zIndex: idx,
+                                transform: `rotate(${isTop ? 1 : (idx % 3 === 0 ? -1 : 1)}deg)`,
                                 overflow: 'visible',
                                 cursor: 'pointer',
                                 transition: 'transform 0.2s',
                                 opacity: isTop ? 1 : 0.8,
-                                '&:hover': isTop ? { transform: 'rotate(0deg) translateY(-4px)', zIndex: 100 } : {},
-                                visibility: !isTop && idx < tickets.length - 5 ? 'hidden' : 'visible' // Max 5 visible in stack
+                                '&:hover': isTop ? { transform: 'rotate(0deg)', zIndex: 100 } : {},
+                                visibility: !isTop && idx < tickets.length - 5 ? 'hidden' : 'visible'
                             }}
                         >
-                            <WashiTape color={t.color ? `${t.color}44` : "rgba(22, 163, 74, 0.2)"} />
+                            {isSoldOut && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        right: '0%',
+                                        transform: 'rotate(-10deg)',
+                                        bgcolor: '#ef4444',
+                                        color: 'white',
+                                        px: 2,
+                                        py: 0.5,
+                                        border: '3px solid #fff',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                        fontFamily: '"Permanent Marker"',
+                                        fontSize: '1.4rem',
+                                        whiteSpace: 'nowrap',
+                                        zIndex: 50,
+                                        pointerEvents: 'none',
+                                        letterSpacing: 1,
+                                    }}
+                                >
+                                    FULL HOUSE
+                                </Box>
+                            )}
                             <Box
                                 sx={{
                                     p: 2,
@@ -452,9 +564,9 @@ export const PurchasedTicketStack = ({
                                         size="small"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onBuyMore();
+                                            onBuyMore(1);
                                         }}
-                                        disabled={isLoading}
+                                        disabled={disabled || isSoldOut || isLoading}
                                         sx={{
                                             mt: 1.5,
                                             borderRadius: 0,
@@ -467,11 +579,10 @@ export const PurchasedTicketStack = ({
                                         BUY MORE
                                     </MuiButton>
                                 )}
-
                             </Box>
                         </Paper>
                         {isTop && capacity && (
-                            <Box sx={{ mt: 2 }}>
+                            <Box sx={{ mt: 0 }}>
                                 <CapacityInfographic
                                     variant="mini"
                                     capacity={capacity}
@@ -479,7 +590,7 @@ export const PurchasedTicketStack = ({
                                 />
                             </Box>
                         )}
-                    </>
+                    </Box>
                 );
             })}
         </Box>
@@ -491,16 +602,15 @@ export const ClassifiedAd = ({
     onInquire,
     isEligible = false,
     isOpportunity = false,
-    navigate,
 }: {
     need: any;
     onInquire: (n: any) => void;
     isEligible?: boolean;
     isOpportunity?: boolean;
-    navigate: any;
 }) => {
+    const navigate = useNavigate();
     const assigned_vendor = need.applications.find((app: any) => app.status === 'accepted');
-    console.log(assigned_vendor)
+
     return (
         <Box sx={{ position: 'relative', width: '100%' }}>
             <Paper
@@ -524,15 +634,15 @@ export const ClassifiedAd = ({
                 <Typography
                     sx={{
                         fontFamily: '"Playfair Display", serif',
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
                         borderBottom: '2px solid #333',
                         mb: 1,
                         fontSize: '1rem',
                         color: need.status === 'filled' ? '#999' : 'inherit',
                     }}
                 >
-                    HELP WANTED: {need.title}
+                    <span style={{ fontFamily: '"Playfair Display", serif', fontWeight: 900, textTransform: 'uppercase' }}>HELP WANTED: </span>{need.title}
                 </Typography>
                 <Typography
                     variant="body2"
@@ -545,7 +655,7 @@ export const ClassifiedAd = ({
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',
-                        mt: 2,
+                        mt: 0,
                     }}
                 >
                     <Box>
@@ -593,7 +703,6 @@ export const ClassifiedAd = ({
                 </Box>
             </Paper>
 
-            {/* Opportunity stamp */}
             {need.status === 'open' && isOpportunity && (
                 <Box
                     sx={{
@@ -623,9 +732,7 @@ export const ClassifiedAd = ({
                 </Box>
             )}
 
-            {/* Overlap if filled */}
             {need.status === 'filled' && (
-
                 <Box
                     sx={{
                         position: 'absolute',
@@ -669,11 +776,10 @@ export const ClassifiedAd = ({
                                 borderRadius: '1px',
                                 boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                             }}
-                        />{' '}
-                        {/* Blue tape holding the card */}
+                        />
                     </Box>
                 </Box>
             )}
         </Box>
-    )
+    );
 };

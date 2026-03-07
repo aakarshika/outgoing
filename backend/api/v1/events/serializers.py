@@ -18,6 +18,8 @@ from apps.events.models import (
     EventSeriesNeedTemplate,
     EventVendorReview,
     EventTicketTier,
+    EventHighlightLike,
+    EventHighlightComment,
 )
 from apps.tickets.models import Ticket
 
@@ -546,6 +548,9 @@ class EventHighlightSerializer(serializers.ModelSerializer):
 
     author_username = serializers.CharField(source="author.username", read_only=True)
     author_avatar = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    user_has_liked = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for EventHighlightSerializer."""
@@ -560,6 +565,9 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "media_file",
             "moderation_status",
             "created_at",
+            "likes_count",
+            "comments_count",
+            "user_has_liked",
         ]
         read_only_fields = [
             "id",
@@ -568,7 +576,22 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "moderation_status",
             "created_at",
             "role",
+            "likes_count",
+            "comments_count",
+            "user_has_liked",
         ]
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def get_user_has_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
 
     def get_author_avatar(self, obj):
         """Return the author's avatar URL or None."""
@@ -579,6 +602,45 @@ class EventHighlightSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
+
+
+class EventHighlightCommentSerializer(serializers.ModelSerializer):
+    """Serializer for event highlight comments."""
+
+    author_username = serializers.CharField(source="author.username", read_only=True)
+    author_avatar = serializers.SerializerMethodField()
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventHighlightComment
+        fields = [
+            "id",
+            "author_username",
+            "author_avatar",
+            "text",
+            "parent",
+            "created_at",
+            "updated_at",
+            "replies",
+        ]
+        read_only_fields = ["id", "author_username", "author_avatar", "created_at", "updated_at"]
+
+    def get_author_avatar(self, obj):
+        profile = getattr(obj.author, "profile", None)
+        if profile and profile.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+            return profile.avatar.url
+        return None
+
+    def get_replies(self, obj):
+        """Return nested replies."""
+        if obj.replies.exists():
+            return EventHighlightCommentSerializer(
+                obj.replies.all(), many=True, context=self.context
+            ).data
+        return []
 
 
 class EventReviewMediaSerializer(serializers.ModelSerializer):

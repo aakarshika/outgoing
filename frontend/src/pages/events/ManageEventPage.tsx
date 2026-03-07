@@ -1174,12 +1174,18 @@ export default function ManageEventPage() {
                               key={occ.id}
                               className="flex items-center gap-0 flex-shrink-0 snap-start"
                             >
-                              <button
-                                type="button"
+                              <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => {
                                   if (!isCurrent) navigate(`/events/${occ.id}/manage`);
                                 }}
-                                className={`relative flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    if (!isCurrent) navigate(`/events/${occ.id}/manage`);
+                                  }
+                                }}
+                                className={`relative group flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
                                   ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
                                   : isCancelled
                                     ? 'opacity-40 bg-gray-50 border-gray-300'
@@ -1239,7 +1245,7 @@ export default function ManageEventPage() {
                                     ×
                                   </button>
                                 )}
-                              </button>
+                              </div>
                               <div className="w-4 h-0.5 bg-gray-200 flex-shrink-0" />
                             </div>
                           );

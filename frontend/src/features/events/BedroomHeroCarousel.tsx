@@ -21,6 +21,7 @@ import type { EventListItem } from '@/types/events';
 import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 import { StarCutoutCard } from './cards/StarCutoutCard';
 import { UserActionCard } from './cards/UserActionCard';
+import { CATEGORY_THEMES } from './CategoricalBackground';
 import { useCarouselEvents, useToggleInterest } from './hooks';
 
 export type MixedCarouselItem =
@@ -141,6 +142,35 @@ const EventTapeCard = ({
   );
   const { isAuthenticated } = useAuth();
   const toggleInterest = useToggleInterest();
+  const highlightImages =
+    event.media?.filter(
+      (media) => media.category === 'highlight' && media.media_type === 'image',
+    ) || [];
+  const isNoImageCard = !event.cover_image && highlightImages.length === 0;
+  const categorySlug =
+    event.category?.slug ||
+    event.category?.name
+      ?.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') ||
+    '';
+  const noImageTheme = CATEGORY_THEMES[categorySlug] || {
+    bg: '#f8fafc',
+    pattern:
+      'linear-gradient(rgba(71, 85, 105, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(71, 85, 105, 0.08) 1px, transparent 1px)',
+    accent: '#475569',
+    tape: 'rgba(71, 85, 105, 0.25)',
+    icon: 'pin',
+  };
+  const formattedDate = new Date(event.start_time).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+  const formattedTime = new Date(event.start_time).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
   const handleInterestClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -151,6 +181,154 @@ const EventTapeCard = ({
       isInterested: event.user_is_interested || false,
     });
   };
+
+  if (isNoImageCard) {
+    return (
+      <Paper
+        elevation={isFocused ? 12 : 4}
+        component={Link}
+        to={`/events/${event.id}`}
+        sx={{
+          flex: '0 0 auto',
+          width: { xs: 280, sm: 350 },
+          height: 520,
+          mx: { xs: '20px', sm: '50px' },
+          mt: isFocused ? 14 : 8,
+          p: 2,
+          textDecoration: 'none',
+          color: 'inherit',
+          transform: isFocused
+            ? `rotate(0deg) scale(1.15)`
+            : `rotate(${rotation}deg) scale(0.95)`,
+          zIndex: isFocused ? 30 : 20,
+          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          scrollSnapAlign: 'center',
+          opacity: isFocused ? 1 : 0.8,
+          filter: isFocused ? 'none' : 'grayscale(20%)',
+          backgroundColor: noImageTheme.bg,
+          backgroundImage: noImageTheme.pattern,
+          backgroundSize: '20px 20px',
+          border: '1px solid',
+          borderColor: `${noImageTheme.accent}44`,
+          '&:hover': {
+            transform: isFocused
+              ? `rotate(0deg) scale(1.18)`
+              : `rotate(0deg) scale(1.02)`,
+            zIndex: 35,
+            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
+            filter: 'none',
+            opacity: 1,
+          },
+        }}
+      >
+        <PhotoClip />
+        <Box
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            border: '1px dashed rgba(0,0,0,0.14)',
+            bgcolor: 'rgba(255,255,255,0.78)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+          }}
+        >
+          <Box
+            aria-hidden
+            sx={{
+              pointerEvents: 'none',
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 0,
+            }}
+          >
+            <Box
+              sx={{
+                width: 140,
+                height: 140,
+                bgcolor: noImageTheme.accent,
+                opacity: 0.14,
+                WebkitMaskImage: "url('/assets/go-symbol.png')",
+                maskImage: "url('/assets/go-symbol.png')",
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+              }}
+            />
+          </Box>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              bgcolor: noImageTheme.accent,
+              boxShadow: '0 0 0 2px rgba(255,255,255,0.85), 0 1px 4px rgba(0,0,0,0.2)',
+            }}
+          />
+          <Typography
+            sx={{
+              fontFamily: '"Permanent Marker"',
+              fontSize: isFocused ? '1.6rem' : '1.35rem',
+              lineHeight: 1.15,
+              color: '#333',
+              mb: 2.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {event.title}
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.75,
+                fontSize: '0.86rem',
+                fontFamily: '"Lora", serif',
+                color: '#444',
+              }}
+            >
+              <Calendar size={14} /> {formattedDate} · {formattedTime}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.75,
+                fontSize: '0.86rem',
+                fontFamily: '"Lora", serif',
+                color: '#555',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              <MapPin size={14} /> {event.location_name}
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -232,9 +410,8 @@ const EventTapeCard = ({
         >
           <Heart
             size={18}
-            className={`transition-colors ${
-              event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
-            }`}
+            className={`transition-colors ${event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
+              }`}
           />
         </button>
 
@@ -298,25 +475,25 @@ const EventTapeCard = ({
 
           {(event.lifecycle_state === 'published' ||
             event.lifecycle_state === 'live') && (
-            <Box
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 4,
-                ml: 'auto',
-                boxShadow: 2,
-                fontWeight: 'bold',
-                fontSize: '0.8rem',
-              }}
-            >
-              $
-              {event.ticket_price_standard
-                ? parseFloat(event.ticket_price_standard).toFixed(0)
-                : 'Free'}
-            </Box>
-          )}
+              <Box
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 4,
+                  ml: 'auto',
+                  boxShadow: 2,
+                  fontWeight: 'bold',
+                  fontSize: '0.8rem',
+                }}
+              >
+                $
+                {event.ticket_price_standard
+                  ? parseFloat(event.ticket_price_standard).toFixed(0)
+                  : 'Free'}
+              </Box>
+            )}
         </Box>
       </Box>
 
@@ -370,11 +547,7 @@ const EventTapeCard = ({
                 fontWeight: 'bold',
               }}
             >
-              <Calendar size={12} />{' '}
-              {new Date(event.start_time).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
+              <Calendar size={12} /> {formattedDate}
             </Typography>
             <Typography
               variant="caption"
@@ -531,6 +704,7 @@ export function BedroomHeroCarousel() {
   const { data: response, isLoading } = useCarouselEvents();
   const events: EventListItem[] = response?.data || [];
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasInitialPositionedRef = useRef(false);
   const [centeredIndex, setCenteredIndex] = useState(0);
 
   const mixedEvents = useMemo(() => {
@@ -545,82 +719,57 @@ export function BedroomHeroCarousel() {
     return result;
   }, [events]);
 
-  // Triple the events for infinite scroll simulation
+  // Triple the sequence for infinite-scroll illusion.
   const displayEvents = useMemo(() => {
     if (mixedEvents.length === 0) return [];
-    const tripled = [...mixedEvents, ...mixedEvents, ...mixedEvents];
-    // Re-randomize the custom cards in the tripled array so they are unpredictable across the scroll
-    return tripled.map(
-      (item): MixedCarouselItem =>
-        item.type === 'custom'
-          ? { type: 'custom', index: Math.floor(Math.random() * 5) }
-          : item,
-    );
+    return [...mixedEvents, ...mixedEvents, ...mixedEvents];
   }, [mixedEvents]);
 
   useEffect(() => {
     if (mixedEvents.length > 0) {
-      setCenteredIndex(mixedEvents.length); // Start at middle of 3x list
+      // Always start on the second item in the middle copy.
+      setCenteredIndex(mixedEvents.length + (mixedEvents.length > 1 ? 1 : 0));
+      hasInitialPositionedRef.current = false;
     }
   }, [mixedEvents.length]);
 
-  // Apply scroll when centeredIndex changes
-  useEffect(() => {
-    if (!scrollRef.current || events.length === 0) return;
+  const scrollToCenteredIndex = (index: number, behavior: ScrollBehavior) => {
+    if (!scrollRef.current) return;
     const container = scrollRef.current;
     const cardNodes = Array.from(
       container.querySelectorAll('[data-card="true"]'),
     ) as HTMLElement[];
-    if (cardNodes.length > centeredIndex && centeredIndex >= 0) {
-      const node = cardNodes[centeredIndex];
-      const containerCenter = container.offsetWidth / 2;
-      const nodeCenter = node.offsetLeft + node.offsetWidth / 2;
-      container.scrollTo({ left: nodeCenter - containerCenter, behavior: 'smooth' });
-    }
+    if (cardNodes.length <= index || index < 0) return;
+    const node = cardNodes[index];
+    const containerCenter = container.offsetWidth / 2;
+    const nodeCenter = node.offsetLeft + node.offsetWidth / 2;
+    container.scrollTo({ left: nodeCenter - containerCenter, behavior });
+  };
+
+  // Apply scroll when centeredIndex changes.
+  useEffect(() => {
+    if (events.length === 0) return;
+    const behavior: ScrollBehavior = hasInitialPositionedRef.current
+      ? 'smooth'
+      : 'auto';
+    scrollToCenteredIndex(centeredIndex, behavior);
+    hasInitialPositionedRef.current = true;
   }, [centeredIndex, events.length]);
 
-  // Handle Infinite Loop boundary reset silently
+  // Keep index in the middle copy with an invisible recenter.
   useEffect(() => {
     if (mixedEvents.length === 0) return;
-    let timeout: NodeJS.Timeout;
-    if (centeredIndex <= Math.floor(mixedEvents.length / 2)) {
-      timeout = setTimeout(() => {
-        const container = scrollRef.current;
-        if (!container) return;
-        const newIndex = centeredIndex + mixedEvents.length;
-        const cardNodes = Array.from(
-          container.querySelectorAll('[data-card="true"]'),
-        ) as HTMLElement[];
-        const node = cardNodes[newIndex];
-        if (!node) return;
-        const containerCenter = container.offsetWidth / 2;
-        const nodeCenter = node.offsetLeft + node.offsetWidth / 2;
-        container.scrollTo({
-          left: nodeCenter - containerCenter,
-          behavior: 'instant',
-        } as any);
-        setCenteredIndex(newIndex);
-      }, 600);
-    } else if (centeredIndex >= mixedEvents.length * 2) {
-      timeout = setTimeout(() => {
-        const container = scrollRef.current;
-        if (!container) return;
-        const newIndex = centeredIndex - mixedEvents.length;
-        const cardNodes = Array.from(
-          container.querySelectorAll('[data-card="true"]'),
-        ) as HTMLElement[];
-        const node = cardNodes[newIndex];
-        if (!node) return;
-        const containerCenter = container.offsetWidth / 2;
-        const nodeCenter = node.offsetLeft + node.offsetWidth / 2;
-        container.scrollTo({
-          left: nodeCenter - containerCenter,
-          behavior: 'instant',
-        } as any);
-        setCenteredIndex(newIndex);
-      }, 600);
+    const lowerBound = mixedEvents.length;
+    const upperBound = mixedEvents.length * 2;
+
+    if (centeredIndex < lowerBound || centeredIndex >= upperBound) {
+      const offsetInSequence =
+        ((centeredIndex % mixedEvents.length) + mixedEvents.length) %
+        mixedEvents.length;
+      const recenteredIndex = mixedEvents.length + offsetInSequence;
+      scrollToCenteredIndex(recenteredIndex, 'auto');
+      setCenteredIndex(recenteredIndex);
     }
-    return () => clearTimeout(timeout);
   }, [centeredIndex, mixedEvents.length]);
 
   // Auto-rotate
@@ -644,8 +793,7 @@ export function BedroomHeroCarousel() {
         position: 'relative',
         width: '100%',
         overflow: 'visible',
-        pb: 10,
-        pt: 4,
+        pb: 10
         // Removed bgcolor to blend seamlessly into HomePage scrapbook background
       }}
     >

@@ -13,6 +13,7 @@ import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
+import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { useAuth } from '@/features/auth/hooks';
 import {
   CategoricalBackground,
@@ -42,6 +43,7 @@ import {
   Button as MuiButton,
   Typography,
 } from '@mui/material';
+
 
 // --- Main Page Component ---
 
@@ -73,8 +75,11 @@ export default function EventDetailPageNew() {
     needsAadharVerification?: boolean;
   } | null>(null);
   const [isTicketingModalOpen, setIsTicketingModalOpen] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
   const [isManageTicketOpen, setIsManageTicketOpen] = useState(false);
   const [manageInitialIndex, setManageInitialIndex] = useState(0);
+  const [quickBuyData, setQuickBuyData] = useState<{ tierId: number; quantity: number } | null>(null);
+  const [oneClickStatus, setOneClickStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (isAuthenticated && Number(id)) {
@@ -139,9 +144,49 @@ export default function EventDetailPageNew() {
   const isHost = user?.username === event.host.username;
   const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
 
-  const handleBuyTicket = () => {
+  const handleBuyTicket = (tierId: number, _quantity: number) => {
     if (!isAuthenticated) return navigate('/signin');
+    setSelectedTierId(tierId);
+    // Modal will handle quantity internally based on initial state, 
+    // but we can pass it if we update the modal props. 
+    // For now, let's just open it with the tier selected.
     setIsTicketingModalOpen(true);
+  };
+
+  const handleOneClickBuy = (tierId: number, quantity: number) => {
+    if (!isAuthenticated) return navigate('/signin');
+    setQuickBuyData({ tierId, quantity });
+    setOneClickStatus('idle');
+  };
+
+  const handleQuickBuyConfirm = ({ guestName }: { guestName: string; paymentMethod: string }) => {
+    if (!quickBuyData) return;
+    setOneClickStatus('loading');
+
+    const tickets = Array.from({ length: quickBuyData.quantity }).map((_, i) => ({
+      tier_id: quickBuyData.tierId,
+      guest_name: i === 0 ? guestName.trim() : '',
+      is_18_plus: true
+    }));
+
+    purchaseTicket.mutate(
+      { eventId: Number(id), tickets },
+      {
+        onSuccess: (_res: any) => {
+          setOneClickStatus('success');
+          toast.success('Quick Buy Successful!');
+          setTimeout(() => {
+            setOneClickStatus('idle');
+            setQuickBuyData(null);
+          }, 3000);
+        },
+        onError: () => {
+          setOneClickStatus('error');
+          toast.error('Purchase failed');
+          setTimeout(() => setOneClickStatus('idle'), 3000);
+        }
+      }
+    );
   };
 
   const handleManageTicket = (ticketId?: number) => {
@@ -239,7 +284,9 @@ export default function EventDetailPageNew() {
             <Grid container spacing={6}>
               {/* Left Column: Details */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <DetailsSection event={event} isHost={isHost} />
+                <Box id="details">
+                  <DetailsSection event={event} isHost={isHost} />
+                </Box>
 
               </Grid>
 
@@ -248,17 +295,22 @@ export default function EventDetailPageNew() {
                 size={{ xs: 12, md: 6 }}
                 sx={{ display: 'flex', flexDirection: 'column' }}
               >
-                <TicketsSection
-                  event={event}
-                  purchaseTicket={purchaseTicket}
-                  handleBuyTicket={handleBuyTicket}
-                  handleManageTicket={handleManageTicket}
-                />
+                <Box id="tickets">
+                  <TicketsSection
+                    event={event}
+                    purchaseTicket={purchaseTicket}
+                    handleBuyTicket={handleBuyTicket}
+                    handleOneClickBuy={handleOneClickBuy}
+                    handleManageTicket={handleManageTicket}
+                  />
+                </Box>
 
-                <AttendanceSection
-                  event={event}
-                  highlights={highlights}
-                />
+                <Box id="attendance">
+                  <AttendanceSection
+                    event={event}
+                    highlights={highlights}
+                  />
+                </Box>
 
               </Grid>
             </Grid>
@@ -266,26 +318,32 @@ export default function EventDetailPageNew() {
             {/* Section 4: Memory Box */}
             <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
 
-              <ServicesSection
-                event={event}
-                displayNeeds={displayNeeds}
-                myServicesResponse={myServicesResponse}
-                isAuthenticated={isAuthenticated}
-                navigate={navigate}
-                setSelectedNeed={setSelectedNeed}
-                setIsApplyModalOpen={setIsApplyModalOpen}
-                highlights={highlights}
-              />
-              <MemoryBoxSection
-                highlights={highlights}
-                setIsHighlightOpen={setIsHighlightOpen}
-              />
+              <Box id="services">
+                <ServicesSection
+                  event={event}
+                  displayNeeds={displayNeeds}
+                  myServicesResponse={myServicesResponse}
+                  isAuthenticated={isAuthenticated}
+                  navigate={navigate}
+                  setSelectedNeed={setSelectedNeed}
+                  setIsApplyModalOpen={setIsApplyModalOpen}
+                  highlights={highlights}
+                />
+              </Box>
+              <Box id="highlights">
+                <MemoryBoxSection
+                  highlights={highlights}
+                  setIsHighlightOpen={setIsHighlightOpen}
+                />
+              </Box>
 
               {/* Section 5: Reviews */}
-              <ReviewsSection
-                reviews={reviews}
-                setIsReviewOpen={setIsReviewOpen}
-              />
+              <Box id="reviews">
+                <ReviewsSection
+                  reviews={reviews}
+                  setIsReviewOpen={setIsReviewOpen}
+                />
+              </Box>
             </Box>
           </CategoricalBackground>
         </Box>
@@ -320,6 +378,8 @@ export default function EventDetailPageNew() {
           isOpen={isTicketingModalOpen}
           onClose={() => setIsTicketingModalOpen(false)}
           event={event}
+          user={user}
+          selectedTierId={selectedTierId}
           onSuccess={handleTicketingSuccess}
         />
         <TicketManagementModal
@@ -335,6 +395,19 @@ export default function EventDetailPageNew() {
           ticketType={confirmedTicket?.type || ''}
           price={confirmedTicket?.price || '0'}
           needsAadharVerification={confirmedTicket?.needsAadharVerification}
+        />
+        <QuickBuyPopup
+          isOpen={!!quickBuyData}
+          onClose={() => {
+            setQuickBuyData(null);
+            setOneClickStatus('idle');
+          }}
+          event={event}
+          tierId={quickBuyData?.tierId ?? null}
+          quantity={quickBuyData?.quantity || 1}
+          user={user}
+          status={oneClickStatus}
+          onConfirm={handleQuickBuyConfirm}
         />
       </Box>
     </ThemeProvider>

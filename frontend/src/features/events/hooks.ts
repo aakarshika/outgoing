@@ -34,6 +34,10 @@ import {
   updateEventTicketTiers,
   updateTicket,
   cancelTicket,
+  fetchEventHighlights,
+  toggleHighlightLike,
+  fetchHighlightComments,
+  addHighlightComment,
   recordEventView,
   toggleInterest,
   transitionEventLifecycle,
@@ -316,6 +320,45 @@ export function useAddEventReview() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+    },
+  });
+}
+export function useEventHighlights(eventId: number, series = false) {
+  return useQuery({
+    queryKey: ['eventHighlights', eventId, series],
+    queryFn: () => fetchEventHighlights(eventId, series),
+    enabled: !!eventId,
+  });
+}
+
+export function useToggleHighlightLike() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (highlightId: number) => toggleHighlightLike(highlightId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['eventHighlights'] });
+      queryClient.invalidateQueries({ queryKey: ['event'] });
+      queryClient.invalidateQueries({ queryKey: ['eventStory'] });
+    },
+  });
+}
+
+export function useHighlightComments(highlightId: number) {
+  return useQuery({
+    queryKey: ['highlightComments', highlightId],
+    queryFn: () => fetchHighlightComments(highlightId),
+    enabled: !!highlightId,
+  });
+}
+
+export function useAddHighlightComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ highlightId, payload }: { highlightId: number; payload: { text: string; parent?: number } }) =>
+      addHighlightComment(highlightId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['highlightComments', variables.highlightId] });
+      queryClient.invalidateQueries({ queryKey: ['eventHighlights'] });
     },
   });
 }

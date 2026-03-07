@@ -8,6 +8,8 @@ from .views import (
     EventCategoryListView,
     EventDetailView,
     EventHighlightListCreateView,
+    EventHighlightLikeToggleView,
+    EventHighlightCommentCreateListView,
     EventInterestView,
     EventLifecycleHistoryView,
     EventLifecycleTransitionView,
@@ -59,5 +61,15 @@ urlpatterns = [
         "<int:event_id>/ticket_tiers/",
         EventTicketTierListView.as_view(),
         name="event_ticket_tiers",
+    ),
+    path(
+        "highlights/<int:highlight_id>/like/",
+        EventHighlightLikeToggleView.as_view(),
+        name="highlight_like_toggle",
+    ),
+    path(
+        "highlights/<int:highlight_id>/comments/",
+        EventHighlightCommentCreateListView.as_view(),
+        name="highlight_comments",
     ),
 ]

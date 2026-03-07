@@ -4,6 +4,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;700&display=swap');
 
+@font-face {
+  font-family: 'Magnolia';
+  src: url('/assets/Lesistar.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
