@@ -77,7 +77,7 @@ export function Navbar() {
                 to="/"
                 className="flex flex-shrink-0 items-center mr-4 relative group"
               >
-                <div className="absolute -inset-1 bg-yellow-300 opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
+                <div className="absolute -inset-1 bg-[#f8c163ff] opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
                 <span
                   className="text-4xl font-bold text-gray-900 relative z-10"
                   style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}

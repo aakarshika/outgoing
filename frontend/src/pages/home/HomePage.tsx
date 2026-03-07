@@ -150,7 +150,7 @@ export default function HomePage() {
           backgroundSize: '20px 20px',
           backgroundPosition: '0 0, 10px 10px',
           pb: 12,
-          color: '#1a1a1a',
+          color: '#f8c163ff',
         }}
       >
         {/* Hero Section */}
@@ -160,7 +160,7 @@ export default function HomePage() {
             sx={{
               fontFamily: '"Magnolia", "Great Vibes", cursive',
               fontSize: { xs: '4rem', md: '6rem' },
-              color: '#4b5563',
+              color: '#eabe72ff',
               pr: 2
             }}
           >
