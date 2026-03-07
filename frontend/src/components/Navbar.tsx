@@ -157,114 +157,88 @@ export function Navbar() {
             />
           )}
           <aside
-            className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l bg-background p-4 transition-transform duration-200 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-              }`}
+            className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            style={{
+              background: '#f4f1ea',
+              backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+              backgroundSize: '12px 12px',
+            }}
           >
             {isAuthenticated && (
-              <div className="mb-4 border-b pb-4 sm:hidden">
-                <Button variant="default" size="sm" asChild className="w-full justify-center gap-1.5">
-                  <Link to="/events/create">
-                    <Plus className="h-4 w-4" /> Create Event
-                  </Link>
-                </Button>
+              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5 sm:hidden">
+                <Link to="/events/create" className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-2.5 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500" style={{ fontFamily: '"Permanent Marker"' }}>
+                  <Plus className="h-4 w-4" /> Create Event
+                </Link>
               </div>
             )}
-            {/* <div className="mb-4 border-b pb-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Primary
-              </p>
-              <div className="grid gap-1">
-                <Button variant="ghost" size="sm" asChild className="justify-start">
-                  <Link to="/">Events</Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild className="justify-start">
-                  <Link to="/vendors">Vendors</Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild className="justify-start">
-                  <Link to="/requests">Requests</Link>
-                </Button>
-                {isAuthenticated && (
-                  <Button variant="ghost" size="sm" asChild className="justify-start gap-1.5">
-                    <Link to="/alerts">
-                      <Bell className="h-4 w-4" /> Alerts
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div> */}
             {isAuthenticated ? (
-              <div className="mb-4 border-b pb-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleTheme}
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'light' ? (
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  ) : (
-                    <Moon className="h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  )}
-                </Button>
+              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
+                <div className="mb-4">
+                  <button
+                    onClick={toggleTheme}
+                    aria-label="Toggle theme"
+                    className="rounded-md border-2 border-gray-800 bg-white p-2 shadow-[2px_2px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
+                  >
+                    {theme === 'light' ? (
+                      <Sun className="h-4 w-4 text-yellow-600" />
+                    ) : (
+                      <Moon className="h-4 w-4 text-indigo-600" />
+                    )}
+                  </button>
+                </div>
 
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="mb-3 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(-1deg)' }}>
                   Workspace
                 </p>
                 <div className="grid gap-1">
                   {secondaryLinks.map((item) => (
-                    <Button
+                    <Link
                       key={item.to}
-                      variant={item.to === '/vendors/create' ? 'outline' : 'ghost'}
-                      size="sm"
-                      asChild
-                      className="justify-start gap-1.5"
+                      to={item.to}
+                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname.startsWith(item.to) ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
+                      style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
                     >
-                      <Link to={item.to}>
-                        {item.icon ? <item.icon className="h-4 w-4" /> : null}
-                        {item.label}
-                      </Link>
-                    </Button>
+                      {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
+                      {item.label}
+                    </Link>
                   ))}
                 </div>
-                <p className="mb-3 mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="mb-3 mt-5 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(1deg)' }}>
                   For Vendors
                 </p>
                 <div className="grid gap-1">
                   {vendorLinks.map((item) => (
-                    <Button
+                    <Link
                       key={item.to}
-                      variant={item.to === '/vendors/create' ? 'outline' : 'ghost'}
-                      size="sm"
-                      asChild
-                      className="justify-start gap-1.5"
+                      to={item.to}
+                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-green-200/60 hover:translate-x-1 ${location.pathname.startsWith(item.to) ? 'bg-green-300/50 rotate-1 border-l-4 border-green-500 font-bold' : 'text-gray-700'}`}
+                      style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
                     >
-                      <Link to={item.to}>
-                        {item.icon ? <item.icon className="h-4 w-4" /> : null}
-                        {item.label}
-                      </Link>
-                    </Button>
+                      {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
+                      {item.label}
+                    </Link>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="mb-4 border-b pb-4">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
+                <p className="mb-3 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(-2deg)' }}>
                   Account
                 </p>
-                <div className="grid gap-2">
-                  <Button variant="ghost" size="sm" asChild className="justify-start">
-                    <Link to="/signin">Sign In</Link>
-                  </Button>
-                  <Button size="sm" asChild className="justify-start">
-                    <Link to="/signup">Sign Up</Link>
-                  </Button>
+                <div className="grid gap-3">
+                  <Link to="/signin" className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-100" style={{ fontFamily: '"Permanent Marker"' }}>
+                    Sign In
+                  </Link>
+                  <Link to="/signup" className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-pink-400 px-4 py-2 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500" style={{ fontFamily: '"Permanent Marker"' }}>
+                    Sign Up
+                  </Link>
                 </div>
               </div>
             )}
             {isAuthenticated && (
-              <Button onClick={logout} variant="outline" size="sm" className="w-full">
+              <button onClick={logout} className="w-full rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-red-100" style={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}>
                 Logout
-              </Button>
+              </button>
             )}
           </aside>
         </>

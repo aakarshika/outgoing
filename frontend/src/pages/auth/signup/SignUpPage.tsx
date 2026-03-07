@@ -4,25 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-
 import { authApi } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/hooks';
 
@@ -76,120 +57,207 @@ export default function SignUpPage() {
     }
   };
 
+  const inputClass =
+    'w-full border-2 border-gray-800 bg-white px-4 py-2.5 text-base outline-none shadow-[2px_3px_0px_#333] transition-all focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_#333] focus:ring-0 placeholder:text-gray-400';
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
-          <CardDescription className="text-center">
-            Pre-filled for Developer Convenience
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="m@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phoneNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="555-0199" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="johndoe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? 'Signing up...' : 'Sign up'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
-          <div>
-            Already have an account?{' '}
-            <Link
-              to="/signin"
-              className="underline underline-offset-4 hover:text-primary"
+    <div
+      className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8"
+      style={{
+        background: '#f4f1ea',
+        backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+        backgroundSize: '15px 15px',
+      }}
+    >
+      <div className="w-full max-w-lg relative">
+        {/* Washi tape top-left */}
+        <div
+          className="absolute -top-3 left-[18%] w-28 h-7 z-10 pointer-events-none"
+          style={{
+            background: 'rgba(244, 114, 182, 0.5)',
+            transform: 'rotate(-4deg)',
+            border: '1px solid rgba(0,0,0,0.05)',
+          }}
+        />
+        {/* Washi tape top-right */}
+        <div
+          className="absolute -top-2 right-[12%] w-24 h-6 z-10 pointer-events-none"
+          style={{
+            background: 'rgba(167, 243, 208, 0.55)',
+            transform: 'rotate(6deg)',
+            border: '1px solid rgba(0,0,0,0.05)',
+          }}
+        />
+
+        <div
+          className="relative border-2 border-gray-800 bg-white p-8 shadow-[4px_6px_0px_#333]"
+          style={{
+            backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 100%)',
+            backgroundSize: '100% 32px',
+            transform: 'rotate(0.5deg)',
+          }}
+        >
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1
+              className="text-4xl text-gray-900 mb-2"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
             >
-              Sign In
-            </Link>
+              Sign Up
+            </h1>
+            <p
+              className="text-gray-500"
+              style={{ fontFamily: '"Caveat", cursive', fontSize: '1.3rem' }}
+            >
+              join the party! 🎉
+            </p>
           </div>
-        </CardFooter>
-      </Card>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {/* First + Last name row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label
+                  className="block font-bold text-gray-700"
+                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+                >
+                  First Name
+                </label>
+                <input
+                  {...register('firstName')}
+                  placeholder="John"
+                  className={inputClass}
+                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                    {errors.firstName.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  className="block font-bold text-gray-700"
+                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+                >
+                  Last Name
+                </label>
+                <input
+                  {...register('lastName')}
+                  placeholder="Doe"
+                  className={inputClass}
+                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                    {errors.lastName.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                className="block font-bold text-gray-700"
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                {...register('email')}
+                placeholder="m@example.com"
+                className={inputClass}
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                className="block font-bold text-gray-700"
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+              >
+                Phone Number
+              </label>
+              <input
+                {...register('phoneNumber')}
+                placeholder="555-0199"
+                className={inputClass}
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                className="block font-bold text-gray-700"
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+              >
+                Username
+              </label>
+              <input
+                {...register('username')}
+                placeholder="johndoe"
+                className={inputClass}
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+              />
+              {errors.username && (
+                <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                  {errors.username.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                className="block font-bold text-gray-700"
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                {...register('password')}
+                className={inputClass}
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full border-2 border-gray-800 bg-pink-400 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.1rem' }}
+            >
+              {isSubmitting ? 'Signing up...' : 'Sign Up 🚀'}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }} className="text-gray-600">
+              Already have an account?{' '}
+              <Link
+                to="/signin"
+                className="font-bold text-blue-500 underline decoration-dashed underline-offset-4 hover:text-blue-600 transition-colors"
+              >
+                Sign In!
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { useEvent, usePurchaseTicket, useRecordEventView } from '@/features/even
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
+import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { Media } from '@/components/ui/media';
@@ -301,6 +302,7 @@ export default function EventDetailPageNew() {
     const [selectedNeed, setSelectedNeed] = useState<{ id: number; title: string } | null>(null);
     const [isHighlightOpen, setIsHighlightOpen] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [confirmedTicket, setConfirmedTicket] = useState<{ type: string; price: string } | null>(null);
 
     useEffect(() => {
         if (isAuthenticated && Number(id)) {
@@ -350,8 +352,14 @@ export default function EventDetailPageNew() {
 
     const handleBuyTicket = (tier: 'standard' | 'flexible') => {
         if (!isAuthenticated) return navigate('/signin');
+        const price = tier === 'standard'
+            ? (event.ticket_price_standard || '0')
+            : (event.ticket_price_flexible || '0');
         purchaseTicket.mutate({ eventId: event.id, ticketType: tier }, {
-            onSuccess: () => toast.success('Ticket purchased!'),
+            onSuccess: () => {
+                toast.success('Ticket purchased!');
+                setConfirmedTicket({ type: tier, price });
+            },
             onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to purchase ticket'),
         });
     };
@@ -795,6 +803,13 @@ export default function EventDetailPageNew() {
                         onOpenChange={setIsReviewOpen}
                     />
                 )}
+                <TicketConfirmationModal
+                    isOpen={!!confirmedTicket}
+                    onClose={() => setConfirmedTicket(null)}
+                    eventTitle={event?.title || ''}
+                    ticketType={confirmedTicket?.type || ''}
+                    price={confirmedTicket?.price || '0'}
+                />
             </Box>
         </ThemeProvider>
     );
