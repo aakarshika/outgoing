@@ -157,16 +157,16 @@ class Command(BaseCommand):
         self.stdout.write("Creating vendor services...")
         services = []
         vendor_types = [
-            ("DJ", "Beats & Rhythms", "Premium audio experiences."),
-            ("Photography", "Lens & Light", "Capturing every moment."),
-            ("Catering", "Gourmet Bites", "Exquisite culinary delights."),
-            ("Security", "Safe Guard", "Professional security services."),
-            ("Decor", "Ambient Designs", "Transforming spaces."),
-            ("Lighting", "Bright Star", "Dynamic event lighting."),
-            ("AV", "Visual Tech", "State-of-the-art AV solutions."),
-            ("Floral", "Bloom & Petal", "Beautiful flower arrangements."),
-            ("Bartending", "Mix Master", "Craft cocktails and service."),
-            ("Cleaning", "Sparkle Squad", "Post-event cleaning services."),
+            ("dj", "Beats & Rhythms", "Premium audio experiences."),
+            ("photography", "Lens & Light", "Capturing every moment."),
+            ("catering", "Gourmet Bites", "Exquisite culinary delights."),
+            ("staffing", "Safe Guard", "Professional security & staffing services."),
+            ("decor_floristry", "Ambient Designs", "Transforming spaces with stunning decor."),
+            ("lighting_audio", "Bright Star", "Dynamic event lighting & AV."),
+            ("videography", "Visual Tech", "State-of-the-art video production."),
+            ("food_truck", "Street Flavor", "Delicious food truck experiences."),
+            ("bartending", "Mix Master", "Craft cocktails and bar service."),
+            ("event_planning", "Plan Perfect", "Full-service event planning & coordination."),
         ]
 
         for i, (cat, title_prefix, desc) in enumerate(vendor_types, 1):
@@ -198,7 +198,7 @@ class Command(BaseCommand):
         EventSeriesNeedTemplate.objects.create(
             series=series1,
             title="Guest Speaker",
-            category="Speaker",
+            category="mc_host",
             criticality="essential",
         )
 

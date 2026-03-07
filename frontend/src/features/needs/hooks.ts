@@ -9,6 +9,7 @@ import {
     reviewNeedApplication,
     inviteVendorToNeed,
     fetchMyVendorOpportunities,
+    fetchMyPotentialOpportunities,
     fetchMyNeedInvites,
 } from './api';
 
@@ -85,6 +86,13 @@ export function useMyVendorOpportunities() {
     return useQuery({
         queryKey: ['myVendorOpportunities'],
         queryFn: fetchMyVendorOpportunities,
+    });
+}
+
+export function useMyPotentialOpportunities() {
+    return useQuery({
+        queryKey: ['myPotentialOpportunities'],
+        queryFn: fetchMyPotentialOpportunities,
     });
 }
 

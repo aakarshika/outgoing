@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, FileEdit, Calendar, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, FileEdit, Calendar, Clock, MapPin, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Box,
@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 
 import { useAuth } from '@/features/auth/hooks';
-import { useEvent, usePurchaseTicket, useRecordEventView } from '@/features/events/hooks';
+import { useEvent, usePurchaseTicket, useRecordEventView, useToggleInterest } from '@/features/events/hooks';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
@@ -196,7 +196,7 @@ const TicketStub = ({ type, price, onBuy, isLoading, hasTicket }: { type: string
     </Paper>
 );
 
-const ClassifiedAd = ({ need, onInquire, isEligible = false, navigate }: { need: any; onInquire: (n: any) => void; isEligible?: boolean; navigate: any }) => (
+const ClassifiedAd = ({ need, onInquire, isEligible = false, isOpportunity = false, navigate }: { need: any; onInquire: (n: any) => void; isEligible?: boolean; isOpportunity?: boolean; navigate: any }) => (
     <Box sx={{ position: 'relative', width: '100%' }}>
         <Paper
             elevation={0}
@@ -235,25 +235,68 @@ const ClassifiedAd = ({ need, onInquire, isEligible = false, navigate }: { need:
                     <Typography sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Budget: ${need.budget_max || '???'}</Typography>
                 </Box>
                 {need.status === 'open' && (
-                    <MuiButton
-                        variant="outlined"
-                        size="small"
-                        onClick={() => onInquire(need)}
-                        disabled={!isEligible}
-                        sx={{
-                            borderRadius: 0,
-                            borderColor: isEligible ? '#333' : '#ccc',
-                            color: isEligible ? '#333' : '#999',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                            '&:hover': { bgcolor: isEligible ? '#333' : 'transparent', color: isEligible ? '#fff' : '#999' }
-                        }}
-                    >
-                        {isEligible ? 'SEND INQUIRY →' : 'CATEGORY MISMATCH'}
-                    </MuiButton>
+                    isEligible ? (
+                        <MuiButton
+                            variant="outlined"
+                            size="small"
+                            onClick={() => onInquire(need)}
+                            sx={{
+                                borderRadius: 0,
+                                borderColor: '#333',
+                                color: '#333',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                '&:hover': { bgcolor: '#333', color: '#fff' }
+                            }}
+                        >
+                            SEND INQUIRY →
+                        </MuiButton>
+                    ) : isOpportunity ? (
+                        <MuiButton
+                            variant="outlined"
+                            size="small"
+                            onClick={() => navigate('/vendors/create')}
+                            sx={{
+                                borderRadius: 0,
+                                borderColor: '#16a34a',
+                                color: '#16a34a',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                '&:hover': { bgcolor: '#16a34a', color: '#fff' }
+                            }}
+                        >
+                            CREATE SERVICE →
+                        </MuiButton>
+                    ) : null
                 )}
             </Box>
         </Paper>
+
+        {/* Opportunity stamp */}
+        {need.status === 'open' && isOpportunity && (
+            <Box sx={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                px: 1.5,
+                py: 0.5,
+                border: '2px solid rgba(22, 163, 74, 0.6)',
+                borderRadius: '2px',
+                transform: 'rotate(3deg)',
+                pointerEvents: 'none',
+                zIndex: 2,
+            }}>
+                <Typography sx={{
+                    fontFamily: '"Permanent Marker", cursive',
+                    fontSize: '0.65rem',
+                    color: 'rgba(22, 163, 74, 0.8)',
+                    letterSpacing: 2,
+                    textTransform: 'uppercase'
+                }}>
+                    OPPORTUNITY
+                </Typography>
+            </Box>
+        )}
 
         {/* Overlap if filled */}
         {need.status === 'filled' && (
@@ -296,6 +339,7 @@ export default function EventDetailPageNew() {
     const { data: needsResponse } = useEventNeeds(Number(id));
     const { data: myServicesResponse } = useMyServices({ enabled: !!isAuthenticated });
     const purchaseTicket = usePurchaseTicket();
+    const toggleInterest = useToggleInterest();
     const recordView = useRecordEventView(Number(id));
 
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -470,42 +514,82 @@ export default function EventDetailPageNew() {
                                         }}
                                     />
                                     {['published', 'at_risk', 'event_ready'].includes(event.lifecycle_state) && event.category?.icon !== 'cpu' && (
-                                        <Box sx={{
-                                            width: 80,
-                                            height: 80,
-                                            border: '3px solid rgba(239, 68, 68, 0.6)',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            transform: 'rotate(-15deg)',
-                                            position: 'absolute',
-                                            top: -10,
-                                            right: 20,
-                                            zIndex: 2,
-                                            pointerEvents: 'none'
-                                        }}>
+                                        <Box
+                                            component="button"
+                                            onClick={() => {
+                                                if (!isAuthenticated) {
+                                                    navigate('/signin');
+                                                    return;
+                                                }
+                                                toggleInterest.mutate({ eventId: event.id, isInterested: !event.user_is_interested });
+                                            }}
+                                            sx={{
+                                                width: 80,
+                                                height: 80,
+                                                border: '3px solid rgba(239, 68, 68, 0.6)',
+                                                borderRadius: '50%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transform: 'rotate(-15deg)',
+                                                position: 'absolute',
+                                                top: -10,
+                                                right: 20,
+                                                zIndex: 2,
+                                                cursor: 'pointer',
+                                                bgcolor: event.user_is_interested ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                                                transition: 'all 0.2s',
+                                                '&:hover': {
+                                                    transform: 'rotate(-10deg) scale(1.05)',
+                                                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                                }
+                                            }}>
                                             <Typography sx={{ color: 'rgba(239, 68, 68, 0.6)', fontFamily: '"Permanent Marker"', fontSize: '0.7rem', textAlign: 'center', lineHeight: 1 }}>
-                                                SAVE THE<br />DATE
+                                                {event.user_is_interested ? <>SAVED<br />DATE</> : <>SAVE THE<br />DATE</>}
                                             </Typography>
                                         </Box>
                                     )}
                                 </Box>
                                 <Box sx={{ pr: { xs: 0, sm: '240px' } }}>
-                                    <Typography
-                                        variant="h1"
-                                        sx={{
-                                            fontSize: { xs: '2.5rem', md: '4rem' },
-                                            mb: 2,
-                                            position: 'relative',
-                                            zIndex: 1,
-                                            color: 'inherit',
-                                            textShadow: event.category?.slug === 'comedy' ? '2px 2px 0px #fbbf24' : 'none',
-                                            wordBreak: 'break-word'
-                                        }}
-                                    >
-                                        {event.title}
-                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                                        <Typography
+                                            variant="h1"
+                                            sx={{
+                                                fontSize: { xs: '2.5rem', md: '4rem' },
+                                                position: 'relative',
+                                                zIndex: 1,
+                                                color: 'inherit',
+                                                textShadow: event.category?.slug === 'comedy' ? '2px 2px 0px #fbbf24' : 'none',
+                                                wordBreak: 'break-word'
+                                            }}
+                                        >
+                                            {event.title}
+                                        </Typography>
+
+                                        {isAuthenticated && (
+                                            <IconButton
+                                                onClick={() => toggleInterest.mutate({ eventId: event.id, isInterested: !event.user_is_interested })}
+                                                sx={{
+                                                    bgcolor: event.user_is_interested ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.5)',
+                                                    border: '2px solid',
+                                                    borderColor: event.user_is_interested ? '#ef4444' : '#333',
+                                                    '&:hover': {
+                                                        bgcolor: event.user_is_interested ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.8)',
+                                                        transform: 'scale(1.1) rotate(5deg)'
+                                                    },
+                                                    transition: 'all 0.2s',
+                                                    p: 1.5,
+                                                    boxShadow: '3px 3px 0px rgba(0,0,0,0.1)'
+                                                }}
+                                            >
+                                                <Heart
+                                                    size={32}
+                                                    fill={event.user_is_interested ? "#ef4444" : "transparent"}
+                                                    color={event.user_is_interested ? "#ef4444" : "#333"}
+                                                />
+                                            </IconButton>
+                                        )}
+                                    </Box>
 
                                     <Grid container spacing={2} sx={{ color: 'inherit', opacity: 0.8, position: 'relative', zIndex: 1 }}>
                                         <Grid size="auto" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -640,11 +724,13 @@ export default function EventDetailPageNew() {
                                                     s.category.toLowerCase().includes(need.category.toLowerCase()) ||
                                                     need.category.toLowerCase().includes(s.category.toLowerCase())
                                                 );
+                                                const isOpportunity = isAuthenticated && !isEligible && need.status === 'open';
                                                 return (
                                                     <ClassifiedAd
                                                         key={need.id}
                                                         need={need}
                                                         isEligible={isEligible}
+                                                        isOpportunity={isOpportunity}
                                                         onInquire={(n) => {
                                                             setSelectedNeed(n);
                                                             setIsApplyModalOpen(true);
@@ -683,11 +769,13 @@ export default function EventDetailPageNew() {
                                                         s.category.toLowerCase().includes(need.category.toLowerCase()) ||
                                                         need.category.toLowerCase().includes(s.category.toLowerCase())
                                                     );
+                                                    const isOpportunity = isAuthenticated && !isEligible && need.status === 'open';
                                                     return (
                                                         <ClassifiedAd
                                                             key={need.id}
                                                             need={need}
                                                             isEligible={isEligible}
+                                                            isOpportunity={isOpportunity}
                                                             onInquire={(n) => {
                                                                 setSelectedNeed(n);
                                                                 setIsApplyModalOpen(true);

@@ -13,13 +13,14 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { useMyEvents, useMyTickets } from '@/features/events/hooks';
+import { useMyEvents, useMyTickets, useMyInterestedEvents } from '@/features/events/hooks';
 import { useMyApplications, useMyNeedInvites } from '@/features/needs/hooks';
-import type { TicketInfo } from '@/types/events';
+import type { TicketInfo, EventListItem } from '@/types/events';
 import type { NeedApplication, NeedInvite } from '@/types/needs';
+import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 
-type CalendarFilter = 'all' | 'hosting' | 'attending' | 'vendor';
-type CalendarKind = 'hosting' | 'attending' | 'vendor_request' | 'vendor_application';
+type CalendarFilter = 'all' | 'hosting' | 'attending' | 'saved' | 'vendor';
+type CalendarKind = 'hosting' | 'attending' | 'saved' | 'vendor_request' | 'vendor_application';
 
 interface CalendarItem {
     id: string;
@@ -35,15 +36,17 @@ interface CalendarItem {
 }
 
 const KIND_STYLES: Record<CalendarKind, string> = {
-    hosting: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    attending: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    vendor_request: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    vendor_application: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    hosting: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-[Caveat] text-base border border-blue-300',
+    attending: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 font-[Caveat] text-base border border-emerald-300',
+    saved: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 font-[Caveat] text-base border border-red-300',
+    vendor_request: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 font-[Caveat] text-base border border-amber-300',
+    vendor_application: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-[Caveat] text-base border border-purple-300',
 };
 
 const KIND_DOT_STYLES: Record<CalendarKind, string> = {
     hosting: 'bg-blue-500',
     attending: 'bg-emerald-500',
+    saved: 'bg-red-500',
     vendor_request: 'bg-amber-500',
     vendor_application: 'bg-purple-500',
 };
@@ -94,15 +97,17 @@ export default function CalendarPage() {
     const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
     const { data: eventsResponse, isLoading: loadingEvents } = useMyEvents();
     const { data: ticketsResponse, isLoading: loadingTickets } = useMyTickets();
+    const { data: savedResponse, isLoading: loadingSaved } = useMyInterestedEvents();
     const { data: appsResponse, isLoading: loadingApps } = useMyApplications();
     const { data: invitesResponse, isLoading: loadingInvites } = useMyNeedInvites();
 
-    const myEvents = (eventsResponse?.data || []) as any[];
+    const myEvents = (eventsResponse?.data || []) as EventListItem[];
     const myTickets = (ticketsResponse?.data || []) as TicketInfo[];
+    const mySaved = (savedResponse?.data || []) as EventListItem[];
     const myApplications = (appsResponse?.data || []) as NeedApplication[];
     const myInvites = (invitesResponse?.data || []) as NeedInvite[];
 
-    const isLoading = loadingEvents || loadingTickets || loadingApps || loadingInvites;
+    const isLoading = loadingEvents || loadingTickets || loadingSaved || loadingApps || loadingInvites;
     const now = Date.now();
 
     const timeline = useMemo<CalendarItem[]>(() => {
@@ -134,6 +139,22 @@ export default function CalendarPage() {
                 route: `/events/${ticket.event_summary.id}`,
                 cta: 'View Event',
                 tag: isPast ? 'Attended' : 'Attending',
+                isPast,
+            };
+        });
+
+        const saved: CalendarItem[] = mySaved.map((event) => {
+            const isPast = new Date(event.start_time).getTime() < now;
+            return {
+                id: `saved-${event.id}`,
+                kind: 'saved',
+                title: event.title,
+                subtitle: isPast ? 'Saved event (past)' : 'Saved event',
+                location: event.location_name || 'Location TBD',
+                eventTime: event.start_time,
+                route: `/events/${event.id}`,
+                cta: 'View Event',
+                tag: isPast ? 'Saved (past)' : 'Saved',
                 isPast,
             };
         });
@@ -174,15 +195,16 @@ export default function CalendarPage() {
             };
         });
 
-        return [...hosted, ...attending, ...vendorRequests, ...vendorApplications].sort(
+        return [...hosted, ...attending, ...saved, ...vendorRequests, ...vendorApplications].sort(
             (a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()
         );
-    }, [myEvents, myTickets, myInvites, myApplications, now]);
+    }, [myEvents, myTickets, mySaved, myInvites, myApplications, now]);
 
     const typeFiltered = timeline.filter((item) => {
         if (filter === 'all') return true;
         if (filter === 'hosting') return item.kind === 'hosting';
         if (filter === 'attending') return item.kind === 'attending';
+        if (filter === 'saved') return item.kind === 'saved';
         return item.kind === 'vendor_request' || item.kind === 'vendor_application';
     });
     const dayFiltered = selectedDateKey
@@ -200,210 +222,287 @@ export default function CalendarPage() {
     }, [typeFiltered]);
 
     return (
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-            <section className="mb-6 rounded-2xl border bg-gradient-to-r from-primary/10 via-background to-sky-100/40 dark:to-sky-900/10 p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                            Unified Timeline
-                        </p>
-                        <h1 className="text-2xl font-bold sm:text-3xl">My Calendar</h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Hosting, attending, and vendor request milestones in one place.
-                        </p>
-                    </div>
-                    <div className="flex gap-2 text-xs">
-                        <span className="rounded-full border bg-background/80 px-3 py-1">
-                            {myEvents.length} hosted
-                        </span>
-                        <span className="rounded-full border bg-background/80 px-3 py-1">
-                            {myTickets.length} tickets
-                        </span>
-                        <span className="rounded-full border bg-background/80 px-3 py-1">
-                            {myInvites.filter((invite) => invite.status === 'pending').length} requests
-                        </span>
-                    </div>
-                </div>
-            </section>
-
-            <section className="mb-5 flex flex-wrap gap-2">
-                {[
-                    { key: 'all', label: 'All' },
-                    { key: 'hosting', label: 'Hosting' },
-                    { key: 'attending', label: 'Attending' },
-                    { key: 'vendor', label: 'Vendor' },
-                ].map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setFilter(tab.key as CalendarFilter)}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                            filter === tab.key
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-muted text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </section>
-            <section className="mb-6 rounded-xl border bg-card p-4 sm:p-5">
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">{monthLabel(visibleMonth)}</h2>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() =>
-                                setVisibleMonth(
-                                    (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
-                                )
-                            }
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() =>
-                                setVisibleMonth(
-                                    (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
-                                )
-                            }
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-2">
-                    {WEEKDAYS.map((day) => (
-                        <div key={day} className="py-1 font-medium">
-                            {day}
+        <div
+            className="min-h-screen py-8"
+            style={{
+                backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+                backgroundSize: '20px 20px',
+            }}
+        >
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+                <section
+                    className="mb-8 p-6 sm:p-8"
+                    style={{
+                        ...scrapbookTheme.paperCard,
+                        transform: 'rotate(-0.5deg)',
+                        backgroundColor: '#fffdf0',
+                    }}
+                >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-sm font-bold uppercase tracking-widest text-[#ef4444]" style={{ fontFamily: '"Permanent Marker"' }}>
+                                Unified Timeline
+                            </p>
+                            <h1 className="text-4xl font-black mt-2" style={{ fontFamily: '"Permanent Marker"', color: '#1f2937' }}>My Calendar</h1>
+                            <p className="text-base font-medium mt-2" style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}>
+                                Hosting, attending, saving, and vendor request milestones in one place.
+                            </p>
                         </div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                    {monthDays.map((day) => {
-                        const dayItems = eventsByDay[day.key] || [];
-                        const uniqueKinds = Array.from(new Set(dayItems.map((item) => item.kind))).slice(0, 3);
-                        const isSelected = selectedDateKey === day.key;
-                        return (
-                            <button
-                                key={day.key}
-                                onClick={() =>
-                                    setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
-                                }
-                                className={`min-h-[68px] rounded-md border p-1.5 text-left transition-colors sm:min-h-[86px] sm:p-2 ${
-                                    day.inMonth ? 'bg-background hover:bg-muted/40' : 'bg-muted/30 text-muted-foreground'
-                                } ${isSelected ? 'ring-2 ring-primary/40 border-primary/40' : ''}`}
+                        <div className="flex flex-wrap gap-3">
+                            <span
+                                className="px-4 py-2 font-bold"
+                                style={{
+                                    ...scrapbookTheme.stickyNote,
+                                    backgroundColor: '#bfdbfe',
+                                    transform: 'rotate(2deg)',
+                                }}
                             >
-                                <div
-                                    className={`text-xs font-medium ${
-                                        day.isToday ? 'text-primary' : day.inMonth ? 'text-foreground' : 'text-muted-foreground'
-                                    }`}
-                                >
-                                    {day.date.getDate()}
-                                </div>
-                                {dayItems.length > 0 && (
-                                    <div className="mt-1.5">
-                                        <div className="text-[10px] text-muted-foreground">
-                                            {dayItems.length} item{dayItems.length === 1 ? '' : 's'}
-                                        </div>
-                                        <div className="mt-1 flex gap-1">
-                                            {uniqueKinds.map((kind) => (
-                                                <span
-                                                    key={`${day.key}-${kind}`}
-                                                    className={`h-1.5 w-1.5 rounded-full ${KIND_DOT_STYLES[kind]}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>Click a date to filter the list.</span>
-                    {selectedDateKey && (
+                                {myEvents.length} hosted
+                            </span>
+                            <span
+                                className="px-4 py-2 font-bold"
+                                style={{
+                                    ...scrapbookTheme.stickyNote,
+                                    backgroundColor: '#a7f3d0',
+                                    transform: 'rotate(-1deg)',
+                                }}
+                            >
+                                {myTickets.length} tickets
+                            </span>
+                            <span
+                                className="px-4 py-2 font-bold"
+                                style={{
+                                    ...scrapbookTheme.stickyNote,
+                                    backgroundColor: '#fecaca',
+                                    transform: 'rotate(1deg)',
+                                }}
+                            >
+                                {mySaved.length} saved
+                            </span>
+                            <span
+                                className="px-4 py-2 font-bold"
+                                style={{
+                                    ...scrapbookTheme.stickyNote,
+                                    backgroundColor: '#fde68a',
+                                    transform: 'rotate(-2deg)',
+                                }}
+                            >
+                                {myInvites.filter((invite) => invite.status === 'pending').length} requests
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="mb-6 flex flex-wrap gap-3">
+                    {[
+                        { key: 'all', label: 'All' },
+                        { key: 'hosting', label: 'Hosting' },
+                        { key: 'attending', label: 'Attending' },
+                        { key: 'saved', label: 'Saved' },
+                        { key: 'vendor', label: 'Vendor' },
+                    ].map((tab) => (
                         <button
-                            onClick={() => setSelectedDateKey(null)}
-                            className="rounded-md border px-2 py-1 hover:bg-muted"
+                            key={tab.key}
+                            onClick={() => setFilter(tab.key as CalendarFilter)}
+                            className={`px-4 py-2 font-bold transition-transform hover:scale-105 active:scale-95 ${filter === tab.key ? 'text-black' : 'text-gray-600'
+                                }`}
+                            style={{
+                                ...scrapbookTheme.border,
+                                fontFamily: '"Caveat"',
+                                fontSize: '1.25rem',
+                                backgroundColor: filter === tab.key ? '#fde047' : '#fdfdfd',
+                                boxShadow: filter === tab.key ? '3px 4px 0px #333' : '2px 2px 0px #333',
+                                transform: `rotate(${Math.random() * 2 - 1}deg)`,
+                            }}
                         >
-                            Clear day filter
+                            {tab.label}
                         </button>
-                    )}
-                </div>
-            </section>
-
-            {isLoading ? (
-                <div className="space-y-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="h-24 rounded-xl border bg-card animate-pulse" />
                     ))}
-                </div>
-            ) : dayFiltered.length === 0 ? (
-                <div className="rounded-xl border bg-card p-10 text-center">
-                    <Sparkles className="h-10 w-10 mx-auto text-primary/60 mb-3" />
-                    <h2 className="text-lg font-semibold">Nothing on your calendar yet</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Events and service requests will appear here automatically.
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {dayFiltered.map((item) => (
-                        <article
-                            key={item.id}
-                            className="rounded-xl border bg-card p-4 transition-all hover:shadow-sm"
-                        >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <h2 className="font-semibold line-clamp-1">{item.title}</h2>
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                KIND_STYLES[item.kind]
-                                            }`}
-                                        >
-                                            {item.tag}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">{item.subtitle}</p>
-                                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                        <span className="inline-flex items-center gap-1">
-                                            <CalendarClock className="h-3.5 w-3.5" />
-                                            {new Date(item.eventTime).toLocaleString()}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1">
-                                            <Clock3 className="h-3.5 w-3.5" />
-                                            {formatRelative(item.eventTime)}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1">
-                                            <MapPin className="h-3.5 w-3.5" />
-                                            {item.location}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    {item.kind === 'vendor_request' ? (
-                                        <Megaphone className="h-4 w-4 text-amber-500" />
-                                    ) : item.kind === 'vendor_application' ? (
-                                        <Briefcase className="h-4 w-4 text-purple-500" />
-                                    ) : (
-                                        <CheckCircle2
-                                            className={`h-4 w-4 ${item.isPast ? 'text-muted-foreground' : 'text-emerald-500'}`}
-                                        />
-                                    )}
-                                    <Button asChild size="sm" variant="outline">
-                                        <Link to={item.route}>{item.cta}</Link>
-                                    </Button>
-                                </div>
+                </section>
+                <section
+                    className="mb-8 p-4 sm:p-6"
+                    style={{
+                        ...scrapbookTheme.paperCard,
+                        transform: 'rotate(0.5deg)',
+                        backgroundColor: '#fcfcfc',
+                    }}
+                >
+                    <div className="mb-6 flex items-center justify-between border-b-2 border-gray-800 pb-4">
+                        <h2 className="text-3xl font-black" style={{ fontFamily: '"Permanent Marker"' }}>{monthLabel(visibleMonth)}</h2>
+                        <div className="flex items-center gap-2">
+                            <button
+                                className="p-2 border-2 border-gray-800 rounded bg-[#fdfdfd] shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                                onClick={() =>
+                                    setVisibleMonth(
+                                        (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+                                    )
+                                }
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                className="p-2 border-2 border-gray-800 rounded bg-[#fdfdfd] shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                                onClick={() =>
+                                    setVisibleMonth(
+                                        (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+                                    )
+                                }
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold mb-3 border-b-2 border-gray-800 pb-2" style={{ fontFamily: '"Permanent Marker"' }}>
+                        {WEEKDAYS.map((day) => (
+                            <div key={day} className="py-1">
+                                {day}
                             </div>
-                        </article>
-                    ))}
-                </div>
-            )}
-        </div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 sm:gap-2 border-t-2 border-gray-800 pt-2">
+                        {monthDays.map((day) => {
+                            const dayItems = eventsByDay[day.key] || [];
+                            const uniqueKinds = Array.from(new Set(dayItems.map((item) => item.kind))).slice(0, 4);
+                            const isSelected = selectedDateKey === day.key;
+                            return (
+                                <button
+                                    key={day.key}
+                                    onClick={() =>
+                                        setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
+                                    }
+                                    className={`min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${day.inMonth ? 'bg-[#fdfdfd] border-gray-800 hover:-translate-y-1 hover:shadow-[2px_2px_0px_#333]' : 'bg-gray-100 border-gray-400 text-gray-400'
+                                        } ${isSelected ? 'ring-4 ring-yellow-400 bg-yellow-50 shadow-[2px_2px_0px_#333]' : ''}`}
+                                >
+                                    <div
+                                        className={`text-sm font-bold w-full ${day.isToday ? 'text-red-500 underline decoration-2 underline-offset-2' : day.inMonth ? 'text-gray-900' : 'text-gray-400'
+                                            }`}
+                                        style={{ fontFamily: '"Permanent Marker"' }}
+                                    >
+                                        {day.date.getDate()}
+                                    </div>
+                                    {dayItems.length > 0 && (
+                                        <div className="mt-2 w-full">
+                                            <div className="text-xs font-medium text-gray-600 mb-1" style={{ fontFamily: '"Caveat"', fontSize: '1rem' }}>
+                                                {dayItems.length} item{dayItems.length === 1 ? '' : 's'}
+                                            </div>
+                                            <div className="mt-1 flex flex-wrap gap-1.5">
+                                                {uniqueKinds.map((kind) => (
+                                                    <span
+                                                        key={`${day.key}-${kind}`}
+                                                        className={`h-2.5 w-2.5 rounded-full border border-gray-800 ${KIND_DOT_STYLES[kind]}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm font-medium" style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}>
+                        <span>Click a date to filter the list below.</span>
+                        {selectedDateKey && (
+                            <button
+                                onClick={() => setSelectedDateKey(null)}
+                                className="bg-red-500 text-white px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all ml-2"
+                                style={{ transform: 'rotate(1deg)' }}
+                            >
+                                CLEAR FILTER X
+                            </button>
+                        )}
+                    </div>
+                </section>
+
+                {
+                    isLoading ? (
+                        <div className="space-y-4">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="h-32 border-2 border-gray-800 bg-gray-200 animate-pulse" />
+                            ))}
+                        </div>
+                    ) : dayFiltered.length === 0 ? (
+                        <div
+                            className="p-12 text-center"
+                            style={{
+                                ...scrapbookTheme.paperCard,
+                                transform: 'rotate(1deg)',
+                                backgroundColor: '#fffdf0',
+                            }}
+                        >
+                            <Sparkles className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
+                            <h2 className="text-2xl font-black" style={{ fontFamily: '"Permanent Marker"' }}>Looks pretty empty...</h2>
+                            <p className="text-lg font-medium mt-2 text-gray-600" style={{ fontFamily: '"Caveat"', fontSize: '1.5rem' }}>
+                                Go request some vendors or buy some tickets to fill up your calendar!
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {dayFiltered.map((item, i) => (
+                                <article
+                                    key={item.id}
+                                    className="p-5 transition-transform hover:-translate-y-1"
+                                    style={{
+                                        ...scrapbookTheme.paperCard,
+                                        backgroundColor: item.kind === 'saved' ? '#fee2e2' : '#fdfdfd',
+                                        transform: `rotate(${i % 2 === 0 ? 0.5 : -0.5}deg)`,
+                                    }}
+                                >
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <h2 className="text-2xl font-black line-clamp-1" style={{ fontFamily: '"Permanent Marker"' }}>{item.title}</h2>
+                                                <span
+                                                    className={`px-3 py-1 font-bold ${KIND_STYLES[item.kind]
+                                                        }`}
+                                                    style={{ transform: 'rotate(-2deg)' }}
+                                                >
+                                                    {item.tag}
+                                                </span>
+                                            </div>
+                                            <p className="text-lg font-medium mt-2 text-gray-700" style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}>{item.subtitle}</p>
+                                            <div className="mt-3 flex flex-wrap gap-4 text-sm font-bold border-t-2 border-dashed border-gray-400 pt-3" style={{ fontFamily: '"Space Mono", monospace' }}>
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <CalendarClock className="h-4 w-4 text-blue-500" />
+                                                    {new Date(item.eventTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <Clock3 className="h-4 w-4 text-green-500" />
+                                                    {formatRelative(item.eventTime)}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <MapPin className="h-4 w-4 text-red-500" />
+                                                    {item.location}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            {item.kind === 'vendor_request' ? (
+                                                <Megaphone className="h-6 w-6 text-amber-500" />
+                                            ) : item.kind === 'vendor_application' ? (
+                                                <Briefcase className="h-6 w-6 text-purple-500" />
+                                            ) : item.kind === 'saved' ? (
+                                                <Sparkles className="h-6 w-6 text-red-500" />
+                                            ) : (
+                                                <CheckCircle2
+                                                    className={`h-6 w-6 ${item.isPast ? 'text-gray-400' : 'text-emerald-500'}`}
+                                                />
+                                            )}
+                                            <Link
+                                                to={item.route}
+                                                className="bg-yellow-300 text-black px-4 py-2 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center justify-center whitespace-nowrap"
+                                                style={{ fontFamily: '"Permanent Marker"' }}
+                                            >
+                                                {item.cta}
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 }

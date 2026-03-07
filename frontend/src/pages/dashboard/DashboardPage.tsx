@@ -90,8 +90,8 @@ export default function DashboardPage() {
                             key={t.key}
                             onClick={() => setTab(t.key)}
                             className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${tab === t.key
-                                    ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                                    : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
                                 }`}
                             style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
                         >
@@ -119,47 +119,59 @@ export default function DashboardPage() {
                                 {events.map((event: any, idx: number) => {
                                     const badge = LIFECYCLE_BADGE_STYLES[event.lifecycle_state] || { bg: '#f3f4f6', text: '#6b7280', border: '#d1d5db' };
                                     return (
-                                        <Link
+                                        <div
                                             key={event.id}
-                                            to={`/events/${event.id}`}
                                             className="flex items-center gap-4 border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
                                             style={{ transform: `rotate(${idx % 2 === 0 ? -0.3 : 0.3}deg)` }}
                                         >
-                                            {event.cover_image ? (
-                                                <div className="h-16 w-24 flex-shrink-0 border-2 border-white shadow-md overflow-hidden" style={{ transform: 'rotate(-2deg)' }}>
-                                                    <Media src={event.cover_image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                </div>
-                                            ) : (
-                                                <div className="h-16 w-24 flex-shrink-0 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                                                    <Calendar className="h-6 w-6 text-gray-300" />
-                                                </div>
-                                            )}
+                                            <Link to={`/events/${event.id}`} className="flex-shrink-0 block">
+                                                {event.cover_image ? (
+                                                    <div className="h-16 w-24 border-2 border-white shadow-md overflow-hidden" style={{ transform: 'rotate(-2deg)' }}>
+                                                        <Media src={event.cover_image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-16 w-24 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-300 relative group overflow-hidden">
+                                                        <Calendar className="h-6 w-6" />
+                                                    </div>
+                                                )}
+                                            </Link>
                                             <div className="flex-1 min-w-0">
-                                                <h3
-                                                    className="font-bold text-gray-900 truncate"
-                                                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
-                                                >
-                                                    {event.title}
-                                                </h3>
+                                                <Link to={`/events/${event.id}`} className="hover:underline">
+                                                    <h3
+                                                        className="font-bold text-gray-900 truncate"
+                                                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+                                                    >
+                                                        {event.title}
+                                                    </h3>
+                                                </Link>
                                                 <p className="text-gray-500 text-sm" style={{ fontFamily: '"Caveat", cursive' }}>
                                                     {new Date(event.start_time).toLocaleDateString()} · {event.location_name}
                                                 </p>
                                             </div>
-                                            <span
-                                                className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
-                                                style={{
-                                                    fontFamily: '"Permanent Marker", cursive',
-                                                    fontSize: '0.65rem',
-                                                    background: badge.bg,
-                                                    color: badge.text,
-                                                    borderColor: badge.border,
-                                                    transform: 'rotate(2deg)',
-                                                    boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
-                                                }}
-                                            >
-                                                {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
-                                            </span>
-                                        </Link>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span
+                                                    className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
+                                                    style={{
+                                                        fontFamily: '"Permanent Marker", cursive',
+                                                        fontSize: '0.65rem',
+                                                        background: badge.bg,
+                                                        color: badge.text,
+                                                        borderColor: badge.border,
+                                                        transform: 'rotate(2deg)',
+                                                        boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
+                                                    }}
+                                                >
+                                                    {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
+                                                </span>
+                                                <Link
+                                                    to={`/events/${event.id}/manage`}
+                                                    className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
+                                                    style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-1deg)', boxShadow: '1px 1px 0px rgba(0,0,0,0.8)' }}
+                                                >
+                                                    MANAGE EVENT
+                                                </Link>
+                                            </div>
+                                        </div>
                                     );
                                 })}
                             </div>

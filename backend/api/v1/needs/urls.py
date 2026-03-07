@@ -10,6 +10,7 @@ from .views import (
     NeedInviteCreateView,
     MyNeedInvitesView,
     MyVendorOpportunitiesView,
+    MyPotentialOpportunitiesView,
 )
 
 urlpatterns = [
@@ -27,5 +28,10 @@ urlpatterns = [
         "opportunities/my/",
         MyVendorOpportunitiesView.as_view(),
         name="my_opportunities",
+    ),
+    path(
+        "opportunities/potential/",
+        MyPotentialOpportunitiesView.as_view(),
+        name="potential_opportunities",
     ),
 ]

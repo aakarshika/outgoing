@@ -31,6 +31,7 @@ import {
     fetchEventSeriesOccurrences,
     generateEventSeriesOccurrences,
     deleteEvent,
+    fetchMyInterestedEvents,
 } from './api';
 
 import type { EventLifecycleState } from '@/types/events';
@@ -223,6 +224,13 @@ export function useMyEvents() {
     return useQuery({
         queryKey: ['myEvents'],
         queryFn: fetchMyEvents,
+    });
+}
+
+export function useMyInterestedEvents() {
+    return useQuery({
+        queryKey: ['myInterestedEvents'],
+        queryFn: fetchMyInterestedEvents,
     });
 }
 

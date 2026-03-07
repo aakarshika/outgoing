@@ -11,6 +11,7 @@ from .views import (
     EventInterestView,
     EventListCreateView,
     MyEventsView,
+    MyInterestedEventsView,
     EventAttendeesView,
     EventHighlightListCreateView,
     EventReviewCreateView,
@@ -22,6 +23,7 @@ urlpatterns = [
     path("autocomplete/", EventAutocompleteView.as_view(), name="event_autocomplete"),
     path("categories/", EventCategoryListView.as_view(), name="event_categories"),
     path("my/", MyEventsView.as_view(), name="my_events"),
+    path("my/interested/", MyInterestedEventsView.as_view(), name="my_interested_events"),
     path(
         "<int:event_id>/lifecycle/transition/",
         EventLifecycleTransitionView.as_view(),

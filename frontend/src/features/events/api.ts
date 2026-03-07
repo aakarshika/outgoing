@@ -178,7 +178,7 @@ export async function deleteEvent(eventId: number) {
 // --- Interest ---
 
 export async function toggleInterest(eventId: number, isInterested: boolean) {
-    if (isInterested) {
+    if (!isInterested) {
         const { data } = await client.delete<ApiResponse<{ interest_count: number }>>(
             `/events/${eventId}/interest/`
         );
@@ -206,6 +206,11 @@ export async function fetchMyTickets() {
 
 export async function fetchMyEvents() {
     const { data } = await client.get('/events/my/');
+    return data;
+}
+
+export async function fetchMyInterestedEvents() {
+    const { data } = await client.get('/events/my/interested/');
     return data;
 }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ArrowLeft, Save, Briefcase, DollarSign, Image as ImageIcon, MapPin } from 'lucide-react';
+import { Box, Typography, ThemeProvider, Paper } from '@mui/material';
 
 import { Button } from '@/components/ui/button';
 import { useCreateVendorService } from '@/features/vendors/hooks';
@@ -19,6 +20,77 @@ interface CreateServiceFormData {
 
 import { compressImage } from '@/utils/image';
 import { VENDOR_CATEGORIES } from '@/constants/categories';
+import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
+
+/* ---- Scrapbook Decorations ---- */
+
+const WashiTape = ({ color = 'rgba(251, 191, 36, 0.5)', rotate = '3deg', width = 80 }: { color?: string; rotate?: string; width?: number }) => (
+    <Box sx={{
+        position: 'absolute',
+        top: -10,
+        left: '50%',
+        transform: `translateX(-50%) rotate(${rotate})`,
+        width,
+        height: 20,
+        bgcolor: color,
+        opacity: 0.8,
+        zIndex: 2,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+        pointerEvents: 'none',
+    }} />
+);
+
+const SectionDivider = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
+    <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        borderBottom: '2px solid #333',
+        pb: 1,
+        mb: 3,
+    }}>
+        <Box sx={{
+            p: 0.75,
+            border: '1px dashed #ccc',
+            transform: 'rotate(3deg)',
+            bgcolor: '#fff',
+        }}>
+            <Icon style={{ width: 18, height: 18, color: '#2563eb' }} />
+        </Box>
+        <Typography sx={{
+            fontFamily: '"Permanent Marker", cursive',
+            fontSize: '1.2rem',
+            transform: 'rotate(-0.5deg)',
+        }}>
+            {title}
+        </Typography>
+    </Box>
+);
+
+/* ---- Styled input helpers ---- */
+
+const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 0 8px 0',
+    fontFamily: '"Caveat", cursive',
+    fontSize: '1.1rem',
+    border: 'none',
+    borderBottom: '1.5px solid #ccc',
+    background: 'transparent',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+};
+
+const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+    textTransform: 'uppercase' as const,
+    fontFamily: 'monospace',
+    color: '#555',
+    marginBottom: 4,
+};
 
 export default function CreateServicePage() {
     const navigate = useNavigate();
@@ -75,174 +147,319 @@ export default function CreateServicePage() {
     };
 
     return (
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full shrink-0">
-                    <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Create Vendor Service</h1>
-                    <p className="text-muted-foreground mt-1">
-                        List your service to start accepting event applications.
-                    </p>
-                </div>
-            </div>
+        <ThemeProvider theme={scrapbookTheme}>
+            <Box sx={{
+                minHeight: '100vh',
+                bgcolor: '#f4f1ea',
+                backgroundImage: 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
+                backgroundSize: '15px 15px',
+                backgroundAttachment: 'fixed',
+                p: { xs: 2, sm: 4, md: 6 },
+            }}>
+                <Box sx={{ maxWidth: 720, mx: 'auto' }}>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-20">
-                <div className="bg-card rounded-xl border p-6 space-y-6 shadow-sm">
-                    {/* Basic Info */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 border-b pb-2 mb-4">
-                            <Briefcase className="h-5 w-5 text-primary" />
-                            <h2 className="text-lg font-semibold">Service Information</h2>
-                        </div>
+                    {/* ── Header ── */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 5 }}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full shrink-0">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <Box>
+                            <Typography sx={{
+                                fontFamily: '"Permanent Marker", cursive',
+                                fontSize: { xs: '1.6rem', sm: '2.2rem' },
+                                transform: 'rotate(-1deg)',
+                                lineHeight: 1.1,
+                            }}>
+                                Create Vendor Service
+                            </Typography>
+                            <Typography sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#888', mt: 0.5, fontSize: '0.85rem' }}>
+                                List your service to start accepting event applications.
+                            </Typography>
+                        </Box>
+                    </Box>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1.5">Service Title *</label>
-                            <input
-                                {...register('title', { required: 'Title is required' })}
-                                type="text"
-                                placeholder="e.g. Professional Wedding Photography"
-                                className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
-                            />
-                            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
-                        </div>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        {/* ── Service Information Section ── */}
+                        <Paper elevation={2} sx={{
+                            p: { xs: 3, sm: 4 },
+                            mb: 4,
+                            bgcolor: '#fff',
+                            position: 'relative',
+                            overflow: 'visible',
+                            backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(0,0,0,0.04) 27px, rgba(0,0,0,0.04) 28px)',
+                        }}>
+                            <WashiTape color="rgba(37, 99, 235, 0.35)" rotate="-2deg" width={90} />
+                            <SectionDivider icon={Briefcase} title="Service Info" />
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Category *</label>
-                                <select
-                                    {...register('category', { required: 'Category is required' })}
-                                    className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm"
-                                >
-                                    <option value="">Select a category</option>
-                                    {VENDOR_CATEGORIES.map(group => (
-                                        <optgroup key={group.group} label={group.group}>
-                                            {group.items.map(item => (
-                                                <option key={item.id} value={item.id}>{item.label}</option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
-                                {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category.message}</p>}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Starting Price ($)</label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <input
-                                        {...register('base_price')}
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="e.g. 150.00"
-                                        className="w-full rounded-lg border bg-background pl-9 pr-4 py-2.5 text-sm"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1.5">Description *</label>
-                            <textarea
-                                {...register('description', { required: 'Description is required' })}
-                                rows={5}
-                                placeholder="Describe what you offer, your experience, and what makes your service special..."
-                                className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm resize-none"
-                            />
-                            {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
-                        </div>
-                    </div>
-
-                    {/* Service Settings */}
-                    <div className="space-y-4 pt-4">
-                        <div className="flex items-center gap-2 border-b pb-2 mb-4">
-                            <MapPin className="h-5 w-5 text-primary" />
-                            <h2 className="text-lg font-semibold">Service Details</h2>
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Travel Radius (miles)</label>
+                            <Box sx={{ mb: 3 }}>
+                                <label style={labelStyle}>Service Title *</label>
                                 <input
-                                    {...register('travel_radius_miles')}
-                                    type="number"
-                                    placeholder="e.g. 50"
-                                    className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm"
+                                    {...register('title', { required: 'Title is required' })}
+                                    type="text"
+                                    placeholder="e.g. Professional Wedding Photography"
+                                    style={inputStyle}
+                                    onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                    onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Leave blank if nationwide or remote.</p>
-                            </div>
+                                {errors.title && <Typography sx={{ color: '#dc2626', mt: 0.5, fontFamily: '"Caveat", cursive', fontSize: '0.9rem' }}>⚠ {errors.title.message}</Typography>}
+                            </Box>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1.5">Portfolio/External URL</label>
-                                <input
-                                    {...register('portfolio_url')}
-                                    type="url"
-                                    placeholder="https://yourwebsite.com"
-                                    className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Media */}
-                    <div className="space-y-4 pt-4">
-                        <div className="flex items-center gap-2 border-b pb-2 mb-4">
-                            <ImageIcon className="h-5 w-5 text-primary" />
-                            <h2 className="text-lg font-semibold">Cover Image</h2>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-6 items-start">
-                            {imagePreview ? (
-                                <div className="relative group">
-                                    <img src={imagePreview} alt="Preview" className="h-32 w-48 object-cover rounded-xl border border-primary/20 shadow-sm" />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setImagePreview(null);
-                                            setSelectedImage(null);
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, mb: 3 }}>
+                                <Box>
+                                    <label style={labelStyle}>Category *</label>
+                                    <select
+                                        {...register('category', { required: 'Category is required' })}
+                                        style={{
+                                            ...inputStyle,
+                                            cursor: 'pointer',
+                                            borderBottom: '1.5px solid #ccc',
                                         }}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                        onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="h-32 w-48 rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/20">
-                                    <ImageIcon className="h-8 w-8 mb-2 opacity-50" />
-                                    <span className="text-xs font-medium">No image selected</span>
-                                </div>
-                            )}
+                                        <option value="">Select a category</option>
+                                        {VENDOR_CATEGORIES.map(group => (
+                                            <optgroup key={group.group} label={group.group}>
+                                                {group.items.map(item => (
+                                                    <option key={item.id} value={item.id}>{item.label}</option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                    {errors.category && <Typography sx={{ color: '#dc2626', mt: 0.5, fontFamily: '"Caveat", cursive', fontSize: '0.9rem' }}>⚠ {errors.category.message}</Typography>}
+                                </Box>
 
-                            <div className="flex-1 space-y-2">
-                                <label className="block text-sm font-medium">Upload Image</label>
-                                <p className="text-xs text-muted-foreground mb-3">Add a cover image or portfolio sample to help your service stand out. Max 5MB.</p>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                                <Box>
+                                    <label style={labelStyle}>Starting Price ($)</label>
+                                    <Box sx={{ position: 'relative' }}>
+                                        <DollarSign style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#999' }} />
+                                        <input
+                                            {...register('base_price')}
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="e.g. 150.00"
+                                            style={{ ...inputStyle, paddingLeft: 20 }}
+                                            onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                            onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
+                                        />
+                                    </Box>
+                                </Box>
+                            </Box>
+
+                            <Box>
+                                <label style={labelStyle}>Description *</label>
+                                <textarea
+                                    {...register('description', { required: 'Description is required' })}
+                                    rows={5}
+                                    placeholder="Describe what you offer, your experience, and what makes your service special..."
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 0',
+                                        fontSize: '1.1rem',
+                                        fontFamily: '"Caveat", cursive',
+                                        border: 'none',
+                                        borderBottom: '1.5px solid #ccc',
+                                        background: 'transparent',
+                                        outline: 'none',
+                                        resize: 'none',
+                                    }}
+                                    onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                    onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
                                 />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                {errors.description && <Typography sx={{ color: '#dc2626', mt: 0.5, fontFamily: '"Caveat", cursive', fontSize: '0.9rem' }}>⚠ {errors.description.message}</Typography>}
+                            </Box>
+                        </Paper>
 
-                {/* Submit Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-6 bg-background/80 backdrop-blur pb-4">
-                    <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" disabled={createMutation.isPending} className="min-w-[140px]">
-                        {createMutation.isPending ? 'Creating...' : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" /> Publish Service
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </form>
-        </div>
+                        {/* ── Service Details Section ── */}
+                        <Paper elevation={2} sx={{
+                            p: { xs: 3, sm: 4 },
+                            mb: 4,
+                            bgcolor: '#fff',
+                            position: 'relative',
+                            overflow: 'visible',
+                            transform: 'rotate(0.3deg)',
+                            backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(0,0,0,0.04) 27px, rgba(0,0,0,0.04) 28px)',
+                        }}>
+                            <WashiTape color="rgba(22, 163, 74, 0.35)" rotate="4deg" width={90} />
+                            <SectionDivider icon={MapPin} title="Service Details" />
+
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
+                                <Box>
+                                    <label style={labelStyle}>Travel Radius (miles)</label>
+                                    <input
+                                        {...register('travel_radius_miles')}
+                                        type="number"
+                                        placeholder="e.g. 50"
+                                        style={inputStyle}
+                                        onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                        onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
+                                    />
+                                    <Typography sx={{ fontSize: '0.75rem', fontFamily: '"Caveat", cursive', color: '#888', mt: 0.5 }}>
+                                        Leave blank if nationwide or remote 🌍
+                                    </Typography>
+                                </Box>
+
+                                <Box>
+                                    <label style={labelStyle}>Portfolio/External URL</label>
+                                    <input
+                                        {...register('portfolio_url')}
+                                        type="url"
+                                        placeholder="https://yourwebsite.com"
+                                        style={inputStyle}
+                                        onFocus={(e) => e.target.style.borderBottomColor = '#2563eb'}
+                                        onBlur={(e) => e.target.style.borderBottomColor = '#ccc'}
+                                    />
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* ── Cover Image Section — Polaroid ── */}
+                        <Paper elevation={2} sx={{
+                            p: { xs: 3, sm: 4 },
+                            mb: 4,
+                            bgcolor: '#fff',
+                            position: 'relative',
+                            overflow: 'visible',
+                            transform: 'rotate(-0.5deg)',
+                        }}>
+                            <WashiTape color="rgba(234, 179, 8, 0.4)" rotate="-3deg" width={70} />
+                            <SectionDivider icon={ImageIcon} title="Cover Image" />
+
+                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 4, alignItems: 'flex-start' }}>
+                                {/* Polaroid preview */}
+                                <Paper elevation={3} sx={{
+                                    p: 1.5,
+                                    pb: 5,
+                                    bgcolor: 'white',
+                                    width: 200,
+                                    flexShrink: 0,
+                                    transform: 'rotate(-2deg)',
+                                    transition: 'transform 0.3s ease',
+                                    '&:hover': { transform: 'rotate(0deg) scale(1.02)' },
+                                    border: '1px solid #efefef',
+                                    position: 'relative',
+                                }}>
+                                    <Box sx={{
+                                        height: 140,
+                                        bgcolor: '#f0f0f0',
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'relative',
+                                    }}>
+                                        {imagePreview ? (
+                                            <>
+                                                <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImagePreview(null);
+                                                        setSelectedImage(null);
+                                                    }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 4,
+                                                        right: 4,
+                                                        background: '#dc2626',
+                                                        color: '#fff',
+                                                        border: 'none',
+                                                        borderRadius: '50%',
+                                                        width: 24,
+                                                        height: 24,
+                                                        cursor: 'pointer',
+                                                        fontSize: '14px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    ×
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <Box sx={{ textAlign: 'center', color: '#ccc' }}>
+                                                <ImageIcon style={{ width: 32, height: 32, marginBottom: 4 }} />
+                                                <Typography sx={{ fontSize: '0.65rem', fontFamily: '"Caveat", cursive', color: '#999' }}>
+                                                    No photo yet
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                    <Typography sx={{
+                                        fontFamily: '"Permanent Marker", cursive',
+                                        fontSize: '0.8rem',
+                                        textAlign: 'center',
+                                        mt: 1.5,
+                                        color: '#666',
+                                    }}>
+                                        {imagePreview ? 'Your photo ✓' : 'Add a photo'}
+                                    </Typography>
+                                </Paper>
+
+                                <Box sx={{ flex: 1 }}>
+                                    <label style={labelStyle}>Upload Image</label>
+                                    <Typography sx={{ fontSize: '0.8rem', fontFamily: '"Caveat", cursive', color: '#888', mb: 2 }}>
+                                        Add a cover image or portfolio sample to help your service stand out. Max 5MB. 📷
+                                    </Typography>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-solid file:border-gray-300 file:text-sm file:font-semibold file:bg-white file:text-gray-700 hover:file:bg-gray-50 cursor-pointer"
+                                    />
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* ── Submit Actions ── */}
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: 2,
+                            pt: 3,
+                            pb: 6,
+                        }}>
+                            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                                Cancel
+                            </Button>
+                            <Box
+                                component="button"
+                                type="submit"
+                                disabled={createMutation.isPending}
+                                sx={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 4,
+                                    py: 1.5,
+                                    bgcolor: '#333',
+                                    color: '#fff',
+                                    border: '2px solid #333',
+                                    fontFamily: '"Permanent Marker", cursive',
+                                    fontSize: '0.95rem',
+                                    cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
+                                    opacity: createMutation.isPending ? 0.6 : 1,
+                                    transform: 'rotate(-1deg)',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                        bgcolor: '#000',
+                                        transform: 'rotate(0deg) scale(1.02)',
+                                        boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
+                                    },
+                                }}
+                            >
+                                {createMutation.isPending ? 'Creating...' : (
+                                    <>
+                                        <Save style={{ width: 16, height: 16 }} />
+                                        Publish Service
+                                    </>
+                                )}
+                            </Box>
+                        </Box>
+                    </form>
+                </Box>
+            </Box>
+        </ThemeProvider>
     );
 }

@@ -262,3 +262,47 @@ class MyVendorOpportunitiesView(APIView):
             for need in needs
         ]
         return success_response(data=data)
+
+
+class MyPotentialOpportunitiesView(APIView):
+    """List open event needs in categories the vendor does NOT yet offer."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Return needs outside the vendor's current service categories."""
+        my_categories = list(
+            VendorService.objects.filter(vendor=request.user, is_active=True)
+            .values_list("category", flat=True)
+            .distinct()
+        )
+
+        qs = (
+            EventNeed.objects.filter(
+                status="open",
+                event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
+            )
+            .exclude(category__in=my_categories)
+            .exclude(applications__vendor=request.user)
+            .select_related("event")
+            .distinct()
+        )
+
+        data = [
+            {
+                "need_id": need.id,
+                "event_id": need.event_id,
+                "event_title": need.event.title,
+                "event_start_time": need.event.start_time,
+                "event_location_name": need.event.location_name,
+                "need_title": need.title,
+                "need_description": need.description,
+                "category": need.category,
+                "criticality": need.criticality,
+                "budget_min": need.budget_min,
+                "budget_max": need.budget_max,
+                "is_invited": False,
+            }
+            for need in qs
+        ]
+        return success_response(data=data)

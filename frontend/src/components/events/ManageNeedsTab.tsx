@@ -64,34 +64,35 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-card rounded-xl border p-4">
+            <div className="flex justify-between items-center bg-white border-2 border-gray-800 p-4 shadow-[2px_3px_0px_#333] mb-6" style={{ transform: 'rotate(-0.5deg)' }}>
                 <div>
-                    <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-primary" /> Vendor Needs
+                    <h2 className="text-xl font-bold flex items-center gap-2" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                        <Briefcase className="h-5 w-5 text-gray-800" /> Vendor Needs
                     </h2>
-                    <p className="text-sm text-muted-foreground">Manage service requests and vendor applications</p>
+                    <p className="text-sm text-gray-600" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}>Manage service requests and vendor applications</p>
                 </div>
                 {!isCreating && (
-                    <Button onClick={() => setIsCreating(true)}>Add New Need</Button>
+                    <Button onClick={() => setIsCreating(true)} className="border-2 border-gray-800 bg-yellow-300 text-gray-900 shadow-[2px_2px_0px_#333] hover:bg-yellow-400 font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all" style={{ fontFamily: '"Permanent Marker", cursive' }}>Add New Need</Button>
                 )}
             </div>
 
             {isCreating && (
-                <div className="bg-card rounded-xl border p-6">
-                    <h3 className="text-md font-semibold mb-4">Create New Need</h3>
+                <div className="bg-[#fff9e6] border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] mb-6 relative" style={{ transform: 'rotate(0.5deg)' }}>
+                    <div className="absolute -top-3 right-6 w-12 h-4 bg-yellow-500/30 border border-yellow-600/20 rotate-12" />
+                    <h3 className="text-xl font-bold mb-4" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>Create New Need</h3>
                     <form onSubmit={handleCreateNeed} className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium mb-1">Title (e.g., DJ Required)</label>
-                                <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Title (e.g., DJ Required)</label>
+                                <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors" />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium mb-1">Description (optional)</label>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Description (optional)</label>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors resize-none" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Category *</label>
-                                <select required value={category} onChange={e => setCategory(e.target.value)} className="w-full rounded-lg border bg-background px-4 py-2 text-sm">
+                                <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Category *</label>
+                                <select required value={category} onChange={e => setCategory(e.target.value)} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors">
                                     <option value="">Select a category</option>
                                     {VENDOR_CATEGORIES.map(group => (
                                         <optgroup key={group.group} label={group.group}>
@@ -103,8 +104,8 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Criticality</label>
-                                <select value={criticality} onChange={e => setCriticality(e.target.value as any)} className="w-full rounded-lg border bg-background px-4 py-2 text-sm">
+                                <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Criticality</label>
+                                <select value={criticality} onChange={e => setCriticality(e.target.value as any)} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors">
                                     <option value="essential">Essential</option>
                                     <option value="replaceable">Replaceable</option>
                                     <option value="non_substitutable">Non-Substitutable</option>
@@ -112,18 +113,18 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Min Budget ($)</label>
-                                    <input type="number" step="0.01" value={budgetMin} onChange={e => setBudgetMin(e.target.value)} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                    <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Min Budget ($)</label>
+                                    <input type="number" step="0.01" value={budgetMin} onChange={e => setBudgetMin(e.target.value)} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Max Budget ($)</label>
-                                    <input type="number" step="0.01" value={budgetMax} onChange={e => setBudgetMax(e.target.value)} className="w-full rounded-lg border bg-background px-4 py-2 text-sm" />
+                                    <label className="block text-sm font-bold mb-1 font-mono text-gray-700">Max Budget ($)</label>
+                                    <input type="number" step="0.01" value={budgetMax} onChange={e => setBudgetMax(e.target.value)} className="w-full border-2 border-gray-300 bg-white px-4 py-2 text-sm focus:border-gray-800 focus:ring-0 transition-colors" />
                                 </div>
                             </div>
                         </div>
-                        <div className="flex justify-end gap-2 pt-4 border-t">
-                            <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>Cancel</Button>
-                            <Button type="submit" disabled={createNeedMutation.isPending}>
+                        <div className="flex justify-end gap-2 pt-6">
+                            <Button type="button" variant="ghost" onClick={() => setIsCreating(false)} className="hover:bg-gray-100 font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>Cancel</Button>
+                            <Button type="submit" disabled={createNeedMutation.isPending} className="border-2 border-gray-800 bg-blue-400 text-white shadow-[2px_3px_0px_#333] hover:bg-blue-500 font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all" style={{ fontFamily: '"Permanent Marker", cursive' }}>
                                 {createNeedMutation.isPending ? 'Creating...' : 'Create Need'}
                             </Button>
                         </div>
@@ -131,89 +132,89 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                 </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {needs.length === 0 ? (
-                    <div className="text-center p-8 bg-card border rounded-xl text-muted-foreground">
+                    <div className="text-center p-12 bg-white border-2 border-dashed border-gray-400 text-gray-500 font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.5rem', transform: 'rotate(-0.5deg)' }}>
                         No needs have been created for this event yet.
                     </div>
                 ) : (
-                    needs.map((need: EventNeed) => (
-                        <div key={need.id} className="bg-card rounded-xl border p-5 space-y-4">
+                    needs.map((need: EventNeed, idx: number) => (
+                        <div key={need.id} className="bg-white border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative space-y-4" style={{ transform: `rotate(${idx % 2 === 0 ? -0.5 : 0.5}deg)` }}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-lg font-bold">{need.title}</h3>
+                                    <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>{need.title}</h3>
                                     <div className="flex flex-wrap gap-2 mt-2">
-                                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${need.status === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-secondary text-secondary-foreground'}`}>
+                                        <span className={`px-2 py-0.5 border-2 border-gray-800 text-xs font-bold ${need.status === 'open' ? 'bg-green-200 text-green-900' : 'bg-gray-200 text-gray-900'}`} style={{ fontFamily: '"Permanent Marker", cursive' }}>
                                             {need.status.toUpperCase()}
                                         </span>
-                                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium">{getCategoryLabel(need.category)}</span>
-                                        <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-xs capitalize">{need.criticality.replace('_', '-')}</span>
+                                        <span className="bg-blue-100 border-2 border-gray-800 text-blue-900 px-2 py-0.5 text-xs font-bold" style={{ fontFamily: '"Permanent Marker", cursive' }}>{getCategoryLabel(need.category)}</span>
+                                        <span className="bg-gray-100 border-2 border-gray-800 text-gray-900 px-2 py-0.5 text-xs font-bold capitalize" style={{ fontFamily: '"Permanent Marker", cursive' }}>{need.criticality.replace('_', '-')}</span>
                                         {(need.budget_min || need.budget_max) && (
-                                            <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-xs">
+                                            <span className="bg-[#fff9e6] border-2 border-dashed border-gray-600 text-gray-800 px-2 py-0.5 font-bold text-xs" style={{ fontFamily: '"Permanent Marker", cursive' }}>
                                                 Budget: ${need.budget_min || '0'} - ${need.budget_max || 'Any'}
                                             </span>
                                         )}
                                     </div>
-                                    {need.description && <p className="text-sm text-muted-foreground mt-2">{need.description}</p>}
+                                    {need.description && <p className="text-sm text-gray-600 mt-3 italic" style={{ fontFamily: 'serif' }}>"{need.description}"</p>}
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <div className="text-sm font-medium text-muted-foreground text-center bg-muted/50 px-3 py-1.5 rounded-lg border">
-                                        <span className="block text-xl text-foreground">{need.application_count}</span>
-                                        <span>Applicants</span>
+                                <div className="flex flex-col items-end gap-3">
+                                    <div className="text-sm font-bold text-gray-900 text-center bg-yellow-100 px-4 py-2 border-2 border-gray-800 shadow-[1px_2px_0px_#333] rotate-2">
+                                        <span className="block text-2xl font-black" style={{ fontFamily: '"Caveat", cursive' }}>{need.application_count}</span>
+                                        <span style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.7rem' }}>Applicants</span>
                                     </div>
                                     {need.status === 'open' && (
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link
-                                                to={`/vendors?eventId=${eventId}&needId=${need.id}&category=${encodeURIComponent(
-                                                    need.category
-                                                )}&needTitle=${encodeURIComponent(need.title)}`}
-                                            >
-                                                Invite Vendors
-                                            </Link>
-                                        </Button>
+                                        <Link
+                                            to={`/vendors?eventId=${eventId}&needId=${need.id}&category=${encodeURIComponent(
+                                                need.category
+                                            )}&needTitle=${encodeURIComponent(need.title)}`}
+                                            className="text-xs font-bold px-3 py-1.5 border-2 border-gray-800 bg-white text-gray-900 shadow-[1px_1px_0px_#333] hover:bg-gray-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all whitespace-nowrap"
+                                            style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-1deg)' }}
+                                        >
+                                            Invite Vendors
+                                        </Link>
                                     )}
                                 </div>
                             </div>
 
                             {/* Applications List */}
                             {need.applications && need.applications.length > 0 && (
-                                <div className="border-t pt-4">
-                                    <h4 className="text-sm font-semibold mb-3">Applications</h4>
-                                    <div className="space-y-3">
-                                        {need.applications.map((app: NeedApplication) => (
-                                            <div key={app.id} className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-muted/30 p-3 rounded-lg border">
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium">{app.vendor_name}</span>
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${app.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                            : app.status === 'accepted' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                                            }`}>
+                                <div className="border-t-2 border-gray-800 border-dashed pt-5 mt-5">
+                                    <h4 className="text-lg font-bold mb-4" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.5rem' }}>Applications</h4>
+                                    <div className="space-y-4">
+                                        {need.applications.map((app: NeedApplication, appIdx: number) => (
+                                            <div key={app.id} className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-[#fdfdfd] p-4 border-2 border-gray-800 shadow-[2px_2px_0px_#333] relative" style={{ transform: `rotate(${appIdx % 2 === 0 ? 0.5 : -0.5}deg)` }}>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-1">
+                                                        <span className="font-bold text-gray-900 text-lg" style={{ fontFamily: '"Permanent Marker", cursive' }}>{app.vendor_name}</span>
+                                                        <span className={`text-[0.65rem] px-2 py-0.5 border-2 uppercase font-bold ${app.status === 'pending' ? 'bg-yellow-200 border-yellow-600 text-yellow-900'
+                                                            : app.status === 'accepted' ? 'bg-green-200 border-green-600 text-green-900'
+                                                                : 'bg-red-200 border-red-600 text-red-900'
+                                                            }`} style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-2deg)' }}>
                                                             {app.status}
                                                         </span>
                                                     </div>
-                                                    {app.proposed_price && <p className="text-xs text-muted-foreground mt-1">Proposed: ${app.proposed_price}</p>}
-                                                    {app.message && <p className="text-sm text-muted-foreground mt-2 bg-background p-2 rounded-md border text-xs">{app.message}</p>}
+                                                    {app.proposed_price && <p className="font-bold text-green-700 mb-2" style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.9rem' }}>Proposed: ${app.proposed_price}</p>}
+                                                    {app.message && <p className="text-gray-600 bg-[#fff9e6] p-3 border-2 border-gray-800 text-sm shadow-[1px_1px_0px_#333]" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}>"{app.message}"</p>}
                                                 </div>
 
                                                 {app.status === 'pending' && need.status === 'open' && (
-                                                    <div className="flex gap-2">
+                                                    <div className="flex flex-col gap-2 shrink-0">
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
-                                                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                                                            onClick={() => handleReview(app.id, 'rejected')}
-                                                            disabled={reviewApplicationMutation.isPending}
-                                                        >
-                                                            <XCircle className="h-4 w-4 mr-1" /> Reject
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                                            className="bg-green-400 hover:bg-green-500 text-gray-900 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all" style={{ fontFamily: '"Permanent Marker", cursive' }}
                                                             onClick={() => handleReview(app.id, 'accepted')}
                                                             disabled={reviewApplicationMutation.isPending}
                                                         >
-                                                            <CheckCircle className="h-4 w-4 mr-1" /> Accept
+                                                            <CheckCircle className="h-4 w-4 mr-1" /> ACCEPT
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="bg-white hover:bg-red-100 text-red-600 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all" style={{ fontFamily: '"Permanent Marker", cursive' }}
+                                                            onClick={() => handleReview(app.id, 'rejected')}
+                                                            disabled={reviewApplicationMutation.isPending}
+                                                        >
+                                                            <XCircle className="h-4 w-4 mr-1" /> REJECT
                                                         </Button>
                                                     </div>
                                                 )}

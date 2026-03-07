@@ -52,6 +52,11 @@ export async function fetchMyVendorOpportunities() {
     return data;
 }
 
+export async function fetchMyPotentialOpportunities() {
+    const { data } = await client.get<VendorOpportunityListResponse>('/needs/opportunities/potential/');
+    return data;
+}
+
 export async function fetchMyNeedInvites() {
     const { data } = await client.get<{ success: boolean; data: NeedInvite[] }>('/needs/invites/my/');
     return data;

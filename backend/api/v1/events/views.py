@@ -231,6 +231,23 @@ class MyEventsView(APIView):
         return success_response(data=serializer.data)
 
 
+class MyInterestedEventsView(APIView):
+    """List events the authenticated user is interested in."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get user's interested events."""
+        events = Event.objects.filter(
+            interests__user=request.user,
+        ).select_related("host", "host__profile", "category")
+
+        serializer = EventListSerializer(
+            events, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+
 class EventCategoryListView(APIView):
     """List all event categories."""
 
