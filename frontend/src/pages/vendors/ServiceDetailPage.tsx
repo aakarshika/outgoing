@@ -125,7 +125,7 @@ const THEMES: Record<string, any> = {
 
 const getCategoryGroup = (cat: string) => {
   const found = Object.entries(CATEGORY_GROUPS).find(([key]) =>
-    cat.toLowerCase().includes(key.toLowerCase()),
+    (cat || '').toLowerCase().includes(key.toLowerCase()),
   );
   return found ? found[1] : 'Other';
 };
@@ -133,7 +133,7 @@ const getCategoryGroup = (cat: string) => {
 export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { data: serviceResponse, isLoading } = useVendorService(Number(id));
+  const { data: serviceResponse, isLoading, isError } = useVendorService(Number(id));
   const service = serviceResponse?.data;
 
   // For "Attach a Need" flow
@@ -142,8 +142,24 @@ export default function ServiceDetailPage() {
   const myEventsWithNeeds =
     myEventsResponse?.data?.filter((e: any) => e.needs?.length > 0) || [];
 
-  if (isLoading || !service) {
+  if (isLoading) {
     return <Box sx={{ p: 8, textAlign: 'center' }}>Loading the Classifieds...</Box>;
+  }
+
+  if (isError || !service) {
+    return (
+      <Box sx={{ p: 8, textAlign: 'center', fontFamily: '"Playfair Display", serif' }}>
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 900, textTransform: 'uppercase' }}>
+          Classified Ad Not Found
+        </Typography>
+        <Typography sx={{ mb: 4, fontStyle: 'italic', fontFamily: 'serif' }}>
+          We couldn't locate the requested service in our records.
+        </Typography>
+        <Button component={Link} to="/vendors" sx={{ color: '#1a1a1a', borderBottom: '1px solid #1a1a1a', borderRadius: 0, fontWeight: 'bold' }}>
+          RETURN TO DIRECTORY
+        </Button>
+      </Box>
+    );
   }
 
   const isOwner = user?.id === service.vendor_id;

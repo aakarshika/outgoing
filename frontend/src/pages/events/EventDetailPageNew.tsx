@@ -14,6 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
+import { EventLocationMap } from '@/components/events/EventLocationMap';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
@@ -37,65 +38,6 @@ import {
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
-
-const MapPlaceholder = ({ location }: { location: string }) => (
-  <Box
-    component="a"
-    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    sx={{
-      display: 'block',
-      width: '100%',
-      height: 200,
-      bgcolor: '#e5e7eb',
-      borderRadius: '4px',
-      position: 'relative',
-      overflow: 'hidden',
-      border: '2px solid #333',
-      transform: 'rotate(1deg)',
-      textDecoration: 'none',
-      '&:hover': {
-        transform: 'rotate(0deg) scale(1.02)',
-        transition: 'all 0.3s ease',
-      },
-    }}
-  >
-    <Box
-      sx={{
-        position: 'absolute',
-        inset: 0,
-        backgroundImage:
-          'repeating-linear-gradient(45deg, #d1d5db 0, #d1d5db 1px, transparent 0, transparent 50%)',
-        backgroundSize: '10px 10px',
-        opacity: 0.5,
-      }}
-    />
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        textAlign: 'center',
-        color: '#374151',
-        zIndex: 1,
-      }}
-    >
-      <MapPin size={32} style={{ margin: '0 auto 8px' }} />
-      <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}>
-        View on Maps
-      </Typography>
-      <Typography
-        variant="caption"
-        sx={{ display: 'block', mt: 0.5, px: 2, lineClamp: 1 }}
-      >
-        {location}
-      </Typography>
-    </Box>
-    <WashiTape color="rgba(239, 68, 68, 0.4)" rotate="-15deg" />
-  </Box>
-);
 
 const LIFECYCLE_LABELS: Record<string, string> = {
   draft: 'Draft',
@@ -127,6 +69,148 @@ const WashiTape = ({ color = 'rgba(251, 191, 36, 0.5)', rotate = '3deg' }) => (
     }}
   />
 );
+
+const Highlighter = ({
+  children,
+  color = 'rgba(252, 211, 77, 0.6)',
+}: {
+  children: React.ReactNode;
+  color?: string;
+}) => (
+  <Box
+    component="span"
+    sx={{
+      position: 'relative',
+      display: 'inline-block',
+      px: 1,
+      zIndex: 1,
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: '50%',
+        left: '-5%',
+        width: '110%',
+        height: '80%',
+        bgcolor: color,
+        transform: 'translateY(-50%) rotate(-1deg)',
+        zIndex: -1,
+        borderRadius: '2px',
+        opacity: 0.8,
+      },
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const getDaysAgo = (dateStr: string) => {
+  const start = new Date(dateStr);
+  const now = new Date('2026-03-06T23:26:31-05:00'); // Updated timestamp
+  const diffTime = Math.abs(now.getTime() - start.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'today';
+  return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+};
+
+const CuteTimer = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+
+  useEffect(() => {
+    const calculate = () => {
+      const now = new Date();
+      const target = new Date(targetDate);
+      const diff = target.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        h: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        m: Math.floor((diff / 1000 / 60) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calculate();
+    const interval = setInterval(calculate, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  const colors = [
+    { bg: '#fef08a', border: '#ca8a04', text: '#854d0e' }, // Yellow
+    { bg: '#fecdd3', border: '#e11d48', text: '#9f1239' }, // Pink
+    { bg: '#bfdbfe', border: '#2563eb', text: '#1e3a8a' }, // Blue
+    { bg: '#bbf7d0', border: '#16a34a', text: '#14532d' }, // Green
+  ];
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1.5, mt: 1 }}>
+      {Object.entries(timeLeft).map(([unit, value], index) => {
+        const color = colors[index % colors.length];
+        return (
+          <Box
+            key={unit}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              animation: `pulse ${2 + index * 0.5}s infinite alternate`,
+              '@keyframes pulse': {
+                '0%': { transform: 'scale(1)' },
+                '100%': { transform: 'scale(1.05)' },
+              },
+            }}
+          >
+            <Box
+              sx={{
+                width: 38,
+                height: 38,
+                borderRadius: index % 2 === 0 ? '40% 60% 70% 30% / 40% 50% 60% 50%' : '50% 50% 30% 70% / 50% 40% 60% 50%',
+                border: `2px solid ${color.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: color.bg,
+                transform: `rotate(${Math.random() * 10 - 5}deg)`,
+                boxShadow: '2px 3px 0px rgba(0,0,0,0.15)',
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: '10%',
+                  right: '15%',
+                  width: '20%',
+                  height: '20%',
+                  bgcolor: 'rgba(255,255,255,0.6)',
+                  borderRadius: '50%',
+                }
+              }}
+            >
+              <Typography sx={{ fontFamily: '"Fredoka One", "Permanent Marker", cursive', fontSize: '1.2rem', color: color.text }}>
+                {value}
+              </Typography>
+            </Box>
+            <Typography
+              sx={{
+                fontSize: '0.65rem',
+                fontFamily: '"Caveat", cursive',
+                mt: 0.5,
+                fontWeight: 'bold',
+                color: 'text.secondary',
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+              }}
+            >
+              {unit === 'd' ? 'days' : unit === 'h' ? 'hrs' : unit === 'm' ? 'min' : 'sec'}
+            </Typography>
+          </Box>
+        );
+      })}
+    </Box>
+  );
+};
 
 const PolaroidFrame = ({
   src,
@@ -319,180 +403,185 @@ const ClassifiedAd = ({
   isEligible?: boolean;
   isOpportunity?: boolean;
   navigate: any;
-}) => (
-  <Box sx={{ position: 'relative', width: '100%' }}>
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        mb: 2,
-        bgcolor: '#fdfdfd',
-        backgroundImage:
-          'linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px)',
-        border: '1px solid #333',
-        outline: '3px solid #fdfdfd',
-        position: 'relative',
-        opacity: need.status === 'filled' ? 0.3 : 1,
-        filter: need.status === 'filled' ? 'grayscale(0.8)' : 'none',
-        transform: `rotate(${(Math.random() * 2 - 1).toFixed(1)}deg)`,
-        pointerEvents: need.status === 'filled' ? 'none' : 'auto',
-        transition: 'all 0.3s ease',
-      }}
-    >
-      <Typography
+}) => {
+  const assigned_vendor = need.applications.find((app: any) => app.status === 'accepted');
+  console.log(assigned_vendor)
+  return (
+    <Box sx={{ position: 'relative', width: '100%' }}>
+      <Paper
+        elevation={0}
         sx={{
-          fontFamily: '"Playfair Display", serif',
-          fontWeight: 900,
-          textTransform: 'uppercase',
-          borderBottom: '2px solid #333',
-          mb: 1,
-          fontSize: '1rem',
-          color: need.status === 'filled' ? '#999' : 'inherit',
-        }}
-      >
-        HELP WANTED: {need.title}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ fontFamily: 'serif', fontStyle: 'italic', mb: 2, lineHeight: 1.4 }}
-      >
-        {need.description}
-      </Typography>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          mt: 2,
-        }}
-      >
-        <Box>
-          <Typography sx={{ fontSize: '0.7rem', color: '#666', mb: 0.5 }}>
-            Criticality: {need.criticality}
-          </Typography>
-          <Typography sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-            Budget: ${need.budget_max || '???'}
-          </Typography>
-        </Box>
-        {need.status === 'open' &&
-          (isEligible ? (
-            <MuiButton
-              variant="outlined"
-              size="small"
-              onClick={() => onInquire(need)}
-              sx={{
-                borderRadius: 0,
-                borderColor: '#333',
-                color: '#333',
-                fontWeight: 'bold',
-                whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#333', color: '#fff' },
-              }}
-            >
-              SEND INQUIRY →
-            </MuiButton>
-          ) : isOpportunity ? (
-            <MuiButton
-              variant="outlined"
-              size="small"
-              onClick={() => navigate('/vendors/create')}
-              sx={{
-                borderRadius: 0,
-                borderColor: '#16a34a',
-                color: '#16a34a',
-                fontWeight: 'bold',
-                whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#16a34a', color: '#fff' },
-              }}
-            >
-              CREATE SERVICE →
-            </MuiButton>
-          ) : null)}
-      </Box>
-    </Paper>
-
-    {/* Opportunity stamp */}
-    {need.status === 'open' && isOpportunity && (
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          px: 1.5,
-          py: 0.5,
-          border: '2px solid rgba(22, 163, 74, 0.6)',
-          borderRadius: '2px',
-          transform: 'rotate(3deg)',
-          pointerEvents: 'none',
-          zIndex: 2,
+          p: 3,
+          mb: 2,
+          bgcolor: '#fdfdfd',
+          backgroundImage:
+            'linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px)',
+          border: '1px solid #333',
+          outline: '3px solid #fdfdfd',
+          position: 'relative',
+          opacity: need.status === 'filled' ? 0.3 : 1,
+          filter: need.status === 'filled' ? 'grayscale(0.8)' : 'none',
+          transform: `rotate(${(Math.random() * 2 - 1).toFixed(1)}deg)`,
+          pointerEvents: need.status === 'filled' ? 'none' : 'auto',
+          transition: 'all 0.3s ease',
         }}
       >
         <Typography
           sx={{
-            fontFamily: '"Permanent Marker", cursive',
-            fontSize: '0.65rem',
-            color: 'rgba(22, 163, 74, 0.8)',
-            letterSpacing: 2,
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 900,
             textTransform: 'uppercase',
+            borderBottom: '2px solid #333',
+            mb: 1,
+            fontSize: '1rem',
+            color: need.status === 'filled' ? '#999' : 'inherit',
           }}
         >
-          OPPORTUNITY
+          HELP WANTED: {need.title}
         </Typography>
-      </Box>
-    )}
-
-    {/* Overlap if filled */}
-    {need.status === 'filled' && (
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 10,
-          pointerEvents: 'none',
-        }}
-      >
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: 'serif', fontStyle: 'italic', mb: 2, lineHeight: 1.4 }}
+        >
+          {need.description}
+        </Typography>
         <Box
           sx={{
-            transform: 'rotate(-3deg) scale(0.95)',
-            pointerEvents: 'auto',
-            filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            mt: 2,
           }}
         >
-          <VendorBusinessCard
-            vendor={{
-              vendor_name: need.assigned_vendor_name || 'Assigned Vendor',
-              category: need.category,
-              avg_rating: 4.8,
-              event_count: 12,
+          <Box>
+            <Typography sx={{ fontSize: '0.7rem', color: '#666', mb: 0.5 }}>
+              Criticality: {need.criticality}
+            </Typography>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Budget: ${need.budget_max || '???'}
+            </Typography>
+          </Box>
+          {need.status === 'open' &&
+            (isEligible ? (
+              <MuiButton
+                variant="outlined"
+                size="small"
+                onClick={() => onInquire(need)}
+                sx={{
+                  borderRadius: 0,
+                  borderColor: '#333',
+                  color: '#333',
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#333', color: '#fff' },
+                }}
+              >
+                SEND INQUIRY →
+              </MuiButton>
+            ) : isOpportunity ? (
+              <MuiButton
+                variant="outlined"
+                size="small"
+                onClick={() => navigate(`/vendors/create?category=${need.category}`)}
+                sx={{
+                  borderRadius: 0,
+                  borderColor: '#001708ff',
+                  color: '#001708ff',
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#16a34a', color: '#fff' },
+                }}
+              >
+                CREATE SERVICE →
+              </MuiButton>
+            ) : null)}
+        </Box>
+      </Paper>
+
+      {/* Opportunity stamp */}
+      {need.status === 'open' && isOpportunity && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            px: 1.5,
+            py: 0.5,
+            border: '2px solid rgba(22, 163, 74, 0.6)',
+            borderRadius: '2px',
+            transform: 'rotate(3deg)',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        >
+          <Typography
+            sx={{
+              fontFamily: '"Permanent Marker", cursive',
+              fontSize: '0.65rem',
+              color: 'rgba(22, 163, 74, 0.8)',
+              letterSpacing: 2,
+              textTransform: 'uppercase',
             }}
-            onClick={() => {
-              if (need.assigned_vendor_id) {
-                navigate(`/services/${need.assigned_vendor_id}`);
-              }
-            }}
-          />
+          >
+            OPPORTUNITY
+          </Typography>
+        </Box>
+      )}
+
+      {/* Overlap if filled */}
+      {need.status === 'filled' && (
+
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}
+        >
           <Box
             sx={{
-              position: 'absolute',
-              top: -10,
-              left: '50%',
-              transform: 'translateX(-50%) rotate(5deg)',
-              width: 50,
-              height: 18,
-              bgcolor: 'rgba(59, 130, 246, 0.5)',
-              borderRadius: '1px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              transform: 'rotate(-3deg) scale(0.95)',
+              pointerEvents: 'auto',
+              filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))',
             }}
-          />{' '}
-          {/* Blue tape holding the card */}
+          >
+            <VendorBusinessCard
+              vendor={{
+                vendor_name: assigned_vendor.vendor_name || 'Assigned Vendor',
+                category: need.category,
+                avg_rating: 4.8,
+                event_count: 12,
+              }}
+              onClick={() => {
+                if (assigned_vendor.service) {
+                  navigate(`/services/${assigned_vendor.service}`);
+                }
+              }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -10,
+                left: '50%',
+                transform: 'translateX(-50%) rotate(5deg)',
+                width: 50,
+                height: 18,
+                bgcolor: 'rgba(59, 130, 246, 0.5)',
+                borderRadius: '1px',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              }}
+            />{' '}
+            {/* Blue tape holding the card */}
+          </Box>
         </Box>
-      </Box>
-    )}
-  </Box>
-);
+      )}
+    </Box>
+  )
+};
 
 // --- Main Page Component ---
 
@@ -643,6 +732,93 @@ export default function EventDetailPageNew() {
               overflow: 'visible',
             }}
           >
+            {/* Status Banner */}
+            {['live', 'completed', 'published', 'event_ready'].includes(event.lifecycle_state) && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mb: 4,
+                  mt: -2,
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              >
+                {event.lifecycle_state === 'live' ? (
+                  <Typography
+                    sx={{
+                      fontFamily: '"Permanent Marker", cursive',
+                      fontSize: { xs: '1.2rem', md: '1.8rem' },
+                      color: '#92400e', // Amber 800
+                      transform: 'rotate(-2deg)',
+                    }}
+                  >
+                    <Highlighter color="rgba(251, 191, 36, 0.7)">happening now!</Highlighter>
+                  </Typography>
+                ) : event.lifecycle_state === 'completed' ? (
+                  <Box sx={{ textAlign: 'center', transform: 'rotate(1deg)' }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '1.1rem', md: '1.5rem' },
+                        color: 'text.secondary',
+                        mb: 0.5,
+                      }}
+                    >
+                      check out the highlights
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: 'serif',
+                        fontStyle: 'italic',
+                        color: 'text.disabled',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {getDaysAgo(event.start_time)}
+                    </Typography>
+                  </Box>
+                ) : event.lifecycle_state === 'published' ? (
+                  <Box sx={{ textAlign: 'center', transform: 'rotate(-1deg)' }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '1.1rem', md: '1.4rem' },
+                        color: 'rgba(37, 99, 235, 0.8)', // Primary blue
+                        mb: 0.5,
+                      }}
+                    >
+                      posted {getDaysAgo(event.created_at)}
+                    </Typography>
+                  </Box>
+                ) : event.lifecycle_state === 'event_ready' ? (
+                  <Box
+                    sx={{
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '1.2rem', md: '1.6rem' },
+                        color: '#16a34a', // Green 600
+                        transform: 'rotate(2deg)',
+                      }}
+                    >
+                      Live in...
+                    </Typography>
+                    <CuteTimer targetDate={event.start_time} />
+                  </Box>
+                ) : null}
+              </Box>
+            )}
+
             {/* Top Bar */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
               <IconButton
@@ -1011,8 +1187,11 @@ export default function EventDetailPageNew() {
                         >
                           LOCATION
                         </Typography>
-                        <MapPlaceholder
-                          location={event.location_address || event.location_name}
+                        <EventLocationMap
+                          locationName={event.location_name}
+                          locationAddress={event.location_address}
+                          latitude={event.latitude}
+                          longitude={event.longitude}
                         />
                       </Box>
                     )}
@@ -1024,6 +1203,7 @@ export default function EventDetailPageNew() {
                       <CapacityInfographic
                         capacity={event.capacity}
                         filled={event.ticket_count}
+                        startDate={event.start_time}
                       />
                     </Box>
                   )}
@@ -1137,61 +1317,62 @@ export default function EventDetailPageNew() {
                 {/* If not live/completed OR highlights are empty, we move infrastructure here */}
                 {(!['live', 'completed'].includes(event.lifecycle_state) ||
                   highlights.length === 0) && (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {/* Capacity Infographic (Moved from left if empty right) */}
-                    {event.capacity && highlights.length === 0 && (
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <CapacityInfographic
-                          capacity={event.capacity}
-                          filled={event.ticket_count}
-                        />
-                      </Box>
-                    )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {/* Capacity Infographic (Moved from left if empty right) */}
+                      {event.capacity && highlights.length === 0 && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                          <CapacityInfographic
+                            capacity={event.capacity}
+                            filled={event.ticket_count}
+                            startDate={event.start_time}
+                          />
+                        </Box>
+                      )}
 
-                    {/* Vendor Needs (Moved from left if empty right) */}
-                    {displayNeeds.length > 0 && highlights.length === 0 && (
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: '"Permanent Marker"',
-                            mb: 3,
-                            textAlign: 'center',
-                          }}
-                        >
-                          Host is Looking For...
-                        </Typography>
-                        {displayNeeds.map((need: any) => {
-                          const myServices = myServicesResponse?.data || [];
-                          const isEligible = myServices.some(
-                            (s: any) =>
-                              s.category
-                                .toLowerCase()
-                                .includes(need.category.toLowerCase()) ||
-                              need.category
-                                .toLowerCase()
-                                .includes(s.category.toLowerCase()),
-                          );
-                          const isOpportunity =
-                            isAuthenticated && !isEligible && need.status === 'open';
-                          return (
-                            <ClassifiedAd
-                              key={need.id}
-                              need={need}
-                              isEligible={isEligible}
-                              isOpportunity={isOpportunity}
-                              onInquire={(n) => {
-                                setSelectedNeed(n);
-                                setIsApplyModalOpen(true);
-                              }}
-                              navigate={navigate}
-                            />
-                          );
-                        })}
-                      </Box>
-                    )}
-                  </Box>
-                )}
+                      {/* Vendor Needs (Moved from left if empty right) */}
+                      {displayNeeds.length > 0 && highlights.length === 0 && (
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: '"Permanent Marker"',
+                              mb: 3,
+                              textAlign: 'center',
+                            }}
+                          >
+                            Host is Looking For...
+                          </Typography>
+                          {displayNeeds.map((need: any) => {
+                            const myServices = myServicesResponse?.data || [];
+                            const isEligible = myServices.some(
+                              (s: any) =>
+                                s.category
+                                  .toLowerCase()
+                                  .includes(need.category.toLowerCase()) ||
+                                need.category
+                                  .toLowerCase()
+                                  .includes(s.category.toLowerCase()),
+                            );
+                            const isOpportunity =
+                              isAuthenticated && !isEligible && need.status === 'open';
+                            return (
+                              <ClassifiedAd
+                                key={need.id}
+                                need={need}
+                                isEligible={isEligible}
+                                isOpportunity={isOpportunity}
+                                onInquire={(n) => {
+                                  setSelectedNeed(n);
+                                  setIsApplyModalOpen(true);
+                                }}
+                                navigate={navigate}
+                              />
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
 
                 {['live', 'completed'].includes(event.lifecycle_state) && (
                   <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>

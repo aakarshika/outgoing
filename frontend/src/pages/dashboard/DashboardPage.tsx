@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import { Briefcase, Calendar, MapPin, Plus, Ticket } from 'lucide-react';
 import { Edit2 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { EditApplicationModal } from '@/components/events/EditApplicationModal';
 import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
@@ -50,8 +50,24 @@ const tabs: { key: Tab; label: string; icon: typeof Calendar | typeof Briefcase 
 ];
 
 export default function DashboardPage() {
-  const [tab, setTab] = useState<Tab>('events');
-  const [serviceSubTab, setServiceSubTab] = useState<ServiceSubTab>('my_services');
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const tab = (searchParams.get('tab') as Tab) || 'events';
+  const serviceSubTab = (searchParams.get('subtab') as ServiceSubTab) || 'my_services';
+
+  const setTab = (newTab: Tab) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tab', newTab);
+    setSearchParams(newParams);
+  };
+
+  const setServiceSubTab = (newSubTab: ServiceSubTab) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('subtab', newSubTab);
+    setSearchParams(newParams);
+  };
+
   const [editingApplication, setEditingApplication] = useState<any | null>(null);
   const { data: eventsResponse, isLoading: eventsLoading } = useMyEvents();
   const { data: ticketsResponse, isLoading: ticketsLoading } = useMyTickets();
@@ -100,11 +116,10 @@ export default function DashboardPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
-                tab === t.key
-                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${tab === t.key
+                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}
@@ -429,6 +444,7 @@ export default function DashboardPage() {
                                 created_at: service.created_at,
                               }}
                               rotation={idx % 2 === 0 ? -0.5 : 0.5}
+                              onClick={() => navigate(`/services/${service.id}`)}
                             />
 
                             {/* Edit Service Button */}

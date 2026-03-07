@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -123,13 +123,19 @@ const labelStyle: React.CSSProperties = {
 
 export default function CreateServicePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
   const createMutation = useCreateVendorService();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateServiceFormData>();
+  } = useForm<CreateServiceFormData>({
+    defaultValues: {
+      category: categoryParam || '',
+    },
+  });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
