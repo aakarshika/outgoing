@@ -12,7 +12,7 @@ import {
 } from '@/features/needs/hooks';
 import type { EventNeed, NeedApplication } from '@/types/needs';
 
-export function ManageNeedsTab({ eventId }: { eventId: number }) {
+export function ManageNeedsTab({ eventId, isSeries }: { eventId: number; isSeries?: boolean }) {
   const { data: needsResponse, isLoading } = useEventNeeds(eventId);
   const needs = needsResponse?.data || [];
 
@@ -28,6 +28,7 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
   >('replaceable');
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
+  const [applyToSeries, setApplyToSeries] = useState(false);
 
   const handleCreateNeed = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +42,7 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
           criticality,
           budget_min: budgetMin || null,
           budget_max: budgetMax || null,
+          update_series: applyToSeries,
         },
       });
       toast.success('Need created successfully!');
@@ -205,6 +207,25 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                 </div>
               </div>
             </div>
+
+            {isSeries && (
+              <div className="flex items-center gap-3 bg-white/50 p-3 rounded border-2 border-dashed border-gray-400">
+                <input
+                  type="checkbox"
+                  id="applyToSeries"
+                  checked={applyToSeries}
+                  onChange={(e) => setApplyToSeries(e.target.checked)}
+                  className="w-5 h-5 rounded border-2 border-gray-800 text-blue-500 focus:ring-blue-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="applyToSeries"
+                  className="font-bold text-gray-800 cursor-pointer select-none"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Apply to entire series (all draft & published events)
+                </label>
+              </div>
+            )}
             <div className="flex justify-end gap-2 pt-6">
               <Button
                 type="button"
@@ -225,8 +246,9 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
               </Button>
             </div>
           </form>
-        </div>
-      )}
+        </div >
+      )
+      }
 
       <div className="space-y-6">
         {needs.length === 0 ? (
@@ -353,13 +375,12 @@ export function ManageNeedsTab({ eventId }: { eventId: number }) {
                               {app.vendor_name}
                             </span>
                             <span
-                              className={`text-[0.65rem] px-2 py-0.5 border-2 uppercase font-bold ${
-                                app.status === 'pending'
-                                  ? 'bg-yellow-200 border-yellow-600 text-yellow-900'
-                                  : app.status === 'accepted'
-                                    ? 'bg-green-200 border-green-600 text-green-900'
-                                    : 'bg-red-200 border-red-600 text-red-900'
-                              }`}
+                              className={`text-[0.65rem] px-2 py-0.5 border-2 uppercase font-bold ${app.status === 'pending'
+                                ? 'bg-yellow-200 border-yellow-600 text-yellow-900'
+                                : app.status === 'accepted'
+                                  ? 'bg-green-200 border-green-600 text-green-900'
+                                  : 'bg-red-200 border-red-600 text-red-900'
+                                }`}
                               style={{
                                 fontFamily: '"Permanent Marker", cursive',
                                 transform: 'rotate(-2deg)',

@@ -201,8 +201,10 @@ export async function deleteEvent(eventId: number) {
   return data;
 }
 
-export async function updateEventTicketTiers(eventId: number, tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>) {
-  const { data } = await client.put<ApiResponse<any>>(`/events/${eventId}/ticket_tiers/`, tiers);
+export async function updateEventTicketTiers(eventId: number, tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>, updateSeries: boolean = false) {
+  const { data } = await client.put<ApiResponse<any>>(`/events/${eventId}/ticket_tiers/`, tiers, {
+    params: { update_series: updateSeries }
+  });
   return data;
 }
 

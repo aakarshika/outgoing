@@ -218,8 +218,8 @@ export function useDeleteEvent() {
 export function useUpdateTicketTiers() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ eventId, tiers }: { eventId: number; tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }> }) =>
-      updateEventTicketTiers(eventId, tiers),
+    mutationFn: ({ eventId, tiers, updateSeries }: { eventId: number; tiers: Array<{ name: string, price: string, capacity?: number | null, is_refundable: boolean, refund_percentage?: number, description?: string, admits?: number }>, updateSeries?: boolean }) =>
+      updateEventTicketTiers(eventId, tiers, updateSeries),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['feed'] });

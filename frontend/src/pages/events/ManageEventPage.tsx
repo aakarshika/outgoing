@@ -217,6 +217,7 @@ export default function ManageEventPage() {
     'details',
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [applyToSeries, setApplyToSeries] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [latitude, setLatitude] = useState<string>(event?.latitude?.toString() || '');
@@ -370,6 +371,9 @@ export default function ManageEventPage() {
 
     // Append features as JSON
     formData.set('features', JSON.stringify(eventFeatures));
+    if (applyToSeries) {
+      formData.set('update_series', 'true');
+    }
 
     try {
       await updateEvent(event.id, formData);
@@ -386,7 +390,8 @@ export default function ManageEventPage() {
       // Update ticket tiers
       await updateTicketTiers.mutateAsync({
         eventId: event.id,
-        tiers: ticketTiers
+        tiers: ticketTiers,
+        updateSeries: applyToSeries
       });
 
       toast.success('Event updated successfully!');
@@ -1172,7 +1177,7 @@ export default function ManageEventPage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (!isCurrent) navigate(`/events/${occ.id}`);
+                                  if (!isCurrent) navigate(`/events/${occ.id}/manage`);
                                 }}
                                 className={`relative flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
                                   ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
@@ -1772,7 +1777,20 @@ export default function ManageEventPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2 sticky bottom-6 z-10">
+            <div className="flex items-center justify-end gap-6 pt-2 sticky bottom-6 z-10">
+              {event?.series && (
+                <label className="flex items-center gap-3 cursor-pointer group bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all">
+                  <input
+                    type="checkbox"
+                    checked={applyToSeries}
+                    onChange={(e) => setApplyToSeries(e.target.checked)}
+                    className="w-5 h-5 rounded border-2 border-gray-800 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
+                  />
+                  <span className="font-bold text-gray-800 select-none" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                    Apply to entire series
+                  </span>
+                </label>
+              )}
               <Button
                 type="submit"
                 size="lg"
@@ -1915,7 +1933,9 @@ export default function ManageEventPage() {
           </div>
         )}
 
-        {activeTab === 'needs' && <ManageNeedsTab eventId={event.id} />}
+        {activeTab === 'needs' && (
+          <ManageNeedsTab eventId={event.id} isSeries={!!event?.series} />
+        )}
       </div>
     </div>
   );

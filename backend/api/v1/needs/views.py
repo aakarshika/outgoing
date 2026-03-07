@@ -43,7 +43,29 @@ class EventNeedsView(APIView):
 
         serializer = EventNeedCreateSerializer(data=request.data)
         if serializer.is_valid():
+            update_series = serializer.validated_data.pop("update_series", False)
             need = serializer.save(event=event)
+            
+            if update_series and event.series:
+                from django.db import transaction
+                # Find all future/draft/published events in the same series
+                other_events = Event.objects.filter(
+                    series=event.series,
+                    lifecycle_state__in=["draft", "published"]
+                ).exclude(pk=event.pk)
+                
+                with transaction.atomic():
+                    for other in other_events:
+                        EventNeed.objects.create(
+                            event=other,
+                            title=need.title,
+                            description=need.description,
+                            category=need.category,
+                            criticality=need.criticality,
+                            budget_min=need.budget_min,
+                            budget_max=need.budget_max,
+                        )
+
             result = EventNeedSerializer(need)
             return success_response(
                 data=result.data, message="Need created", status=201

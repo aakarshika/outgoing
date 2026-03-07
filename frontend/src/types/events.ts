@@ -28,6 +28,7 @@ export interface EventTicketTier {
   color: string;
   price: string;
   capacity: number | null;
+  sold_count: number;
   is_refundable: boolean;
   refund_percentage: number;
   description: string;

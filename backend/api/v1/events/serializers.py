@@ -33,9 +33,14 @@ class EventCategorySerializer(serializers.ModelSerializer):
 
 
 class EventTicketTierSerializer(serializers.ModelSerializer):
+    sold_count = serializers.SerializerMethodField()
+
     class Meta:
         model = EventTicketTier
-        fields = ["id", "name", "color", "price", "capacity", "is_refundable", "refund_percentage"]
+        fields = ["id", "name", "color", "price", "capacity", "is_refundable", "refund_percentage", "sold_count"]
+
+    def get_sold_count(self, obj):
+        return obj.tickets.filter(status__in=["active", "used"]).count()
 
 
 class EventHostSerializer(serializers.Serializer):
@@ -70,7 +75,7 @@ class EventListSerializer(serializers.ModelSerializer):
     series = serializers.SerializerMethodField()
     user_is_interested = serializers.SerializerMethodField()
     user_has_ticket = serializers.SerializerMethodField()
-    media = EventMediaSerializer(many=True, read_only=True)
+    media = serializers.SerializerMethodField()
     ticket_tiers = EventTicketTierSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
@@ -125,6 +130,18 @@ class EventListSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.tickets.filter(goer=request.user, status="active").exists()
         return False
+
+    def get_media(self, obj):
+        """Aggregate media from the entire series if applicable."""
+        if obj.series_id:
+            # We use a filter on the related name 'media' across all events in the series
+            # But it's more direct to use EventMedia model
+            return EventMediaSerializer(
+                EventMedia.objects.filter(event__series_id=obj.series_id).order_by("order", "-created_at"),
+                many=True,
+                context=self.context
+            ).data
+        return EventMediaSerializer(obj.media.all(), many=True, context=self.context).data
 
     def get_reviews(self, obj):
         """Return a small subset of public reviews for snippets."""
@@ -264,14 +281,18 @@ class EventDetailSerializer(EventListSerializer):
         )
 
     def get_highlights(self, obj):
-        """Return highlights depending on event state."""
-        if obj.lifecycle_state in ["live", "completed"]:
-            # Uses the prefetched highlights
-            highlights = getattr(obj, "prefetched_highlights", obj.highlights.all())
-            return EventHighlightSerializer(
-                highlights, many=True, context=self.context
-            ).data
-        return []
+        """Aggregate highlights from the entire series if applicable."""
+        if obj.series_id:
+            highlights = EventHighlight.objects.filter(
+                event__series_id=obj.series_id, moderation_status="approved"
+            ).order_by("-created_at")
+        else:
+            # Fallback to single event highlights if not in a series
+            # (Prefetch optimization is less effective here but we maintain correctness)
+            highlights = obj.highlights.filter(moderation_status="approved").order_by(
+                "-created_at"
+            )
+        return EventHighlightSerializer(highlights, many=True, context=self.context).data
 
     def get_reviews(self, obj):
         """Return full reviews."""
@@ -366,6 +387,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "recurrence_rule",
             "generate_count",
             "ticket_tiers",
+            "update_series",
         ]
         read_only_fields = ["lifecycle_state", "occurrence_index"]
 
@@ -379,6 +401,24 @@ class EventCreateSerializer(serializers.ModelSerializer):
     generate_count = serializers.IntegerField(
         required=False, write_only=True, default=4, min_value=1, max_value=52
     )
+    update_series = serializers.BooleanField(
+        required=False, write_only=True, default=False
+    )
+
+    def to_internal_value(self, data):
+        """Parse JSON strings for specific fields when receiving multipart/form-data."""
+        # Check if data is a QueryDict-like object (common for multipart/form-data)
+        if hasattr(data, "getlist") and not isinstance(data, dict):
+            import json
+            data = data.copy()
+            for field in ("features", "tags", "ticket_tiers"):
+                val = data.get(field)
+                if isinstance(val, str) and val.strip():
+                    try:
+                        data[field] = json.loads(val)
+                    except (json.JSONDecodeError, ValueError):
+                        pass
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         if attrs.get("is_recurring") and not attrs.get("recurrence_rule"):

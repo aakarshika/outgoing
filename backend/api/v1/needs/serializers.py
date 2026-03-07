@@ -72,7 +72,10 @@ class EventNeedCreateSerializer(serializers.ModelSerializer):
             "criticality",
             "budget_min",
             "budget_max",
+            "update_series",
         ]
+
+    update_series = serializers.BooleanField(required=False, write_only=True, default=False)
 
 
 class NeedApplicationCreateSerializer(serializers.Serializer):

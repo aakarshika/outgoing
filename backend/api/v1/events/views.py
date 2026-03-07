@@ -146,20 +146,57 @@ class EventDetailView(APIView):
         if event.host != request.user:
             return error_response(message="Not authorized", status=403)
 
-        # Parse JSON string fields from multipart form data
-        data = request.data.copy()
-        for json_field in ("features", "tags"):
-            val = data.get(json_field)
-            if isinstance(val, str):
-                try:
-                    data[json_field] = json.loads(val)
-                except (json.JSONDecodeError, ValueError):
-                    pass
+        data = request.data
+        update_series = data.get("update_series") == "true" or data.get("update_series") is True
 
         serializer = EventCreateSerializer(event, data=data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            detail = EventDetailSerializer(event, context={"request": request})
+            with transaction.atomic():
+                updated_event = serializer.save()
+                
+                if update_series and updated_event.series:
+                    # Find all future/draft/published events in the same series
+                    other_events = Event.objects.filter(
+                        series=updated_event.series,
+                        lifecycle_state__in=["draft", "published"]
+                    ).exclude(pk=updated_event.pk)
+
+                    # Fields to propagate from validated_data
+                    propagate_fields = [
+                        "title", "description", "category", "location_name", 
+                        "location_address", "latitude", "longitude", "capacity",
+                        "event_ready_message", "check_in_instructions", "features", "tags"
+                    ]
+                    
+                    update_data = {}
+                    for field in propagate_fields:
+                        if field in serializer.validated_data:
+                            update_data[field] = serializer.validated_data[field]
+
+                    # Special handling for times: Sync time-of-day and duration, keep dates
+                    sync_times = "start_time" in serializer.validated_data or "end_time" in serializer.validated_data
+                    
+                    for other in other_events:
+                        for field, value in update_data.items():
+                            setattr(other, field, value)
+                        
+                        if sync_times:
+                            # Apply the same time of day and duration
+                            duration = updated_event.end_time - updated_event.start_time
+                            
+                            # Update start_time to same time of day on other's date
+                            new_start = other.start_time.replace(
+                                hour=updated_event.start_time.hour,
+                                minute=updated_event.start_time.minute,
+                                second=updated_event.start_time.second,
+                                microsecond=updated_event.start_time.microsecond
+                            )
+                            other.start_time = new_start
+                            other.end_time = new_start + duration
+                        
+                        other.save()
+
+            detail = EventDetailSerializer(updated_event, context={"request": request})
             return success_response(data=detail.data, message="Event updated")
         return error_response(message="Validation Error", errors=serializer.errors)
 
@@ -210,6 +247,7 @@ class EventTicketTierListView(APIView):
         if event.host != request.user:
             return error_response(message="Not authorized", status=403)
 
+        update_series = request.query_params.get("update_series") == "true"
         tiers_data = request.data
         if not isinstance(tiers_data, list):
             return error_response(message="Expected a list of tiers", status=400)
@@ -236,6 +274,28 @@ class EventTicketTierListView(APIView):
                         errors=serializer.errors,
                         status=400
                     )
+
+            if update_series and event.series:
+                other_events = Event.objects.filter(
+                    series=event.series,
+                    lifecycle_state__in=["draft", "published"]
+                ).exclude(pk=event.pk)
+                
+                for other in other_events:
+                    other.ticket_tiers.all().delete()
+                    for index, tier_data in enumerate(sorted_tiers):
+                        # Re-create tiers foreach event
+                        EventTicketTier.objects.create(
+                            event=other,
+                            name=tier_data["name"],
+                            description=tier_data.get("description", ""),
+                            admits=tier_data.get("admits", 1),
+                            color=tier_data.get("color", color_palette[index % len(color_palette)]),
+                            price=tier_data["price"],
+                            capacity=tier_data.get("capacity"),
+                            is_refundable=tier_data.get("is_refundable", False),
+                            refund_percentage=tier_data.get("refund_percentage", 100),
+                        )
                     
         updated_tiers = event.ticket_tiers.all()
         return success_response(
