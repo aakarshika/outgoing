@@ -1,30 +1,30 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from django.core.management.base import BaseCommand
-from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from apps.events.models import (
-    EventCategory,
-    EventSeries,
-    EventSeriesNeedTemplate,
     Event,
-    EventMedia,
+    EventCategory,
+    EventHighlight,
     EventInterest,
     EventLifecycleTransition,
-    EventHighlight,
+    EventMedia,
     EventReview,
     EventReviewMedia,
+    EventSeries,
+    EventSeriesNeedTemplate,
     EventVendorReview,
     EventView,
 )
-from apps.profiles.models import UserProfile
-from apps.vendors.models import VendorService, VendorReview
 from apps.needs.models import EventNeed, NeedApplication, NeedInvite
-from apps.tickets.models import Ticket
+from apps.profiles.models import UserProfile
 from apps.requests.models import EventRequest, RequestUpvote, RequestWishlist
+from apps.tickets.models import Ticket
+from apps.vendors.models import VendorReview, VendorService
 
 User = get_user_model()
 
@@ -40,12 +40,27 @@ CATEGORIES = [
     {"id": 11, "name": "Festivals", "slug": "festivals", "icon": "party-popper"},
     {"id": 2, "name": "Food & Drink", "slug": "food-drink", "icon": "utensils"},
     {"id": 1, "name": "Music", "slug": "music", "icon": "music"},
-    {"id": 10, "name": "Networking & Social", "slug": "networking-social", "icon": "users"},
+    {
+        "id": 10,
+        "name": "Networking & Social",
+        "slug": "networking-social",
+        "icon": "users",
+    },
     {"id": 3, "name": "Nightlife", "slug": "nightlife", "icon": "moon"},
-    {"id": 8, "name": "Outdoors & Adventure", "slug": "outdoors-adventure", "icon": "mountain"},
+    {
+        "id": 8,
+        "name": "Outdoors & Adventure",
+        "slug": "outdoors-adventure",
+        "icon": "mountain",
+    },
     {"id": 4, "name": "Sports & Fitness", "slug": "sports-fitness", "icon": "dumbbell"},
     {"id": 6, "name": "Tech & Innovation", "slug": "tech-innovation", "icon": "cpu"},
-    {"id": 7, "name": "Workshops & Classes", "slug": "workshops-classes", "icon": "book-open"},
+    {
+        "id": 7,
+        "name": "Workshops & Classes",
+        "slug": "workshops-classes",
+        "icon": "book-open",
+    },
 ]
 
 
@@ -71,7 +86,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Data wiped successfully."))
 
     @transaction.atomic
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         if not options["no_wipe"]:
             self.wipe_data()
 
@@ -117,15 +132,21 @@ class Command(BaseCommand):
 
         # Host + Goer
         for i in range(1, 4):
-            user_data.append((f"hostgoer{i}", f"HostGoer{i}", "Lastname", "host and goer"))
+            user_data.append(
+                (f"hostgoer{i}", f"HostGoer{i}", "Lastname", "host and goer")
+            )
 
         # Vendor + Goer
         for i in range(1, 4):
-            user_data.append((f"vendorgoer{i}", f"VendorGoer{i}", "Lastname", "vendor and goer"))
+            user_data.append(
+                (f"vendorgoer{i}", f"VendorGoer{i}", "Lastname", "vendor and goer")
+            )
 
         # Host + Vendor
         for i in range(1, 3):
-            user_data.append((f"hostvendor{i}", f"HostVendor{i}", "Lastname", "host and vendor"))
+            user_data.append(
+                (f"hostvendor{i}", f"HostVendor{i}", "Lastname", "host and vendor")
+            )
 
         # All three
         for i in range(1, 4):
@@ -152,9 +173,21 @@ class Command(BaseCommand):
             )
             users[username] = user
 
-        all_hosts = [u for u in users.values() if any(role in u.username for role in ["host", "omni"])]
-        all_vendors = [u for u in users.values() if any(role in u.username for role in ["vendor", "omni"])]
-        all_goers = [u for u in users.values() if any(role in u.username for role in ["goer", "omni"])]
+        all_hosts = [
+            u
+            for u in users.values()
+            if any(role in u.username for role in ["host", "omni"])
+        ]
+        all_vendors = [
+            u
+            for u in users.values()
+            if any(role in u.username for role in ["vendor", "omni"])
+        ]
+        all_goers = [
+            u
+            for u in users.values()
+            if any(role in u.username for role in ["goer", "omni"])
+        ]
 
         # Vendor services: ensure every vendor-capable user has at least one service
         self.stdout.write("Creating vendor services...")
@@ -164,12 +197,20 @@ class Command(BaseCommand):
             ("photography", "Lens & Light", "Capturing every moment."),
             ("catering", "Gourmet Bites", "Exquisite culinary delights."),
             ("staffing", "Safe Guard", "Professional security & staffing services."),
-            ("decor_floristry", "Ambient Designs", "Transforming spaces with stunning decor."),
+            (
+                "decor_floristry",
+                "Ambient Designs",
+                "Transforming spaces with stunning decor.",
+            ),
             ("lighting_audio", "Bright Star", "Dynamic event lighting & AV."),
             ("videography", "Visual Tech", "State-of-the-art video production."),
             ("food_truck", "Street Flavor", "Delicious food truck experiences."),
             ("bartending", "Mix Master", "Craft cocktails and bar service."),
-            ("event_planning", "Plan Perfect", "Full-service event planning & coordination."),
+            (
+                "event_planning",
+                "Plan Perfect",
+                "Full-service event planning & coordination.",
+            ),
         ]
         service_count = max(len(all_vendors), len(vendor_types))
         for i in range(service_count):
@@ -243,7 +284,7 @@ class Command(BaseCommand):
         cat_list = [db_categories[cat_data["slug"]] for cat_data in CATEGORIES]
         for i, cat in enumerate(cat_list):
             host = all_hosts[i % len(all_hosts)]
-            
+
             # Mix up statuses and offsets
             if i % 7 == 0:
                 state, status, offset = "draft", "draft", 30 + i
@@ -262,14 +303,9 @@ class Command(BaseCommand):
 
             event_key = f"event_{i}"
             events[event_key] = create_event(
-                f"Big {cat.name} Bash {i}",
-                host,
-                status,
-                state,
-                offset,
-                cat
+                f"Big {cat.name} Bash {i}", host, status, state, offset, cat
             )
-        
+
         # Add a couple of series events
         events["series_past"] = create_event(
             "Weekly Tech Meetup #1",
@@ -291,7 +327,7 @@ class Command(BaseCommand):
         )
 
         # Event Lifecycle Transitions
-        for key, e in events.items():
+        for e in events.values():
             if e.lifecycle_state != "draft":
                 EventLifecycleTransition.objects.create(
                     event=e,
@@ -305,16 +341,16 @@ class Command(BaseCommand):
         self.stdout.write("Creating needs and applications...")
         # Add needs to diverse events
         needs_list = []
-        for i, (key, e) in enumerate(list(events.items())[:10]):
+        for i, e in enumerate(list(events.values())[:10]):
             vendor_user = all_vendors[i % len(all_vendors)]
             service = services[i % len(services)]
-            
+
             need = EventNeed.objects.create(
                 event=e,
                 title=f"Need for {service.category}",
                 category=service.category,
                 budget_max=service.base_price * Decimal("1.2"),
-                status="filled" if i % 2 == 0 else "open"
+                status="filled" if i % 2 == 0 else "open",
             )
             needs_list.append(need)
 
@@ -336,13 +372,13 @@ class Command(BaseCommand):
                         need=need,
                         vendor=all_vendors[v_idx],
                         service=services[(i + j) % len(services)],
-                        status="pending"
+                        status="pending",
                     )
                     NeedInvite.objects.create(
                         need=need,
                         vendor=all_vendors[v_idx],
                         invited_by=e.host,
-                        message=f"Hey vendor, we'd love for you to join {e.title}!"
+                        message=f"Hey vendor, we'd love for you to join {e.title}!",
                     )
 
         # 7. Tickets
@@ -358,8 +394,10 @@ class Command(BaseCommand):
                         goer=goer,
                         defaults={
                             "ticket_type": "standard" if j % 3 != 0 else "flexible",
-                            "price_paid": e.ticket_price_standard if j % 3 != 0 else e.ticket_price_flexible,
-                        }
+                            "price_paid": e.ticket_price_standard
+                            if j % 3 != 0
+                            else e.ticket_price_flexible,
+                        },
                     )
                 e.ticket_count = num_tickets
                 e.save()
@@ -378,22 +416,25 @@ class Command(BaseCommand):
                     text=f"Check out this moment from {e.title}! Highlight #{j}",
                     moderation_status="approved",
                 )
-                EventHighlight.objects.filter(pk=h.pk).update(media_file=PLACEHOLDER_EVENT_IMG)
+                EventHighlight.objects.filter(pk=h.pk).update(
+                    media_file=PLACEHOLDER_EVENT_IMG
+                )
 
             # Event Media Gallery
             for j in range(1, 5):
                 m = EventMedia.objects.create(
-                    event=e, 
-                    media_type="image" if j % 2 == 0 else "video", 
+                    event=e,
+                    media_type="image" if j % 2 == 0 else "video",
                     category="gallery",
-                    order=j
+                    order=j,
                 )
                 EventMedia.objects.filter(pk=m.pk).update(file=PLACEHOLDER_EVENT_IMG)
 
         def random_rating(seed):
             return 3 + (seed % 3)
 
-            # Reviews
+        # Reviews
+        for i, e in enumerate(completed_events):
             for j in range(1, 6):
                 reviewer = all_goers[(j + i * 5) % len(all_goers)]
                 rev = EventReview.objects.create(
@@ -403,15 +444,19 @@ class Command(BaseCommand):
                     text=f"Review #{j} for {e.title}: An absolutely wonderful experience!",
                 )
                 rev_m = EventReviewMedia.objects.create(review=rev)
-                EventReviewMedia.objects.filter(pk=rev_m.pk).update(file=PLACEHOLDER_EVENT_IMG)
+                EventReviewMedia.objects.filter(pk=rev_m.pk).update(
+                    file=PLACEHOLDER_EVENT_IMG
+                )
 
                 # Vendor review for the service provided at this event (if any needs were filled)
                 for need in e.needs.filter(status="filled"):
                     EventVendorReview.objects.create(
-                        event_review=rev, 
-                        vendor=need.applications.filter(status="accepted").first().service, 
-                        rating=random_rating(j), 
-                        text="The vendor did a great job!"
+                        event_review=rev,
+                        vendor=need.applications.filter(status="accepted")
+                        .first()
+                        .service,
+                        rating=random_rating(j),
+                        text="The vendor did a great job!",
                     )
 
         # Standalone Vendor Reviews
@@ -448,17 +493,19 @@ class Command(BaseCommand):
                 category=cat,
                 location_city="New York" if i % 2 == 0 else "Los Angeles",
                 status="open" if i < 4 else "fulfilled",
-                fulfilled_event=events[f"event_{i}"] if i >= 4 else None
+                fulfilled_event=events[f"event_{i}"] if i >= 4 else None,
             )
             # Add upvotes
             for j in range(1, 5):
                 upvoter = all_goers[(i + j) % len(all_goers)]
                 RequestUpvote.objects.get_or_create(request=req, user=upvoter)
                 req.upvote_count += 1
-            
+
             # Add wishlist
             RequestWishlist.objects.create(
-                request=req, user=all_vendors[i % len(all_vendors)], wishlist_as="vendor"
+                request=req,
+                user=all_vendors[i % len(all_vendors)],
+                wishlist_as="vendor",
             )
             req.save()
 

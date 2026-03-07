@@ -104,7 +104,7 @@ class NeedApplicationReviewView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, application_id):
+    def patch(self, request, application_id):  # noqa: C901
         """Update application status."""
         try:
             application = NeedApplication.objects.select_related("need__event").get(
@@ -142,15 +142,19 @@ class NeedApplicationUpdateView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, application_id):
+    def patch(self, request, application_id):  # noqa: C901
         """Update proposed price or message of an application."""
         try:
-            application = NeedApplication.objects.get(pk=application_id, vendor=request.user)
+            application = NeedApplication.objects.get(
+                pk=application_id, vendor=request.user
+            )
         except NeedApplication.DoesNotExist:
             return error_response(message="Application not found", status=404)
 
         if application.status != "pending":
-            return error_response(message="Can only edit pending applications", status=400)
+            return error_response(
+                message="Can only edit pending applications", status=400
+            )
 
         serializer = NeedApplicationCreateSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
@@ -164,7 +168,9 @@ class NeedApplicationUpdateView(APIView):
             service_id = serializer.validated_data["service_id"]
             if service_id:
                 try:
-                    service = VendorService.objects.get(pk=service_id, vendor=request.user)
+                    service = VendorService.objects.get(
+                        pk=service_id, vendor=request.user
+                    )
                     application.service = service
                 except VendorService.DoesNotExist:
                     return error_response(message="Service not found", status=404)

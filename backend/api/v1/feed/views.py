@@ -3,7 +3,7 @@
 from datetime import datetime, time, timedelta
 from math import cos, radians
 
-from django.db.models import Q, Count, Avg
+from django.db.models import Avg, Count, Q
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView

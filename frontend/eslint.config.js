@@ -8,7 +8,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default tseslint.config(
-    { ignores: ['dist', '**/*'] },
+    { ignores: ['dist'] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ['**/*.{ts,tsx}'],
@@ -24,13 +24,18 @@ export default tseslint.config(
         },
         rules: {
             ...reactHooks.configs.recommended.rules,
-            'react-refresh/only-export-components': [
-                'warn',
-                { allowConstantExport: true },
-            ],
             'prettier/prettier': 'error',
             'simple-import-sort/imports': 'error',
             'simple-import-sort/exports': 'error',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            'react-hooks/exhaustive-deps': 'off',
+            'react-hooks/incompatible-library': 'off',
+            'react-hooks/set-state-in-effect': 'off',
+            'react-hooks/static-components': 'off',
+            'react-hooks/purity': 'off',
+            'react-refresh/only-export-components': 'off',
         },
     },
     eslintConfigPrettier,

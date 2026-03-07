@@ -1,11 +1,11 @@
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from 'react';
 
 const THEME_KEY = 'theme';
@@ -55,9 +55,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [theme, setTheme, toggleTheme],
   );
 
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

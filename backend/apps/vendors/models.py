@@ -1,7 +1,7 @@
 """Models for the vendors application."""
 
 from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from core.validators import validate_image_upload

@@ -2,8 +2,8 @@
 
 from rest_framework import serializers
 
-from apps.vendors.models import VendorService, VendorReview
 from api.v1.events.serializers import EventListSerializer
+from apps.vendors.models import VendorReview, VendorService
 
 
 class VendorServiceSerializer(serializers.ModelSerializer):
@@ -51,8 +51,8 @@ class VendorServiceSerializer(serializers.ModelSerializer):
 
     def get_past_events(self, obj):
         """Return events where this service was accepted."""
-        from apps.needs.models import NeedApplication
         from apps.events.models import Event
+        from apps.needs.models import NeedApplication
 
         # Find events through accepted applications
         event_ids = NeedApplication.objects.filter(

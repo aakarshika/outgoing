@@ -5,14 +5,14 @@ from django.contrib import admin
 from .models import (
     Event,
     EventCategory,
+    EventHighlight,
     EventInterest,
     EventLifecycleTransition,
-    EventSeries,
-    EventSeriesNeedTemplate,
     EventMedia,
-    EventHighlight,
     EventReview,
     EventReviewMedia,
+    EventSeries,
+    EventSeriesNeedTemplate,
     EventVendorReview,
     EventView,
 )

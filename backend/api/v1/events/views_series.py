@@ -1,9 +1,10 @@
 """Views for event series endpoints."""
 
-from dateutil.rrule import rrulestr
 from datetime import datetime, timedelta
-from django.utils import timezone
+
+from dateutil.rrule import rrulestr
 from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -14,9 +15,9 @@ from apps.needs.models import EventNeed
 from core.responses import error_response, success_response
 
 from .serializers import (
-    EventSeriesSerializer,
-    EventSeriesDetailSerializer,
     EventListSerializer,
+    EventSeriesDetailSerializer,
+    EventSeriesSerializer,
 )
 
 

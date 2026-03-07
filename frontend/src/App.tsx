@@ -25,17 +25,17 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-            <Navbar />
-            <Toaster />
-            <main className="flex-1 bg-background">
-              <AppRoutes />
-            </main>
-          </div>
-        </BrowserRouter>
-        {process.env.NODE_ENV === 'development' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
-      </AuthProvider>
+              <Navbar />
+              <Toaster />
+              <main className="flex-1 bg-background">
+                <AppRoutes />
+              </main>
+            </div>
+          </BrowserRouter>
+          {process.env.NODE_ENV === 'development' && (
+            <ReactQueryDevtools initialIsOpen={false} />
+          )}
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

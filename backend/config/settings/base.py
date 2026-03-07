@@ -1,8 +1,8 @@
 """Base settings for the monolith project."""
 
 import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 try:
     import dj_database_url

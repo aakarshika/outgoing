@@ -4,11 +4,11 @@ import client from '@/api/client';
 import type { EventRequestsResponse } from '@/types/requests';
 
 export async function fetchRequests(params: {
-    category?: string;
-    sort?: 'trending' | 'newest';
-    page?: number;
-    page_size?: number;
+  category?: string;
+  sort?: 'trending' | 'newest';
+  page?: number;
+  page_size?: number;
 }) {
-    const { data } = await client.get<EventRequestsResponse>('/requests/', { params });
-    return data;
+  const { data } = await client.get<EventRequestsResponse>('/requests/', { params });
+  return data;
 }

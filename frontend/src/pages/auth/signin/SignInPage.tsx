@@ -48,7 +48,11 @@ export default function SignInPage() {
   const inputClass =
     'w-full border-2 border-gray-800 bg-white px-4 py-2.5 text-base outline-none shadow-[2px_3px_0px_#333] transition-all focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_#333] focus:ring-0 placeholder:text-gray-400';
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
 
   return (
     <div
@@ -118,7 +122,10 @@ export default function SignInPage() {
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
               />
               {errors.username && (
-                <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                <p
+                  className="text-sm text-red-500 mt-1"
+                  style={{ fontFamily: '"Caveat", cursive' }}
+                >
                   {errors.username.message}
                 </p>
               )}
@@ -138,7 +145,10 @@ export default function SignInPage() {
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}
               />
               {errors.password && (
-                <p className="text-sm text-red-500 mt-1" style={{ fontFamily: '"Caveat", cursive' }}>
+                <p
+                  className="text-sm text-red-500 mt-1"
+                  style={{ fontFamily: '"Caveat", cursive' }}
+                >
                   {errors.password.message}
                 </p>
               )}
@@ -156,7 +166,10 @@ export default function SignInPage() {
 
           {/* Footer */}
           <div className="mt-6 text-center">
-            <p style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }} className="text-gray-600">
+            <p
+              style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+              className="text-gray-600"
+            >
               Don't have an account?{' '}
               <Link
                 to="/signup"

@@ -2,10 +2,12 @@ import { lazy, Suspense } from 'react';
 import { Route } from 'react-router-dom';
 
 const UserInfoSection = lazy(() =>
-  import('./sections/UserInfoSection').then((m) => ({ default: m.UserInfoSection }))
+  import('./sections/UserInfoSection').then((m) => ({ default: m.UserInfoSection })),
 );
 const AccountSettingsSection = lazy(() =>
-  import('./sections/AccountSettingsSection').then((m) => ({ default: m.AccountSettingsSection }))
+  import('./sections/AccountSettingsSection').then((m) => ({
+    default: m.AccountSettingsSection,
+  })),
 );
 
 const fallback = (

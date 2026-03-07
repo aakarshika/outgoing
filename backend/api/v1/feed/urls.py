@@ -3,13 +3,13 @@
 from django.urls import path
 
 from .views import (
-    FeedView,
     CarouselFeedView,
-    RecentlyViewedFeedView,
     CompletedHighlightsFeedView,
-    UpcomingFeedView,
+    FeedView,
     IconicHostsFeedView,
+    RecentlyViewedFeedView,
     TopVendorsFeedView,
+    UpcomingFeedView,
 )
 
 urlpatterns = [

@@ -1,25 +1,23 @@
 """Serializers for event data."""
 
+from dateutil.rrule import rrulestr
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.events.models import (
     Event,
     EventCategory,
-    EventSeries,
-    EventSeriesNeedTemplate,
+    EventHighlight,
     EventInterest,
     EventLifecycleTransition,
-    EventHighlight,
+    EventMedia,
     EventReview,
     EventReviewMedia,
+    EventSeries,
+    EventSeriesNeedTemplate,
     EventVendorReview,
-    EventMedia,
 )
-
-from dateutil.rrule import rrulestr
-from django.utils import timezone
-from django.db import transaction
-
 from apps.tickets.models import Ticket
 
 

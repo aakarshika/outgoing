@@ -2,8 +2,12 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from apps.events.models import Event, EventSeries, EventSeriesNeedTemplate
-from apps.events.models import EventCategory
+from apps.events.models import (
+    Event,
+    EventCategory,
+    EventSeries,
+    EventSeriesNeedTemplate,
+)
 
 pytestmark = pytest.mark.django_db
 

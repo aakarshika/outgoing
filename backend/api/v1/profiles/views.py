@@ -5,9 +5,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from apps.events.models import Event, EventReview
-from apps.tickets.models import Ticket
-from apps.vendors.models import VendorService, VendorReview
 from apps.profiles.services import get_or_create_profile
+from apps.tickets.models import Ticket
+from apps.vendors.models import VendorReview, VendorService
 from core.responses import error_response, success_response
 from core.serializers import SuccessResponseSerializer
 
@@ -66,18 +66,26 @@ class PublicShowcaseView(APIView):
                 "slug": e.slug,
                 "start_time": e.start_time,
                 "location_name": e.location_name,
-                "cover_image": request.build_absolute_uri(e.cover_image.url) if e.cover_image else None
+                "cover_image": request.build_absolute_uri(e.cover_image.url)
+                if e.cover_image
+                else None,
             }
-            for e in user.hosted_events.filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES).order_by("-start_time")[:10]
+            for e in user.hosted_events.filter(
+                lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+            ).order_by("-start_time")[:10]
         ]
-        
+
         # Attended Events
-        tickets = Ticket.objects.select_related("event").filter(
-            goer=user, 
-            status__in=["active", "used"],
-            event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-        ).order_by("-event__start_time")[:10]
-        
+        tickets = (
+            Ticket.objects.select_related("event")
+            .filter(
+                goer=user,
+                status__in=["active", "used"],
+                event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
+            )
+            .order_by("-event__start_time")[:10]
+        )
+
         attended_events = [
             {
                 "id": t.event.id,
@@ -85,80 +93,145 @@ class PublicShowcaseView(APIView):
                 "slug": t.event.slug,
                 "start_time": t.event.start_time,
                 "location_name": t.event.location_name,
-                "cover_image": request.build_absolute_uri(t.event.cover_image.url) if t.event.cover_image else None
+                "cover_image": request.build_absolute_uri(t.event.cover_image.url)
+                if t.event.cover_image
+                else None,
             }
             for t in tickets
         ]
-        
+
         # Vendor Services
-        active_services = VendorService.objects.filter(vendor=user, is_active=True).order_by("-created_at")
+        active_services = VendorService.objects.filter(
+            vendor=user, is_active=True
+        ).order_by("-created_at")
         services = [
             {
                 "id": s.id,
                 "title": s.title,
                 "category": s.category,
                 "base_price": str(s.base_price) if s.base_price else None,
-                "portfolio_image": request.build_absolute_uri(s.portfolio_image.url) if s.portfolio_image else None
+                "portfolio_image": request.build_absolute_uri(s.portfolio_image.url)
+                if s.portfolio_image
+                else None,
             }
             for s in active_services[:5]
         ]
-        
+
         # Badges
         badges = []
-        hosted_count = user.hosted_events.filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES).count()
+        hosted_count = user.hosted_events.filter(
+            lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+        ).count()
         if hosted_count >= 3:
-            badges.append({"id": "host_pro", "label": "Host Extraordinaire", "icon": "star", "color": "#fef08a"})
+            badges.append(
+                {
+                    "id": "host_pro",
+                    "label": "Host Extraordinaire",
+                    "icon": "star",
+                    "color": "#fef08a",
+                }
+            )
         elif hosted_count > 0:
-            badges.append({"id": "host", "label": "Event Host", "icon": "award", "color": "#e2e8f0"})
-            
+            badges.append(
+                {
+                    "id": "host",
+                    "label": "Event Host",
+                    "icon": "award",
+                    "color": "#e2e8f0",
+                }
+            )
+
         if active_services.exists():
-            badges.append({"id": "vendor", "label": "Trusted Vendor", "icon": "briefcase", "color": "#fdba74"})
-            
-        attended_count = Ticket.objects.filter(goer=user, status__in=["active", "used"], event__lifecycle_state__in=["live", "completed"]).count()
+            badges.append(
+                {
+                    "id": "vendor",
+                    "label": "Trusted Vendor",
+                    "icon": "briefcase",
+                    "color": "#fdba74",
+                }
+            )
+
+        attended_count = Ticket.objects.filter(
+            goer=user,
+            status__in=["active", "used"],
+            event__lifecycle_state__in=["live", "completed"],
+        ).count()
         if attended_count >= 5:
-            badges.append({"id": "social", "label": "Social Butterfly", "icon": "users", "color": "#a7f3d0"})
-            
+            badges.append(
+                {
+                    "id": "social",
+                    "label": "Social Butterfly",
+                    "icon": "users",
+                    "color": "#a7f3d0",
+                }
+            )
+
         if hosted_count == 0 and attended_count > 0:
-            badges.append({"id": "enthusiast", "label": "Enthusiast", "icon": "heart", "color": "#fecaca"})
+            badges.append(
+                {
+                    "id": "enthusiast",
+                    "label": "Enthusiast",
+                    "icon": "heart",
+                    "color": "#fecaca",
+                }
+            )
 
         # Testimonials
-        event_reviews = EventReview.objects.select_related("reviewer", "reviewer__profile", "event").filter(
-            event__host=user, is_public=True
-        ).order_by("-created_at")[:5]
-        
-        vendor_reviews = VendorReview.objects.select_related("reviewer", "reviewer__profile", "vendor_service").filter(
-            vendor_service__vendor=user, is_public=True
-        ).order_by("-created_at")[:5]
+        event_reviews = (
+            EventReview.objects.select_related("reviewer", "reviewer__profile", "event")
+            .filter(event__host=user, is_public=True)
+            .order_by("-created_at")[:5]
+        )
+
+        vendor_reviews = (
+            VendorReview.objects.select_related(
+                "reviewer", "reviewer__profile", "vendor_service"
+            )
+            .filter(vendor_service__vendor=user, is_public=True)
+            .order_by("-created_at")[:5]
+        )
 
         testimonials = []
         for r in event_reviews:
             r_profile = getattr(r.reviewer, "profile", None)
-            avatar_url = request.build_absolute_uri(r_profile.avatar.url) if r_profile and r_profile.avatar else None
-            testimonials.append({
-                "id": f"event_{r.id}",
-                "type": "event",
-                "text": r.text,
-                "rating": r.rating,
-                "reviewer_name": r.reviewer.username,
-                "reviewer_avatar": avatar_url,
-                "context": r.event.title,
-                "date": r.created_at
-            })
-            
+            avatar_url = (
+                request.build_absolute_uri(r_profile.avatar.url)
+                if r_profile and r_profile.avatar
+                else None
+            )
+            testimonials.append(
+                {
+                    "id": f"event_{r.id}",
+                    "type": "event",
+                    "text": r.text,
+                    "rating": r.rating,
+                    "reviewer_name": r.reviewer.username,
+                    "reviewer_avatar": avatar_url,
+                    "context": r.event.title,
+                    "date": r.created_at,
+                }
+            )
+
         for r in vendor_reviews:
             r_profile = getattr(r.reviewer, "profile", None)
-            avatar_url = request.build_absolute_uri(r_profile.avatar.url) if r_profile and r_profile.avatar else None
-            testimonials.append({
-                "id": f"vendor_{r.id}",
-                "type": "vendor",
-                "text": r.text,
-                "rating": r.rating,
-                "reviewer_name": r.reviewer.username,
-                "reviewer_avatar": avatar_url,
-                "context": r.vendor_service.title,
-                "date": r.created_at
-            })
-            
+            avatar_url = (
+                request.build_absolute_uri(r_profile.avatar.url)
+                if r_profile and r_profile.avatar
+                else None
+            )
+            testimonials.append(
+                {
+                    "id": f"vendor_{r.id}",
+                    "type": "vendor",
+                    "text": r.text,
+                    "rating": r.rating,
+                    "reviewer_name": r.reviewer.username,
+                    "reviewer_avatar": avatar_url,
+                    "context": r.vendor_service.title,
+                    "date": r.created_at,
+                }
+            )
+
         testimonials.sort(key=lambda x: x["date"], reverse=True)
         testimonials = testimonials[:8]
 
@@ -183,4 +256,3 @@ class PublicShowcaseView(APIView):
         }
 
         return success_response(data=data)
-

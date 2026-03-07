@@ -3,59 +3,59 @@
 import type { ApiResponse } from './events';
 
 export interface NeedApplication {
-    id: number;
-    vendor_name: string;
-    need_title?: string;
-    event_title?: string;
-    event_id?: number;
-    service: number | null; // ID of the VendorService
-    message: string;
-    proposed_price: string | null;
-    status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
-    created_at: string;
+  id: number;
+  vendor_name: string;
+  need_title?: string;
+  event_title?: string;
+  event_id?: number;
+  service: number | null; // ID of the VendorService
+  message: string;
+  proposed_price: string | null;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at: string;
 }
 
 export interface EventNeed {
-    id: number;
-    title: string;
-    description: string;
-    category: string;
-    criticality: 'essential' | 'replaceable' | 'non_substitutable';
-    budget_min: string | null;
-    budget_max: string | null;
-    status: 'open' | 'filled' | 'cancelled';
-    assigned_vendor: number | null;
-    application_count: number;
-    applications: NeedApplication[];
-    created_at: string;
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  criticality: 'essential' | 'replaceable' | 'non_substitutable';
+  budget_min: string | null;
+  budget_max: string | null;
+  status: 'open' | 'filled' | 'cancelled';
+  assigned_vendor: number | null;
+  application_count: number;
+  applications: NeedApplication[];
+  created_at: string;
 }
 
 export interface NeedInvite {
-    id: number;
-    need: number;
-    need_title: string;
-    event_id: number;
-    event_title: string;
-    vendor: number;
-    invited_by_username: string;
-    message: string;
-    status: 'pending' | 'applied' | 'dismissed';
-    created_at: string;
+  id: number;
+  need: number;
+  need_title: string;
+  event_id: number;
+  event_title: string;
+  vendor: number;
+  invited_by_username: string;
+  message: string;
+  status: 'pending' | 'applied' | 'dismissed';
+  created_at: string;
 }
 
 export interface VendorOpportunity {
-    need_id: number;
-    event_id: number;
-    event_title: string;
-    event_start_time: string;
-    event_location_name: string;
-    need_title: string;
-    need_description: string;
-    category: string;
-    criticality: 'essential' | 'replaceable' | 'non_substitutable';
-    budget_min: string | null;
-    budget_max: string | null;
-    is_invited: boolean;
+  need_id: number;
+  event_id: number;
+  event_title: string;
+  event_start_time: string;
+  event_location_name: string;
+  need_title: string;
+  need_description: string;
+  category: string;
+  criticality: 'essential' | 'replaceable' | 'non_substitutable';
+  budget_min: string | null;
+  budget_max: string | null;
+  is_invited: boolean;
 }
 
 export type EventNeedListResponse = ApiResponse<EventNeed[]>;

@@ -3,10 +3,10 @@
 from django.urls import path
 
 from .views_series import (
-    EventSeriesListCreateView,
     EventSeriesDetailView,
-    EventSeriesOccurrencesView,
     EventSeriesGenerateView,
+    EventSeriesListCreateView,
+    EventSeriesOccurrencesView,
 )
 
 urlpatterns = [

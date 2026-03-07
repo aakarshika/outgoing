@@ -1,6 +1,5 @@
 import client from '@/api/client';
 import { ApiResponse } from '@/types/api';
-
 import { UserRole } from '@/types/roles';
 
 export interface User {

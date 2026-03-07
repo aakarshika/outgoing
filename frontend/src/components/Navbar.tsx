@@ -1,11 +1,23 @@
-import { Bell, Briefcase, CalendarDays, Menu, Moon, Plus, Sun, X, User, LayoutDashboard, Search } from 'lucide-react';
+import {
+  Bell,
+  Briefcase,
+  CalendarDays,
+  LayoutDashboard,
+  Menu,
+  Moon,
+  Plus,
+  Search,
+  Sun,
+  User,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/features/auth/hooks';
 import { useAlerts } from '@/features/alerts/hooks';
+import { useAuth } from '@/features/auth/hooks';
 import { useEventAutocomplete } from '@/features/events/hooks';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
@@ -61,9 +73,17 @@ export function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-4">
-              <Link to="/" className="flex flex-shrink-0 items-center mr-4 relative group">
+              <Link
+                to="/"
+                className="flex flex-shrink-0 items-center mr-4 relative group"
+              >
                 <div className="absolute -inset-1 bg-yellow-300 opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
-                <span className="text-2xl font-bold text-gray-900 relative z-10" style={{ fontFamily: '"Permanent Marker"' }}>Outgoing</span>
+                <span
+                  className="text-2xl font-bold text-gray-900 relative z-10"
+                  style={{ fontFamily: '"Permanent Marker"' }}
+                >
+                  Outgoing
+                </span>
               </Link>
               <div className="hidden md:flex relative w-64 lg:w-96">
                 <form onSubmit={handleSearchSubmit} className="w-full relative">
@@ -88,7 +108,9 @@ export function Navbar() {
                         onClick={() => handleSuggestionClick(suggestion.title)}
                         className="w-full flex flex-col items-start rounded-md px-3 py-2 text-left hover:bg-muted transition-colors"
                       >
-                        <p className="text-sm font-medium line-clamp-1">{suggestion.title}</p>
+                        <p className="text-sm font-medium line-clamp-1">
+                          {suggestion.title}
+                        </p>
                         <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                           {[suggestion.category_name, suggestion.location_name]
                             .filter(Boolean)
@@ -104,7 +126,12 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
-                  <Button variant="ghost" size="icon" asChild className="relative hidden sm:inline-flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="relative hidden sm:inline-flex"
+                  >
                     <Link to="/alerts" aria-label="Alerts">
                       <Bell className="h-4 w-4" />
                       {alertsCount > 0 && (
@@ -114,7 +141,13 @@ export function Navbar() {
                       )}
                     </Link>
                   </Button>
-                  <Button variant="default" size="sm" asChild className="hidden gap-1.5 sm:inline-flex rounded-none border-2 border-gray-800 bg-blue-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 transition-all font-bold" style={{ fontFamily: '"Permanent Marker"' }}>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    asChild
+                    className="hidden gap-1.5 sm:inline-flex rounded-none border-2 border-gray-800 bg-blue-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 transition-all font-bold"
+                    style={{ fontFamily: '"Permanent Marker"' }}
+                  >
                     <Link to="/events/create">
                       <Plus className="h-4 w-4" /> Create Event
                     </Link>
@@ -122,10 +155,20 @@ export function Navbar() {
                 </>
               ) : (
                 <div className="hidden gap-2 sm:flex">
-                  <Button variant="ghost" size="sm" asChild className="font-bold font-serif hover:bg-yellow-200 hover:rotate-2 transition-all">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="font-bold font-serif hover:bg-yellow-200 hover:rotate-2 transition-all"
+                  >
                     <Link to="/signin">Sign In</Link>
                   </Button>
-                  <Button size="sm" asChild className="rounded-none border-2 border-gray-800 bg-pink-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 transition-all font-bold" style={{ fontFamily: '"Permanent Marker"' }}>
+                  <Button
+                    size="sm"
+                    asChild
+                    className="rounded-none border-2 border-gray-800 bg-pink-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 transition-all font-bold"
+                    style={{ fontFamily: '"Permanent Marker"' }}
+                  >
                     <Link to="/signup">Sign Up</Link>
                   </Button>
                 </div>
@@ -165,7 +208,11 @@ export function Navbar() {
           >
             {isAuthenticated && (
               <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5 sm:hidden">
-                <Link to="/events/create" className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-2.5 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500" style={{ fontFamily: '"Permanent Marker"' }}>
+                <Link
+                  to="/events/create"
+                  className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-2.5 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500"
+                  style={{ fontFamily: '"Permanent Marker"' }}
+                >
                   <Plus className="h-4 w-4" /> Create Event
                 </Link>
               </div>
@@ -186,7 +233,13 @@ export function Navbar() {
                   </button>
                 </div>
 
-                <p className="mb-3 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(-1deg)' }}>
+                <p
+                  className="mb-3 text-sm uppercase tracking-wider text-gray-600"
+                  style={{
+                    fontFamily: '"Permanent Marker"',
+                    transform: 'rotate(-1deg)',
+                  }}
+                >
                   Workspace
                 </p>
                 <div className="grid gap-1">
@@ -202,7 +255,13 @@ export function Navbar() {
                     </Link>
                   ))}
                 </div>
-                <p className="mb-3 mt-5 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(1deg)' }}>
+                <p
+                  className="mb-3 mt-5 text-sm uppercase tracking-wider text-gray-600"
+                  style={{
+                    fontFamily: '"Permanent Marker"',
+                    transform: 'rotate(1deg)',
+                  }}
+                >
                   For Vendors
                 </p>
                 <div className="grid gap-1">
@@ -221,21 +280,39 @@ export function Navbar() {
               </div>
             ) : (
               <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
-                <p className="mb-3 text-sm uppercase tracking-wider text-gray-600" style={{ fontFamily: '"Permanent Marker"', transform: 'rotate(-2deg)' }}>
+                <p
+                  className="mb-3 text-sm uppercase tracking-wider text-gray-600"
+                  style={{
+                    fontFamily: '"Permanent Marker"',
+                    transform: 'rotate(-2deg)',
+                  }}
+                >
                   Account
                 </p>
                 <div className="grid gap-3">
-                  <Link to="/signin" className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-100" style={{ fontFamily: '"Permanent Marker"' }}>
+                  <Link
+                    to="/signin"
+                    className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-100"
+                    style={{ fontFamily: '"Permanent Marker"' }}
+                  >
                     Sign In
                   </Link>
-                  <Link to="/signup" className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-pink-400 px-4 py-2 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500" style={{ fontFamily: '"Permanent Marker"' }}>
+                  <Link
+                    to="/signup"
+                    className="flex items-center justify-center rounded-none border-2 border-gray-800 bg-pink-400 px-4 py-2 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500"
+                    style={{ fontFamily: '"Permanent Marker"' }}
+                  >
                     Sign Up
                   </Link>
                 </div>
               </div>
             )}
             {isAuthenticated && (
-              <button onClick={logout} className="w-full rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-red-100" style={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}>
+              <button
+                onClick={logout}
+                className="w-full rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-red-100"
+                style={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}
+              >
                 Logout
               </button>
             )}

@@ -4,9 +4,9 @@ from django.urls import path
 
 from .views import (
     MyServicesView,
+    VendorReviewCreateView,
     VendorServiceDetailView,
     VendorServiceListCreateView,
-    VendorReviewCreateView,
 )
 
 urlpatterns = [

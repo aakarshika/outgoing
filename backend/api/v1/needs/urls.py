@@ -4,14 +4,14 @@ from django.urls import path
 
 from .views import (
     EventNeedsView,
+    MyNeedApplicationsView,
+    MyNeedInvitesView,
+    MyPotentialOpportunitiesView,
+    MyVendorOpportunitiesView,
     NeedApplicationReviewView,
     NeedApplicationUpdateView,
     NeedApplyView,
-    MyNeedApplicationsView,
     NeedInviteCreateView,
-    MyNeedInvitesView,
-    MyVendorOpportunitiesView,
-    MyPotentialOpportunitiesView,
 )
 
 urlpatterns = [

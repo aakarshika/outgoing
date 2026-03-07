@@ -19,15 +19,15 @@ from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
 
 from .serializers import (
+    EventAttendeeSerializer,
     EventCategorySerializer,
     EventCreateSerializer,
     EventDetailSerializer,
-    EventListSerializer,
-    EventAttendeeSerializer,
-    EventTransitionRequestSerializer,
-    EventLifecycleTransitionSerializer,
     EventHighlightSerializer,
+    EventLifecycleTransitionSerializer,
+    EventListSerializer,
     EventReviewSerializer,
+    EventTransitionRequestSerializer,
 )
 
 

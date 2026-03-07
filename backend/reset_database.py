@@ -8,21 +8,22 @@ from pathlib import Path
 # Setup Django before importing models
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
 
-import django
-from django.contrib.auth import get_user_model
-from django.core.management import call_command
+import django  # noqa: E402
+from django.contrib.auth import get_user_model  # noqa: E402
+from django.core.management import call_command  # noqa: E402
 
 # Initialize Django
 django.setup()
 
 # Get BASE_DIR from settings
-from django.conf import settings
+from django.conf import settings  # noqa: E402
+
 BASE_DIR = Path(settings.BASE_DIR)
 
 
 def drop_database():
     """Drop the SQLite database file."""
-    db_path = BASE_DIR / 'db.sqlite3'
+    db_path = BASE_DIR / "db.sqlite3"
     if db_path.exists():
         print(f"Dropping database {db_path}...")
         try:
@@ -39,11 +40,12 @@ def create_tables():
     """Create all database tables from migrations."""
     print("Running migrations...")
     try:
-        call_command('migrate', verbosity=1)
+        call_command("migrate", verbosity=1)
         print("✓ Database tables created from migrations")
     except Exception as e:
         print(f"✗ Critical error running migrations: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -53,14 +55,15 @@ def create_superuser():
     print("\nCreating superuser...")
     try:
         User = get_user_model()
-        if not User.objects.filter(username='root').exists():
-            User.objects.create_superuser('root', 'root@root.com', 'root')
+        if not User.objects.filter(username="root").exists():
+            User.objects.create_superuser("root", "root@root.com", "root")
             print("✓ Superuser 'root' created")
         else:
             print("✓ Superuser 'root' already exists")
     except Exception as e:
         print(f"✗ Error creating superuser: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -69,6 +72,7 @@ def seed_categories():
     print("\nSeeding event categories...")
     try:
         from apps.events.models import EventCategory
+
         categories = [
             ("Music", "music", "music"),
             ("Food & Drink", "food-drink", "utensils"),
@@ -83,37 +87,37 @@ def seed_categories():
             ("Festivals", "festivals", "party-popper"),
             ("Community", "community", "heart-handshake"),
         ]
-        
+
         count = 0
         for name, slug, icon in categories:
             _, created = EventCategory.objects.get_or_create(
-                slug=slug,
-                defaults={"name": name, "icon": icon}
+                slug=slug, defaults={"name": name, "icon": icon}
             )
             if created:
                 count += 1
-                
+
         print(f"✓ Seeded {count} event categories")
     except Exception as e:
         print(f"✗ Error seeding categories: {e}")
         import traceback
+
         traceback.print_exc()
 
 
 def main():
-    print("="*60)
+    print("=" * 60)
     print("DATABASE RESET SCRIPT (MIGRATIONS)")
-    print("="*60)
-    
+    print("=" * 60)
+
     drop_database()
     create_tables()
     create_superuser()
     seed_categories()
-    
-    print("\n" + "="*60)
+
+    print("\n" + "=" * 60)
     print("RESET COMPLETE")
-    print("="*60)
+    print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

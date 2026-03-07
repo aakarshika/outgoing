@@ -4,13 +4,13 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.vendors.models import VendorService, VendorReview
+from apps.vendors.models import VendorReview, VendorService
 from core.responses import error_response, success_response
 
 from .serializers import (
+    VendorReviewSerializer,
     VendorServiceCreateSerializer,
     VendorServiceSerializer,
-    VendorReviewSerializer,
 )
 
 
