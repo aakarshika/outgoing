@@ -120,7 +120,7 @@ export function HeroSection() {
               <Media
                 src={eventMedia.url}
                 alt={event.title}
-                className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[5000ms] ${isActive ? 'scale-105' : 'scale-100'}`}
+                className={`absolute inset-0 h-full w-full object-cover transition-transform duration-&lsqb;5000ms&rsqb; ${isActive ? 'scale-105' : 'scale-100'}`}
               />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary to-primary/70" />

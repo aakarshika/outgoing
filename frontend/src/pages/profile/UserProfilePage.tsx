@@ -5,10 +5,25 @@ import {
   IconButton,
   Paper,
   ThemeProvider,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Award, Briefcase, Heart, MapPin, Star } from 'lucide-react';
+import {
+  ArrowLeft,
+  Award,
+  Briefcase,
+  Crosshair,
+  Crown,
+  Heart,
+  MapPin,
+  PartyPopper,
+  Sparkles,
+  Sprout,
+  Star,
+  Tent,
+  Wrench,
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Media } from '@/components/ui/media';
@@ -99,9 +114,9 @@ const PolaroidFrame = ({
   );
 };
 
-const StickerBadge = ({ icon: Icon, label, color, rotation }: any) => {
+const StickerBadge = ({ icon: Icon, label, color, rotation, isEarned = true, description = '' }: any) => {
   const rot = rotation ?? Math.random() * 10 - 5;
-  return (
+  const content = (
     <Paper
       elevation={2}
       sx={{
@@ -110,12 +125,16 @@ const StickerBadge = ({ icon: Icon, label, color, rotation }: any) => {
         gap: 1,
         py: 1,
         px: 2,
-        bgcolor: color,
+        bgcolor: isEarned ? color : '#e5e7eb',
+        color: isEarned ? 'inherit' : '#9ca3af',
         borderRadius: '20px',
         transform: `rotate(${rot}deg)`,
         border: '2px solid white',
         fontFamily: '"Permanent Marker", cursive',
         whiteSpace: 'nowrap',
+        opacity: isEarned ? 1 : 0.6,
+        filter: isEarned ? 'none' : 'grayscale(100%)',
+        cursor: description ? 'help' : 'default',
       }}
     >
       <Icon size={18} />
@@ -124,6 +143,12 @@ const StickerBadge = ({ icon: Icon, label, color, rotation }: any) => {
       </Typography>
     </Paper>
   );
+
+  return description ? (
+    <Tooltip title={description} arrow placement="top">
+      {content}
+    </Tooltip>
+  ) : content;
 };
 
 export default function UserProfilePage() {
@@ -147,21 +172,23 @@ export default function UserProfilePage() {
 
   const profile = response.data;
 
+  // Icon mapping for tag/badge icons from the backend
   const getIconForBadge = (iconName: string) => {
-    switch (iconName) {
-      case 'star':
-        return Star;
-      case 'award':
-        return Award;
-      case 'heart':
-        return Heart;
-      case 'briefcase':
-        return Briefcase;
-      case 'users':
-        return Award;
-      default:
-        return Star;
-    }
+    const iconMap: Record<string, any> = {
+      star: Star,
+      award: Award,
+      heart: Heart,
+      briefcase: Briefcase,
+      'party-popper': PartyPopper,
+      tent: Tent,
+      wrench: Wrench,
+      sprout: Sprout,
+      crown: Crown,
+      sparkles: Sparkles,
+      crosshair: Crosshair,
+      users: Award,
+    };
+    return iconMap[iconName] || Star;
   };
 
   return (
@@ -308,6 +335,8 @@ export default function UserProfilePage() {
                       icon={getIconForBadge(badge.icon)}
                       label={badge.label}
                       color={badge.color}
+                      isEarned={badge.is_earned ?? true}
+                      description={badge.description ?? ''}
                     />
                   ))}
                 </Box>

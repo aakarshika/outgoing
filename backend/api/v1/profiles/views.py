@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from apps.events.models import Event, EventReview
 from apps.profiles.services import get_or_create_profile
+from apps.profiles.user_tags import get_user_tags
 from apps.tickets.models import Ticket
 from apps.vendors.models import VendorReview, VendorService
 from core.responses import error_response, success_response
@@ -126,64 +127,21 @@ class PublicShowcaseView(APIView):
             for s in active_services[:5]
         ]
 
-        # Badges
-        badges = []
-        hosted_count = user.hosted_events.filter(
-            lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-        ).count()
-        if hosted_count >= 3:
-            badges.append(
-                {
-                    "id": "host_pro",
-                    "label": "Host Extraordinaire",
-                    "icon": "star",
-                    "color": "#fef08a",
-                }
-            )
-        elif hosted_count > 0:
-            badges.append(
-                {
-                    "id": "host",
-                    "label": "Event Host",
-                    "icon": "award",
-                    "color": "#e2e8f0",
-                }
-            )
+        # User category tags (computed from activity)
+        user_tags = get_user_tags(user)
 
-        if active_services.exists():
-            badges.append(
-                {
-                    "id": "vendor",
-                    "label": "Trusted Vendor",
-                    "icon": "briefcase",
-                    "color": "#fdba74",
-                }
-            )
-
-        attended_count = Ticket.objects.filter(
-            goer=user,
-            status__in=["active", "used"],
-            event__lifecycle_state__in=["live", "completed"],
-        ).count()
-        if attended_count >= 5:
-            badges.append(
-                {
-                    "id": "social",
-                    "label": "Social Butterfly",
-                    "icon": "users",
-                    "color": "#a7f3d0",
-                }
-            )
-
-        if hosted_count == 0 and attended_count > 0:
-            badges.append(
-                {
-                    "id": "enthusiast",
-                    "label": "Enthusiast",
-                    "icon": "heart",
-                    "color": "#fecaca",
-                }
-            )
+        # Backward-compatible badges list (derived from user_tags)
+        badges = [
+            {
+                "id": t["id"],
+                "label": f'{t["emoji"]} {t["label"]}',
+                "icon": t["icon"],
+                "color": t["color"],
+                "is_earned": t.get("is_earned", False),
+                "description": t.get("description", ""),
+            }
+            for t in user_tags["all_tags"]
+        ]
 
         # Testimonials
         event_reviews = (
@@ -252,16 +210,17 @@ class PublicShowcaseView(APIView):
             "headline": profile.headline,
             "showcase_bio": profile.showcase_bio,
             "avatar": request.build_absolute_uri(profile.avatar.url)
-            if profile.avatar
-            else None,
+            if profile.avatar and not profile.avatar.url.startswith(("http://", "https://"))
+            else profile.avatar.url if profile.avatar else None,
             "cover_photo": request.build_absolute_uri(profile.cover_photo.url)
-            if profile.cover_photo
-            else None,
+            if profile.cover_photo and not profile.cover_photo.url.startswith(("http://", "https://"))
+            else profile.cover_photo.url if profile.cover_photo else None,
             "location_city": profile.location_city,
             "hosted_events": hosted_events,
             "attended_events": attended_events,
             "services": services,
             "badges": badges,
+            "user_tags": user_tags,
             "testimonials": testimonials,
         }
 
