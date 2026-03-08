@@ -138,6 +138,8 @@ export interface EventLifecycleTransition {
 
 export interface TicketInfo {
   id: number;
+  name: string;
+  description: string;
   event_summary: {
     id: number;
     title: string;

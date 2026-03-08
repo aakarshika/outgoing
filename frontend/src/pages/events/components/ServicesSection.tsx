@@ -2,7 +2,10 @@ import { Avatar, Box, Collapse, IconButton, Rating, Typography, Grid } from '@mu
 import { ChevronDown, ChevronUp, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { ClassifiedAd, HostBusinessCard, MiniBusinessCard } from './scrapbookHelpers';
+import { ClassifiedAd } from './ClassifiedAd';
+import { HostBusinessCard } from './HostBusinessCard';
+import { MiniBusinessCard } from './MiniBusinessCard';
+
 
 export const ServicesSection = ({
   event,

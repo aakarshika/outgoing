@@ -41,7 +41,7 @@ class EventTicketTierSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventTicketTier
-        fields = ["id", "name", "color", "price", "capacity", "is_refundable", "refund_percentage", "sold_count"]
+        fields = ["id", "name", "description", "color", "price", "capacity", "is_refundable", "refund_percentage", "sold_count"]
 
     def get_sold_count(self, obj):
         return obj.tickets.filter(status__in=["active", "used"]).count()

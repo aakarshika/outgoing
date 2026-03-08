@@ -16,10 +16,14 @@ from apps.events.models import (
     Event,
     EventCategory,
     EventHighlight,
+    EventHighlightComment,
+    EventHighlightLike,
     EventInterest,
     EventLifecycleTransition,
     EventMedia,
     EventReview,
+    EventReviewComment,
+    EventReviewLike,
     EventReviewMedia,
     EventSeries,
     EventSeriesNeedTemplate,
@@ -53,6 +57,7 @@ class SeedContext:
     needs: dict[str, EventNeed] = field(default_factory=dict)
     applications: dict[str, NeedApplication] = field(default_factory=dict)
     reviews: dict[str, EventReview] = field(default_factory=dict)
+    highlights: dict[str, EventHighlight] = field(default_factory=dict)
     requests: dict[str, EventRequest] = field(default_factory=dict)
 
 
@@ -550,6 +555,35 @@ class Command(BaseCommand):
             self._set_file_field(
                 EventHighlight, highlight.pk, "media_file", row.get("media_file")
             )
+            if row.get("key"):
+                ctx.highlights[row["key"]] = highlight
+
+    def _seed_event_highlight_likes(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_highlight_likes", [])):
+            path = f"event_highlight_likes[{index}]"
+            self._expect(row, ["highlight", "user"], path)
+            highlight = self._resolve(ctx.highlights, row["highlight"], f"{path}.highlight")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            EventHighlightLike.objects.get_or_create(highlight=highlight, user=user)
+
+    def _seed_event_highlight_comments(self, data: dict[str, Any], ctx: SeedContext):
+        keyed_comments: dict[str, EventHighlightComment] = {}
+        for index, row in enumerate(data.get("event_highlight_comments", [])):
+            path = f"event_highlight_comments[{index}]"
+            self._expect(row, ["highlight", "author", "text"], path)
+            highlight = self._resolve(ctx.highlights, row["highlight"], f"{path}.highlight")
+            author = self._resolve(ctx.users, row["author"], f"{path}.author")
+            parent = None
+            if row.get("parent"):
+                parent = self._resolve(keyed_comments, row["parent"], f"{path}.parent")
+            comment = EventHighlightComment.objects.create(
+                highlight=highlight,
+                author=author,
+                parent=parent,
+                text=row["text"],
+            )
+            if row.get("key"):
+                keyed_comments[row["key"]] = comment
 
     def _seed_event_reviews(self, data: dict[str, Any], ctx: SeedContext):
         for index, row in enumerate(data.get("event_reviews", [])):
@@ -617,6 +651,33 @@ class Command(BaseCommand):
                 rating=rating,
                 text=row.get("text", ""),
             )
+
+    def _seed_event_review_likes(self, data: dict[str, Any], ctx: SeedContext):
+        for index, row in enumerate(data.get("event_review_likes", [])):
+            path = f"event_review_likes[{index}]"
+            self._expect(row, ["review", "user"], path)
+            review = self._resolve(ctx.reviews, row["review"], f"{path}.review")
+            user = self._resolve(ctx.users, row["user"], f"{path}.user")
+            EventReviewLike.objects.get_or_create(review=review, user=user)
+
+    def _seed_event_review_comments(self, data: dict[str, Any], ctx: SeedContext):
+        keyed_comments: dict[str, EventReviewComment] = {}
+        for index, row in enumerate(data.get("event_review_comments", [])):
+            path = f"event_review_comments[{index}]"
+            self._expect(row, ["review", "author", "text"], path)
+            review = self._resolve(ctx.reviews, row["review"], f"{path}.review")
+            author = self._resolve(ctx.users, row["author"], f"{path}.author")
+            parent = None
+            if row.get("parent"):
+                parent = self._resolve(keyed_comments, row["parent"], f"{path}.parent")
+            comment = EventReviewComment.objects.create(
+                review=review,
+                author=author,
+                parent=parent,
+                text=row["text"],
+            )
+            if row.get("key"):
+                keyed_comments[row["key"]] = comment
 
     def _seed_interests_views(self, data: dict[str, Any], ctx: SeedContext):
         for index, row in enumerate(data.get("event_interests", [])):
@@ -726,10 +787,14 @@ class Command(BaseCommand):
         self._seed_tickets(payload, ctx)
         self._seed_event_media(payload, ctx)
         self._seed_event_highlights(payload, ctx)
+        self._seed_event_highlight_likes(payload, ctx)
+        self._seed_event_highlight_comments(payload, ctx)
         self._seed_event_reviews(payload, ctx)
         self._seed_event_review_media(payload, ctx)
         self._seed_event_vendor_reviews(payload, ctx)
         self._seed_vendor_reviews(payload, ctx)
+        self._seed_event_review_likes(payload, ctx)
+        self._seed_event_review_comments(payload, ctx)
         self._seed_interests_views(payload, ctx)
         self._seed_requests(payload, ctx)
         self._sync_counters(ctx)

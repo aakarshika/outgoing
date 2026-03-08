@@ -24,11 +24,13 @@ import Barcode from 'react-barcode';
 import { toast } from 'sonner';
 
 import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
+import { TICKET_COLORS } from '@/features/events/constants';
 
 interface TicketManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   tickets: any[];
+  ticketTiers?: any[];
   initialIndex?: number;
 }
 
@@ -36,6 +38,7 @@ export function TicketManagementModal({
   isOpen,
   onClose,
   tickets,
+  ticketTiers = [],
   initialIndex = 0,
 }: TicketManagementModalProps) {
   const updateTicket = useUpdateTicket();
@@ -48,9 +51,11 @@ export function TicketManagementModal({
   const ticketRef = useRef<HTMLDivElement>(null);
 
   // Reset index when modal opens with new index
-  useState(() => {
-    if (isOpen) setActiveIndex(initialIndex);
-  });
+  useEffect(() => {
+    if (isOpen) {
+      setActiveIndex(initialIndex);
+    }
+  }, [isOpen, initialIndex]);
 
   // Reset guest name when active ticket changes
   const lastTicketId = useRef<number | null>(null);
@@ -182,189 +187,271 @@ export function TicketManagementModal({
               pb: 1,
             }}
           >
-            {tickets.map((t, idx) => (
-              <Box
-                key={t.id}
-                ref={idx === activeIndex ? ticketRef : null}
-                sx={{
-                  minWidth: '100%',
-                  display: idx === activeIndex ? 'flex' : 'none',
-                  bgcolor: t.color || '#fff9e6',
-                  border: '2px solid #333',
-                  boxShadow: '4px 6px 0px #333',
-                  transform: idx % 2 === 0 ? 'rotate(-1deg)' : 'rotate(1deg)',
-                  position: 'relative',
-                  mb: 1,
-                }}
-              >
+            {tickets.map((t, idx) => {
+              const tierIndex = ticketTiers.findIndex((tier: any) => tier.name === t.ticket_type);
+              const themeColor = tierIndex !== -1 ? TICKET_COLORS[tierIndex % TICKET_COLORS.length] : { light: '#fff9e6', dark: '#333' };
+
+              return (
                 <Box
+                  key={t.id}
+                  ref={idx === activeIndex ? ticketRef : null}
                   sx={{
-                    p: 3,
-                    borderRight: '2px dashed #999',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    bgcolor: 'rgba(255,255,255,0.5)',
+                    minWidth: '100%',
+                    display: idx === activeIndex ? 'flex' : 'none',
+                    bgcolor: themeColor.light,
+                    borderTop: '1px solid #e0d8c0',
+                    borderBottom: '1px solid #e0d8c0',
+                    borderLeft: '1px dashed #e0d8c0',
+                    borderRight: '1px dashed #e0d8c0',
+                    boxShadow: '4px 6px 0px #333',
+                    transform: idx % 2 === 0 ? 'rotate(-1deg)' : 'rotate(1deg)',
+                    position: 'relative',
+                    mb: 1,
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      left: -6,
+                      top: 0,
+                      bottom: 0,
+                      width: 12,
+                      background: 'radial-gradient(circle at 0 0, transparent 0, transparent 4px, #fff9e6 5px)',
+                      backgroundSize: '12px 12px',
+                      backgroundPosition: '0 0',
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      right: -6,
+                      top: 0,
+                      bottom: 0,
+                      width: 12,
+                      background: 'radial-gradient(circle at 100% 0, transparent 0, transparent 4px, #fff9e6 5px)',
+                      backgroundSize: '12px 12px',
+                      backgroundPosition: '0 0',
+                    }
                   }}
                 >
-                  <TicketIcon size={32} style={{ transform: 'rotate(-45deg)' }} />
-                </Box>
-                <Box sx={{ p: 3, flexGrow: 1, position: 'relative' }}>
-                  {t.status === 'cancelled' && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRight: '2px dashed #e0d8c0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      bgcolor: themeColor.dark,
+                      color: 'white',
+                      minWidth: 80,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <TicketIcon size={32} style={{ transform: 'rotate(-45deg)' }} />
+                  </Box>
+                  <Box sx={{ p: 3, flexGrow: 1, position: 'relative' }}>
+                    {/* purchased bookmark tag */}
                     <Box
                       sx={{
                         position: 'absolute',
-                        inset: 0,
-                        bgcolor: 'rgba(255,255,255,0.85)',
+                        top: 8,
+                        right: -12,
+                        zIndex: 50,
+                        transform: 'rotate(-2deg)',
+                        animation: 'wiggle 4s ease-in-out infinite alternate',
+                        '@keyframes wiggle': {
+                          '0%': { transform: 'rotate(-3deg)' },
+                          '100%': { transform: 'rotate(-1deg)' },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          bgcolor: '#FFD700',
+                          background: 'linear-gradient(110deg, #FFD700 0%, #FDB931 20%, #fff 40%, #FDB931 60%, #FFD700 100%)',
+                          backgroundSize: '200% auto',
+                          animation: 'shine 3s linear infinite',
+                          '@keyframes shine': {
+                            'to': {
+                              backgroundPosition: '200% center',
+                            },
+                          },
+                          color: 'black',
+                          px: 2,
+                          py: 0.5,
+                          pr: 3,
+                          fontWeight: 'bold',
+                          fontFamily: '"Permanent Marker"',
+                          fontSize: '0.8rem',
+                          zIndex: 50,
+                          clipPath: 'polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%)', // Bookmark shape
+                          boxShadow: '2px 4px 6px rgba(0,0,0,0.2)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <span>{idx + 1}</span>
+                        <span style={{ fontSize: '0.65rem' }}>of {tickets.length}</span>
+                      </Box>
+                    </Box>
+                    {t.status === 'cancelled' && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          bgcolor: 'rgba(255,255,255,0.85)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                        }}
+                      >
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            color: 'red',
+                            fontWeight: 'bold',
+                            border: '4px solid red',
+                            px: 2,
+                            transform: 'rotate(-15deg)',
+                            fontFamily: '"Permanent Marker"',
+                            mb: 2,
+                          }}
+                        >
+                          CANCELLED
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontWeight: 'bold',
+                            fontFamily: '"Permanent Marker", cursive',
+                          }}
+                        >
+                          On {new Date(t.updated_at).toLocaleDateString()}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontWeight: 'bold',
+                            fontFamily: '"Permanent Marker", cursive',
+                          }}
+                        >
+                          Refunded: $
+                          {(
+                            parseFloat(t.price_paid) *
+                            (t.is_refundable && t.refund_percentage
+                              ? t.refund_percentage / 100
+                              : 0)
+                          ).toFixed(2)}
+                        </Typography>
+                      </Box>
+                    )}
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Event
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontFamily: '"Caveat", cursive',
+                        fontSize: '1.5rem',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {t.event_summary?.title}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          TIER
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {t.ticket_type}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          PRICE
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          ${t.price_paid}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        mt: 2,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 10,
+                        bgcolor: 'white',
+                        p: 1,
+                        borderRadius: 1,
                       }}
                     >
                       <Typography
-                        variant="h4"
-                        sx={{
-                          color: 'red',
-                          fontWeight: 'bold',
-                          border: '4px solid red',
-                          px: 2,
-                          transform: 'rotate(-15deg)',
-                          fontFamily: '"Permanent Marker"',
-                          mb: 2,
-                        }}
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ alignSelf: 'flex-start', mb: 1 }}
                       >
-                        CANCELLED
+                        BARCODE
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontFamily: '"Permanent Marker", cursive',
-                        }}
-                      >
-                        On {new Date(t.updated_at).toLocaleDateString()}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontFamily: '"Permanent Marker", cursive',
-                        }}
-                      >
-                        Refunded: $
-                        {(
-                          parseFloat(t.price_paid) *
-                          (t.is_refundable && t.refund_percentage
-                            ? t.refund_percentage / 100
-                            : 0)
-                        ).toFixed(2)}
-                      </Typography>
+                      {t.barcode ? (
+                        <Barcode
+                          value={t.barcode}
+                          width={1.5}
+                          height={40}
+                          displayValue={true}
+                        />
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          sx={{ fontFamily: 'monospace', letterSpacing: 2 }}
+                        >
+                          PENDING
+                        </Typography>
+                      )}
                     </Box>
-                  )}
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Event
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Caveat", cursive',
-                      fontSize: '1.5rem',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {t.event_summary?.title}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        TIER
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {t.ticket_type}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        PRICE
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        ${t.price_paid}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      mt: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      bgcolor: 'white',
-                      p: 1,
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ alignSelf: 'flex-start', mb: 1 }}
-                    >
-                      BARCODE
-                    </Typography>
-                    {t.barcode ? (
-                      <Barcode
-                        value={t.barcode}
-                        width={1.5}
-                        height={40}
-                        displayValue={true}
-                      />
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        sx={{ fontFamily: 'monospace', letterSpacing: 2 }}
-                      >
-                        PENDING
-                      </Typography>
-                    )}
                   </Box>
                 </Box>
-              </Box>
-            ))}
+              );
+            })}
           </Box>
 
           {/* Mobile Navigation Controls */}
-          {tickets.length > 1 && (
-            <Box
-              sx={{
-                display: { xs: 'flex', sm: 'none' },
-                justifyContent: 'center',
-                gap: 4,
-                mt: 1,
-              }}
-            >
-              <IconButton
-                onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
-                disabled={activeIndex === 0}
-                size="small"
-                sx={{ border: '1px solid #ccc' }}
+          {
+            tickets.length > 1 && (
+              <Box
+                sx={{
+                  display: { xs: 'flex', sm: 'none' },
+                  justifyContent: 'center',
+                  gap: 4,
+                  mt: 1,
+                }}
               >
-                <ChevronLeft size={20} />
-              </IconButton>
-              <IconButton
-                onClick={() =>
-                  setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
-                }
-                disabled={activeIndex === tickets.length - 1}
-                size="small"
-                sx={{ border: '1px solid #ccc' }}
-              >
-                <ChevronRight size={20} />
-              </IconButton>
-            </Box>
-          )}
+                <IconButton
+                  onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
+                  disabled={activeIndex === 0}
+                  size="small"
+                  sx={{ border: '1px solid #ccc' }}
+                >
+                  <ChevronLeft size={20} />
+                </IconButton>
+                <IconButton
+                  onClick={() =>
+                    setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
+                  }
+                  disabled={activeIndex === tickets.length - 1}
+                  size="small"
+                  sx={{ border: '1px solid #ccc' }}
+                >
+                  <ChevronRight size={20} />
+                </IconButton>
+              </Box>
+            )
+          }
         </Box>
 
         {/* Actions & info for currentTicket */}
