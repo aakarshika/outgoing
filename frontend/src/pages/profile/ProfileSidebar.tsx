@@ -49,9 +49,10 @@ export const ProfileSidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-2.5 rounded-sm px-3 py-2.5 transition-all ${isActive
-                ? 'bg-yellow-300/50 border-l-4 border-yellow-500 font-bold -rotate-1'
-                : 'text-gray-600 hover:bg-yellow-200/40 hover:translate-x-1'
+              `flex items-center gap-2.5 rounded-sm px-3 py-2.5 transition-all ${
+                isActive
+                  ? 'bg-yellow-300/50 border-l-4 border-yellow-500 font-bold -rotate-1'
+                  : 'text-gray-600 hover:bg-yellow-200/40 hover:translate-x-1'
               }`
             }
             style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}

@@ -60,7 +60,8 @@ export function TicketingServiceModal({
       const initialCount = selectedQuantity || 1;
       const initialGuests = Array.from({ length: initialCount }).map((_, i) => ({
         tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
-        guest_name: i === 0 && user ? `${user.first_name} ${user.last_name}`.trim() : '',
+        guest_name:
+          i === 0 && user ? `${user.first_name} ${user.last_name}`.trim() : '',
         is_18_plus: true, // Default to adult as requested
       }));
       setGuests(initialGuests);
@@ -310,9 +311,9 @@ export function TicketingServiceModal({
                       '&:hover':
                         guests[0]?.tier_id !== tier.id
                           ? {
-                            transform: 'translate(-2px, -2px)',
-                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                          }
+                              transform: 'translate(-2px, -2px)',
+                              boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                            }
                           : {},
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -597,9 +598,9 @@ export function TicketingServiceModal({
                     '&:hover':
                       paymentMethod !== 'card'
                         ? {
-                          transform: 'translate(-2px, -2px)',
-                          boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                        }
+                            transform: 'translate(-2px, -2px)',
+                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                          }
                         : {},
                   }}
                 >
@@ -629,9 +630,9 @@ export function TicketingServiceModal({
                     '&:hover':
                       paymentMethod !== 'upi'
                         ? {
-                          transform: 'translate(-2px, -2px)',
-                          boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-                        }
+                            transform: 'translate(-2px, -2px)',
+                            boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+                          }
                         : {},
                   }}
                 >

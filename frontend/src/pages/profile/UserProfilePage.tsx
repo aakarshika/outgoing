@@ -114,7 +114,14 @@ const PolaroidFrame = ({
   );
 };
 
-const StickerBadge = ({ icon: Icon, label, color, rotation, isEarned = true, description = '' }: any) => {
+const StickerBadge = ({
+  icon: Icon,
+  label,
+  color,
+  rotation,
+  isEarned = true,
+  description = '',
+}: any) => {
   const rot = rotation ?? Math.random() * 10 - 5;
   const content = (
     <Paper
@@ -148,7 +155,9 @@ const StickerBadge = ({ icon: Icon, label, color, rotation, isEarned = true, des
     <Tooltip title={description} arrow placement="top">
       {content}
     </Tooltip>
-  ) : content;
+  ) : (
+    content
+  );
 };
 
 export default function UserProfilePage() {

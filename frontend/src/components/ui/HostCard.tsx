@@ -64,7 +64,6 @@ export const HostCard = ({
         },
       }}
     >
-
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Box
           sx={{
@@ -78,7 +77,7 @@ export const HostCard = ({
             zIndex: 30,
             position: 'relative',
             bgcolor: '#eee',
-            transform: 'scale(1.52) translateY(-1rem)'
+            transform: 'scale(1.52) translateY(-1rem)',
           }}
         >
           <Media

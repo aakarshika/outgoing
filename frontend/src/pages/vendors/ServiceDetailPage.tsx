@@ -20,8 +20,8 @@ import { Media } from '@/components/ui/media';
 import { PostItNote } from '@/components/ui/PostItNote';
 import { ProprietorCard } from '@/components/ui/ProprietorCard';
 import { useAuth } from '@/features/auth/hooks';
-import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useMyEvents } from '@/features/events/hooks';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useVendorService } from '@/features/vendors/hooks';
 
 const CATEGORY_GROUPS: Record<string, string> = {

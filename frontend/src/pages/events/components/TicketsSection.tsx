@@ -1,8 +1,10 @@
 import { Box, Button } from '@mui/material';
 import { useState } from 'react';
-import { TicketStub, PurchasedTicketStack } from './scrapbookHelpers';
+
 import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { TICKET_COLORS } from '@/features/events/constants';
+
+import { PurchasedTicketStack, TicketStub } from './scrapbookHelpers';
 
 export const TicketsSection = ({
   event,
@@ -39,10 +41,13 @@ export const TicketsSection = ({
 
             return Object.entries(groups).map(([type, tickets]) => {
               const tierIndex = event.ticket_tiers?.findIndex(
-                (tier: any) => tier.name === type
+                (tier: any) => tier.name === type,
               );
               const tier = event.ticket_tiers?.[tierIndex !== -1 ? tierIndex : 0];
-              const themeColor = tierIndex !== undefined && tierIndex !== -1 ? TICKET_COLORS[tierIndex % TICKET_COLORS.length] : undefined;
+              const themeColor =
+                tierIndex !== undefined && tierIndex !== -1
+                  ? TICKET_COLORS[tierIndex % TICKET_COLORS.length]
+                  : undefined;
 
               return (
                 <PurchasedTicketStack
@@ -81,42 +86,46 @@ export const TicketsSection = ({
       )}
 
       {/* Ticket Stubs (if applicable) - Always on Left */}
-      {event.ticket_tiers && event.ticket_tiers.length > 0 && (!hasPurchasedTickets || showStubs) && (
-        <Box sx={{ mt: 0 }}>
-          {event.ticket_tiers.map((tier: any, index: number) => {
-            const userPurchasedCount =
-              event.user_tickets?.filter(
-                (t: any) => t.ticket_type === tier.name
-              ).length || 0;
+      {event.ticket_tiers &&
+        event.ticket_tiers.length > 0 &&
+        (!hasPurchasedTickets || showStubs) && (
+          <Box sx={{ mt: 0 }}>
+            {event.ticket_tiers.map((tier: any, index: number) => {
+              const userPurchasedCount =
+                event.user_tickets?.filter((t: any) => t.ticket_type === tier.name)
+                  .length || 0;
 
-            const themeColor = TICKET_COLORS[index % TICKET_COLORS.length];
+              const themeColor = TICKET_COLORS[index % TICKET_COLORS.length];
 
-            return (
-              <TicketStub
-                key={tier.id}
-                type={tier.name}
-                price={parseFloat(tier.price)}
-                color={tier.color}
-                capacity={tier.capacity}
-                soldCount={tier.sold_count}
-                userPurchasedCount={userPurchasedCount}
-                onBuy={(qty) => handleBuyTicket(tier.id, qty)}
-                onOneClickBuy={(qty) => handleOneClickBuy(tier.id, qty)}
-                isLoading={purchaseTicket.isPending}
-                disabled={!isEventActive}
-                clearTicketformTrigger={clearTicketformTrigger}
-                themeColor={themeColor}
-              />
-            );
-          })}
-        </Box>
-      )}
+              return (
+                <TicketStub
+                  key={tier.id}
+                  type={tier.name}
+                  price={parseFloat(tier.price)}
+                  color={tier.color}
+                  capacity={tier.capacity}
+                  soldCount={tier.sold_count}
+                  userPurchasedCount={userPurchasedCount}
+                  onBuy={(qty) => handleBuyTicket(tier.id, qty)}
+                  onOneClickBuy={(qty) => handleOneClickBuy(tier.id, qty)}
+                  isLoading={purchaseTicket.isPending}
+                  disabled={!isEventActive}
+                  clearTicketformTrigger={clearTicketformTrigger}
+                  themeColor={themeColor}
+                />
+              );
+            })}
+          </Box>
+        )}
       <TicketManagementModal
         isOpen={!!selectedTicketId}
         onClose={() => setSelectedTicketId(null)}
         tickets={event.user_tickets}
         ticketTiers={event.ticket_tiers}
-        initialIndex={Math.max(0, event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0)}
+        initialIndex={Math.max(
+          0,
+          event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
+        )}
       />
     </>
   );

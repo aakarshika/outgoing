@@ -401,8 +401,9 @@ const EventTapeCard = ({
         >
           <Heart
             size={18}
-            className={`transition-colors ${event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
-              }`}
+            className={`transition-colors ${
+              event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
+            }`}
           />
         </button>
 
@@ -466,25 +467,25 @@ const EventTapeCard = ({
 
           {(event.lifecycle_state === 'published' ||
             event.lifecycle_state === 'live') && (
-              <Box
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 4,
-                  ml: 'auto',
-                  boxShadow: 2,
-                  fontWeight: 'bold',
-                  fontSize: '0.8rem',
-                }}
-              >
-                $
-                {event.ticket_price_standard
-                  ? parseFloat(event.ticket_price_standard).toFixed(0)
-                  : 'Free'}
-              </Box>
-            )}
+            <Box
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'white',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 4,
+                ml: 'auto',
+                boxShadow: 2,
+                fontWeight: 'bold',
+                fontSize: '0.8rem',
+              }}
+            >
+              $
+              {event.ticket_price_standard
+                ? parseFloat(event.ticket_price_standard).toFixed(0)
+                : 'Free'}
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -680,7 +681,10 @@ export function BedroomHeroCarousel() {
   if (events.length === 0) {
     return (
       <Box sx={{ py: 10, width: '100%', textAlign: 'center' }}>
-        <Typography variant="body1" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}>
+        <Typography
+          variant="body1"
+          sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}
+        >
           No featured events to show right now.
         </Typography>
       </Box>
@@ -692,7 +696,7 @@ export function BedroomHeroCarousel() {
       sx={{
         position: 'relative',
         width: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
         // Removed bgcolor to blend seamlessly into HomePage scrapbook background
       }}
     >

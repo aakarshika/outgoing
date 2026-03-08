@@ -10,7 +10,7 @@ export const HeroSection = () => (
         sx={{
           fontFamily: '"Magnolia", "Great Vibes", cursive',
           fontSize: { xs: '3.5rem', md: '5.5rem' },
-          color: '#eabe72ff'
+          color: '#eabe72ff',
         }}
       >
         Start here,

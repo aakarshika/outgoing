@@ -375,14 +375,16 @@ export async function updateEventReview(reviewId: number, formData: FormData) {
 }
 
 export async function deleteEventReview(reviewId: number) {
-  const { data } = await client.delete<ApiResponse<any>>(`/events/reviews/${reviewId}/`);
+  const { data } = await client.delete<ApiResponse<any>>(
+    `/events/reviews/${reviewId}/`,
+  );
   return data;
 }
 
 export async function toggleReviewLike(reviewId: number) {
-  const { data } = await client.post<ApiResponse<{ liked: boolean; likes_count: number }>>(
-    `/events/reviews/${reviewId}/like/`,
-  );
+  const { data } = await client.post<
+    ApiResponse<{ liked: boolean; likes_count: number }>
+  >(`/events/reviews/${reviewId}/like/`);
   return data;
 }
 
@@ -393,7 +395,10 @@ export async function fetchReviewComments(reviewId: number) {
   return data;
 }
 
-export async function addReviewComment(reviewId: number, payload: { text: string; parent?: number }) {
+export async function addReviewComment(
+  reviewId: number,
+  payload: { text: string; parent?: number },
+) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/reviews/${reviewId}/comments/`,
     payload,

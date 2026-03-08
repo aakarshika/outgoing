@@ -4,8 +4,8 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { CategoryChips } from '@/features/events/CategoryChips';
-import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useFeed } from '@/features/events/hooks';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 
 export default function BrowseEventsPage() {
   const [category, setCategory] = useState<string | undefined>();

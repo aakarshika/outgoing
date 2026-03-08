@@ -1,11 +1,18 @@
-import { Avatar, Box, Collapse, IconButton, Rating, Typography, Grid } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Collapse,
+  Grid,
+  IconButton,
+  Rating,
+  Typography,
+} from '@mui/material';
 import { ChevronDown, ChevronUp, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { ClassifiedAd } from './ClassifiedAd';
 import { HostBusinessCard } from './HostBusinessCard';
 import { MiniBusinessCard } from './MiniBusinessCard';
-
 
 export const ServicesSection = ({
   event,
@@ -44,7 +51,6 @@ export const ServicesSection = ({
   }, []);
 
   const participatingVendors = event?.participating_vendors || [];
-
 
   const myServices = myServicesResponse?.data || [];
   const isCenter = highlights.length === 0;

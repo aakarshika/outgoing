@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import { profileRouteElements } from '@/pages/profile/ProfileRoutes';
 import { dashboardRouteElements } from '@/pages/dashboard/DashboardRoutes';
+import { profileRouteElements } from '@/pages/profile/ProfileRoutes';
 import { ThemeWrapper } from '@/theme/ThemeWrapper';
 
 import { RoleGuard } from './RoleGuard';

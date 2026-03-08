@@ -19,12 +19,12 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
 import { TICKET_COLORS } from '@/features/events/constants';
+import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
 
 interface TicketManagementModalProps {
   isOpen: boolean;
@@ -188,8 +188,13 @@ export function TicketManagementModal({
             }}
           >
             {tickets.map((t, idx) => {
-              const tierIndex = ticketTiers.findIndex((tier: any) => tier.name === t.ticket_type);
-              const themeColor = tierIndex !== -1 ? TICKET_COLORS[tierIndex % TICKET_COLORS.length] : { light: '#fff9e6', dark: '#333' };
+              const tierIndex = ticketTiers.findIndex(
+                (tier: any) => tier.name === t.ticket_type,
+              );
+              const themeColor =
+                tierIndex !== -1
+                  ? TICKET_COLORS[tierIndex % TICKET_COLORS.length]
+                  : { light: '#fff9e6', dark: '#333' };
 
               return (
                 <Box
@@ -214,7 +219,8 @@ export function TicketManagementModal({
                       top: 0,
                       bottom: 0,
                       width: 12,
-                      background: 'radial-gradient(circle at 0 0, transparent 0, transparent 4px, #fff9e6 5px)',
+                      background:
+                        'radial-gradient(circle at 0 0, transparent 0, transparent 4px, #fff9e6 5px)',
                       backgroundSize: '12px 12px',
                       backgroundPosition: '0 0',
                     },
@@ -225,10 +231,11 @@ export function TicketManagementModal({
                       top: 0,
                       bottom: 0,
                       width: 12,
-                      background: 'radial-gradient(circle at 100% 0, transparent 0, transparent 4px, #fff9e6 5px)',
+                      background:
+                        'radial-gradient(circle at 100% 0, transparent 0, transparent 4px, #fff9e6 5px)',
                       backgroundSize: '12px 12px',
                       backgroundPosition: '0 0',
-                    }
+                    },
                   }}
                 >
                   <Box
@@ -269,11 +276,12 @@ export function TicketManagementModal({
                           alignItems: 'center',
                           gap: 0.5,
                           bgcolor: '#FFD700',
-                          background: 'linear-gradient(110deg, #FFD700 0%, #FDB931 20%, #fff 40%, #FDB931 60%, #FFD700 100%)',
+                          background:
+                            'linear-gradient(110deg, #FFD700 0%, #FDB931 20%, #fff 40%, #FDB931 60%, #FFD700 100%)',
                           backgroundSize: '200% auto',
                           animation: 'shine 3s linear infinite',
                           '@keyframes shine': {
-                            'to': {
+                            to: {
                               backgroundPosition: '200% center',
                             },
                           },
@@ -391,7 +399,9 @@ export function TicketManagementModal({
                       {t.event_summary?.title}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <Box
+                      sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}
+                    >
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           TIER
@@ -448,7 +458,12 @@ export function TicketManagementModal({
                           />
                           <Typography
                             variant="caption"
-                            sx={{ mt: 1, fontFamily: 'monospace', letterSpacing: 2, fontWeight: 'bold' }}
+                            sx={{
+                              mt: 1,
+                              fontFamily: 'monospace',
+                              letterSpacing: 2,
+                              fontWeight: 'bold',
+                            }}
                           >
                             {t.barcode}
                           </Typography>
@@ -469,37 +484,35 @@ export function TicketManagementModal({
           </Box>
 
           {/* Mobile Navigation Controls */}
-          {
-            tickets.length > 1 && (
-              <Box
-                sx={{
-                  display: { xs: 'flex', sm: 'none' },
-                  justifyContent: 'center',
-                  gap: 4,
-                  mt: 1,
-                }}
+          {tickets.length > 1 && (
+            <Box
+              sx={{
+                display: { xs: 'flex', sm: 'none' },
+                justifyContent: 'center',
+                gap: 4,
+                mt: 1,
+              }}
+            >
+              <IconButton
+                onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
+                disabled={activeIndex === 0}
+                size="small"
+                sx={{ border: '1px solid #ccc' }}
               >
-                <IconButton
-                  onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
-                  disabled={activeIndex === 0}
-                  size="small"
-                  sx={{ border: '1px solid #ccc' }}
-                >
-                  <ChevronLeft size={20} />
-                </IconButton>
-                <IconButton
-                  onClick={() =>
-                    setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
-                  }
-                  disabled={activeIndex === tickets.length - 1}
-                  size="small"
-                  sx={{ border: '1px solid #ccc' }}
-                >
-                  <ChevronRight size={20} />
-                </IconButton>
-              </Box>
-            )
-          }
+                <ChevronLeft size={20} />
+              </IconButton>
+              <IconButton
+                onClick={() =>
+                  setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
+                }
+                disabled={activeIndex === tickets.length - 1}
+                size="small"
+                sx={{ border: '1px solid #ccc' }}
+              >
+                <ChevronRight size={20} />
+              </IconButton>
+            </Box>
+          )}
         </Box>
 
         {/* Actions & info for currentTicket */}

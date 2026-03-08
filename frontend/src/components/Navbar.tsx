@@ -3,15 +3,18 @@ import {
   Briefcase,
   CalendarDays,
   FileEdit,
-  LayoutDashboard,
   LocateFixed,
   MapPin,
   Menu,
+  MessageSquare,
   Moon,
   Pencil,
   Plus,
   Search,
+  Settings,
+  Shield,
   Sun,
+  Ticket,
   User,
   X,
 } from 'lucide-react';
@@ -61,8 +64,8 @@ export function Navbar() {
   useEffect(() => {
     if (!isAuthenticated || !canUseBrowserGeolocation()) return;
     navigator.geolocation.getCurrentPosition(
-      () => { },
-      () => { },
+      () => {},
+      () => {},
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
     );
   }, [isAuthenticated]);
@@ -71,7 +74,10 @@ export function Navbar() {
   useEffect(() => {
     if (!locationDropdownOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (locationDropdownRef.current && !locationDropdownRef.current.contains(e.target as Node)) {
+      if (
+        locationDropdownRef.current &&
+        !locationDropdownRef.current.contains(e.target as Node)
+      ) {
         setLocationDropdownOpen(false);
       }
     };
@@ -105,7 +111,8 @@ export function Navbar() {
   const { data: eventResponse } = useEvent(Number(eventId));
   const event = eventResponse?.data;
   const { user } = useAuth();
-  const isEventHost = isAuthenticated && user && event && user.username === event.host?.username;
+  const isEventHost =
+    isAuthenticated && user && event && user.username === event.host?.username;
   const isNotOnManagePage = !location.pathname.endsWith('/manage');
 
   useEffect(() => {
@@ -156,13 +163,17 @@ export function Navbar() {
     navigate(`/?${params.toString()}`);
   };
 
-  const secondaryLinks = [
-    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/profile', label: 'Profile', icon: User },
+  const dashboardLinks = [
+    { to: '/dashboard/events', label: 'My Events', icon: CalendarDays },
+    { to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket },
+    { to: '/dashboard/services', label: 'Services', icon: Briefcase },
+    { to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare },
   ];
-  const vendorLinks = [
-    { to: '/vendors/create', label: '+ Create Service', icon: Briefcase },
+
+  const profileLinks = [
+    { path: 'user-info', label: 'User Info', icon: User },
+    { path: 'settings', label: 'Account Settings', icon: Settings },
+    { path: 'privacy', label: 'Privacy', icon: Shield },
   ];
 
   return (
@@ -209,20 +220,30 @@ export function Navbar() {
                       <span className="flex items-center gap-2 truncate">
                         <MapPin size={18} className="text-gray-600 shrink-0" />
                         <span className="truncate text-gray-800">
-                          {nearYouEnabled ? nearYouName || 'Near you' : locationSearch || 'Location'}
+                          {nearYouEnabled
+                            ? nearYouName || 'Near you'
+                            : locationSearch || 'Location'}
                         </span>
                       </span>
-                      <span className="text-gray-500 text-xs shrink-0">{radiusMiles} mi</span>
+                      <span className="text-gray-500 text-xs shrink-0">
+                        {radiusMiles} mi
+                      </span>
                     </button>
                     {locationDropdownOpen && (
                       <div
                         className="absolute top-full left-0 mt-2 z-50 w-[380px] rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-3 shadow-[4px_5px_0px_#333]"
                         style={{
-                          backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+                          backgroundImage:
+                            'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
                           backgroundSize: '10px 10px',
                         }}
                       >
-                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-2" style={{ fontFamily: '"Permanent Marker"' }}>Where?</p>
+                        <p
+                          className="text-xs uppercase tracking-wider text-gray-600 mb-2"
+                          style={{ fontFamily: '"Permanent Marker"' }}
+                        >
+                          Where?
+                        </p>
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
@@ -233,10 +254,18 @@ export function Navbar() {
                           className="w-full flex items-center gap-3 rounded-none border-2 border-gray-800 px-4 py-3 text-left bg-blue-200/80 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold text-gray-900 mb-3"
                           style={{ fontFamily: '"Permanent Marker"' }}
                         >
-                          <LocateFixed size={20} className={nearYouEnabled ? 'text-blue-600' : ''} />
+                          <LocateFixed
+                            size={20}
+                            className={nearYouEnabled ? 'text-blue-600' : ''}
+                          />
                           <span>Use current location</span>
                         </button>
-                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-2 mt-2" style={{ fontFamily: '"Permanent Marker"' }}>Or type an address</p>
+                        <p
+                          className="text-xs uppercase tracking-wider text-gray-600 mb-2 mt-2"
+                          style={{ fontFamily: '"Permanent Marker"' }}
+                        >
+                          Or type an address
+                        </p>
                         <div className="relative">
                           <input
                             value={locationSearch}
@@ -245,36 +274,50 @@ export function Navbar() {
                               if (nearYouEnabled) toggleNearYou();
                             }}
                             onFocus={() => {
-                              if (locationSuggestions.length > 0) setShowLocationSuggestions(true);
+                              if (locationSuggestions.length > 0)
+                                setShowLocationSuggestions(true);
                             }}
-                            onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+                            onBlur={() =>
+                              setTimeout(() => setShowLocationSuggestions(false), 200)
+                            }
                             placeholder="City or address..."
                             className="w-full rounded-none border-2 border-gray-800 bg-white px-3 py-2.5 text-gray-800 placeholder:text-gray-500 outline-none shadow-[2px_2px_0px_#333]"
                             style={{ fontFamily: '"Permanent Marker"' }}
                           />
-                          {showLocationSuggestions && locationSuggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 rounded-none border-2 border-gray-800 bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
-                              {locationSuggestions.map((suggestion) => (
-                                <button
-                                  key={suggestion.place_id}
-                                  type="button"
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => {
-                                    handleLocationSuggestionClick(suggestion);
-                                    setShowLocationSuggestions(false);
-                                    setLocationDropdownOpen(false);
-                                  }}
-                                  className="w-full flex items-start gap-2 rounded-none px-3 py-2.5 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
-                                  style={{ fontFamily: '"Permanent Marker"' }}
-                                >
-                                  <Search size={14} className="text-gray-500 shrink-0 mt-0.5" />
-                                  <p className="text-sm line-clamp-2">{suggestion.display_name}</p>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          {showLocationSuggestions &&
+                            locationSuggestions.length > 0 && (
+                              <div className="absolute top-full left-0 right-0 mt-1 rounded-none border-2 border-gray-800 bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
+                                {locationSuggestions.map((suggestion) => (
+                                  <button
+                                    key={suggestion.place_id}
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      handleLocationSuggestionClick(suggestion);
+                                      setShowLocationSuggestions(false);
+                                      setLocationDropdownOpen(false);
+                                    }}
+                                    className="w-full flex items-start gap-2 rounded-none px-3 py-2.5 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
+                                    style={{ fontFamily: '"Permanent Marker"' }}
+                                  >
+                                    <Search
+                                      size={14}
+                                      className="text-gray-500 shrink-0 mt-0.5"
+                                    />
+                                    <p className="text-sm line-clamp-2">
+                                      {suggestion.display_name}
+                                    </p>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                         </div>
-                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-1.5 mt-3" style={{ fontFamily: '"Permanent Marker"' }}>Miles radius</p>
+                        <p
+                          className="text-xs uppercase tracking-wider text-gray-600 mb-1.5 mt-3"
+                          style={{ fontFamily: '"Permanent Marker"' }}
+                        >
+                          Miles radius
+                        </p>
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
@@ -288,7 +331,12 @@ export function Navbar() {
                             className="w-20 rounded-none border-2 border-gray-800 bg-white px-3 py-2 text-gray-800 outline-none shadow-[2px_2px_0px_#333]"
                             style={{ fontFamily: '"Permanent Marker"' }}
                           />
-                          <span className="text-sm text-gray-600" style={{ fontFamily: '"Permanent Marker"' }}>miles</span>
+                          <span
+                            className="text-sm text-gray-600"
+                            style={{ fontFamily: '"Permanent Marker"' }}
+                          >
+                            miles
+                          </span>
                         </div>
                         {locationSearch && (
                           <button
@@ -296,7 +344,9 @@ export function Navbar() {
                             onClick={() => {
                               setLocationSearch('');
                               if (nearYouEnabled) toggleNearYou();
-                              const params = new URLSearchParams(window.location.search);
+                              const params = new URLSearchParams(
+                                window.location.search,
+                              );
                               params.delete('location');
                               params.delete('lat');
                               params.delete('lng');
@@ -331,9 +381,13 @@ export function Navbar() {
                         className="w-full flex flex-col items-start rounded-none px-4 py-3 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
                         style={{ fontFamily: '"Permanent Marker"' }}
                       >
-                        <p className="text-[15px] font-medium line-clamp-1">{suggestion.title}</p>
+                        <p className="text-[15px] font-medium line-clamp-1">
+                          {suggestion.title}
+                        </p>
                         <p className="text-sm text-gray-500 line-clamp-1 mt-1">
-                          {[suggestion.category_name, suggestion.location_name].filter(Boolean).join(' · ')}
+                          {[suggestion.category_name, suggestion.location_name]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </p>
                       </button>
                     ))}
@@ -345,14 +399,9 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    asChild
-                    className="relative hidden sm:inline-flex"
-                  >
+                  <Button variant="ghost" size="icon" asChild className="relative">
                     <Link to="/alerts" aria-label="Alerts">
-                      <Bell className="h-4 w-4" />
+                      <Bell className="h-5 w-5" />
                       {alertsCount > 0 && (
                         <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                           {alertsCount}
@@ -360,15 +409,9 @@ export function Navbar() {
                       )}
                     </Link>
                   </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    asChild
-                    className="hidden gap-1.5 sm:inline-flex rounded-none border-2 border-gray-800 bg-blue-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 transition-all font-bold"
-                    style={{ fontFamily: '"Permanent Marker"' }}
-                  >
-                    <Link to="/events/create">
-                      <Plus className="h-4 w-4" /> Create Event
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/events/create" aria-label="Create Event">
+                      <Plus className="h-5 w-5" />
                     </Link>
                   </Button>
 
@@ -394,7 +437,10 @@ export function Navbar() {
                         asChild
                         className="inline-flex md:hidden rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all"
                       >
-                        <Link to={`/events/${eventId}/manage`} aria-label="Edit the event">
+                        <Link
+                          to={`/events/${eventId}/manage`}
+                          aria-label="Edit the event"
+                        >
                           <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -429,11 +475,7 @@ export function Navbar() {
                 aria-expanded={isMenuOpen}
                 className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
               >
-                {isMenuOpen ? (
-                  <X className="h-4 w-4" />
-                ) : (
-                  <Menu className="h-4 w-4" />
-                )}
+                {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -459,18 +501,71 @@ export function Navbar() {
             }}
           >
             {isAuthenticated && (
-              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5 sm:hidden">
+              <div className="mb-6 grid gap-3 border-b-2 border-dashed border-gray-300 pb-6">
                 <Link
                   to="/events/create"
-                  className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-2.5 text-white shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500"
+                  className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_3px_0px_#333] hover:bg-blue-500 font-bold"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  <Plus className="h-4 w-4" /> Create Event
+                  <Plus className="h-5 w-5" /> Create Event
+                </Link>
+                <Link
+                  to="/vendors/create"
+                  className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-green-500 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_3px_0px_#333] hover:bg-green-600 font-bold"
+                  style={{ fontFamily: '"Permanent Marker"' }}
+                >
+                  <Briefcase className="h-5 w-5" /> Create Service
                 </Link>
               </div>
             )}
             {isAuthenticated ? (
-              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
+              <div>
+                {/* User Details Header */}
+                <div className="mb-6 relative group">
+                  <div
+                    className="absolute -inset-2 bg-yellow-200/40 border-2 border-dashed border-gray-400 -rotate-2 group-hover:rotate-0 transition-transform"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <div className="relative flex items-center gap-4 p-2 bg-white/40 border border-gray-200">
+                    <div className="w-16 h-16 rounded-none border-2 border-gray-800 bg-white overflow-hidden shadow-[2px_2px_0] p-1 rotate-3">
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <User className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3
+                        className="text-xl text-gray-900 leading-tight"
+                        style={{ fontFamily: '"Permanent Marker", cursive' }}
+                      >
+                        {user ? `${user.first_name} ${user.last_name}` : 'Logged In'}
+                      </h3>
+                      <p
+                        className="text-gray-500 text-sm"
+                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
+                      >
+                        @{user?.username}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Washi tape accent */}
+                  <div
+                    className="absolute -top-3 -left-2 w-12 h-6 pointer-events-none z-10"
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.4)',
+                      transform: 'rotate(-15deg)',
+                      border: '1px solid rgba(0,0,0,0.05)',
+                    }}
+                  />
+                </div>
+
                 <div className="mb-4">
                   <button
                     onClick={toggleTheme}
@@ -492,21 +587,30 @@ export function Navbar() {
                     transform: 'rotate(-1deg)',
                   }}
                 >
-                  Workspace
+                  Dashboard
                 </p>
-                <div className="grid gap-1">
-                  {secondaryLinks.map((item) => (
+                <div className="grid gap-1 ml-2">
+                  {dashboardLinks.map((item) => (
                     <Link
                       key={item.to}
                       to={item.to}
-                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname.startsWith(item.to) ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
+                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
                       style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
                     >
                       {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
                       {item.label}
                     </Link>
                   ))}
+                  <Link
+                    to="/calendar"
+                    className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === '/calendar' ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
+                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+                  >
+                    <CalendarDays className="h-4 w-4 shrink-0" />
+                    Calendar
+                  </Link>
                 </div>
+
                 <p
                   className="mb-3 mt-5 text-sm uppercase tracking-wider text-gray-600"
                   style={{
@@ -514,20 +618,23 @@ export function Navbar() {
                     transform: 'rotate(1deg)',
                   }}
                 >
-                  Offer Services
+                  Profile & Settings
                 </p>
-                <div className="grid gap-1">
-                  {vendorLinks.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-green-200/60 hover:translate-x-1 ${location.pathname.startsWith(item.to) ? 'bg-green-300/50 rotate-1 border-l-4 border-green-500 font-bold' : 'text-gray-700'}`}
-                      style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-                    >
-                      {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
-                      {item.label}
-                    </Link>
-                  ))}
+                <div className="grid gap-1 ml-2">
+                  {profileLinks.map((item) => {
+                    const fullPath = `/profile/${item.path}`;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={fullPath}
+                        className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-blue-200/60 hover:translate-x-1 ${location.pathname === fullPath ? 'bg-blue-300/50 rotate-1 border-l-4 border-blue-500 font-bold' : 'text-gray-700'}`}
+                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+                      >
+                        {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ) : (

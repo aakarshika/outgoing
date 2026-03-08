@@ -86,7 +86,7 @@ export function ManageNeedsTab({
   return (
     <div className="space-y-6">
       <div
-        className="flex justify-between items-center bg-white border-2 border-gray-800 p-4 shadow-[2px_3px_0px_#333] mb-6"
+        className="flex justify-between items-center "
         style={{ transform: 'rotate(-0.5deg)' }}
       >
         <div>

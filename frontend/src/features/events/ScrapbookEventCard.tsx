@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Media } from '@/components/ui/media';
-
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
 import { CategoricalBackground, CATEGORY_THEMES } from './CategoricalBackground';
@@ -203,20 +202,45 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                 <Typography
                   sx={{ fontSize: '0.82rem', color: '#555', fontFamily: 'serif' }}
                 >
-                  {event.description.slice(0, 500)}{event.description.length > 500 ? '...' : ''}
+                  {event.description.slice(0, 500)}
+                  {event.description.length > 500 ? '...' : ''}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  width: '100%',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}
+                >
                   <Calendar size={13} color="#555" />
                   <Typography
-                    sx={{ fontSize: '0.82rem', fontWeight: 'bolder', color: '#555', fontFamily: 'serif', whiteSpace: 'nowrap' }}
+                    sx={{
+                      fontSize: '0.82rem',
+                      fontWeight: 'bolder',
+                      color: '#555',
+                      fontFamily: 'serif',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {relativeTime}
                   </Typography>
                 </Box>
 
-                <Box sx={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    minWidth: 0,
+                    flex: 1,
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    overflow: 'hidden',
+                  }}
+                >
                   <LocationTag
                     locationName={event.location_name}
                     locationAddress={event.location_address}
@@ -254,7 +278,6 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                   transition: 'transform 0.5s ease',
                 }}
               />
-
             </Box>
 
             <Box sx={{ px: 0.5 }}>
@@ -277,20 +300,45 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                 <Typography
                   sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'serif' }}
                 >
-                  {event.description.slice(0, 160)}{event.description.length > 160 ? '...' : ''}
+                  {event.description.slice(0, 160)}
+                  {event.description.length > 160 ? '...' : ''}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  width: '100%',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}
+                >
                   <Calendar size={12} color="#666" />
                   <Typography
-                    sx={{ fontSize: '0.75rem', fontWeight: 'bolder', color: '#666', fontFamily: 'serif', whiteSpace: 'nowrap' }}
+                    sx={{
+                      fontSize: '0.75rem',
+                      fontWeight: 'bolder',
+                      color: '#666',
+                      fontFamily: 'serif',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {relativeTime}
                   </Typography>
                 </Box>
 
-                <Box sx={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'flex-end', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    minWidth: 0,
+                    flex: 1,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    overflow: 'hidden',
+                  }}
+                >
                   <LocationTag
                     locationName={event.location_name}
                     locationAddress={event.location_address}
@@ -402,39 +450,38 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
           </Box>
         )}
 
-        {
-          (event.lifecycle_state === 'published' ||
-            event.lifecycle_state === 'live') && (
-            <Box
-              sx={{
+        {(event.lifecycle_state === 'published' ||
+          event.lifecycle_state === 'live') && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 15,
+              right: -10,
+              bgcolor: '#fbbf24',
+              color: '#000',
+              p: '4px 15px 4px 10px',
+              transform: 'rotate(-10deg)',
+              boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
+              zIndex: 2,
+              '&::before': {
+                content: '""',
                 position: 'absolute',
-                bottom: 15,
-                right: -10,
-                bgcolor: '#fbbf24',
-                color: '#000',
-                p: '4px 15px 4px 10px',
-                transform: 'rotate(-10deg)',
-                boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
-                zIndex: 2,
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: -5,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: 10,
-                  height: 10,
-                  bgcolor: 'inherit',
-                  borderRadius: '50%',
-                  borderRight: '1px solid rgba(0,0,0,0.1)',
-                },
-              }}
-            >
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
-                {price}
-              </Typography>
-            </Box>
-          )}
+                left: -5,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 10,
+                height: 10,
+                bgcolor: 'inherit',
+                borderRadius: '50%',
+                borderRight: '1px solid rgba(0,0,0,0.1)',
+              },
+            }}
+          >
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+              {price}
+            </Typography>
+          </Box>
+        )}
 
         {event.lifecycle_state === 'completed' && (
           <Box
@@ -465,7 +512,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
         )}
 
         {/* Pencil mark/sketch detail */}
-        {(
+        {
           <Box
             sx={{
               position: 'absolute',
@@ -478,7 +525,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
               transform: 'rotate(-1deg)',
             }}
           />
-        )}
+        }
       </CategoricalBackground>
     </Box>
   );

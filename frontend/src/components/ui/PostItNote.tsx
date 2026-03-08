@@ -1,5 +1,5 @@
-import { Box, Typography, IconButton } from '@mui/material';
-import { Star, Heart, MessageCircle } from 'lucide-react';
+import { Box, IconButton, Typography } from '@mui/material';
+import { Heart, MessageCircle, Star } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { Hostname } from './Hostname';
@@ -176,7 +176,11 @@ export const PostItNote = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton size="small" onClick={onLike} sx={{ p: 0.5, color: userHasLiked ? 'error.main' : 'inherit' }}>
+          <IconButton
+            size="small"
+            onClick={onLike}
+            sx={{ p: 0.5, color: userHasLiked ? 'error.main' : 'inherit' }}
+          >
             <Heart size={18} fill={userHasLiked ? 'currentColor' : 'none'} />
           </IconButton>
           <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
@@ -184,7 +188,11 @@ export const PostItNote = ({
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton size="small" onClick={onComment} sx={{ p: 0.5, color: 'inherit' }}>
+          <IconButton
+            size="small"
+            onClick={onComment}
+            sx={{ p: 0.5, color: 'inherit' }}
+          >
             <MessageCircle size={18} />
           </IconButton>
           <Typography variant="body2" sx={{ fontWeight: 'bold' }}>

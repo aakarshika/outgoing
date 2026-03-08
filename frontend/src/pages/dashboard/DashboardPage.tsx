@@ -1,7 +1,7 @@
 /** Dashboard page — My Events, Tickets, Services, Activities tabs. Scrapbook themed. Layout component. */
 
-import { Calendar, Ticket, Briefcase, MessageSquare } from 'lucide-react';
-import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { Briefcase, Calendar, MessageSquare, Ticket } from 'lucide-react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 type Tab = 'events' | 'tickets' | 'services' | 'activities';
 
@@ -61,10 +61,11 @@ export default function DashboardPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${activeTab === t.key
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
+                activeTab === t.key
                   ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
                   : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-                }`}
+              }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}

@@ -1,7 +1,7 @@
 import { Box, Grid, ThemeProvider } from '@mui/material';
 import { Button as MuiButton, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
@@ -10,17 +10,16 @@ import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
-
 import { useAuth } from '@/features/auth/hooks';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
+  useDeleteEventReview,
   useEvent,
   useEventSeriesOccurrences,
   useEventStory,
   usePurchaseTicket,
   useRecordEventView,
   useToggleInterest,
-  useDeleteEventReview,
 } from '@/features/events/hooks';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
@@ -31,10 +30,10 @@ import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
 import { ReviewsSection } from './components/ReviewsSection';
+import { getDaysAgo } from './components/scrapbookHelpers';
 import { ServicesSection } from './components/ServicesSection';
 import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
-import { getDaysAgo } from './components/scrapbookHelpers';
 
 // --- Main Page Component ---
 
@@ -222,7 +221,7 @@ export default function EventDetailPageNew() {
           setTimeout(() => {
             setOneClickStatus('idle');
             setQuickBuyData(null);
-            setClearTicketformTrigger(prev => prev + 1);
+            setClearTicketformTrigger((prev) => prev + 1);
           }, 3000);
         },
         onError: () => {
@@ -234,11 +233,10 @@ export default function EventDetailPageNew() {
     );
   };
 
-
   const handleTicketingSuccess = (ticketsData: any[]) => {
     setIsTicketingModalOpen(false);
     toast.success('Tickets purchased successfully!');
-    setClearTicketformTrigger(prev => prev + 1);
+    setClearTicketformTrigger((prev) => prev + 1);
     if (ticketsData.length > 0) {
       setConfirmedTicket({
         type: ticketsData.length > 1 ? 'Multiple' : ticketsData[0].ticket_type,
@@ -341,7 +339,6 @@ export default function EventDetailPageNew() {
                     clearTicketformTrigger={clearTicketformTrigger}
                   />
                 </Box>
-
               </Grid>
             </Grid>
 

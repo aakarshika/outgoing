@@ -209,7 +209,6 @@ export const NearbySection = () => {
   );
 };
 
-
 // --- Online ---
 export const OnlineSection = () => (
   <GenericFeedSection

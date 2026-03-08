@@ -8,14 +8,12 @@ import {
   Typography,
 } from '@mui/material';
 import { ChevronLeft } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { HighlightComposer } from '@/components/events/HighlightComposer';
-import {
-  useEvent,
-  useEventHighlights,
-} from '@/features/events/hooks';
+import { useEvent, useEventHighlights } from '@/features/events/hooks';
+
 import { HighlightCard } from './components/HighlightCard';
 import { HighlightFeedViewer } from './components/HighlightFeedViewer';
 import { DoodleHeart, DoodleStar, WashiTape } from './components/scrapbookHelpers';
@@ -37,7 +35,7 @@ export default function GalleryPage() {
   // Handle deep linking and initial state
   useEffect(() => {
     if (highlightId && highlights.length > 0) {
-      const h = highlights.find(h => h.id === Number(highlightId));
+      const h = highlights.find((h) => h.id === Number(highlightId));
       if (h) {
         setSelectedHighlight(h);
         setViewerOpen(true);
@@ -59,22 +57,50 @@ export default function GalleryPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: 4, position: 'relative', minHeight: '100vh', overflow: 'hidden' }}
+    >
       {/* Background Doodles */}
-      <Box sx={{ position: 'absolute', top: 50, left: -20, opacity: 0.1, pointerEvents: 'none' }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 50,
+          left: -20,
+          opacity: 0.1,
+          pointerEvents: 'none',
+        }}
+      >
         <DoodleStar size={120} rotate={-15} />
       </Box>
-      <Box sx={{ position: 'absolute', bottom: 100, right: -40, opacity: 0.1, pointerEvents: 'none' }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 100,
+          right: -40,
+          opacity: 0.1,
+          pointerEvents: 'none',
+        }}
+      >
         <DoodleHeart size={150} rotate={10} />
       </Box>
 
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4, position: 'relative' }}>
-        <IconButton onClick={() => navigate(`/events/${id}`)}><ChevronLeft /></IconButton>
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        sx={{ mb: 4, position: 'relative' }}
+      >
+        <IconButton onClick={() => navigate(`/events/${id}`)}>
+          <ChevronLeft />
+        </IconButton>
         <Box>
           <Typography variant="h4" sx={{ fontFamily: '"Permanent Marker"' }}>
             Gallery: {event?.title}
           </Typography>
-          <Typography color="text.secondary">All memories from this event series</Typography>
+          <Typography color="text.secondary">
+            All memories from this event series
+          </Typography>
         </Box>
         <Box sx={{ flex: 1 }} />
         <Button
@@ -88,7 +114,7 @@ export default function GalleryPage() {
             px: 3,
             transform: 'rotate(-1deg)',
             boxShadow: '4px 4px 0px rgba(0,0,0,0.2)',
-            '&:hover': { bgcolor: '#333' }
+            '&:hover': { bgcolor: '#333' },
           }}
         >
           Add Highlight
@@ -97,14 +123,21 @@ export default function GalleryPage() {
 
       <Grid container spacing={4} sx={{ position: 'relative' }}>
         {highlights.map((h: any, index: number) => (
-          <Grid size={{ xs: 12, sm: 12, md: 4 }} key={h.id} sx={{ position: 'relative' }}>
-            {index % 4 === 0 && <WashiTape color="rgba(96, 165, 250, 0.4)" rotate="-5deg" />}
-            {index % 7 === 0 && <Box sx={{ position: 'absolute', bottom: -20, left: -20, zIndex: 5 }}><DoodleStar size={40} rotate={15} /></Box>}
+          <Grid
+            size={{ xs: 12, sm: 12, md: 4 }}
+            key={h.id}
+            sx={{ position: 'relative' }}
+          >
+            {index % 4 === 0 && (
+              <WashiTape color="rgba(96, 165, 250, 0.4)" rotate="-5deg" />
+            )}
+            {index % 7 === 0 && (
+              <Box sx={{ position: 'absolute', bottom: -20, left: -20, zIndex: 5 }}>
+                <DoodleStar size={40} rotate={15} />
+              </Box>
+            )}
             <Box onClick={() => handleHighlightClick(h)} sx={{ cursor: 'pointer' }}>
-              <HighlightCard
-                highlight={h}
-                rotation={((index % 3) - 1) * 2}
-              />
+              <HighlightCard highlight={h} rotation={((index % 3) - 1) * 2} />
             </Box>
           </Grid>
         ))}

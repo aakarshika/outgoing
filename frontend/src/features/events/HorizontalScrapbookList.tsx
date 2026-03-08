@@ -87,7 +87,7 @@ export function HorizontalScrapbookList({
                 '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
               }}
             >
-              See more  →
+              See more →
             </Button>
           )}
         </Box>

@@ -24,7 +24,9 @@ export function useNearYou() {
 
   const [locationName, setLocationName] = useState<string>('');
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
-  const [radiusMiles, setRadiusMilesState] = useState<number>(() => getNearYouRadiusMiles());
+  const [radiusMiles, setRadiusMilesState] = useState<number>(() =>
+    getNearYouRadiusMiles(),
+  );
 
   // 1. Mount-only auto-detection
   useEffect(() => {

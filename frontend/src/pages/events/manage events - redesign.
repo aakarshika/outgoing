@@ -1,0 +1,50 @@
+manage events - redesign. 
+
+at the top of the page above the tabs - 
+horizontal list of recurring events date boxes - with current event highlighted..
+in each box - add the lifecycle state of that event. 
+
+below it i need the state transition section for the current event.. 
+    no border. small section.
+    it will show the current flowchart UI but smller and minimum details. 
+    only the possible transitions at that moment will be shown. 
+
+
+tab wise changes - 
+merge the attendees and the entry tabs into 'attendance' tab. 
+only one tab will have all the purchased users list and at the top will have scan functionality, and when scanned, 
+attendance will be marked.
+
+on basic details - 
+    the event features section needs to be separate from the tickets and capacity section.
+    Custom Ticket Tiers - when new ticket is added, const tier color codes will be seen. 
+        for the tiers - total capacity per tier field needs to be added. along with the max passes per ticket field. 
+        on the UI the last ticket tier's capacity will be uneditable by the user as it will be the remaining capacity calculated by total - the rest . 
+        the max passes per ticket field will be a number input field upto 6 per tier. 
+
+on needs tab - 
+    only let add and edit need functionality be available when not in live or completed state.
+    no need can be edited if any application is accepted. 
+    if a need is accepted, another section per service will come up there and be expand and collapsible. "event-service-details" - leave placeholder for now. 
+    
+
+2. tabs 
+    when the state is draft / published - 
+        editable section for 
+            basic info , location, event features, ticket section.
+        editable needs section
+        draft - no attendance tab
+
+    when state is event_ready or live:
+        basic info tab - sections readonly - 
+            basic info , location, event features, ticket section.
+        needs section - 
+            readonly.
+        editable attendance tab - user will attend the users. 
+
+    when state is completed:
+        all tabs read only. remove the buttons that cannot be used once the event is completed. 
+
+            
+
+        

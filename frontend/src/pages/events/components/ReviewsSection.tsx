@@ -1,13 +1,10 @@
+import { Box, Button as MuiButton, Typography } from '@mui/material';
+import { Edit2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Trash2, Edit2 } from 'lucide-react';
-import {
-  Box,
-  Button as MuiButton,
-  Typography,
-} from '@mui/material';
 
 import { PostItNote } from '@/components/ui/PostItNote';
 import { useToggleReviewLike } from '@/features/events/hooks';
+
 import { ReviewCommentDrawer } from './ReviewCommentDrawer';
 
 export const ReviewsSection = ({
@@ -60,7 +57,9 @@ export const ReviewsSection = ({
                 color={['#fff740', '#ff7eb9', '#7afcff'][idx % 3]}
               />
               {isOwnReview && (
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                <Box
+                  sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}
+                >
                   <MuiButton
                     size="small"
                     startIcon={<Edit2 size={16} />}
@@ -73,7 +72,9 @@ export const ReviewsSection = ({
                     color="error"
                     startIcon={<Trash2 size={16} />}
                     onClick={() => {
-                      if (window.confirm("Are you sure you want to delete your review?")) {
+                      if (
+                        window.confirm('Are you sure you want to delete your review?')
+                      ) {
                         onDeleteReview?.(rev.id);
                       }
                     }}

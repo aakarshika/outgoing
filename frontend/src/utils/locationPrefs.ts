@@ -22,7 +22,9 @@ export function getNearYouRadiusMiles(): number {
   const stored = localStorage.getItem(NEAR_YOU_RADIUS_MILES_KEY);
   if (stored == null) return DEFAULT_RADIUS_MILES;
   const n = parseInt(stored, 10);
-  return Number.isFinite(n) && n > 0 ? Math.min(500, Math.max(1, n)) : DEFAULT_RADIUS_MILES;
+  return Number.isFinite(n) && n > 0
+    ? Math.min(500, Math.max(1, n))
+    : DEFAULT_RADIUS_MILES;
 }
 
 export function setNearYouRadiusMiles(miles: number): void {

@@ -1,11 +1,5 @@
 import { Box, Chip, Collapse, Grid, Paper, Typography } from '@mui/material';
-import {
-  Calendar,
-  ChevronDown,
-  Clock,
-  MapPin,
-  Navigation,
-} from 'lucide-react';
+import { Calendar, ChevronDown, Clock, MapPin, Navigation } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { EventLocationMap } from '@/components/events/EventLocationMap';
@@ -122,9 +116,7 @@ const WhenWhereCard = ({ event }: { event: any }) => {
       }}
     >
       {/* Collapsed summary */}
-      <Box
-        sx={{ alignItems: 'center', justifyContent: 'space-between' }}
-      >
+      <Box sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Navigation size={14} style={{ opacity: 0.6, color: '#2563eb' }} />
           <Typography
@@ -270,9 +262,17 @@ const WhenWhereCard = ({ event }: { event: any }) => {
 };
 
 // --- Hero Photo Negative Strip Gallery ---
-const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; title: string, host: any }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
+const HeroNegativeStripGallery = ({
+  images,
+  title,
+  host,
+  categorySlug,
+}: {
+  images: string[];
+  title: string;
+  host: any;
+  categorySlug?: string;
+}) => {
   // We double/triple the images for infinite scrolling effect
   const extendedImages = useMemo(() => {
     if (images.length === 0) return [];
@@ -284,27 +284,15 @@ const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; t
 
   return (
     <Box
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       sx={{
         transform: 'scale(1.15)',
         width: '100%',
         height: { xs: 300, md: 350 },
         position: 'relative',
         overflow: 'hidden',
-        bgcolor: '#5234136d', // Deep black for negative strip
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        // Truly transparent sprocket holes using Mask
-        WebkitMaskImage: `
-          radial-gradient(circle at 16px 14px, transparent 7px, black 7.5px),
-          radial-gradient(circle at 16px calc(100% - 14px), transparent 7px, black 7.5px)
-        `,
-        WebkitMaskSize: '32px 100%',
-        WebkitMaskRepeat: 'repeat-x',
-        WebkitMaskComposite: 'source-in',
-        maskComposite: 'intersect',
       }}
     >
       {/* The Moving Strip */}
@@ -314,9 +302,21 @@ const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; t
           alignItems: 'center',
           gap: 4,
           px: 6,
-          py: 4.5,
+          py: 3,
+          border: `1px solid ${categorySlug ? CATEGORY_THEMES[categorySlug]?.accent : '#e1780898'}`,
+          borderRadius: '2px',
           width: 'max-content',
-          animation: isHovered ? 'none' : 'scrollStrip 40s linear infinite',
+          bgcolor: categorySlug ? CATEGORY_THEMES[categorySlug]?.tape : '#e1780898', // category color dynamic
+          // Truly transparent sprocket holes using Mask
+          WebkitMaskImage: `
+            radial-gradient(circle at 16px 14px, transparent 7px, black 7.5px),
+            radial-gradient(circle at 16px calc(100% - 14px), transparent 7px, black 7.5px)
+          `,
+          WebkitMaskSize: '32px 100%',
+          WebkitMaskRepeat: 'repeat-x',
+          WebkitMaskComposite: 'source-in',
+          maskComposite: 'intersect',
+          animation: 'scrollStrip 90s linear infinite',
           '@keyframes scrollStrip': {
             '0%': { transform: 'translateX(0)' },
             '100%': { transform: `translateX(calc(-50%))` }, // Adjust based on doubling/tripling
@@ -331,23 +331,12 @@ const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; t
               flexShrink: 0,
               width: { xs: 200, md: 320 },
               height: { xs: 180, md: 300 },
-              borderRadius: '4px',
               overflow: 'hidden',
               transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               transform: 'scale(0.95)',
-              opacity: 0.7,
               '&:hover': {
-                transform: 'scale(1.1) rotate(1deg)',
-                opacity: 1,
-                zIndex: 10,
+                transform: 'scale(1.005) rotate(1deg)',
               },
-              // Film grain / texture overlay
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-              }
             }}
           >
             <Media
@@ -357,7 +346,6 @@ const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; t
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                filter: 'contrast(1.1) brightness(0.9)',
               }}
             />
             {/* Frame labels - typical of film negatives */}
@@ -372,52 +360,12 @@ const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; t
                 letterSpacing: '2px',
               }}
             >
-              @{host.username}-
-              07.11.2026
+              @{host.username}- 07.11.2026
             </Typography>
           </Box>
         ))}
       </Box>
 
-      {/* Center Focus Overlay (Subtle) */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%)',
-          zIndex: 4,
-        }}
-      />
-
-      {/* Navigation Hint */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bgcolor: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(8px)',
-          px: 2,
-          py: 0.5,
-          borderRadius: '20px',
-          border: '1px solid rgba(255,255,255,0.1)',
-          zIndex: 10,
-          opacity: isHovered ? 1 : 0.4,
-          transition: 'opacity 0.3s',
-        }}
-      >
-        <Typography
-          sx={{
-            color: 'white',
-            fontFamily: '"Caveat"',
-            fontSize: '0.9rem',
-          }}
-        >
-          {isHovered ? 'Paused - Hover to inspect' : 'Glance at the negatives...'}
-        </Typography>
-      </Box>
     </Box>
   );
 };
@@ -456,7 +404,9 @@ const TinyHostCard = ({
         elevation={0}
         onClick={() => {
           window.location.hash = 'services';
-          window.dispatchEvent(new CustomEvent('section-scroll', { detail: 'services' }));
+          window.dispatchEvent(
+            new CustomEvent('section-scroll', { detail: 'services' }),
+          );
         }}
         sx={{
           display: 'inline-flex',
@@ -495,7 +445,9 @@ const TinyHostCard = ({
           }}
         >
           planned by <span style={{ fontWeight: 'bolder' }}>@{host.username}</span>
-          {!!displayNeedsCount && displayNeedsCount > 0 && ` and ${displayNeedsCount} others..`}
+          {!!displayNeedsCount &&
+            displayNeedsCount > 0 &&
+            ` and ${displayNeedsCount} others..`}
         </Typography>
       </Paper>
     </Box>
@@ -665,8 +617,6 @@ export const HeroSection = ({
             <Box sx={{ position: 'relative', height: '40px', mb: 3 }}>
               <WhenWhereCard event={event} />
             </Box>
-
-
           </Box>
 
           {/* Save the Date stamp */}
@@ -770,7 +720,12 @@ export const HeroSection = ({
             </Box>
           ) : (
             <Box sx={{ width: '100%' }}>
-              <HeroNegativeStripGallery images={galleryImages} title={event.title} host={event.host} />
+              <HeroNegativeStripGallery
+                images={galleryImages}
+                title={event.title}
+                host={event.host}
+                categorySlug={event.category?.slug}
+              />
             </Box>
           )}
         </Grid>

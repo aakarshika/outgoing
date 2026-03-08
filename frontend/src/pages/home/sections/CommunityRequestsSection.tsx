@@ -161,7 +161,10 @@ export const CommunityRequestsSection = ({ requests }: { requests: any[] }) => {
           ))
         ) : (
           <Box sx={{ py: 4, gridColumn: '1 / -1', width: '100%', textAlign: 'center' }}>
-            <Typography variant="body1" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}>
+            <Typography
+              variant="body1"
+              sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}
+            >
               No community requests found yet.
             </Typography>
           </Box>

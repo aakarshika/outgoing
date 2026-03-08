@@ -70,7 +70,7 @@ export function ReviewComposer({
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [showVendorReviews, setShowVendorReviews] = useState(
-    !!initialData?.vendorReviews?.length
+    !!initialData?.vendorReviews?.length,
   );
 
   const form = useForm<ReviewFormValues>({
@@ -80,7 +80,7 @@ export function ReviewComposer({
       text: initialData?.comment || '',
       vendor_reviews: participatingVendors.map((v) => {
         const existingVendorReview = initialData?.vendorReviews?.find(
-          (vr: any) => vr.vendorName === v.vendor_name
+          (vr: any) => vr.vendorName === v.vendor_name,
         );
         return {
           vendor_id: v.id,
@@ -168,7 +168,7 @@ export function ReviewComposer({
         text: initialData?.comment || '',
         vendor_reviews: participatingVendors.map((v) => {
           const existingVendorReview = initialData?.vendorReviews?.find(
-            (vr: any) => vr.vendorName === v.vendor_name
+            (vr: any) => vr.vendorName === v.vendor_name,
           );
           return {
             vendor_id: v.id,
@@ -194,10 +194,11 @@ export function ReviewComposer({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Review' : `Review ${eventName}`}</DialogTitle>
+          <DialogTitle>
+            {initialData ? 'Edit Review' : `Review ${eventName}`}
+          </DialogTitle>
           <DialogDescription>
             Share your experience, add photos or videos, and optionally review
-
             individual vendors.
           </DialogDescription>
         </DialogHeader>
@@ -474,14 +475,19 @@ export function ReviewComposer({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={addReview.isPending || updateReview.isPending}>
+              <Button
+                type="submit"
+                disabled={addReview.isPending || updateReview.isPending}
+              >
                 {addReview.isPending || updateReview.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {initialData ? 'Updating...' : 'Submitting...'}
                   </>
+                ) : initialData ? (
+                  'Update Review'
                 ) : (
-                  initialData ? 'Update Review' : 'Submit Review'
+                  'Submit Review'
                 )}
               </Button>
             </div>

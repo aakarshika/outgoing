@@ -57,8 +57,13 @@ export const VendorServicesSection = ({ services }: { services: any[] }) => {
               </Box>
             ))
           ) : (
-            <Box sx={{ py: 4, gridColumn: '1 / -1', width: '100%', textAlign: 'center' }}>
-              <Typography variant="body1" sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}>
+            <Box
+              sx={{ py: 4, gridColumn: '1 / -1', width: '100%', textAlign: 'center' }}
+            >
+              <Typography
+                variant="body1"
+                sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}
+              >
                 No vendor services available right now.
               </Typography>
             </Box>
