@@ -52,105 +52,119 @@ export const StatusBannerSection = ({
           {['live', 'completed', 'published', 'event_ready'].includes(
             event.lifecycle_state,
           ) && (
-            <Box sx={{ mr: { xs: 0.5, sm: 1 } }}>
-              {event.lifecycle_state === 'live' ? (
-                <Box sx={{ textAlign: 'right', transform: 'rotate(-2deg)' }}>
-                  <Typography
-                    sx={{
-                      fontFamily: '"Permanent Marker", cursive',
-                      fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                      color: '#92400e',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <Highlighter color="rgba(251, 191, 36, 0.7)">
-                      happening now!
-                    </Highlighter>
-                  </Typography>
-                  <Typography
-                    component="a"
-                    href="#highlights"
-                    sx={{
-                      fontFamily: '"Caveat", cursive',
-                      fontSize: { xs: '0.8rem', sm: '1rem' },
-                      color: '#92400e',
-                      textDecoration: 'none',
-                      '&:hover': { textDecoration: 'underline' },
-                      display: 'block',
-                      mt: -0.5,
-                    }}
-                  >
-                    check out the highlights
-                  </Typography>
-                </Box>
-              ) : event.lifecycle_state === 'completed' ? (
-                <Box sx={{ textAlign: 'right', transform: 'rotate(1deg)' }}>
-                  <Typography
-                    component="a"
-                    href="#highlights"
-                    sx={{
-                      fontFamily: '"Permanent Marker", cursive',
-                      fontSize: { xs: '0.8rem', sm: '1.1rem', md: '1.3rem' },
-                      color: 'text.secondary',
-                      whiteSpace: 'nowrap',
-                      textDecoration: 'none',
-                      '&:hover': { color: 'text.primary' },
-                    }}
-                  >
-                    check out the highlights
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: 1,
-                      alignItems: 'baseline',
-                    }}
-                  >
+              <Box sx={{ mr: { xs: 0.5, sm: 1 } }}>
+                {event.lifecycle_state === 'live' ? (
+                  <Box sx={{ textAlign: 'right', transform: 'rotate(-2deg)' }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                        color: '#92400e',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <Highlighter color="rgba(251, 191, 36, 0.7)">
+                        happening now!
+                      </Highlighter>
+                    </Typography>
                     <Typography
                       component="a"
-                      href="#reviews"
+                      href="#highlights"
                       sx={{
                         fontFamily: '"Caveat", cursive',
                         fontSize: { xs: '0.8rem', sm: '1rem' },
-                        color: '#16a34a', // Using a green for reviews link
+                        color: '#92400e',
                         textDecoration: 'none',
                         '&:hover': { textDecoration: 'underline' },
+                        display: 'block',
+                        mt: -0.5,
                       }}
                     >
-                      {event.reviews?.length || 0} reviews
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontFamily: 'serif',
-                        fontStyle: 'italic',
-                        color: 'text.disabled',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {getDaysAgo(event.start_time)}
+                      check out the highlights
                     </Typography>
                   </Box>
-                </Box>
-              ) : event.lifecycle_state === 'event_ready' ||
-                event.lifecycle_state === 'published' ? (
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography
-                    sx={{
-                      fontFamily: '"Permanent Marker", cursive',
-                      fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                      color: '#165aa3ff',
-                      transform: 'rotate(2deg)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Live soon...
-                  </Typography>
-                </Box>
-              ) : null}
-            </Box>
-          )}
+                ) : event.lifecycle_state === 'completed' ? (
+                  <Box sx={{ textAlign: 'right', transform: 'rotate(1deg)' }}>
+                    <Typography
+                      component="a"
+                      href="#highlights"
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '0.8rem', sm: '1.1rem', md: '1.3rem' },
+                        color: 'text.secondary',
+                        whiteSpace: 'nowrap',
+                        textDecoration: 'none',
+                        '&:hover': { color: 'text.primary' },
+                      }}
+                    >
+                      check out the highlights
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        alignItems: 'baseline',
+                      }}
+                    >
+                      <Typography
+                        component="a"
+                        href="#reviews"
+                        sx={{
+                          fontFamily: '"Caveat", cursive',
+                          fontSize: { xs: '0.8rem', sm: '1rem' },
+                          color: '#16a34a', // Using a green for reviews link
+                          textDecoration: 'none',
+                          '&:hover': { textDecoration: 'underline' },
+                        }}
+                      >
+                        {event.reviews?.length || 0} reviews
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontFamily: 'serif',
+                          fontStyle: 'italic',
+                          color: 'text.disabled',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {getDaysAgo(event.start_time)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ) : event.lifecycle_state === 'event_ready' ? (
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                        color: '#165aa3ff',
+                        transform: 'rotate(2deg)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Live soon...
+                    </Typography>
+                  </Box>
+                ) :
+                  event.lifecycle_state === 'published' ? (
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography
+                        sx={{
+                          fontFamily: '"Permanent Marker", cursive',
+                          fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                          color: '#165aa3ff',
+                          transform: 'rotate(2deg)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Coming Soon!
+                      </Typography>
+                    </Box>
+                  ) : null}
+              </Box>
+            )}
 
           {isAuthenticated && (
             <IconButton
@@ -205,25 +219,6 @@ export const StatusBannerSection = ({
               />
             </Box>
           )}
-          {isHost && (
-            <MuiButton
-              variant="contained"
-              startIcon={<FileEdit size={18} />}
-              onClick={() => navigate(`/events/${event.id}/manage`)}
-              sx={{
-                bgcolor: 'white',
-                color: 'black',
-                '&:hover': { bgcolor: '#f0f0f0' },
-                boxShadow: 2,
-                textTransform: 'none',
-                fontWeight: 'bold',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                px: { xs: 1, sm: 2 },
-              }}
-            >
-              Manage Event
-            </MuiButton>
-          )}
         </Box>
       </Box>
 
@@ -264,11 +259,11 @@ export const StatusBannerSection = ({
                     transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                     '&:hover': !isCurrent
                       ? {
-                          transform: 'scale(1.1) rotate(0deg)',
-                          boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
-                          borderColor: 'rgba(0,0,0,0.3)',
-                          zIndex: 2,
-                        }
+                        transform: 'scale(1.1) rotate(0deg)',
+                        boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
+                        borderColor: 'rgba(0,0,0,0.3)',
+                        zIndex: 2,
+                      }
                       : {},
                     position: 'relative',
                   }}

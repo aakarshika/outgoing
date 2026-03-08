@@ -1,7 +1,14 @@
-import { Box, Typography } from '@mui/material';
-import { useMemo } from 'react';
+import { Box, Chip, Collapse, Grid, Paper, Typography } from '@mui/material';
+import { Calendar, ChevronDown, Clock, MapPin, Navigation } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { EventLocationMap } from '@/components/events/EventLocationMap';
+import { HostCard } from '@/components/ui/HostCard';
 import { Media } from '@/components/ui/media';
 import { CATEGORY_THEMES } from '@/features/events/CategoricalBackground';
+
+import { LIFECYCLE_LABELS, WashiTape } from './scrapbookHelpers';
+
 
 // --- Hero Photo Negative Strip Gallery ---
 export const HeroNegativeStripGallery = ({

@@ -1,7 +1,14 @@
 manage events - redesign. 
 
+event should not be savable if mandatory fields not added. 
+    ticket info and capacity 
+    location , start date
+    title, category 
+
+
 at the top of the page above the tabs - 
-horizontal list of recurring events date boxes - with current event highlighted..
+horizontal list of recurring events date boxes (Series Timeline) - with current event highlighted..
+make this much smaller. no section border. 
 in each box - add the lifecycle state of that event. 
 
 below it i need the state transition section for the current event.. 
