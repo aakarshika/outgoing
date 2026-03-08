@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
+import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
 import { AppRoutes } from './routes/AppRoutes';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -25,6 +26,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
               <Navbar />
               <Toaster />
