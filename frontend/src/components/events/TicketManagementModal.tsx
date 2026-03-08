@@ -400,7 +400,17 @@ export function TicketManagementModal({
                           {t.ticket_type}
                         </Typography>
                       </Box>
-                      <Box>
+                      {t.guest_name && (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            GUEST
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                            {t.guest_name}
+                          </Typography>
+                        </Box>
+                      )}
+                      <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="caption" color="text.secondary">
                           PRICE
                         </Typography>

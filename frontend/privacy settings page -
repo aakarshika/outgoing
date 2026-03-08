@@ -1,0 +1,26 @@
+privacy settings page - 
+let the user decide visibility for his activities 
+    - name 
+    - email
+    - hosted events
+    - serviced events 
+    - events attending (purchased)
+    - events attended
+- let others send me private message in inbox
+
+
+
+
+
+if the events attending and events attended are true - we need to implement that here:
+
+in the event details page - add an attending list section . 
+it will be a constantly infinitely slowly scrolling list of users who have purchsed the ticket before the event, and who attended after the event. 
+when user hovers over the list, the scrolling animation will stop.
+
+the list needs to be in our comic book theme. 
+    and each item will have username , avatar
+    their soul identity and verified tick mark. 
+
+    
+

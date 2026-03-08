@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Box, Paper, Typography, IconButton, FormControlLabel, Checkbox, Button as MuiButton } from '@mui/material';
 import { Minus, Plus } from 'lucide-react';
 import { TermsDialog } from './TermsDialog';
-import { CapacityInfographic } from './CapacityInfographic';
 
 export const TicketStub = ({
     type,
@@ -184,6 +183,86 @@ export const TicketStub = ({
                         }}
                     >
                         FULL HOUSE
+                    </Box>
+                )}
+                {capacity !== null && capacity !== undefined && soldCount !== undefined && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: -15,
+                            left: 20,
+                            zIndex: 60,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 0.5
+                        }}
+                    >
+                        {(() => {
+                            const remaining = capacity - soldCount;
+                            const fillRate = soldCount / capacity;
+
+                            let urgencyText = "";
+                            let urgencyColor = "#333";
+                            let urgencyBgColor = "#fff";
+
+                            if (remaining > 0 && remaining <= 5) {
+                                urgencyText = `Only ${remaining} left!`;
+                                urgencyColor = "#fff";
+                                urgencyBgColor = "#f43f5e"; // rose-500
+                            } else if (fillRate >= 0.7 && !isSoldOut) {
+                                urgencyText = "Filling Fast!";
+                                urgencyColor = "#000";
+                                urgencyBgColor = "#fbbf24"; // amber-400
+                            }
+
+                            return (
+                                <>
+                                    {urgencyText && (
+                                        <Box
+                                            sx={{
+                                                bgcolor: urgencyBgColor,
+                                                color: urgencyColor,
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: '2px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                fontFamily: '"Permanent Marker"',
+                                                boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
+                                                transform: 'rotate(-3deg)',
+                                                border: '1px solid currentColor',
+                                                animation: 'pulse 2s infinite ease-in-out',
+                                                '@keyframes pulse': {
+                                                    '0%': { transform: 'rotate(-3deg) scale(1)' },
+                                                    '50%': { transform: 'rotate(-2deg) scale(1.05)' },
+                                                    '100%': { transform: 'rotate(-3deg) scale(1)' },
+                                                },
+                                            }}
+                                        >
+                                            {urgencyText}
+                                        </Box>
+                                    )}
+                                    <Box
+                                        sx={{
+                                            bgcolor: '#fff',
+                                            color: '#666',
+                                            px: 1,
+                                            py: 0.2,
+                                            borderRadius: '2px',
+                                            fontSize: '0.65rem',
+                                            fontFamily: '"Permanent Marker"',
+                                            boxShadow: '1px 1px 0px rgba(0,0,0,0.1)',
+                                            transform: 'rotate(2deg)',
+                                            border: '1px dashed #ccc',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        SOLD {soldCount} / {capacity}
+                                    </Box>
+                                </>
+                            );
+                        })()}
                     </Box>
                 )}
                 <Box sx={{ display: 'flex' }}>
@@ -371,15 +450,7 @@ export const TicketStub = ({
                 )}
             </Paper>
             <TermsDialog isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
-            {capacity && (
-                <Box sx={{ mt: -1, mb: 2 }}>
-                    <CapacityInfographic
-                        variant="mini"
-                        capacity={capacity}
-                        filled={soldCount || 0}
-                    />
-                </Box>
-            )}
+
         </Box>
     );
 };

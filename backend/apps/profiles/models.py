@@ -48,6 +48,15 @@ class UserProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Privacy Settings
+    privacy_name = models.BooleanField(default=True)
+    privacy_email = models.BooleanField(default=False)
+    privacy_hosted_events = models.BooleanField(default=True)
+    privacy_serviced_events = models.BooleanField(default=True)
+    privacy_events_attending = models.BooleanField(default=True)
+    privacy_events_attended = models.BooleanField(default=True)
+    allow_private_messages = models.BooleanField(default=True)
+
     def __str__(self):
         """String representation of the UserProfile."""
         return f"{self.user.username}'s Profile"

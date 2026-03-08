@@ -26,7 +26,7 @@ import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
-import { AttendanceSection } from './components/AttendanceSection';
+import { AttendingList } from './components/AttendingList';
 import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
@@ -342,13 +342,15 @@ export default function EventDetailPageNew() {
                   />
                 </Box>
 
-                <Box id="attendance">
-                  <AttendanceSection event={event} />
-                </Box>
               </Grid>
             </Grid>
 
-            {/* Section 4: Memory Box */}
+            {/* Section 4: Attending List */}
+            <Box id="attending">
+              <AttendingList attendees={event?.attendees || []} />
+            </Box>
+
+            {/* Section 5: Memory Box */}
             <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
               <Box id="services">
                 <ServicesSection
@@ -368,7 +370,7 @@ export default function EventDetailPageNew() {
                 />
               </Box>
 
-              {/* Section 5: Reviews */}
+              {/* Section 6: Reviews */}
               <Box id="reviews">
                 <ReviewsSection
                   reviews={reviews}
