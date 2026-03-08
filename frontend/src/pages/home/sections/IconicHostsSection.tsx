@@ -10,10 +10,9 @@ export const IconicHostsSection = () => {
   const hosts = data?.data || [];
   const navigate = useNavigate();
 
-  if (!isLoading && hosts.length === 0) return null;
-
+  // Show section even if there are 0 hosts
   return (
-    <section className="py-8 relative bg-[#fdfaf6] border-y border-dashed border-gray-300">
+    <section className="relative">
       <Box
         sx={{
           position: 'absolute',
@@ -27,7 +26,6 @@ export const IconicHostsSection = () => {
       />
       <Box
         sx={{
-          mb: 6,
           px: { xs: 2, sm: 4, lg: 8 },
           relative: 'z-10',
           display: 'flex',
@@ -61,7 +59,6 @@ export const IconicHostsSection = () => {
       <Box
         sx={{
           display: 'flex',
-          gap: 12,
           overflowX: 'auto',
           px: { xs: 2, sm: 4, lg: 8 },
           pb: 12,
@@ -70,20 +67,28 @@ export const IconicHostsSection = () => {
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {hosts.map((host: any, index: number) => (
-          <div
-            key={host.id}
-            onClick={() => navigate(`/user/${host.username}`)}
-            className="flex-none snap-start group cursor-pointer w-[280px]"
-          >
-            <HostCard
-              host={host}
-              rating={host.avg_rating || 0}
-              tag={host.review_count ? `${host.review_count} Reviews` : 'New Host'}
-              rotation={index % 2 === 0 ? 2 : -2}
-            />
-          </div>
-        ))}
+        {hosts.length > 0 ? (
+          hosts.map((host: any, index: number) => (
+            <div
+              key={host.id}
+              onClick={() => navigate(`/user/${host.username}`)}
+              className="flex-none snap-start group cursor-pointer w-[280px]"
+            >
+              <HostCard
+                host={host}
+                rating={host.avg_rating || 0}
+                tag={host.review_count ? `${host.review_count} Reviews` : 'New Host'}
+                rotation={index % 2 === 0 ? 2 : -2}
+              />
+            </div>
+          ))
+        ) : (
+          <Box sx={{ py: 4, width: '100%', textAlign: 'center' }}>
+            <p className="text-sm font-serif text-muted-foreground italic">
+              No iconic hosts found yet...
+            </p>
+          </Box>
+        )}
       </Box>
     </section>
   );

@@ -64,21 +64,6 @@ export const HostCard = ({
         },
       }}
     >
-      {/* Washi Tape Effect instead of staple */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -10,
-          left: '50%',
-          transform: 'translateX(-50%) rotate(-3deg)',
-          width: 60,
-          height: 25,
-          bgcolor: 'rgba(239, 68, 68, 0.4)', // Red washi tape
-          backdropFilter: 'blur(2px)',
-          zIndex: 10,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        }}
-      />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Box
@@ -90,8 +75,10 @@ export const HostCard = ({
             border: '4px solid white',
             boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             mb: 1.5,
+            zIndex: 30,
             position: 'relative',
             bgcolor: '#eee',
+            transform: 'scale(1.52) translateY(-1rem)'
           }}
         >
           <Media

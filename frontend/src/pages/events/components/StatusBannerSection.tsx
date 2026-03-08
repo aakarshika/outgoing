@@ -2,6 +2,7 @@ import { Box, Button as MuiButton, IconButton, Typography } from '@mui/material'
 import { ArrowLeft, FileEdit, Heart } from 'lucide-react';
 
 import { CuteTimer, getDaysAgo, Highlighter } from './scrapbookHelpers';
+import { TicketStatusBadge } from '@/features/events/TicketStatusBadge';
 
 export const StatusBannerSection = ({
   event,
@@ -138,42 +139,18 @@ export const StatusBannerSection = ({
                       sx={{
                         fontFamily: '"Permanent Marker", cursive',
                         fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                        color: '#16a34a',
+                        color: '#165aa3ff',
                         transform: 'rotate(2deg)',
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      Live in...
+                      Live soon...
                     </Typography>
                   </Box>
                 ) : null}
               </Box>
             )}
 
-          {['published', 'event_ready'].includes(event.lifecycle_state) && (
-            <Typography
-              component="a"
-              href="#tickets"
-              sx={{
-                mr: 1,
-                fontFamily: '"Caveat", cursive',
-                fontSize: { xs: '0.8rem', sm: '1rem' },
-                color: '#2563eb', // Blue for tickets
-                textDecoration: 'none',
-                '&:hover': { textDecoration: 'underline' },
-                textAlign: 'right',
-                lineHeight: 1.1,
-              }}
-            >
-              {event.capacity ? (
-                <>
-                  {event.ticket_count}/{event.capacity} filled,
-                  <br />
-                </>
-              ) : null}
-              buy tickets
-            </Typography>
-          )}
 
           {isAuthenticated && (
             <IconButton
@@ -197,6 +174,7 @@ export const StatusBannerSection = ({
                 },
                 transition: 'all 0.2s',
                 p: { xs: 0.5, sm: 1 },
+                mr: 3,
                 boxShadow: 1,
               }}
             >
@@ -206,6 +184,23 @@ export const StatusBannerSection = ({
                 color={event.user_is_interested ? '#ef4444' : '#999'}
               />
             </IconButton>
+          )}
+
+          {['published', 'event_ready'].includes(event.lifecycle_state) && (
+            <Box
+              component="a"
+              href="#tickets"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                textDecoration: 'none',
+                gap: 0.5,
+                transform: ' scale(1.4)'
+              }}
+            >
+              <TicketStatusBadge ticketCount={event.ticket_count} capacity={event.capacity} />
+            </Box>
           )}
           {isHost && (
             <MuiButton

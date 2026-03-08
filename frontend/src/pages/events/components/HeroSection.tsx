@@ -454,11 +454,13 @@ const TinyHostCard = ({
   host,
   rating,
   tag,
+  displayNeedsCount,
   onClick,
 }: {
   host: any;
   rating?: number;
   tag: string;
+  displayNeedsCount?: number;
   onClick?: () => void;
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -477,75 +479,52 @@ const TinyHostCard = ({
         transform: expanded ? 'rotate(0deg)' : 'rotate(-1deg)',
       }}
     >
-      <Collapse in={!expanded}>
-        <Paper
-          elevation={0}
+      <Paper
+        elevation={0}
+        onClick={() => {
+          window.location.hash = 'services';
+          window.dispatchEvent(new CustomEvent('section-scroll', { detail: 'services' }));
+        }}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 2,
+          py: 1,
+          bgcolor: 'transparent',
+          '&:hover': {
+            transform: 'scale(1.03)',
+          },
+        }}
+      >
+        <Box
           sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 1.5,
-            px: 2,
-            py: 1,
-            bgcolor: '#fff9e6',
-            border: '1.5px solid #e0d8c0',
-            borderRadius: '20px',
-            '&:hover': {
-              boxShadow: '2px 3px 8px rgba(0,0,0,0.1)',
-              transform: 'scale(1.03)',
-            },
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            bgcolor: '#eee',
+            flexShrink: 0,
           }}
         >
-          <Box
-            sx={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '2px solid white',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              bgcolor: '#eee',
-              flexShrink: 0,
-            }}
-          >
-            <Media
-              src={host.avatar || undefined}
-              alt={host.username}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </Box>
-          <Typography
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '0.95rem',
-              fontWeight: 'bold',
-              color: 'text.secondary',
-            }}
-          >
-            hosted by @{host.username}
-          </Typography>
-          <ChevronDown size={14} style={{ opacity: 0.4 }} />
-        </Paper>
-      </Collapse>
-
-      <Collapse in={expanded}>
-        <Box onClick={(e) => e.stopPropagation()}>
-          <HostCard host={host} rating={rating} tag={tag} />
-          <Typography
-            onClick={() => setExpanded(false)}
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '0.8rem',
-              color: 'text.disabled',
-              textAlign: 'center',
-              mt: 0.5,
-              cursor: 'pointer',
-              '&:hover': { color: 'text.secondary' },
-            }}
-          >
-            tap to collapse
-          </Typography>
+          <Media
+            src={host.avatar || undefined}
+            alt={host.username}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </Box>
-      </Collapse>
+        <Typography
+          sx={{
+            fontFamily: '"Caveat", cursive',
+            fontSize: '0.95rem',
+            fontWeight: 'bold',
+            color: 'text.secondary',
+          }}
+        >
+          planned by <span style={{ fontWeight: 'bolder' }}>@{host.username}</span>
+          {!!displayNeedsCount && displayNeedsCount > 0 && ` and ${displayNeedsCount} others..`}
+        </Typography>
+      </Paper>
     </Box>
   );
 };
@@ -557,6 +536,7 @@ export const HeroSection = ({
   toggleInterest,
   highlights = [],
   occurrences = [],
+  displayNeedsCount = 0,
 }: {
   event: any;
   isAuthenticated: boolean;
@@ -564,6 +544,7 @@ export const HeroSection = ({
   toggleInterest: any;
   highlights?: any[];
   occurrences?: any[];
+  displayNeedsCount?: number;
 }) => {
   // Unique list of all images for the gallery
   const galleryImages = useMemo(() => {
@@ -710,6 +691,7 @@ export const HeroSection = ({
                     ? 'Photographer'
                     : 'Vibe Architect'
                 }
+                displayNeedsCount={displayNeedsCount}
               />
             </Box>
           </Box>
@@ -788,36 +770,36 @@ export const HeroSection = ({
             position: 'relative',
           }}
         >
-          <Box
-            sx={{
-              padding: 12,
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
-          >
+          {galleryImages.length === 0 ? (
             <Box
               sx={{
                 width: '100%',
-                height: '100%',
-                bgcolor: 'black',
-                opacity: 0.14,
-                WebkitMaskImage: "url('/assets/go-symbol.png')",
-                maskImage: "url('/assets/go-symbol.png')",
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
+                minHeight: { xs: 300, md: 450 },
+                padding: { xs: 6, md: 12 },
+                display: 'flex',
               }}
-            />
-          </Box>
-          <Box sx={{ width: '100%' }}>
-            <HeroAutoGallery images={galleryImages} title={event.title} />
-          </Box>
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  bgcolor: 'black',
+                  opacity: 0.14,
+                  WebkitMaskImage: "url('/assets/go-symbol.png')",
+                  maskImage: "url('/assets/go-symbol.png')",
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                }}
+              />
+            </Box>
+          ) : (
+            <Box sx={{ width: '100%' }}>
+              <HeroAutoGallery images={galleryImages} title={event.title} />
+            </Box>
+          )}
         </Grid>
       </Grid>
 
@@ -829,6 +811,7 @@ export const HeroSection = ({
           tag={
             event.category?.name === 'Photography' ? 'Photographer' : 'Vibe Architect'
           }
+          displayNeedsCount={displayNeedsCount}
         />
       </Box>
     </>

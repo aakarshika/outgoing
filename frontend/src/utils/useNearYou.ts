@@ -7,8 +7,10 @@ import {
 } from './geolocation';
 import {
   getNearYouCoords,
+  getNearYouRadiusMiles,
   NEAR_YOU_COORDS_KEY,
   NEAR_YOU_ENABLED_KEY,
+  setNearYouRadiusMiles,
 } from './locationPrefs';
 
 export function useNearYou() {
@@ -22,6 +24,7 @@ export function useNearYou() {
 
   const [locationName, setLocationName] = useState<string>('');
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
+  const [radiusMiles, setRadiusMilesState] = useState<number>(() => getNearYouRadiusMiles());
 
   // 1. Mount-only auto-detection
   useEffect(() => {
@@ -115,11 +118,20 @@ export function useNearYou() {
     }
   };
 
+  const setRadiusMiles = (miles: number) => {
+    const value = Math.min(500, Math.max(1, Math.round(miles)));
+    setNearYouRadiusMiles(value);
+    setRadiusMilesState(value);
+    window.dispatchEvent(new Event('nearYouChanged'));
+  };
+
   return {
     enabled,
     coords,
     locationName,
     isDetecting,
+    radiusMiles,
+    setRadiusMiles,
     toggleLocation,
   };
 }

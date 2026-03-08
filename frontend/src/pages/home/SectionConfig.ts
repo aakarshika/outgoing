@@ -14,6 +14,7 @@ export type SectionId =
   | 'sign_up_cta';
 
 export const SIGNED_IN_SECTIONS: SectionId[] = [
+  'hero',
   'featured_carousel',
   'upcoming_rsvps',
   'trending',

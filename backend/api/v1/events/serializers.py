@@ -97,6 +97,9 @@ class EventListSerializer(serializers.ModelSerializer):
             "series",
             "occurrence_index",
             "location_name",
+            "location_address",
+            "latitude",
+            "longitude",
             "start_time",
             "end_time",
             "ticket_price_standard",
@@ -439,6 +442,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
         recurrence_rule = validated_data.pop("recurrence_rule", None)
         generate_count = validated_data.pop("generate_count", 4)
         ticket_tiers_data = validated_data.pop("ticket_tiers", [])
+        update_series = validated_data.pop("update_series", False)
 
         event = super().create(validated_data)
 

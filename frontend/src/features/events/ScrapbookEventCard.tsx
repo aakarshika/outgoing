@@ -1,25 +1,35 @@
 import { Box, Typography } from '@mui/material';
-import { Calendar, Heart, MapPin } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Media } from '@/components/ui/media';
-import { useAuth } from '@/features/auth/hooks';
+
+import { formatEventRelativeTime } from '@/utils/dateUtils';
 
 import { CategoricalBackground, CATEGORY_THEMES } from './CategoricalBackground';
-import { useToggleInterest } from './hooks';
+import { LikeButton } from './LikeButton';
+import { LocationTag } from './LocationTag';
+import { TicketStatusBadge } from './TicketStatusBadge';
 
 interface EventListItem {
   id: number;
   title: string;
+  description: string;
   cover_image: string | null;
   start_time: string;
   location_name: string;
+  location_address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   category?: { name: string; icon: string; slug?: string };
   ticket_price_standard: string | null;
   ticket_price_flexible: string | null;
   lifecycle_state: string;
   user_is_interested?: boolean;
+  interest_count?: number;
+  capacity?: number | null;
+  ticket_count?: number;
   media?: Array<{
     id: number;
     media_type: 'image' | 'video';
@@ -58,18 +68,6 @@ const WashiTape = ({ color = 'rgba(59, 130, 246, 0.5)', rotate = '0deg' }) => (
 
 export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
   const rotation = useMemo(() => (Math.random() * 4 - 2).toFixed(1), []);
-  const { isAuthenticated } = useAuth();
-  const toggleInterest = useToggleInterest();
-
-  const handleInterestClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated) return;
-    toggleInterest.mutate({
-      eventId: event.id,
-      isInterested: event.user_is_interested || false,
-    });
-  };
 
   const categorySlug =
     event.category?.slug ||
@@ -86,14 +84,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
   };
   const tapeColor = theme.tape;
 
-  const date = new Date(event.start_time).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-  const time = new Date(event.start_time).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const relativeTime = formatEventRelativeTime(event.start_time);
   const price = event.ticket_price_standard
     ? `$${parseFloat(event.ticket_price_standard).toFixed(0)}`
     : 'Free';
@@ -101,7 +92,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
     event.media?.filter(
       (media) => media.category === 'highlight' && media.media_type === 'image',
     ) || [];
-  const isNoImageCard = !event.cover_image && highlightImages.length === 0;
+  const isNoImageCard = !event.cover_image;
 
   return (
     <Box
@@ -208,45 +199,49 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Calendar size={13} color="#555" />
                 <Typography
                   sx={{ fontSize: '0.82rem', color: '#555', fontFamily: 'serif' }}
                 >
-                  {date} · {time}
+                  {event.description.slice(0, 500)}{event.description.length > 500 ? '...' : ''}
                 </Typography>
               </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                  <Calendar size={13} color="#555" />
+                  <Typography
+                    sx={{ fontSize: '0.82rem', fontWeight: 'bolder', color: '#555', fontFamily: 'serif', whiteSpace: 'nowrap' }}
+                  >
+                    {relativeTime}
+                  </Typography>
+                </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MapPin size={13} color="#555" />
-                <Typography
-                  sx={{
-                    fontSize: '0.82rem',
-                    color: '#555',
-                    fontFamily: 'serif',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {event.location_name}
-                </Typography>
+                <Box sx={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                  <LocationTag
+                    locationName={event.location_name}
+                    locationAddress={event.location_address}
+                    latitude={event.latitude}
+                    longitude={event.longitude}
+                    size={13}
+                    color="#555"
+                  />
+                </Box>
               </Box>
             </Box>
           </Box>
         )}
 
         {!isNoImageCard && (
-          <Box
-            sx={{
-              aspectRatio: '1 / 1',
-              bgcolor: '#eee',
-              overflow: 'hidden',
-              mb: 2,
-              border: '1px solid rgba(0,0,0,0.05)',
-              position: 'relative',
-            }}
-          >
-            {event.cover_image ? (
+          <>
+            <Box
+              sx={{
+                aspectRatio: '1.5 / 1',
+                bgcolor: '#eee',
+                overflow: 'hidden',
+                mb: 2,
+                border: '1px solid rgba(0,0,0,0.05)',
+                position: 'relative',
+              }}
+            >
               <Media
                 src={event.cover_image}
                 alt={event.title}
@@ -258,139 +253,124 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                   transition: 'transform 0.5s ease',
                 }}
               />
-            ) : (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ccc',
-                }}
-              >
-                <Calendar size={48} />
-              </Box>
-            )}
 
-            {/* Interest Heart */}
-            <button
-              onClick={handleInterestClick}
-              className="absolute top-2 left-2 rounded-full bg-white/80 backdrop-blur-sm p-1.5 transition-all hover:bg-white hover:scale-110 shadow-sm z-10"
-              aria-label={
-                event.user_is_interested ? 'Remove interest' : 'Mark interested'
-              }
-            >
-              <Heart
-                size={16}
-                className={`transition-colors ${
-                  event.user_is_interested
-                    ? 'fill-red-500 text-red-500'
-                    : 'text-gray-500'
-                }`}
-              />
-            </button>
-
-            {/* Category "Sticker" */}
-            {event.category && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 10,
-                  right: 10,
-                  bgcolor: '#fff',
-                  color: '#1a1a1a',
-                  p: '4px 8px',
-                  borderRadius: '2px',
-                  boxShadow: '2px 2px 5px rgba(0,0,0,0.15)',
-                  transform: 'rotate(5deg)',
-                  zIndex: 2,
-                  border: '1px dashed #ccc',
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: '0.65rem',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  {event.category.name}
-                </Typography>
-              </Box>
-            )}
-
-            {/* LIVE indicator as a badge or stamp */}
-            {event.lifecycle_state === 'live' && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 10,
-                  left: 10,
-                  bgcolor: '#ef4444',
-                  color: '#fff',
-                  p: '2px 8px',
-                  borderRadius: '4px',
-                  fontFamily: '"Permanent Marker"',
-                  fontSize: '0.8rem',
-                  transform: 'rotate(-5deg)',
-                  zIndex: 2,
-                  animation: 'pulse 2s infinite',
-                }}
-              >
-                LIVE!
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {!isNoImageCard && (
-          <Box sx={{ px: 0.5 }}>
-            <Typography
-              sx={{
-                fontFamily: '"Permanent Marker"',
-                fontSize: '1.1rem',
-                color: '#1a1a1a',
-                lineHeight: 1.2,
-                mb: 1,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {event.title}
-            </Typography>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Calendar size={12} color="#666" />
-              <Typography
-                sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'serif' }}
-              >
-                {date} · {time}
-              </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <MapPin size={12} color="#666" />
+            <Box sx={{ px: 0.5 }}>
               <Typography
                 sx={{
-                  fontSize: '0.75rem',
-                  color: '#666',
-                  fontFamily: 'serif',
+                  fontFamily: '"Permanent Marker"',
+                  fontSize: '1.1rem',
+                  color: '#1a1a1a',
+                  lineHeight: 1.2,
+                  mb: 1,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}
               >
-                {event.location_name}
+                {event.title}
               </Typography>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <Typography
+                  sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'serif' }}
+                >
+                  {event.description.slice(0, 160)}{event.description.length > 160 ? '...' : ''}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                  <Calendar size={12} color="#666" />
+                  <Typography
+                    sx={{ fontSize: '0.75rem', fontWeight: 'bolder', color: '#666', fontFamily: 'serif', whiteSpace: 'nowrap' }}
+                  >
+                    {relativeTime}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'flex-end', overflow: 'hidden' }}>
+                  <LocationTag
+                    locationName={event.location_name}
+                    locationAddress={event.location_address}
+                    latitude={event.latitude}
+                    longitude={event.longitude}
+                    size={12}
+                    color="#666"
+                  />
+                </Box>
+              </Box>
             </Box>
+          </>
+        )}
+
+        {/* Interest Heart */}
+        <LikeButton
+          eventId={event.id}
+          initialIsInterested={event.user_is_interested}
+          initialInterestCount={event.interest_count}
+        />
+
+        {/* Ticket Infographic */}
+        <TicketStatusBadge
+          ticketCount={event.ticket_count}
+          capacity={event.capacity}
+          sx={{ position: 'absolute', top: 10, left: 55, zIndex: 2 }}
+        />
+
+        {/* Category "Sticker" */}
+        {event.category && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              bgcolor: '#fff',
+              color: '#1a1a1a',
+              p: '4px 8px',
+              borderRadius: '2px',
+              boxShadow: '2px 2px 5px rgba(0,0,0,0.15)',
+              transform: 'rotate(5deg)',
+              zIndex: 2,
+              border: '1px dashed #ccc',
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: '0.65rem',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {event.category.name}
+            </Typography>
           </Box>
         )}
 
+        {/* LIVE indicator as a badge or stamp */}
+        {event.lifecycle_state === 'live' && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              bgcolor: '#ef4444',
+              color: '#fff',
+              p: '2px 8px',
+              borderRadius: '4px',
+              fontFamily: '"Permanent Marker"',
+              fontSize: '0.8rem',
+              transform: 'rotate(-5deg)',
+              zIndex: 2,
+              animation: 'pulse 2s infinite',
+            }}
+          >
+            LIVE!
+          </Box>
+        )}
         {/* Bottom stickers based on status */}
-        {!isNoImageCard && event.lifecycle_state === 'event_ready' && (
+        {event.lifecycle_state === 'event_ready' && (
           <Box
             sx={{
               position: 'absolute',
@@ -421,7 +401,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
           </Box>
         )}
 
-        {!isNoImageCard &&
+        {
           (event.lifecycle_state === 'published' ||
             event.lifecycle_state === 'live') && (
             <Box
@@ -455,7 +435,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
             </Box>
           )}
 
-        {!isNoImageCard && event.lifecycle_state === 'completed' && (
+        {event.lifecycle_state === 'completed' && (
           <Box
             sx={{
               position: 'absolute',
@@ -484,7 +464,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
         )}
 
         {/* Pencil mark/sketch detail */}
-        {!isNoImageCard && (
+        {(
           <Box
             sx={{
               position: 'absolute',

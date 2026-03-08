@@ -5,6 +5,7 @@ import {
   FileEdit,
   LayoutDashboard,
   LocateFixed,
+  MapPin,
   Menu,
   Moon,
   Pencil,
@@ -14,7 +15,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { useAlerts } from '@/features/alerts/hooks';
 import { useAuth } from '@/features/auth/hooks';
 import { useEvent, useEventAutocomplete } from '@/features/events/hooks';
 import { useTheme } from '@/theme/ThemeProvider';
+import { canUseBrowserGeolocation } from '@/utils/geolocation';
 import { type LocationSuggestion, searchLocation } from '@/utils/geolocation';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
 import { useNearYou } from '@/utils/useNearYou';
@@ -33,7 +35,10 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const {
     enabled: nearYouEnabled,
+    coords,
     locationName: nearYouName,
+    radiusMiles,
+    setRadiusMiles,
     toggleLocation: toggleNearYou,
   } = useNearYou();
   const [search, setSearch] = useState('');
@@ -43,12 +48,36 @@ export function Navbar() {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>(
     [],
   );
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (nearYouEnabled) {
       setLocationSearch(nearYouName);
     }
   }, [nearYouEnabled, nearYouName]);
+
+  // Ask Chrome for location permission on load when user is logged in (stays enabled for session)
+  useEffect(() => {
+    if (!isAuthenticated || !canUseBrowserGeolocation()) return;
+    navigator.geolocation.getCurrentPosition(
+      () => { },
+      () => { },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+    );
+  }, [isAuthenticated]);
+
+  // Close location dropdown on click outside
+  useEffect(() => {
+    if (!locationDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(e.target as Node)) {
+        setLocationDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [locationDropdownOpen]);
 
   const navigate = useNavigate();
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -86,9 +115,22 @@ export function Navbar() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowSuggestions(false);
-    const params = new URLSearchParams();
-    if (search.trim()) params.append('search', search.trim());
-    if (locationSearch.trim()) params.append('location', locationSearch.trim());
+    const params = new URLSearchParams(window.location.search);
+    if (search.trim()) params.set('search', search.trim());
+    else params.delete('search');
+    if (locationSearch.trim()) {
+      params.set('location', locationSearch.trim());
+      params.set('radius_miles', String(radiusMiles));
+      if (nearYouEnabled && coords) {
+        params.set('lat', String(coords.lat));
+        params.set('lng', String(coords.lng));
+      }
+    } else {
+      params.delete('location');
+      params.delete('lat');
+      params.delete('lng');
+      params.delete('radius_miles');
+    }
 
     if (params.toString()) {
       navigate(`/?${params.toString()}`);
@@ -110,6 +152,7 @@ export function Navbar() {
     params.set('location', suggestion.display_name);
     params.set('lat', suggestion.lat);
     params.set('lng', suggestion.lon);
+    params.set('radius_miles', String(radiusMiles));
     navigate(`/?${params.toString()}`);
   };
 
@@ -140,10 +183,11 @@ export function Navbar() {
                   Outgoing
                 </span>
               </Link>
-              <div className="hidden md:flex relative flex-1 max-w-7xl mx-4 lg:mx-12">
+              <div className="hidden md:flex relative flex-1 min-w-0 max-w-[900px] mx-4 mt-4 lg:mx-8">
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center w-full rounded-full border-2 border-gray-200 bg-white pl-7 pr-2 py-3 shadow-sm transition-all hover:shadow-md focus-within:border-gray-400 focus-within:shadow-md"
+                  className="flex items-center w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] pl-5 pr-2 py-2.5 shadow-[3px_4px_0px_#333] focus-within:shadow-[2px_3px_0px_#333] focus-within:translate-x-[1px] focus-within:translate-y-[1px] transition-all"
+                  style={{ fontFamily: '"Permanent Marker"' }}
                 >
                   <input
                     value={search}
@@ -151,116 +195,145 @@ export function Navbar() {
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                     placeholder="Search events..."
-                    className="flex-1 bg-transparent text-[17px] font-medium outline-none text-gray-800 placeholder:text-gray-400"
+                    className="flex-1 min-w-[140px] bg-transparent text-base outline-none text-gray-800 placeholder:text-gray-500"
+                    style={{ fontFamily: '"Permanent Marker"' }}
                   />
-                  <div className="h-8 w-[2px] bg-gray-100 mx-6"></div>
-                  <div className="flex bg-transparent items-center flex-[2] relative pr-8">
-                    <input
-                      value={locationSearch}
-                      onChange={(e) => {
-                        setLocationSearch(e.target.value);
-                        if (nearYouEnabled) toggleNearYou();
-                      }}
-                      onFocus={() => {
-                        if (locationSuggestions.length > 0)
-                          setShowLocationSuggestions(true);
-                      }}
-                      onBlur={() =>
-                        setTimeout(() => setShowLocationSuggestions(false), 200)
-                      }
-                      placeholder="Location"
-                      className="w-full bg-transparent text-[17px] font-medium outline-none text-gray-800 placeholder:text-gray-400"
-                    />
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={toggleNearYou}
-                        className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
-                        title={
-                          nearYouEnabled
-                            ? 'Near You: ON - click to disable'
-                            : 'Use my location'
-                        }
+                  <div className="h-7 w-[2px] bg-gray-400 mx-3 flex-shrink-0" />
+                  <div className="relative flex-shrink-0" ref={locationDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setLocationDropdownOpen((o) => !o)}
+                      className="flex items-center gap-2 rounded-none border-2 border-gray-800 bg-white px-4 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all min-w-[160px] justify-between"
+                      style={{ fontFamily: '"Permanent Marker"' }}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <MapPin size={18} className="text-gray-600 shrink-0" />
+                        <span className="truncate text-gray-800">
+                          {nearYouEnabled ? nearYouName || 'Near you' : locationSearch || 'Location'}
+                        </span>
+                      </span>
+                      <span className="text-gray-500 text-xs shrink-0">{radiusMiles} mi</span>
+                    </button>
+                    {locationDropdownOpen && (
+                      <div
+                        className="absolute top-full left-0 mt-2 z-50 w-[380px] rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-3 shadow-[4px_5px_0px_#333]"
+                        style={{
+                          backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+                          backgroundSize: '10px 10px',
+                        }}
                       >
-                        <LocateFixed
-                          size={18}
-                          className={nearYouEnabled ? 'text-blue-500' : ''}
-                        />
-                      </button>
-                      {locationSearch && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setLocationSearch('');
-                            if (nearYouEnabled) toggleNearYou();
-                            const params = new URLSearchParams(window.location.search);
-                            params.delete('location');
-                            params.delete('lat');
-                            params.delete('lng');
-                            navigate(`/?${params.toString()}`);
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </div>
-
-                    {showLocationSuggestions && (
-                      <div className="absolute top-[3.5rem] left-0 z-50 w-[420px] -ml-24 rounded-2xl border bg-card p-2 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-2" style={{ fontFamily: '"Permanent Marker"' }}>Where?</p>
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={toggleNearYou}
-                          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-left hover:bg-blue-50 transition-colors text-blue-600 font-medium"
+                          onClick={() => {
+                            toggleNearYou();
+                            setLocationDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 rounded-none border-2 border-gray-800 px-4 py-3 text-left bg-blue-200/80 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold text-gray-900 mb-3"
+                          style={{ fontFamily: '"Permanent Marker"' }}
                         >
-                          <LocateFixed size={18} />
-                          <span>Near You (GPS)</span>
+                          <LocateFixed size={20} className={nearYouEnabled ? 'text-blue-600' : ''} />
+                          <span>Use current location</span>
                         </button>
-                        <div className="h-[1px] bg-gray-100 my-1 mx-2" />
-                        {locationSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.place_id}
-                            type="button"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => handleLocationSuggestionClick(suggestion)}
-                            className="w-full flex items-start gap-3 rounded-lg px-4 py-3 text-left hover:bg-muted transition-colors"
-                          >
-                            <div className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 shrink-0">
-                              <Search size={14} className="text-gray-500" />
+                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-2 mt-2" style={{ fontFamily: '"Permanent Marker"' }}>Or type an address</p>
+                        <div className="relative">
+                          <input
+                            value={locationSearch}
+                            onChange={(e) => {
+                              setLocationSearch(e.target.value);
+                              if (nearYouEnabled) toggleNearYou();
+                            }}
+                            onFocus={() => {
+                              if (locationSuggestions.length > 0) setShowLocationSuggestions(true);
+                            }}
+                            onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+                            placeholder="City or address..."
+                            className="w-full rounded-none border-2 border-gray-800 bg-white px-3 py-2.5 text-gray-800 placeholder:text-gray-500 outline-none shadow-[2px_2px_0px_#333]"
+                            style={{ fontFamily: '"Permanent Marker"' }}
+                          />
+                          {showLocationSuggestions && locationSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 rounded-none border-2 border-gray-800 bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
+                              {locationSuggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion.place_id}
+                                  type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    handleLocationSuggestionClick(suggestion);
+                                    setShowLocationSuggestions(false);
+                                    setLocationDropdownOpen(false);
+                                  }}
+                                  className="w-full flex items-start gap-2 rounded-none px-3 py-2.5 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
+                                  style={{ fontFamily: '"Permanent Marker"' }}
+                                >
+                                  <Search size={14} className="text-gray-500 shrink-0 mt-0.5" />
+                                  <p className="text-sm line-clamp-2">{suggestion.display_name}</p>
+                                </button>
+                              ))}
                             </div>
-                            <p className="text-sm font-medium line-clamp-2">
-                              {suggestion.display_name}
-                            </p>
+                          )}
+                        </div>
+                        <p className="text-xs uppercase tracking-wider text-gray-600 mb-1.5 mt-3" style={{ fontFamily: '"Permanent Marker"' }}>Miles radius</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={500}
+                            value={radiusMiles}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value, 10);
+                              if (!Number.isNaN(v)) setRadiusMiles(v);
+                            }}
+                            className="w-20 rounded-none border-2 border-gray-800 bg-white px-3 py-2 text-gray-800 outline-none shadow-[2px_2px_0px_#333]"
+                            style={{ fontFamily: '"Permanent Marker"' }}
+                          />
+                          <span className="text-sm text-gray-600" style={{ fontFamily: '"Permanent Marker"' }}>miles</span>
+                        </div>
+                        {locationSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLocationSearch('');
+                              if (nearYouEnabled) toggleNearYou();
+                              const params = new URLSearchParams(window.location.search);
+                              params.delete('location');
+                              params.delete('lat');
+                              params.delete('lng');
+                              navigate(`/?${params.toString()}`);
+                              setLocationDropdownOpen(false);
+                            }}
+                            className="mt-3 w-full rounded-none border-2 border-gray-800 bg-red-100 px-3 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-gray-800 font-bold"
+                            style={{ fontFamily: '"Permanent Marker"' }}
+                          >
+                            Clear location
                           </button>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
                   <button
                     type="submit"
-                    className="ml-2 rounded-full bg-[#222222] p-3 text-white hover:bg-black transition-transform hover:scale-105 active:scale-95"
+                    className="ml-2 rounded-none border-2 border-gray-800 bg-[#f8c163] p-3 text-gray-900 shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
+                    style={{ fontFamily: '"Permanent Marker"' }}
                   >
                     <Search size={20} strokeWidth={3} />
                   </button>
                 </form>
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute top-[4.25rem] left-0 z-50 w-full rounded-2xl border bg-card p-2 shadow-xl overflow-hidden">
+                  <div className="absolute top-[4rem] left-0 z-50 w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-2 shadow-[4px_5px_0px_#333] overflow-hidden">
                     {suggestions.map((suggestion) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => handleSuggestionClick(suggestion.title)}
-                        className="w-full flex flex-col items-start rounded-lg px-4 py-3 text-left hover:bg-muted transition-colors"
+                        className="w-full flex flex-col items-start rounded-none px-4 py-3 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
+                        style={{ fontFamily: '"Permanent Marker"' }}
                       >
-                        <p className="text-[16px] font-medium line-clamp-1">
-                          {suggestion.title}
-                        </p>
-                        <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                          {[suggestion.category_name, suggestion.location_name]
-                            .filter(Boolean)
-                            .join(' · ')}
+                        <p className="text-[15px] font-medium line-clamp-1">{suggestion.title}</p>
+                        <p className="text-sm text-gray-500 line-clamp-1 mt-1">
+                          {[suggestion.category_name, suggestion.location_name].filter(Boolean).join(' · ')}
                         </p>
                       </button>
                     ))}

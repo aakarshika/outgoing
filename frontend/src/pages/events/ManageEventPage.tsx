@@ -271,6 +271,7 @@ export default function ManageEventPage() {
     }>
   >([]);
   const [eventFeatures, setEventFeatures] = useState<EventFeature[]>([]);
+  const [capacity, setCapacity] = useState<string>('');
 
   const { data: occurrencesResponse, isLoading: isLoadingOccurrences } =
     useEventSeriesOccurrences(event?.series?.id ?? 0);
@@ -337,8 +338,22 @@ export default function ManageEventPage() {
       if (event.features && event.features.length > 0) {
         setEventFeatures(event.features);
       }
+      if (event.capacity) {
+        setCapacity(String(event.capacity));
+      }
     }
   }, [event]);
+
+  // Force total capacity if all tiers have a capacity
+  useEffect(() => {
+    if (ticketTiers.length > 0) {
+      const allHaveCapacity = ticketTiers.every((t) => t.capacity !== undefined && t.capacity !== null && t.capacity > 0);
+      if (allHaveCapacity) {
+        const sum = ticketTiers.reduce((acc, t) => acc + (t.capacity || 0), 0);
+        setCapacity(String(sum));
+      }
+    }
+  }, [ticketTiers]);
 
   useEffect(() => {
     if (generateUntil && event?.series?.id) {
@@ -379,6 +394,21 @@ export default function ManageEventPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    const totalCapacityStr = formData.get('capacity') as string;
+    const totalCapacityVal = totalCapacityStr ? parseInt(totalCapacityStr, 10) : null;
+
+    if (ticketTiers.length > 0 && totalCapacityVal !== null) {
+      const hasAnyCapacity = ticketTiers.some((t) => t.capacity !== undefined && t.capacity !== null && t.capacity > 0);
+      if (hasAnyCapacity) {
+        const sumTiers = ticketTiers.reduce((acc, t) => acc + (t.capacity || 0), 0);
+        if (sumTiers !== totalCapacityVal) {
+          toast.error(`The sum of the capacity of your ticket tiers (${sumTiers}) must exactly match the Total Event Capacity (${totalCapacityVal}).`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+    }
+
     // Avoid sending empty strings for optional numeric fields.
     [
       'latitude',
@@ -388,7 +418,7 @@ export default function ManageEventPage() {
       'capacity',
     ].forEach((field) => {
       if (!String(formData.get(field) || '').trim()) {
-        formData.delete(field);
+        formData.set(field, '');
       }
     });
 
@@ -627,15 +657,14 @@ export default function ManageEventPage() {
                         setNextLifecycleState(state);
                       }
                     }}
-                    className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 transition-all min-w-[80px] ${
-                      isCurrent
-                        ? 'ring-2 ring-offset-2 scale-110 shadow-lg'
-                        : canTransition
-                          ? 'hover:scale-105 hover:shadow-md cursor-pointer opacity-90'
-                          : isPast
-                            ? 'opacity-40'
-                            : 'opacity-30'
-                    }`}
+                    className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 transition-all min-w-[80px] ${isCurrent
+                      ? 'ring-2 ring-offset-2 scale-110 shadow-lg'
+                      : canTransition
+                        ? 'hover:scale-105 hover:shadow-md cursor-pointer opacity-90'
+                        : isPast
+                          ? 'opacity-40'
+                          : 'opacity-30'
+                      }`}
                     style={{
                       backgroundColor: isCurrent ? cfg.bg : isPast ? cfg.bg : '#fafafa',
                       borderColor: isCurrent
@@ -702,13 +731,12 @@ export default function ManageEventPage() {
                         setNextLifecycleState(state);
                       }
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
-                      isCurrent
-                        ? 'ring-2 ring-offset-1 scale-105 shadow-md'
-                        : canTransition
-                          ? 'hover:scale-105 hover:shadow cursor-pointer'
-                          : 'opacity-30 cursor-default'
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${isCurrent
+                      ? 'ring-2 ring-offset-1 scale-105 shadow-md'
+                      : canTransition
+                        ? 'hover:scale-105 hover:shadow cursor-pointer'
+                        : 'opacity-30 cursor-default'
+                      }`}
                     style={{
                       backgroundColor: isCurrent ? cfg.bg : '#fafafa',
                       borderColor: isCurrent
@@ -892,11 +920,10 @@ export default function ManageEventPage() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as any)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
-                activeTab === t.id
-                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${activeTab === t.id
+                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}
@@ -1167,11 +1194,10 @@ export default function ManageEventPage() {
                             .slice(0, 16);
                         }
                       }}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-2 transition-all hover:scale-105 ${
-                        eventDuration === preset.ms
-                          ? 'bg-gray-800 text-white border-gray-800'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
-                      }`}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-2 transition-all hover:scale-105 ${eventDuration === preset.ms
+                        ? 'bg-gray-800 text-white border-gray-800'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                        }`}
                     >
                       {preset.label}
                     </button>
@@ -1215,7 +1241,7 @@ export default function ManageEventPage() {
                           const isCancelled = occ.lifecycle_state === 'cancelled';
                           const occCfg =
                             LIFECYCLE_FLOW_CONFIG[
-                              occ.lifecycle_state as EventLifecycleState
+                            occ.lifecycle_state as EventLifecycleState
                             ] || LIFECYCLE_FLOW_CONFIG.draft;
 
                           return (
@@ -1235,15 +1261,14 @@ export default function ManageEventPage() {
                                       navigate(`/events/${occ.id}/manage`);
                                   }
                                 }}
-                                className={`relative group flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${
-                                  isCurrent
-                                    ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
-                                    : isCancelled
-                                      ? 'opacity-40 bg-gray-50 border-gray-300'
-                                      : isPast
-                                        ? 'bg-gray-50 border-gray-300 hover:border-gray-500 cursor-pointer'
-                                        : 'bg-white border-gray-300 hover:border-primary hover:shadow-md cursor-pointer'
-                                }`}
+                                className={`relative group flex flex-col items-center p-3 rounded-xl border-2 min-w-[100px] transition-all ${isCurrent
+                                  ? 'bg-yellow-100 border-gray-800 shadow-[2px_3px_0px_#333] scale-105'
+                                  : isCancelled
+                                    ? 'opacity-40 bg-gray-50 border-gray-300'
+                                    : isPast
+                                      ? 'bg-gray-50 border-gray-300 hover:border-gray-500 cursor-pointer'
+                                      : 'bg-white border-gray-300 hover:border-primary hover:shadow-md cursor-pointer'
+                                  }`}
                               >
                                 <span
                                   className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mb-1"
@@ -1370,11 +1395,10 @@ export default function ManageEventPage() {
                     key={mode}
                     type="button"
                     onClick={() => setLocationMode(mode)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                      locationMode === mode
-                        ? 'bg-white shadow-md text-gray-800 border border-gray-200'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${locationMode === mode
+                      ? 'bg-white shadow-md text-gray-800 border border-gray-200'
+                      : 'text-gray-500 hover:text-gray-700'
+                      }`}
                     style={{ fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
                   >
                     <Icon className="h-4 w-4" /> {label}
@@ -1554,7 +1578,8 @@ export default function ManageEventPage() {
                       id="capacity"
                       name="capacity"
                       type="number"
-                      defaultValue={event.capacity || ''}
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
                       placeholder="Unlimited"
                       className="w-full rounded-lg border bg-background pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-mono"
                     />
@@ -1626,18 +1651,17 @@ export default function ManageEventPage() {
                               ]);
                             }
                           }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
-                            selected
-                              ? 'shadow-[1px_2px_0px_#333] font-bold scale-105'
-                              : 'border-gray-300 bg-white text-gray-600 hover:border-gray-500 hover:bg-gray-50'
-                          }`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${selected
+                            ? 'shadow-[1px_2px_0px_#333] font-bold scale-105'
+                            : 'border-gray-300 bg-white text-gray-600 hover:border-gray-500 hover:bg-gray-50'
+                            }`}
                           style={
                             selected
                               ? {
-                                  backgroundColor: TAG_COLORS[selected.tag].bg,
-                                  borderColor: TAG_COLORS[selected.tag].border,
-                                  color: TAG_COLORS[selected.tag].text,
-                                }
+                                backgroundColor: TAG_COLORS[selected.tag].bg,
+                                borderColor: TAG_COLORS[selected.tag].border,
+                                color: TAG_COLORS[selected.tag].text,
+                              }
                               : undefined
                           }
                         >
@@ -1660,11 +1684,10 @@ export default function ManageEventPage() {
                                     ),
                                   );
                                 }}
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[8px] transition-all ${
-                                  selected.tag === tag
-                                    ? 'scale-125 ring-1 ring-offset-1'
-                                    : 'opacity-60 hover:opacity-100'
-                                }`}
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[8px] transition-all ${selected.tag === tag
+                                  ? 'scale-125 ring-1 ring-offset-1'
+                                  : 'opacity-60 hover:opacity-100'
+                                  }`}
                                 style={{
                                   backgroundColor: TAG_COLORS[tag].bg,
                                   borderColor: TAG_COLORS[tag].border,
@@ -2034,11 +2057,10 @@ export default function ManageEventPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                attendee.ticket_type === 'flexible'
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                  : 'bg-secondary text-secondary-foreground'
-                              }`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${attendee.ticket_type === 'flexible'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                : 'bg-secondary text-secondary-foreground'
+                                }`}
                             >
                               {attendee.ticket_type.charAt(0).toUpperCase() +
                                 attendee.ticket_type.slice(1)}

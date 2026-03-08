@@ -18,14 +18,7 @@ export const MakeYourEventHappenSection = () => {
   const { data: servicesData, isLoading: servicesLoading } = useTopVendorsFeed();
   const services = servicesData?.data || [];
 
-  if (
-    !requestsLoading &&
-    !servicesLoading &&
-    requests.length === 0 &&
-    services.length === 0
-  )
-    return null;
-
+  // Always render the section
   return (
     <Box sx={{ px: { xs: 2, sm: 4, lg: 8 }, py: 8 }}>
       <Box sx={{ textAlign: 'center', mb: 8 }}>

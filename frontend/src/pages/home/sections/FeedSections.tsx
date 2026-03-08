@@ -22,7 +22,7 @@ export const GenericFeedSection = ({
   viewAllPath,
   emptyMessage,
   forceShowHeader = false,
-  decorative = false,
+  decorative = true,
 }: GenericFeedSectionProps) => {
   const { data, isLoading } = useFeed(params);
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export const TrendingSection = () => (
 // --- Upcoming RSVPs ---
 export const UpcomingRSVPsSection = () => (
   <GenericFeedSection
-    title="📅 Upcoming Events (Your RSVPs)"
+    title="📅 Upcoming "
     params={{ sort: 'upcoming' }} // popular upcoming approximation
     viewAllPath="/browse?sort=popular&title=Upcoming Events"
   />
@@ -81,8 +81,9 @@ export const UpcomingRSVPsSection = () => (
 
 // --- Nearby ---
 export const NearbySection = () => {
-  const { enabled, coords, toggleLocation } = useNearYou();
+  const { enabled, coords, radiusMiles, toggleLocation } = useNearYou();
   const navigate = useNavigate();
+  const radiusKm = enabled ? Math.round(radiusMiles * 1.60934) : undefined;
 
   if (!enabled) {
     return (
@@ -136,7 +137,7 @@ export const NearbySection = () => {
       params={{
         lat: enabled && coords ? coords.lat : undefined,
         lng: enabled && coords ? coords.lng : undefined,
-        radius_km: enabled ? 25 : undefined,
+        radius_km: radiusKm,
       }}
       viewAllPath="/browse?sort=trending&title=Nearby Events"
       forceShowHeader={true}
@@ -208,14 +209,6 @@ export const NearbySection = () => {
   );
 };
 
-// --- This Week ---
-export const ThisWeekSection = () => (
-  <GenericFeedSection
-    title="🗓️ Happening This Week"
-    params={{ sort: 'newest', weekend: true }}
-    viewAllPath="/browse?weekend=true&title=Happening This Week"
-  />
-);
 
 // --- Online ---
 export const OnlineSection = () => (
@@ -242,7 +235,7 @@ export const LastWeekMemoriesSection = () => {
   const { data, isLoading } = useHighlightsFeed();
   return (
     <HorizontalScrapbookList
-      title="📸 Last Week's Memories"
+      title="📸 Popular Memories"
       events={data?.data || []}
       isLoading={isLoading}
     />

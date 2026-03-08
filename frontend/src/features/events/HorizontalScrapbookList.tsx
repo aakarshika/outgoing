@@ -38,16 +38,12 @@ export function HorizontalScrapbookList({
     scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
-  if (!isLoading && events.length === 0 && !forceShowHeader) {
-    return null;
-  }
-
+  // Always show the section even if it has no items.
   return (
-    <Box sx={{ py: 6, position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ py: 0, position: 'relative', overflow: 'hidden' }}>
       {title && (
         <Box
           sx={{
-            mb: 4,
             px: { xs: 2, sm: 4, lg: 8 },
             display: 'flex',
             alignItems: 'baseline',
@@ -73,7 +69,7 @@ export function HorizontalScrapbookList({
               sx={{
                 fontFamily: '"Permanent Marker"',
                 color: '#1a1a1a',
-                fontSize: { xs: '1.5rem', sm: '2rem' },
+                fontSize: { xs: '1rem', sm: '1rem' },
                 position: 'relative',
                 zIndex: 1,
               }}
@@ -91,7 +87,7 @@ export function HorizontalScrapbookList({
                 '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
               }}
             >
-              See more memories →
+              See more  →
             </Button>
           )}
         </Box>
@@ -137,15 +133,15 @@ export function HorizontalScrapbookList({
         onScroll={handleScroll}
         sx={{
           display: 'flex',
-          gap: { xs: 3, sm: 4, md: 6 },
+          gap: { xs: 1, sm: 2, md: 3 },
           overflowX: 'auto',
           overflowY: 'hidden',
           px: { xs: 2, sm: 4, lg: 8 },
-          pb: 8,
-          pt: 6,
-          scrollSnapType: 'x mandatory',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
+          pb: 4,
+          pt: 2,
+          // scrollSnapType: 'x mandatory',
+          // scrollbarWidth: 'none',
+          // '&::-webkit-scrollbar': { display: 'none' },
           // Decorative pencil line behind the cards
           position: 'relative',
           '&::before': {

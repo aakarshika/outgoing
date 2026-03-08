@@ -42,6 +42,9 @@ export interface EventListItem {
   slug: string;
   category: EventCategory | null;
   location_name: string;
+  location_address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   start_time: string;
   end_time: string;
   ticket_price_standard: string | null;

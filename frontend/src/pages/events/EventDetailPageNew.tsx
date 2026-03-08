@@ -324,6 +324,7 @@ export default function EventDetailPageNew() {
               toggleInterest={toggleInterest}
               highlights={highlights}
               occurrences={occurrences}
+              displayNeedsCount={displayNeeds.length}
             />
 
             {/* Section 3: Content — Details + Tickets/Attendance */}

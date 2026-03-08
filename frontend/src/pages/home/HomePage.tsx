@@ -18,7 +18,6 @@ import {
   OnlineSection,
   RecommendedSection,
   SignUpCTASection,
-  ThisWeekSection,
   TrendingSection,
   UpcomingRSVPsSection,
 } from './HomeSections';
@@ -34,6 +33,10 @@ export default function HomePage() {
   const locationParam = searchParams.get('location') || '';
   const latParam = searchParams.get('lat');
   const lngParam = searchParams.get('lng');
+  const radiusMilesParam = searchParams.get('radius_miles');
+  const radiusKm = radiusMilesParam
+    ? Math.round(parseFloat(radiusMilesParam) * 1.60934) || undefined
+    : undefined;
   const { isAuthenticated } = useAuth();
 
   const { data: searchFeed, isLoading: isLoadingSearch } = useFeed({
@@ -41,6 +44,7 @@ export default function HomePage() {
     location: locationParam || undefined,
     lat: latParam ? parseFloat(latParam) : undefined,
     lng: lngParam ? parseFloat(lngParam) : undefined,
+    radius_km: radiusKm,
   });
 
   const activeSections = isAuthenticated ? SIGNED_IN_SECTIONS : SIGNED_OUT_SECTIONS;
@@ -57,8 +61,6 @@ export default function HomePage() {
         return <TrendingSection key={id} />;
       case 'nearby':
         return <NearbySection key={id} />;
-      case 'this_week':
-        return <ThisWeekSection key={id} />;
       case 'online':
         return <OnlineSection key={id} />;
       case 'iconic_hosts':
@@ -93,7 +95,7 @@ export default function HomePage() {
           color: '#f8c163ff',
         }}
       >
-        <div className="space-y-4">
+        <div className="">
           {/* Search results override normal feed if searching */}
           {search && (
             <HorizontalScrapbookList

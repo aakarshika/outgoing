@@ -323,7 +323,7 @@ export const TicketStub = ({
   userPurchasedCount?: number;
   clearTicketformTrigger?: number;
 }) => {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
 

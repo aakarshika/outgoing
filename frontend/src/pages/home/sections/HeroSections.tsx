@@ -5,13 +5,12 @@ import { BedroomHeroCarousel } from '@/features/events/BedroomHeroCarousel';
 // --- Hero Section ---
 export const HeroSection = () => (
   <section className="pt-6 pb-2">
-    <Box sx={{ textAlign: 'center', mb: 1, px: { xs: 2, sm: 4, lg: 8 } }}>
+    <Box sx={{ textAlign: 'right', px: { xs: 2, sm: 4, lg: 8 } }}>
       <Typography
         sx={{
           fontFamily: '"Magnolia", "Great Vibes", cursive',
           fontSize: { xs: '3.5rem', md: '5.5rem' },
-          color: '#eabe72ff',
-          lineHeight: 1,
+          color: '#eabe72ff'
         }}
       >
         Start here,
@@ -19,19 +18,19 @@ export const HeroSection = () => (
           component="span"
           sx={{
             display: 'inline-block',
-            fontWeight: 'bold',
-            width: '1.4em',
-            height: '1.4em',
-            backgroundColor: 'currentColor',
-            maskImage: 'url(/assets/go-symbol.png)',
+            width: '1.3em',
+            height: '1.3em',
+            backgroundColor: '#eabe72', // use the explicit hex color rather than currentColor to be safe
+            maskImage: "url('/assets/go-symbol.png')",
             maskSize: 'contain',
             maskRepeat: 'no-repeat',
             maskPosition: 'center',
-            WebkitMaskImage: 'url(/assets/go-symbol.png)',
+            WebkitMaskImage: "url('/assets/go-symbol.png')",
             WebkitMaskSize: 'contain',
             WebkitMaskRepeat: 'no-repeat',
             WebkitMaskPosition: 'center',
-            verticalAlign: 'middle',
+            verticalAlign: '-0.44em', // Adjusted to align perfectly with the cursive font height
+            // margin: '0 0.15em', // Adds breathing room between the words and the logo
           }}
         />
         places..
@@ -51,8 +50,6 @@ export const FeaturedCarouselSection = () => (
   <section>
     <Box
       sx={{
-        mt: 3,
-        mb: 0.5,
         px: { xs: 2, sm: 4, lg: 8 },
         display: 'flex',
         justifyContent: 'space-between',
@@ -66,7 +63,7 @@ export const FeaturedCarouselSection = () => (
         Featured Events
       </Typography>
     </Box>
-    <Box sx={{ transform: 'scale(0.82)', transformOrigin: 'top center', mt: -4 }}>
+    <Box sx={{ transform: 'scale(1)', transformOrigin: 'top center' }}>
       <BedroomHeroCarousel />
     </Box>
   </section>

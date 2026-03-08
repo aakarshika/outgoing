@@ -105,9 +105,7 @@ class FeedView(APIView):
             # SQLite doesn't support __contains with a list/choice on JSON fields well.
             # We search for the string 'online' within the JSON text or location fields.
             events = events.filter(
-                Q(location_name__icontains="online") | 
-                Q(location_name__icontains="virtual") |
-                Q(location_name__icontains="zoom") |
+                Q(location_address__icontains="online event") |
                 Q(tags__icontains="online")
             )
 
@@ -215,21 +213,19 @@ class RecentlyViewedFeedView(APIView):
 
 
 class CompletedHighlightsFeedView(APIView):
-    """Return completed events that have highlights or reviews — for 'Highlights & Rewinds'."""
+    """Return all completed events — for 'Highlights & Rewinds'."""
 
     permission_classes = [AllowAny]
 
     def get(self, request):
-        """Get completed events with highlight/review content."""
+        """Get completed events ordered by recently completed."""
         page_size = int(request.query_params.get("page_size", 20))
 
         events = (
             Event.objects.filter(lifecycle_state="completed")
-            .filter(Q(highlights__isnull=False) | Q(reviews__isnull=False))
-            .distinct()
             .select_related("host", "host__profile", "category")
             .prefetch_related("media")
-            .order_by("-interest_count", "-updated_at")[:page_size]
+            .order_by("-end_time")[:page_size]
         )
 
         serializer = EventListSerializer(
