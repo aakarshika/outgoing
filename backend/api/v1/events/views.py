@@ -262,7 +262,9 @@ class EventTicketTierListView(APIView):
         color_palette = ["#f59e0b", "#94a3b8", "#eab308", "#10b981", "#8b5cf6"] # Bronze, Silver, Gold, Emerald, Purple
             
         with transaction.atomic():
-            event.ticket_tiers.all().delete()
+            # Get existing tiers to determine what to delete later
+            incoming_ids = [t.get("id") for t in tiers_data if t.get("id")]
+            event.ticket_tiers.exclude(id__in=incoming_ids).delete()
             
             # Sort tiers by price for color assignment
             sorted_tiers = sorted(tiers_data, key=lambda x: float(x.get("price", 0)))
@@ -271,8 +273,18 @@ class EventTicketTierListView(APIView):
                 tier_data["event"] = event.id
                 if not tier_data.get("color"):
                     tier_data["color"] = color_palette[index % len(color_palette)]
-                    
-                serializer = EventTicketTierSerializer(data=tier_data)
+                
+                tier_id = tier_data.get("id")
+                if tier_id:
+                    try:
+                        instance = EventTicketTier.objects.get(id=tier_id, event=event)
+                        serializer = EventTicketTierSerializer(instance, data=tier_data, partial=True)
+                    except EventTicketTier.DoesNotExist:
+                        # If ID provided but not found for this event, treat as new (or could error)
+                        serializer = EventTicketTierSerializer(data=tier_data)
+                else:
+                    serializer = EventTicketTierSerializer(data=tier_data)
+
                 if serializer.is_valid():
                     serializer.save(event=event)
                 else:
@@ -289,20 +301,41 @@ class EventTicketTierListView(APIView):
                 ).exclude(pk=event.pk)
                 
                 for other in other_events:
-                    other.ticket_tiers.all().delete()
+                    # For other events, we match by name since IDs will be different
+                    existing_other_tiers = {t.name: t for t in other.ticket_tiers.all()}
+                    incoming_names = [t.get("name") for t in sorted_tiers]
+                    
+                    # Delete tiers that no longer exist in the new set
+                    other.ticket_tiers.exclude(name__in=incoming_names).delete()
+                    
                     for index, tier_data in enumerate(sorted_tiers):
-                        # Re-create tiers foreach event
-                        EventTicketTier.objects.create(
-                            event=other,
-                            name=tier_data["name"],
-                            description=tier_data.get("description", ""),
-                            admits=tier_data.get("admits", 1),
-                            color=tier_data.get("color", color_palette[index % len(color_palette)]),
-                            price=tier_data["price"],
-                            capacity=tier_data.get("capacity"),
-                            is_refundable=tier_data.get("is_refundable", False),
-                            refund_percentage=tier_data.get("refund_percentage", 100),
-                        )
+                        name = tier_data["name"]
+                        if name in existing_other_tiers:
+                            # Update existing
+                            tier = existing_other_tiers[name]
+                            tier.description = tier_data.get("description", "")
+                            tier.admits = tier_data.get("admits", 1)
+                            tier.max_passes_per_ticket = tier_data.get("max_passes_per_ticket", 6)
+                            tier.color = tier_data.get("color", color_palette[index % len(color_palette)])
+                            tier.price = tier_data["price"]
+                            tier.capacity = tier_data.get("capacity")
+                            tier.is_refundable = tier_data.get("is_refundable", False)
+                            tier.refund_percentage = tier_data.get("refund_percentage", 100)
+                            tier.save()
+                        else:
+                            # Create new
+                            EventTicketTier.objects.create(
+                                event=other,
+                                name=name,
+                                description=tier_data.get("description", ""),
+                                admits=tier_data.get("admits", 1),
+                                max_passes_per_ticket=tier_data.get("max_passes_per_ticket", 6),
+                                color=tier_data.get("color", color_palette[index % len(color_palette)]),
+                                price=tier_data["price"],
+                                capacity=tier_data.get("capacity"),
+                                is_refundable=tier_data.get("is_refundable", False),
+                                refund_percentage=tier_data.get("refund_percentage", 100),
+                            )
                     
         updated_tiers = event.ticket_tiers.all()
         return success_response(

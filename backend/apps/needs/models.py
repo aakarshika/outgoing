@@ -20,6 +20,7 @@ class EventNeed(models.Model):
         ("open", "Open"),
         ("filled", "Filled"),
         ("cancelled", "Cancelled"),
+        ("override_filled", "Override Filled"),
     ]
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="needs")

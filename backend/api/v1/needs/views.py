@@ -3,6 +3,7 @@
 from django.db.models import Exists, F, OuterRef
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from apps.events.models import Event
 from apps.needs.models import EventNeed, NeedApplication, NeedInvite
@@ -15,6 +16,7 @@ from .serializers import (
     NeedApplicationCreateSerializer,
     NeedApplicationSerializer,
     NeedInviteSerializer,
+    EventNeedUpdateSerializer,
 )
 
 
@@ -71,6 +73,42 @@ class EventNeedsView(APIView):
                 data=result.data, message="Need created", status=201
             )
         return error_response(message="Validation Error", errors=serializer.errors)
+
+
+class NeedDetailView(APIView):
+    """Update or delete a specific need."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, need_id):
+        """Update a need. Event host only."""
+        try:
+            need = EventNeed.objects.select_related("event").get(pk=need_id)
+        except EventNeed.DoesNotExist:
+            return error_response(message="Need not found", status=404)
+
+        if need.event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        serializer = EventNeedUpdateSerializer(need, data=request.data, partial=True)
+        if serializer.is_valid():
+            need = serializer.save()
+            result = EventNeedSerializer(need)
+            return success_response(data=result.data, message="Need updated")
+        return error_response(message="Validation Error", errors=serializer.errors)
+
+    def delete(self, request, need_id):
+        """Delete a need. Event host only."""
+        try:
+            need = EventNeed.objects.select_related("event").get(pk=need_id)
+        except EventNeed.DoesNotExist:
+            return error_response(message="Need not found", status=404)
+
+        if need.event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        need.delete()
+        return success_response(message="Need deleted")
 
 
 class NeedApplyView(APIView):

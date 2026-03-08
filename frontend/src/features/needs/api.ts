@@ -104,3 +104,23 @@ export async function fetchMyNeedInvites() {
   );
   return data;
 }
+
+export async function updateEventNeed(
+  needId: number,
+  payload: {
+    status?: 'open' | 'filled' | 'cancelled' | 'override_filled';
+    title?: string;
+    description?: string;
+    category?: string;
+    criticality?: string;
+    budget_min?: string | null;
+    budget_max?: string | null;
+  },
+) {
+  const { data } = await client.patch<{
+    success: boolean;
+    data: EventNeed;
+    message: string;
+  }>(`/needs/${needId}/`, payload);
+  return data;
+}

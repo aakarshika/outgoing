@@ -11,31 +11,11 @@ horizontal list of recurring events date boxes (Series Timeline) - with current 
 make this much smaller. no section border. 
 in each box - add the lifecycle state of that event. 
 
-below it i need the state transition section for the current event.. 
-    no border. small section.
-    it will show the current flowchart UI but smller and minimum details. 
-    only the possible transitions at that moment will be shown. 
+state transition section will be removed but the functionality is needed . it will be converted into a step by step process. described below. 
 
 
-tab wise changes - 
-merge the attendees and the entry tabs into 'attendance' tab. 
-only one tab will have all the purchased users list and at the top will have scan functionality, and when scanned, 
-attendance will be marked.
 
-on basic details - 
-    the event features section needs to be separate from the tickets and capacity section.
-    Custom Ticket Tiers - when new ticket is added, const tier color codes will be seen. 
-        for the tiers - total capacity per tier field needs to be added. along with the max passes per ticket field. 
-        on the UI the last ticket tier's capacity will be uneditable by the user as it will be the remaining capacity calculated by total - the rest . 
-        the max passes per ticket field will be a number input field upto 6 per tier. 
-
-on needs tab - 
-    only let add and edit need functionality be available when not in live or completed state.
-    no need can be edited if any application is accepted. 
-    if a need is accepted, another section per service will come up there and be expand and collapsible. "event-service-details" - leave placeholder for now. 
-    
-
-2. tabs 
+lifecycle-state wise:
     when the state is draft / published - 
         editable section for 
             basic info , location, event features, ticket section.
@@ -52,6 +32,202 @@ on needs tab -
     when state is completed:
         all tabs read only. remove the buttons that cannot be used once the event is completed. 
 
+
+
+the page will have different kind of tabs . instead of being tabs - they must look lits a list of steps to be taken on each tab. 
+user can go back a step. but the information editable will change based on state. 
+
+step 1- basic details 
+    basic details 
+    add needs 
+step 1.5- only state change. publish the event for everyone - 'published'
+step 2- services prep checklist
+        need list with applications   - when accepted and paid, the status will become 'filled'
+        the needs will be disabled and auto checked by the filled status of the need. the other features user will himself check off.
+        attendees list functionality. 
+step 2.5- "event readyness" - 
+    check in instructions . "event is ready, send" button to state change. 
+step 3- "Live"  - highlight this tab when event is ready. 
+    add 3 parts  - 
+    - "Attendance" section -  all goers with scanning function.
+    - state change event - live 
+    - "Messages" 2 placeholder boxes - "livechat", "messages from host section" 
+step 4- "wrap up"
+    also 3 parts - 
+        to change the state to completed - if live, or cancelled if other status.
+        add highlights button - takes you to the eventpage#highlights section .
+        rate vendors - add ui - placeholder functionality
+
+
             
+basic sections:    
+	basic [component]
+		Category dropdown 
+		Name the event 
+		Upload photo
+		description
+	when and where [component]
+		check in instructions
+        when [component]
+            date time section 
+            if it is recurring? 
+                recurring pattern?
+		location section [component]
+	ticket [component]
+		capacity	total 
+		tiers added for each tier- Custom Ticket Tiers - when new ticket is added, const tier color codes will be seen. 
+        for the tiers - "total capacity per tier" field needs to be added. along with the max passes per ticket field. 
+        on the UI the last ticket tier's capacity will be uneditable by the user as it will be the remaining capacity calculated by total minus sum of the rest . 
+        the max passes per ticket field will be a number input field upto 6 per tier. 
+			Pass Name
+			Price ($)
+			Admits (People)
+			Max Passes limit
+			Tier Capacity
+			description
+		(maintain total capacity sum of tier capacities)
+	event features section [component] the event features section needs to be separate from the tickets and capacity section.
+
+needs [component]
+	add need form - [component]
+		category first, 
+		optional title
+		no description
+		optional min max budget but dropdown for both
+	other saving functionality remain as they are. 
+    list of needs [component]
+        needs basic item [component]
+
+    list of services [component]
+        list of needs 
+            checkbox disabled
+            needs advance item [component]
+                need details similar to needs basics with more context and details. .
+                if unfilled:
+                    applications list [component]
+                        application details 
+                        agreements [component]
+                            collapsed: 
+                                text: "signed on" or not
+                            expanded:
+                                application sent accepted rejected 
+                                vendor agreement confirmed [price decided - placeholder, free for now.], 
+                                host agreement confirmed [paid or semi paid, placeholder, free for now.]-> filled.
+                            vendor agreement barcode popup - like the TicketManagementModal
+                if filled :
+                    assigned vendor details, 
+                        service ratings, 
+                    agreements collapsed. 
+placeholder "messages from host section" 
+
+
+attendance section: [component]
+    list of purchased users, and scanning functionality - will add 'admitted' column check on goers.
+            merge the attendees and the entry tabs into 'attendance' section. 
+            will have all the purchased users list and at the top will have scan functionality, and when scanned, 
+            attendance will be marked.
+    also in the same list we will have the vendors - who will also be checked in using a similar barcode mechanism. 
+        for them the barcode will be generated at the time of service need filled and the barcode will be put in the vendor agreement confirmation. 
+
+ 
+	
+
 
         
+
+
+
+
+
+
+
+----------
+
+on navbar - edit the event button is there for the hosts.- rename it to "manage event" 
+another button - for the vendors who have applied to this event - "servicing" also with a pencil icon
+new page - "vendor service" 
+
+will also have a step by step look similar to the host's manage event page.
+
+here we will show the basic details of the event. 
+his application, the result of the application, 
+the "agreement section" component from above. - enabled from the vendor's side. 
+where he can see: 
+    collapsed: 
+        text: "signed on" or not
+    expanded:
+        application sent accepted rejected - disabled.
+        vendor agreement confirmed [price decided - placeholder, free for now.] - enabled., 
+        host agreement confirmed [paid or semi paid, placeholder, free for now.]-> disabled. 
+    vendor agreement barcode popup.
+    
+placeholder "messages from host section"
+next will be reviews list - from users and host. 
+
+---
+
+### Clarification Questions for the Plan
+*Please edit or answer these below or directly inside the sections above.*
+
+1. **Step 1 - Basic Details**: Did you want the timing (Start Date/Time) and Location elements combined inside the `basic [component]`, or should they remain in a separate `when and where [component]` as outlined? 
+`when and where [component]` as outlined
+2. **Series Timeline**: At the top, you mentioned making the recurring dates boxes smaller without a border. Should this series list appear *only* if the event is recurring, or always?
+always
+3. **Step 2.5 - Event Readiness**: You placed "check in instructions" here. Does this mean they are *only* editable at this step, or can they be filled out in Step 1 as well? 
+both places. component reusable.
+4. **Needs & Vendors**: How does the Vendor Agreement barcode work on the host side? Are we storing the exact payment details immediately or keeping them as placeholders for now?
+on host side - in the attendees section - we will accept vendor check in in the same way as the goer.
+placeholders for payment. build only for 0Rs. but have arcitecture ready.
+5. **ManageForVendorPage ("Vendor Service") Route**: Should this page exist at a completely separate URL like `/events/:id/vendor-service`, or as part of the dashboard navigation?
+yes separate. `/events/:id/event-vendor-management` and `/events/:id/host-event-management`
+******************
+******************
+thing to note - we must design all the [components] for this plan as separate . 
+so that when the steps are being changed, we only render those combination of sections in a defined order in a simple list. 
+
+so that if we want to reuse or replace which component should appear in which step, too much code change is not needed.
+******************
+
+
+Good, about the sections - 
+
+but we need to talk about the theme now. 
+it has to be compact and font should be consistent and small. 
+all the input fields will look similar- create a reusable component, unless customiation is needed.
+    input fields need to have shadows only on bottom right sides. no borders. and never rounded corners.  
+    the placeholder will be there on the fields until user starts typing.
+    the label will only appear when the field is in focus. - otherwise placeholder will show [label] [example]
+the sections themselves will have no background and no border and no heading. 
+the parts inside the sections might - to show that some input fields belong together. 
+there will be a separate reusable compoennt heading that can be used to add heading if needed. 
+there should be a separate component 'enclosingbox' that if needed can be used to group sections and headings in a color or something.
+make the when and where section snugger. and meeting url is not mandatory.
+Custom Ticket Tiers section will always have atleast one ticket tier and add more button.
+
+
+the steps UI - 
+it needs to have all the steps visible as little no border tabs maybe with a dot in between or something. 
+
+the current step will be highlighted
+
+the steps UI should be cute with scrapbook theme 
+******************
+for step tabs. - i want it to have dots or something and arrows in between or some ting unique like a scrapbook decoration 
+
+"creating an event" should look like a super simple task with just 4 steps! 
+also, differentiate between the half and full steps . 
+
+
+
+***
+1. Event Features
+- remove the buttons from the bottom of the bullets. 
+the top buttons will be greyed a little - when clicked - will be highlighted, and when selecting the features, the selected type will be attached.. 
+2. the categories dropdown - needs to come from 
+
+ManageEventPage.tsx
+
+always refer to the legacy file for functionality unless changed by the redesign document.
+3. the save and apply to entire series type functionalities must be there exactly. all this should have been done in util files to keep track and reuse as the ui keeps evolving. 
+4. the step list where i see step 1: basic details look good. list all the steps there horizontally and highlight the active one. i will be able to switch between steps as i do tabs
+5. the tier ticket colors come from an index order from constants file - see ticket stub. 

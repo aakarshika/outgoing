@@ -78,6 +78,24 @@ class EventNeedCreateSerializer(serializers.ModelSerializer):
     update_series = serializers.BooleanField(required=False, write_only=True, default=False)
 
 
+class EventNeedUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating event needs."""
+
+    class Meta:
+        """Meta configuration for EventNeedUpdateSerializer."""
+
+        model = EventNeed
+        fields = [
+            "title",
+            "description",
+            "category",
+            "criticality",
+            "budget_min",
+            "budget_max",
+            "status",
+        ]
+
+
 class NeedApplicationCreateSerializer(serializers.Serializer):
     """Serializer for applying to a need."""
 

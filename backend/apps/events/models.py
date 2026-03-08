@@ -313,6 +313,7 @@ class EventTicketTier(models.Model):
     color = models.CharField(max_length=50, default="gray")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     capacity = models.PositiveIntegerField(null=True, blank=True, help_text="Null means unlimited for this tier")
+    max_passes_per_ticket = models.PositiveIntegerField(default=6, help_text="Maximum tickets per transaction for this tier")
     is_refundable = models.BooleanField(default=False)
     refund_percentage = models.PositiveIntegerField(default=100)
     

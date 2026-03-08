@@ -17,6 +17,8 @@ const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'));
 const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
 const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
 const ManageEventPage = lazy(() => import('@/pages/events/ManageEventPage'));
+const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'));
+const ManageForVendorPage = lazy(() => import('@/pages/events/ManageForVendorPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
 const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
@@ -40,6 +42,8 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   EventDetailNew: EventDetailNewPage,
   CreateEvent: CreateEventPage,
   ManageEvent: ManageEventPage,
+  ManageForHost: ManageForHostPage,
+  ManageForVendor: ManageForVendorPage,
   Dashboard: DashboardPage,
   Calendar: CalendarPage,
   BrowseVendors: BrowseVendorsPage,

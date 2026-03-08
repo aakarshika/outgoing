@@ -11,11 +11,13 @@ from .views import (
     NeedApplicationReviewView,
     NeedApplicationUpdateView,
     NeedApplyView,
+    NeedDetailView,
     NeedInviteCreateView,
 )
 
 urlpatterns = [
     path("events/<int:event_id>/", EventNeedsView.as_view(), name="event_needs"),
+    path("<int:need_id>/", NeedDetailView.as_view(), name="need_detail"),
     path("<int:need_id>/apply/", NeedApplyView.as_view(), name="need_apply"),
     path("<int:need_id>/invite/", NeedInviteCreateView.as_view(), name="need_invite"),
     path(

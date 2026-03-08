@@ -13,6 +13,7 @@ import {
   inviteVendorToNeed,
   reviewNeedApplication,
   updateNeedApplication,
+  updateEventNeed,
 } from './api';
 
 export function useEventNeeds(eventId: number) {
@@ -37,6 +38,17 @@ export function useCreateEventNeed() {
       createEventNeed(eventId, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventNeeds', variables.eventId] });
+    },
+  });
+}
+
+export function useUpdateEventNeed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ needId, payload }: { needId: number; payload: any }) =>
+      updateEventNeed(needId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
     },
   });
 }

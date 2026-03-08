@@ -164,6 +164,7 @@ export interface TicketInfo {
 export interface EventAttendee {
   id: number;
   user: EventHost;
+  attendee_name?: string;
   tier_id?: number;
   ticket_type: string;
   color?: string;
