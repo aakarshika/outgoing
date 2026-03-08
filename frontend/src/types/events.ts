@@ -114,6 +114,7 @@ export interface EventDetail extends EventListItem {
   participating_vendors?: any[];
   host_events_count?: number;
   user_tickets?: TicketInfo[];
+  attendees?: AttendeeInfo[];
 }
 
 export type EventLifecycleState =
@@ -163,6 +164,12 @@ export interface EventAttendee {
   ticket_type: 'standard' | 'flexible';
   status: string;
   purchased_at: string;
+}
+
+export interface AttendeeInfo {
+  username: string;
+  avatar: string | null;
+  is_verified: boolean;
 }
 
 export interface EventSearchSuggestion {

@@ -44,6 +44,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "avatar",
             "cover_photo",
             "location_city",
+            "privacy_name",
+            "privacy_email",
+            "privacy_hosted_events",
+            "privacy_serviced_events",
+            "privacy_events_attending",
+            "privacy_events_attended",
+            "allow_private_messages",
             "created_at",
             "updated_at",
         ]

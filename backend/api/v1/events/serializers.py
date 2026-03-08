@@ -226,6 +226,7 @@ class EventDetailSerializer(EventListSerializer):
     participating_vendors = serializers.SerializerMethodField()
     host_events_count = serializers.SerializerMethodField()
     user_tickets = serializers.SerializerMethodField()
+    attendees = serializers.SerializerMethodField()
 
     class Meta(EventListSerializer.Meta):
         """Meta configuration for EventDetailSerializer."""
@@ -248,6 +249,7 @@ class EventDetailSerializer(EventListSerializer):
             "participating_vendors",
             "host_events_count",
             "user_tickets",
+            "attendees",
         ]
 
     def get_user_tickets(self, obj):
@@ -347,6 +349,47 @@ class EventDetailSerializer(EventListSerializer):
     def get_host_events_count(self, obj):
         """Return number of completed events by this host."""
         return Event.objects.filter(host=obj.host, lifecycle_state="completed").count()
+
+    def get_attendees(self, obj):
+        """Return list of public attendees (username, avatar, verified status)."""
+        # Filter for active/used tickets
+        tickets = obj.tickets.select_related("goer", "goer__profile").filter(
+            status__in=["active", "used"]
+        )
+        
+        attendees = []
+        for t in tickets:
+            user = t.goer
+            profile = getattr(user, "profile", None)
+            
+            # Check privacy settings
+            is_past = obj.lifecycle_state == "completed"
+            is_visible = False
+            if profile:
+                if is_past:
+                    is_visible = profile.privacy_events_attended
+                else:
+                    is_visible = profile.privacy_events_attending
+            else:
+                # Default visibility if no profile exists (though it should)
+                is_visible = True
+            
+            if is_visible:
+                avatar_url = None
+                if profile and profile.avatar:
+                    request = self.context.get("request")
+                    if request:
+                        avatar_url = request.build_absolute_uri(profile.avatar.url)
+                    else:
+                        avatar_url = profile.avatar.url
+                
+                attendees.append({
+                    "username": user.username,
+                    "avatar": avatar_url,
+                    "is_verified": False, # Placeholder for verified tick mark if implemented
+                })
+        
+        return attendees
 
 
 class EventCreateSerializer(serializers.ModelSerializer):

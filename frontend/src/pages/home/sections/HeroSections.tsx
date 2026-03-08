@@ -48,21 +48,6 @@ export const HeroSection = () => (
 // --- Featured Carousel ---
 export const FeaturedCarouselSection = () => (
   <section>
-    <Box
-      sx={{
-        px: { xs: 2, sm: 4, lg: 8 },
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-      }}
-    >
-      <Typography
-        variant="h5"
-        sx={{ fontFamily: '"Permanent Marker"', color: '#1a1a1a' }}
-      >
-        Featured Events
-      </Typography>
-    </Box>
     <Box sx={{ transform: 'scale(1)', transformOrigin: 'top center' }}>
       <BedroomHeroCarousel />
     </Box>

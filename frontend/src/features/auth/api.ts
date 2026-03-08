@@ -10,6 +10,14 @@ export interface User {
   last_name: string;
   role: UserRole;
   phone_number?: string;
+  avatar?: string;
+  privacy_name?: boolean;
+  privacy_email?: boolean;
+  privacy_hosted_events?: boolean;
+  privacy_serviced_events?: boolean;
+  privacy_events_attending?: boolean;
+  privacy_events_attended?: boolean;
+  allow_private_messages?: boolean;
 }
 
 export interface AuthResponse {

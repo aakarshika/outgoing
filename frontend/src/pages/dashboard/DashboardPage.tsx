@@ -1,8 +1,7 @@
 /** Dashboard page — My Events, Tickets, Services, Applications tabs. Scrapbook themed. */
 
 import { Box } from '@mui/material';
-import { Briefcase, Calendar, MapPin, Plus, Ticket } from 'lucide-react';
-import { Edit2 } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Plus, Ticket, Edit2, MessageSquare, Star, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -14,10 +13,11 @@ import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { useMyEvents, useMyTickets } from '@/features/events/hooks';
 import { useMyApplications } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
+import { useMyActivities } from '@/features/profiles/hooks';
 
 import { OpportunitiesTab } from './OpportunitiesTab';
 
-type Tab = 'events' | 'tickets' | 'services';
+type Tab = 'events' | 'tickets' | 'services' | 'activities';
 type ServiceSubTab = 'my_services' | 'opportunities';
 
 const LIFECYCLE_BADGE_STYLES: Record<
@@ -44,10 +44,11 @@ const LIFECYCLE_LABELS: Record<string, string> = {
   completed: 'Completed',
 };
 
-const tabs: { key: Tab; label: string; icon: typeof Calendar | typeof Briefcase }[] = [
+const tabs: { key: Tab; label: string; icon: any }[] = [
   { key: 'events', label: 'My Events', icon: Calendar },
   { key: 'tickets', label: 'My Tickets', icon: Ticket },
   { key: 'services', label: 'Services', icon: Briefcase },
+  { key: 'activities', label: 'My Activities', icon: MessageSquare },
 ];
 
 export default function DashboardPage() {
@@ -75,6 +76,7 @@ export default function DashboardPage() {
   const { data: ticketsResponse, isLoading: ticketsLoading } = useMyTickets();
   const { data: servicesResponse, isLoading: servicesLoading } = useMyServices();
   const { data: applicationsResponse } = useMyApplications();
+  const { data: activitiesResponse, isLoading: activitiesLoading } = useMyActivities();
 
   const events = eventsResponse?.data || [];
   const tickets = ticketsResponse?.data || [];
@@ -118,11 +120,10 @@ export default function DashboardPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
-                tab === t.key
-                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${tab === t.key
+                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
               <t.icon className="h-4 w-4" /> {t.label}
@@ -639,6 +640,113 @@ export default function DashboardPage() {
             )}
           </div>
         )}
+
+        {/* ═══════════ MY ACTIVITIES ═══════════ */}
+        {tab === 'activities' && (
+          <div className="space-y-8">
+            {activitiesLoading ? (
+              <LoadingSkeleton count={3} />
+            ) : !activitiesResponse?.data || (activitiesResponse.data.reviews.length === 0 && activitiesResponse.data.comments.length === 0) ? (
+              <EmptyState
+                icon={<MessageSquare className="h-12 w-12 text-gray-400" />}
+                title="No activities yet"
+                subtitle="Share your thoughts by reviewing events or joining the conversation!"
+                actionLabel="Browse Events"
+                actionTo="/"
+              />
+            ) : (
+              <div className="space-y-10">
+                {/* Reviews Section */}
+                {activitiesResponse.data.reviews.length > 0 && (
+                  <div className="relative">
+                    <div className="absolute -top-6 -left-2 transform -rotate-6 z-10">
+                      <div className="bg-pink-400/80 px-4 py-1 border-2 border-gray-800 shadow-[2px_2px_0px_#333]" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                        MY REVIEWS
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                      {activitiesResponse.data.reviews.map((rev: any, idx: number) => (
+                        <div
+                          key={`rev-${rev.id}`}
+                          className="p-5 border-2 border-gray-800 shadow-[4px_4px_0px_#333] relative transition-transform hover:scale-[1.02]"
+                          style={{
+                            backgroundColor: idx % 3 === 0 ? '#fef9c3' : idx % 3 === 1 ? '#dcfce7' : '#fff1f2',
+                            transform: `rotate(${idx % 2 === 0 ? -1 : 1.5}deg)`,
+                          }}
+                        >
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-blue-300/40 border border-blue-400/20 rotate-2 z-10" />
+
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-gray-900 leading-tight pr-2" style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1rem' }}>
+                              {rev.title}
+                            </h4>
+                            <div className="flex bg-white/50 px-1 rounded border border-black/10">
+                              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 mt-0.5" />
+                              <span className="text-xs font-bold ml-1">{rev.rating}/5</span>
+                            </div>
+                          </div>
+
+                          <p className="text-gray-700 italic text-sm mb-4 line-clamp-4" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}>
+                            "{rev.text}"
+                          </p>
+
+                          <div className="flex justify-between items-center mt-auto pt-2 border-t border-black/10">
+                            <span className="text-[0.6rem] font-bold text-gray-500 tracking-tighter uppercase">
+                              {rev.type === 'event_review' ? 'Event' : 'Vendor Service'}
+                            </span>
+                            <span className="text-[0.6rem] text-gray-500">
+                              {new Date(rev.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Comments Section */}
+                {activitiesResponse.data.comments.length > 0 && (
+                  <div className="relative mt-12">
+                    <div className="absolute -top-6 -left-2 transform rotate-3 z-10">
+                      <div className="bg-yellow-300 px-4 py-1 border-2 border-gray-800 shadow-[2px_2px_0px_#333]" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                        MY COMMENTS
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-6">
+                      {activitiesResponse.data.comments.map((comm: any, idx: number) => (
+                        <div
+                          key={`comm-${comm.id}`}
+                          className="flex gap-4 items-start"
+                        >
+                          <div className="flex-shrink-0 mt-2">
+                            <MessageCircle className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <div
+                            className="flex-1 p-4 border-2 border-gray-800 bg-white shadow-[2px_2px_0px_#333] relative"
+                            style={{
+                              transform: `rotate(${idx % 2 === 0 ? 0.3 : -0.3}deg)`,
+                              borderRadius: '0 12px 12px 12px'
+                            }}
+                          >
+                            <p className="text-sm text-gray-600 mb-2">
+                              Replying to <span className="font-bold text-gray-900 underline decoration-yellow-200 decoration-4">{comm.target_title}</span>
+                            </p>
+                            <p className="text-gray-900" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}>
+                              {comm.text}
+                            </p>
+                            <div className="text-[0.6rem] text-right text-gray-400 mt-1">
+                              {new Date(comm.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -653,17 +761,17 @@ export default function DashboardPage() {
         tickets={
           managingTicket
             ? tickets.filter(
-                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-              )
+              (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+            )
             : []
         }
         initialIndex={
           managingTicket
             ? tickets
-                .filter(
-                  (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-                )
-                .findIndex((t: any) => t.id === managingTicket.id)
+              .filter(
+                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+              )
+              .findIndex((t: any) => t.id === managingTicket.id)
             : 0
         }
       />

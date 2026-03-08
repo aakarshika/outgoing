@@ -9,6 +9,11 @@ const AccountSettingsSection = lazy(() =>
     default: m.AccountSettingsSection,
   })),
 );
+const PrivacySettingsSection = lazy(() =>
+  import('./sections/PrivacySettingsSection').then((m) => ({
+    default: m.PrivacySettingsSection,
+  })),
+);
 
 const fallback = (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -42,6 +47,15 @@ export const profileRouteElements = [
     element={
       <Suspense fallback={fallback}>
         <AccountSettingsSection />
+      </Suspense>
+    }
+  />,
+  <Route
+    key="privacy"
+    path="privacy"
+    element={
+      <Suspense fallback={fallback}>
+        <PrivacySettingsSection />
       </Suspense>
     }
   />,
