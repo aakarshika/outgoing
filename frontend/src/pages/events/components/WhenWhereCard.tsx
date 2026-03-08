@@ -85,18 +85,14 @@ export const WhenWhereCard = ({ event }: { event: any }) => {
         if (rText) summaryParts.push(rText);
     }
     if (distanceMiles !== null) summaryParts.push(`${distanceMiles} miles away`);
-    if (!isPast && daysToGo > 0)
+    if (!isPast && daysToGo > 0 && daysToGo < 7)
         summaryParts.push(`${daysToGo} day${daysToGo !== 1 ? 's' : ''} to go`);
-    else if (isPast) summaryParts.push('already happened');
-    else summaryParts.push('happening today!');
 
     return (
         <Box
             onClick={() => setExpanded(!expanded)}
             sx={{
-                position: expanded ? 'absolute' : 'relative',
-                top: 0,
-                left: 0,
+                position:  'absolute',
                 background: expanded ? 'rgba(253, 253, 253, 1)' : 'transparent',
                 zIndex: expanded ? 100 : 10,
                 mb: expanded ? 0 : 3,
@@ -116,7 +112,7 @@ export const WhenWhereCard = ({ event }: { event: any }) => {
             }}
         >
             {/* Collapsed summary */}
-            <Box sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            {(summaryParts.length > 0 && !isPast) && (<Box sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Navigation size={14} style={{ opacity: 0.6, color: '#2563eb' }} />
                     <Typography
@@ -131,7 +127,7 @@ export const WhenWhereCard = ({ event }: { event: any }) => {
                         {summaryParts.join(' · ')}
                     </Typography>
                 </Box>
-            </Box>
+            </Box>)}
 
             {/* Expanded content */}
             <Collapse in={expanded}>

@@ -29,7 +29,8 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                 className="text-[10px] uppercase tracking-widest text-gray-400 mb-3 ml-1"
                 style={{ fontFamily: '"Permanent Marker", cursive' }}
             >
-                Your journey ↓
+                Step-by-step configuration of your event ↓
+
             </div>
 
             <div className="flex items-center flex-wrap gap-0">
@@ -47,9 +48,9 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                             <button
                                 onClick={() => onStepSelect(step.stepId)}
                                 className={`
-                  relative flex flex-col items-center group transition-all
-                  ${isActive ? 'z-10' : ''}
-                `}
+                      relative flex flex-col items-center group transition-all
+                      ${isActive ? 'z-10' : ''}
+                    `}
                                 style={{
                                     transform: isActive
                                         ? 'translateY(-3px)'
@@ -61,25 +62,25 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                                 {/* Circle number badge */}
                                 <div
                                     className={`
-                    w-10 h-10 flex items-center justify-center border-2 transition-all font-bold text-sm
-                    ${isActive
-                                            ? 'bg-yellow-300 border-gray-900 shadow-[3px_3px_0px_#333] text-gray-900'
-                                            : isPast
-                                                ? 'bg-white border-gray-700 shadow-[2px_2px_0px_#555] text-gray-700'
-                                                : 'bg-white border-gray-300 shadow-[1px_1px_0px_#ccc] text-gray-400'
-                                        }
-                  `}
-                                    style={{ fontFamily: '"Permanent Marker", cursive', borderRadius: '2px' }}
+                        w-14 h-14 flex items-center justify-center border-2 transition-all font-bold text-lg
+                        ${isActive
+                                                ? 'bg-yellow-300 border-gray-900 shadow-[3px_3px_0px_#333] text-gray-900'
+                                                : isPast
+                                                    ? 'bg-white border-gray-700 shadow-[2px_2px_0px_#555] text-gray-700'
+                                                    : 'bg-white border-gray-300 shadow-[1px_1px_0px_#ccc] text-gray-400'
+                                            }
+                      `}
+                                    style={{ fontFamily: '"Permanent Marker", cursive', borderRadius: '3px' }}
                                 >
                                     {isPast ? '✓' : stepNumber}
                                 </div>
 
                                 {/* Label below */}
                                 <span
-                                    className={`mt-1 text-[10px] whitespace-nowrap font-bold leading-tight transition-all
-                    ${isActive ? 'text-gray-900' : isPast ? 'text-gray-500' : 'text-gray-400'}
-                  `}
-                                    style={{ fontFamily: '"Permanent Marker", cursive', fontSize: isActive ? '0.7rem' : '0.62rem' }}
+                                    className={`mt-2 text-xs whitespace-nowrap font-bold leading-tight transition-all
+                        ${isActive ? 'text-gray-900 text-base' : isPast ? 'text-gray-500' : 'text-gray-400'}
+                      `}
+                                    style={{ fontFamily: '"Permanent Marker", cursive', fontSize: isActive ? '0.85rem' : '0.78rem' }}
                                 >
                                     {step.title}
                                 </span>
@@ -98,7 +99,7 @@ export const StepTabs: React.FC<StepTabsProps> = ({
 
                             {/* ─── Connector + optional half-step ─── */}
                             {idx < fullSteps.length - 1 && (
-                                <div className="flex items-center mx-1 gap-1 pb-4">
+                                <div className="flex items-center mx-2 gap-2 pb-4">
                                     {halfStep ? (
                                         // Half-step: show as a small pill between the arrows
                                         <>
@@ -109,27 +110,27 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                                             <button
                                                 onClick={() => onStepSelect(halfStep.stepId)}
                                                 className={`
-                          relative flex flex-col items-center transition-all
-                          ${isHalfActive ? 'z-10' : ''}
-                        `}
+                              relative flex flex-col items-center transition-all
+                              ${isHalfActive ? 'z-10' : ''}
+                            `}
                                                 style={{
                                                     transform: isHalfActive ? 'translateY(-2px)' : 'rotate(1deg)',
                                                 }}
                                             >
                                                 <div
                                                     className={`
-                            px-2 py-0.5 text-[9px] font-bold border-2 transition-all leading-tight whitespace-nowrap
-                            ${isHalfActive
-                                                            ? 'bg-orange-200 border-orange-700 text-orange-900 shadow-[2px_2px_0px_#c05621]'
-                                                            : isHalfPast
-                                                                ? 'bg-white border-gray-400 text-gray-500 shadow-[1px_1px_0px_#ccc]'
-                                                                : 'bg-white border-gray-200 text-gray-300 shadow-[1px_1px_0px_#e5e7eb]'
-                                                        }
-                          `}
+                                px-3 py-1 text-xs font-bold border-2 transition-all leading-tight whitespace-nowrap
+                                ${isHalfActive
+                                                                ? 'bg-orange-200 border-orange-700 text-orange-900 shadow-[2px_2px_0px_#c05621]'
+                                                                : isHalfPast
+                                                                    ? 'bg-white border-gray-400 text-gray-500 shadow-[1px_1px_0px_#ccc]'
+                                                                    : 'bg-white border-gray-200 text-gray-300 shadow-[1px_1px_0px_#e5e7eb]'
+                                                            }
+                              `}
                                                     style={{
                                                         fontFamily: '"Permanent Marker", cursive',
                                                         borderRadius: '20px',
-                                                        fontSize: '0.6rem',
+                                                        fontSize: '0.7rem',
                                                     }}
                                                 >
                                                     ½ {halfStep.title}
@@ -141,7 +142,7 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                                         </>
                                     ) : (
                                         // Plain arrow connector
-                                        <div className="flex items-center gap-0.5 pb-1">
+                                        <div className="flex items-center gap-1 pb-1">
                                             <div className="w-4 h-px bg-gray-300" />
                                             <svg width="6" height="8" viewBox="0 0 6 8" className="text-gray-300 flex-shrink-0">
                                                 <path d="M0 0 L6 4 L0 8" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />

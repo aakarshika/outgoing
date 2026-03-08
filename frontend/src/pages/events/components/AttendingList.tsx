@@ -32,7 +32,7 @@ export const AttendingList = ({ attendees }: AttendingListProps) => {
           className="text-2xl text-gray-900 bg-yellow-300 px-4 py-1 border-2 border-gray-800 shadow-[3px_3px_0px_#333] transform -rotate-1"
           style={{ fontFamily: '"Permanent Marker", cursive' }}
         >
-          WHO'S GOING
+          CHECK OUT WHO'S GOING
         </h3>
         <div className="h-0.5 flex-1 bg-gray-800" />
       </div>

@@ -3,8 +3,41 @@ import { Box, Chip, Paper, Typography } from '@mui/material';
 import { CheckInMemo } from '@/components/ui/CheckInMemo';
 
 import { WashiTape } from './scrapbookHelpers';
+import { Media } from '@/components/ui/media';
 
-export const DetailsSection = ({ event, isHost }: { event: any; isHost: boolean }) => {
+export  const FEATURE_EMOJI_MAP: Record<string, string> = {
+  Food: '🍕',
+  'Non-Alcoholic Drinks': '🧃',
+  'Alcoholic Drinks': '🍷',
+  Music: '🎵',
+  DJ: '🎧',
+  'Live Band': '🎸',
+  Games: '🎮',
+  'Photo Booth': '📸',
+  'Surprise Gifts': '🎁',
+  'Educational Activities': '📚',
+  'Group Activities': '👥',
+  Networking: '🤝',
+  'Dance Floor': '💃',
+  Workshops: '🔧',
+  Art: '🎨',
+  Karaoke: '🎤',
+  Bonfire: '🔥',
+  Fireworks: '🎆',
+  Pool: '🏊',
+  'Outdoor Seating': '⛱️',
+  'Indoor Seating': '🪑',
+  Decorations: '🎀',
+  'Themed Costumes': '🎭',
+  Raffle: '🎟️',
+  Trivia: '🧠',
+  'Kids Zone': '🧒',
+  'Pet-Friendly': '🐾',
+  'Open Bar': '🍹',
+  'VIP Lounge': '✨',
+  Parking: '🅿️',
+};
+export const DetailsSection = ({ event, isHost, displayNeeds }: { event: any; isHost: boolean; displayNeeds: any[] }) => {
   const TAG_DISPLAY: Record<
     string,
     {
@@ -41,38 +74,6 @@ export const DetailsSection = ({ event, isHost }: { event: any; isHost: boolean 
       chipBg: '#ecfdf5',
     },
   };
-  const FEATURE_EMOJI_MAP: Record<string, string> = {
-    Food: '🍕',
-    'Non-Alcoholic Drinks': '🧃',
-    'Alcoholic Drinks': '🍷',
-    Music: '🎵',
-    DJ: '🎧',
-    'Live Band': '🎸',
-    Games: '🎮',
-    'Photo Booth': '📸',
-    'Surprise Gifts': '🎁',
-    'Educational Activities': '📚',
-    'Group Activities': '👥',
-    Networking: '🤝',
-    'Dance Floor': '💃',
-    Workshops: '🔧',
-    Art: '🎨',
-    Karaoke: '🎤',
-    Bonfire: '🔥',
-    Fireworks: '🎆',
-    Pool: '🏊',
-    'Outdoor Seating': '⛱️',
-    'Indoor Seating': '🪑',
-    Decorations: '🎀',
-    'Themed Costumes': '🎭',
-    Raffle: '🎟️',
-    Trivia: '🧠',
-    'Kids Zone': '🧒',
-    'Pet-Friendly': '🐾',
-    'Open Bar': '🍹',
-    'VIP Lounge': '✨',
-    Parking: '🅿️',
-  };
   const features = event.features || [];
   const grouped: Record<string, { name: string; tag: string }[]> = {};
   features.forEach((f: { name: string; tag: string }) => {
@@ -93,47 +94,7 @@ export const DetailsSection = ({ event, isHost }: { event: any; isHost: boolean 
   });
 
   return (
-    <Box sx={{ spaceY: 6 }}>
-      {/* ═══ Tablets Section — Event Features ═══ */}
-      <Box
-        sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}
-      >
-        {allChips.length === 0 ? (
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.1rem',
-              color: 'text.disabled',
-              fontStyle: 'italic',
-            }}
-          >
-            No features listed yet — stay tuned! ✨
-          </Typography>
-        ) : (
-          allChips.map(({ name, cfg, idx }) => (
-            <Chip
-              key={name}
-              label={`${FEATURE_EMOJI_MAP[name] || '🏷️'} ${name}`}
-              sx={{
-                bgcolor: cfg.chipBg,
-                border: `1.5px solid ${cfg.border}`,
-                color: cfg.text,
-                fontWeight: 600,
-                fontSize: '0.8rem',
-                height: 'auto',
-                py: 0.5,
-                transform: `rotate(${idx % 2 === 0 ? -0.5 : 0.5}deg)`,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  transform: 'rotate(0deg) scale(1.05)',
-                  boxShadow: '2px 2px 0px rgba(0,0,0,0.1)',
-                },
-              }}
-            />
-          ))
-        )}
-      </Box>
+    <Box sx={{  }}>
       {/* Description */}
       <Paper
         sx={{
@@ -146,9 +107,9 @@ export const DetailsSection = ({ event, isHost }: { event: any; isHost: boolean 
         }}
       >
         <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
-        <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
+        {/* <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
           The Details
-        </Typography>
+        </Typography> */}
         <Typography sx={{ lineHeight: 1.8, whiteSpace: 'pre-wrap', mb: 4 }}>
           {event.description}
         </Typography>

@@ -34,6 +34,7 @@ import { getDaysAgo } from './components/scrapbookHelpers';
 import { ServicesSection } from './components/ServicesSection';
 import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
+import { WhenWhereCard } from './components/WhenWhereCard';
 
 // --- Main Page Component ---
 
@@ -295,6 +296,7 @@ export default function EventDetailPageNew() {
               overflow: 'visible',
             }}
           >
+
             {/* Section 1: Status Banner & Top Bar */}
             <StatusBannerSection
               event={event}
@@ -314,6 +316,7 @@ export default function EventDetailPageNew() {
               highlights={highlights}
               occurrences={occurrences}
               displayNeedsCount={displayNeeds.length}
+              displayNeeds={displayNeeds}
             />
 
             {/* Section 3: Content — Details + Tickets/Attendance */}
@@ -321,7 +324,9 @@ export default function EventDetailPageNew() {
               {/* Left Column: Details */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Box id="details">
-                  <DetailsSection event={event} isHost={isHost} />
+                  <DetailsSection event={event} isHost={isHost} 
+                  displayNeeds={displayNeeds}
+                  />
                 </Box>
               </Grid>
 
@@ -341,14 +346,6 @@ export default function EventDetailPageNew() {
                 </Box>
               </Grid>
             </Grid>
-
-            {/* Section 4: Attending List */}
-            <Box id="attending">
-              <AttendingList attendees={event?.attendees || []} />
-            </Box>
-
-            {/* Section 5: Memory Box */}
-            <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
               <Box id="services">
                 <ServicesSection
                   event={event}
@@ -360,8 +357,16 @@ export default function EventDetailPageNew() {
                   highlights={highlights}
                 />
               </Box>
+            {/* Section 4: Attending List */}
+            <Box id="attending">
+              <AttendingList attendees={event?.attendees || []} />
+            </Box>
+
+            {/* Section 5: Memory Box */}
+            <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
               <Box id="highlights">
                 <MemoryBoxSection
+                  event={event}
                   highlights={highlights}
                   setIsHighlightOpen={setIsHighlightOpen}
                 />
@@ -370,6 +375,7 @@ export default function EventDetailPageNew() {
               {/* Section 6: Reviews */}
               <Box id="reviews">
                 <ReviewsSection
+                  isHost={isHost}
                   reviews={reviews}
                   currentUser={user}
                   userHasPurchased={event?.user_has_ticket || false}

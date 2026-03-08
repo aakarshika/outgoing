@@ -30,10 +30,7 @@ export const ServicesSection = ({
   setIsApplyModalOpen: (v: boolean) => void;
   highlights?: any[];
 }) => {
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const saved = localStorage.getItem('services_section_expanded');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('services_section_expanded', JSON.stringify(isExpanded));
@@ -54,7 +51,7 @@ export const ServicesSection = ({
   const myServices = myServicesResponse?.data || [];
   const isCenter = highlights.length === 0;
 
-  return (
+  return displayNeeds.filter(n => n.status !== 'override_filled' && n.status !== 'filled').length > 0 && (
     <Box sx={{ mt: 6 }}>
       {/* Services Header Toggle */}
       <Box
@@ -78,7 +75,8 @@ export const ServicesSection = ({
             fontSize: '1rem',
           }}
         >
-          Meet the planners
+          hustler APPLICATIONS OPEN!
+
         </Typography>
         <IconButton size="small">
           {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -88,67 +86,6 @@ export const ServicesSection = ({
       <Collapse in={isExpanded}>
         <Box>
           <Grid container spacing={2}>
-            {/* Host Card is always first */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Box sx={{
-                width: '100%',
-                columns: 2,
-                aspectRatio: '1.75 / 1',
-              }}>
-                <HostBusinessCard host={event.host} />
-
-
-                {(!(event.features?.length === 0 && displayNeeds.filter(n => n.status === 'override_filled').length === 0)) && (
-
-                  <Box sx={{
-                    maxWidth: 320,
-                  }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontFamily: '"Permanent Marker"',
-                        color: '#ef4444',
-                        display: 'block',
-                        mb: 0.5,
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px'
-                      }}
-                    >
-                      Services by the host
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                      {[
-                        ...displayNeeds
-                          .filter(n => n.status === 'override_filled')
-                          .map(n => getCategoryLabel(n.category)),
-                        ...(event.features || [])
-                      ].map((item: any, idx) => (
-                        <Typography
-                          key={idx}
-                          sx={{
-                            fontFamily: '"Caveat", cursive',
-                            fontSize: '1.2rem',
-                            color: '#555',
-                            lineHeight: 1.1,
-                            position: 'relative',
-                            pl: 1,
-                            '&::before': {
-                              content: '"•"',
-                              position: 'absolute',
-                              left: 0,
-                              color: '#ef4444'
-                            }
-                          }}
-                        >
-                          {typeof item === 'string' ? item : item.name}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-
             {displayNeeds.length > 0 && (
               <>
                 {displayNeeds.filter(n => n.status !== 'override_filled').map((need: any) => {
@@ -179,52 +116,6 @@ export const ServicesSection = ({
         </Box>
       </Collapse>
 
-      <Collapse in={!isExpanded}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1.5,
-            alignItems: 'center',
-          }}
-        >
-          <MiniBusinessCard
-            name={event.host.username}
-            avatar={event.host.avatar}
-            rating={5.0}
-            service="Host & Curator"
-            type="host"
-          />
-
-          {participatingVendors.map((vendor: any) => (
-            <MiniBusinessCard
-              key={vendor.id}
-              name={vendor.vendor_name}
-              avatar={vendor.vendor_avatar}
-              rating={vendor.rating || 5.0}
-              service={vendor.category || 'Service Specialist'}
-              onClick={() => {
-                if (vendor.service) {
-                  window.location.href = `/services/${vendor.service}`;
-                }
-              }}
-            />
-          ))}
-
-          <Typography
-            variant="caption"
-            sx={{
-              fontFamily: '"Permanent Marker"',
-              color: 'text.secondary',
-              ml: 1,
-              fontSize: '0.75rem',
-            }}
-          >
-            {participatingVendors.length} of {displayNeeds.length} need
-            {displayNeeds.length > 1 ? 's' : ''} met
-          </Typography>
-        </Box>
-      </Collapse>
     </Box>
   );
 };

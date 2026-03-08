@@ -30,6 +30,7 @@ export const HeroSection = ({
   highlights = [],
   occurrences = [],
   displayNeedsCount = 0,
+  displayNeeds = [],
 }: {
   event: any;
   isAuthenticated: boolean;
@@ -38,6 +39,7 @@ export const HeroSection = ({
   highlights?: any[];
   occurrences?: any[];
   displayNeedsCount?: number;
+  displayNeeds?: any[];
 }) => {
   // Unique list of all images for the gallery
   const galleryImages = useMemo(() => {
@@ -66,13 +68,12 @@ export const HeroSection = ({
 
   return (
     <>
-      <Grid container spacing={0} sx={{ mb: 8 }}>
+      <Grid container spacing={0}>
         {/* Left Half - Important Details Section */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Box sx={{ position: 'relative' }}>
             <Box
               sx={{
-                position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'all 0.4s ease',
@@ -86,51 +87,6 @@ export const HeroSection = ({
                 rotate={event.category?.slug === 'comedy' ? '10deg' : '3deg'}
               />
 
-              {/* Category Tag - small */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                  mb: 2,
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                {event.category && (
-                  <Chip
-                    label={event.category.name}
-                    size="small"
-                    sx={{
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      fontFamily: '"Permanent Marker"',
-                    }}
-                  />
-                )}
-                <Chip
-                  label={LIFECYCLE_LABELS[event.lifecycle_state]}
-                  size="small"
-                  variant={event.lifecycle_state === 'live' ? 'filled' : 'outlined'}
-                  sx={{
-                    fontWeight: 'bold',
-                    fontFamily: '"Permanent Marker"',
-                    bgcolor:
-                      event.lifecycle_state === 'live' ? 'success.main' : 'transparent',
-                    color:
-                      event.lifecycle_state === 'live'
-                        ? 'white'
-                        : event.category?.icon === 'cpu'
-                          ? '#fff'
-                          : 'inherit',
-                    borderColor: event.category?.icon === 'cpu' ? '#fff' : 'inherit',
-                    boxShadow:
-                      event.lifecycle_state === 'live'
-                        ? '0 0 15px rgba(34, 197, 94, 0.5)'
-                        : 'none',
-                  }}
-                />
-              </Box>
 
               {/* Event Name */}
               <Box
@@ -169,8 +125,10 @@ export const HeroSection = ({
                 display: { xs: 'none', sm: 'block' },
               }}
             >
+              
               <TinyHostCard
                 host={event.host}
+                categoryName={event.category.name}
                 rating={event.average_rating ?? undefined}
                 tag={
                   event.category?.name === 'Photography'
@@ -178,77 +136,13 @@ export const HeroSection = ({
                     : 'Vibe Architect'
                 }
                 displayNeedsCount={displayNeedsCount}
+                displayNeeds={displayNeeds}
+                allChips={event.features}
               />
             </Box>
 
-            {/* When and Where Card - wrapped in relative box to allow overlapping expansion */}
-            <Box sx={{ position: 'relative', height: '40px', mb: 3 }}>
-              <WhenWhereCard event={event} />
-            </Box>
           </Box>
 
-          {/* Save the Date stamp */}
-          {['published', 'at_risk', 'event_ready'].includes(event.lifecycle_state) &&
-            event.category?.icon !== 'cpu' && (
-              <Box
-                component="button"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    navigate('/signin');
-                    return;
-                  }
-                  toggleInterest.mutate({
-                    eventId: event.id,
-                    isInterested: !event.user_is_interested,
-                  });
-                }}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  border: '3px solid rgba(239, 68, 68, 0.6)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transform: 'rotate(-15deg)',
-                  mt: 2,
-                  cursor: 'pointer',
-                  bgcolor: event.user_is_interested
-                    ? 'rgba(239, 68, 68, 0.15)'
-                    : 'transparent',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    transform: 'rotate(-10deg) scale(1.05)',
-                    bgcolor: 'rgba(239, 68, 68, 0.1)',
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: 'rgba(239, 68, 68, 0.6)',
-                    fontFamily: '"Permanent Marker"',
-                    fontSize: '0.7rem',
-                    textAlign: 'center',
-                    lineHeight: 1,
-                  }}
-                >
-                  {event.user_is_interested ? (
-                    <>
-                      SAVED
-                      <br />
-                      DATE
-                    </>
-                  ) : (
-                    <>
-                      SAVE THE
-                      <br />
-                      DATE
-                      <br />
-                    </>
-                  )}
-                </Typography>
-              </Box>
-            )}
         </Grid>
 
         {/* Right Half - Event Image Section */}
@@ -324,11 +218,14 @@ export const HeroSection = ({
       <Box sx={{ display: { xs: 'block', sm: 'none' }, mb: 4, textAlign: 'center' }}>
         <TinyHostCard
           host={event.host}
+          categoryName={event.category.name}
           rating={event.average_rating ?? undefined}
           tag={
             event.category?.name === 'Photography' ? 'Photographer' : 'Vibe Architect'
           }
           displayNeedsCount={displayNeedsCount}
+          displayNeeds={displayNeeds}
+          allChips={event.features}
         />
       </Box>
     </>

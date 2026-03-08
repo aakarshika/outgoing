@@ -228,7 +228,12 @@ export const TicketStub = ({
                 urgencyColor = '#000';
                 urgencyBgColor = '#fbbf24'; // amber-400
               }
-
+              //  add urgency for being early bird .. color calm pink. 
+              else if (fillRate < 0.1 && !isSoldOut) {
+                urgencyText = 'Early Bird!';
+                urgencyColor = '#fff';
+                urgencyBgColor = '#f48fb1'; // rose-300
+              } 
               return (
                 <>
                   {urgencyText && (

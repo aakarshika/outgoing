@@ -14,6 +14,7 @@ export const ReviewsSection = ({
   setIsReviewOpen,
   onEditReview,
   onDeleteReview,
+  isHost,
 }: {
   reviews: any[];
   currentUser?: any;
@@ -21,6 +22,7 @@ export const ReviewsSection = ({
   setIsReviewOpen: (v: boolean) => void;
   onEditReview?: (review: any) => void;
   onDeleteReview?: (reviewId: number) => void;
+  isHost: boolean;
 }) => {
   const userReview = reviews.find((r) => r.username === currentUser?.username);
   const toggleLike = useToggleReviewLike();
@@ -34,10 +36,15 @@ export const ReviewsSection = ({
 
   return (
     <Box>
+      {reviews.length > 0  && (
+
       <Typography variant="h3" sx={{ mb: 4 }}>
         What people said
       </Typography>
-      {reviews.length > 0 ? (
+      )}
+
+
+      {reviews.length > 0  ? (
         reviews.map((rev: any, idx: number) => {
           const isOwnReview = currentUser && rev.username === currentUser.username;
           return (
@@ -94,11 +101,11 @@ export const ReviewsSection = ({
             textAlign: 'center',
           }}
         >
-          No sticky notes yet.
+          {isHost ?  'No notes yet.' : userReview ? 'Be the first to review this event!' : '' }
         </Typography>
       )}
 
-      {userHasPurchased && !userReview && (
+      {userHasPurchased && !userReview && !isHost && (
         <MuiButton
           fullWidth
           variant="contained"

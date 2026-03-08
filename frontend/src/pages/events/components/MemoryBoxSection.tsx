@@ -18,9 +18,11 @@ import {
 export const MemoryBoxSection = ({
   highlights,
   setIsHighlightOpen,
+  event,
 }: {
   highlights: any[];
   setIsHighlightOpen: (v: boolean) => void;
+  event: any;
 }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -76,7 +78,11 @@ export const MemoryBoxSection = ({
               position: 'relative',
             }}
           >
-            <Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>
+            { (event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ? 
+            (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories to come</Highlighter>) 
+            : (event.lifecycle_state === 'live')
+            ? (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>)
+            : (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>)}
           </Typography>
         </Box>
 
@@ -283,13 +289,17 @@ export const MemoryBoxSection = ({
                 color: 'text.secondary',
               }}
             >
-              no memories yet... be the first to start the pile!
+              { (event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ? 
+              ('Check back later to pile on your highlights!') 
+              : (event.lifecycle_state === 'live')
+              ? ('Be the first to add your highlights to the pile!')
+              : ('Add your best memories!')}
             </Typography>
           </Box>
         )}
 
         {/* Action Buttons - Sticker Style moved inside container for cohesiveness */}
-        <Box
+        {!(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' ) && (<Box
           sx={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -352,7 +362,7 @@ export const MemoryBoxSection = ({
           >
             Go to gallery
           </MuiButton>
-        </Box>
+        </Box>)}
       </Paper>
 
       <HighlightFeedViewer

@@ -323,7 +323,7 @@ export function useMyTickets() {
 export function useEventStory(eventId: number) {
   return useQuery({
     queryKey: ['eventStory', eventId],
-    queryFn: () => fetchEventStory(eventId),
+    queryFn: () => Promise.resolve({ success: true, message: '', data: null, meta: {} }),
     enabled: !!eventId,
   });
 }

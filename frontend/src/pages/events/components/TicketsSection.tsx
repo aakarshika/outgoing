@@ -1,10 +1,10 @@
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { TICKET_COLORS } from '@/features/events/constants';
 
-import { PurchasedTicketStack, TicketStub } from './scrapbookHelpers';
+import { PurchasedTicketStack, TicketStub, WashiTape } from './scrapbookHelpers';
 
 export const TicketsSection = ({
   event,
@@ -29,6 +29,11 @@ export const TicketsSection = ({
 
   return (
     <>
+    <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+    <Typography variant="h6" sx={{ 
+      fontFamily: '"Caveat"', mb: 2, fontSize: '1.1rem', fontWeight: 'bold', color: 'text.secondary'
+      
+      }}>Get Your Tickets</Typography>
       {/* Purchased Tickets (if applicable) */}
       {hasPurchasedTickets && (
         <Box sx={{ mt: 0 }}>

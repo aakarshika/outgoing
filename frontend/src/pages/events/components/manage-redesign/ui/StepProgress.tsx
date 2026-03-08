@@ -4,6 +4,7 @@ export interface StepProgressConfig {
     stepId: number;
     title: string;
     isHalfStep?: boolean;
+    routeSlug?: string;
 }
 
 export type StepConfigItem = StepProgressConfig;

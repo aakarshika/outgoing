@@ -1,9 +1,11 @@
 import { Calendar } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
 import { Media } from '@/components/ui/media';
 import { useMyEvents } from '@/features/events/hooks';
+import type { EventListItem } from '@/types/events';
 
 const LIFECYCLE_BADGE_STYLES: Record<
   string,
@@ -68,13 +70,267 @@ function EmptyState({ icon, title, subtitle, actionLabel, actionTo }: any) {
   );
 }
 
+type SeriesDisplayItem = {
+  type: 'series';
+  seriesId: number;
+  seriesName: string;
+  events: EventListItem[];
+  startTime: string;
+};
+
+type SingleDisplayItem = {
+  type: 'single';
+  event: EventListItem;
+  startTime: string;
+};
+
+type DisplayItem = SeriesDisplayItem | SingleDisplayItem;
+
+function formatSeriesDate(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function EventCardRow({
+  event,
+  actionsEnabled = true,
+}: {
+  event: EventListItem;
+  actionsEnabled?: boolean;
+}) {
+  const badge = LIFECYCLE_BADGE_STYLES[event.lifecycle_state] || {
+    bg: '#f3f4f6',
+    text: '#6b7280',
+    border: '#d1d5db',
+  };
+
+  const rotation = event.id % 2 === 0 ? -0.3 : 0.3;
+
+  return (
+    <div
+      className="flex items-center gap-4 border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
+      style={{ transform: `rotate(${rotation}deg)` }}
+    >
+      <Link to={`/events/${event.id}`} className="flex-shrink-0 block">
+        {event.cover_image ? (
+          <div
+            className="h-16 w-24 border-2 border-white shadow-md overflow-hidden"
+            style={{ transform: 'rotate(-2deg)' }}
+          >
+            <Media
+              src={event.cover_image}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+        ) : (
+          <div className="h-16 w-24 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-300 relative group overflow-hidden">
+            <Calendar className="h-6 w-6" />
+          </div>
+        )}
+      </Link>
+      <div className="flex-1 min-w-0">
+        <Link to={`/events/${event.id}`} className="hover:underline">
+          <h3
+            className="font-bold text-gray-900 truncate"
+            style={{
+              fontFamily: '"Caveat", cursive',
+              fontSize: '1.2rem',
+            }}
+          >
+            {event.title}
+          </h3>
+        </Link>
+        <p
+          className="text-gray-500 text-sm"
+          style={{ fontFamily: '"Caveat", cursive' }}
+        >
+          {new Date(event.start_time).toLocaleDateString()} ·{' '}
+          {event.location_name}
+        </p>
+        <EventNeedsSummary eventId={event.id} />
+      </div>
+      <div className="flex flex-col items-end gap-2">
+        <span
+          className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
+          style={{
+            fontFamily: '"Permanent Marker", cursive',
+            fontSize: '0.65rem',
+            background: badge.bg,
+            color: badge.text,
+            borderColor: badge.border,
+            transform: 'rotate(2deg)',
+            boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
+          }}
+        >
+          {LIFECYCLE_LABELS[event.lifecycle_state] ||
+            event.lifecycle_state}
+        </span>
+        {actionsEnabled ? (
+          <Link
+            to={`/events/${event.id}/host-event-management/basic-details`}
+            className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
+            style={{
+              fontFamily: '"Permanent Marker", cursive',
+              transform: 'rotate(-1deg)',
+              boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+            }}
+          >
+            MANAGE EVENT
+          </Link>
+        ) : (
+          <span
+            className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
+            style={{
+              fontFamily: '"Permanent Marker", cursive',
+              transform: 'rotate(-1deg)',
+              boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
+            }}
+          >
+            MANAGE EVENT
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RecurringSeriesGroup({
+  group,
+  isExpanded,
+  onToggle,
+}: {
+  group: SeriesDisplayItem;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const firstEvent = group.events[0];
+
+  return (
+    <div className="space-y-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        className="w-full border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-colors hover:bg-gray-50"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-16 w-24 border-2 border-white bg-gray-50 shadow-md overflow-hidden flex items-center justify-center">
+            {firstEvent.cover_image ? (
+              <Media
+                src={firstEvent.cover_image}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <Calendar className="h-6 w-6 text-gray-400" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[0.65rem] uppercase tracking-widest text-gray-500">
+              Recurring series
+            </p>
+            <h3 className="text-lg font-bold text-gray-900 truncate">
+              {group.seriesName}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {group.events.length} {group.events.length === 1 ? 'date' : 'dates'} ·
+              next {formatSeriesDate(group.startTime)}
+            </p>
+            <p className="text-sm text-gray-700 truncate">
+              {firstEvent.title} · {firstEvent.location_name}
+            </p>
+          </div>
+          <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-700">
+            {isExpanded ? 'Hide' : 'View'} <span>{isExpanded ? '▴' : '▾'}</span>
+          </span>
+        </div>
+      </button>
+      {isExpanded && (
+        <div className="space-y-3">
+          {group.events.map((event) => (
+            <EventCardRow key={event.id} event={event} actionsEnabled />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EventsTab() {
   const { data: eventsResponse, isLoading } = useMyEvents();
-  const events = eventsResponse?.data || [];
+  const events: EventListItem[] = eventsResponse?.data || [];
+
+  const [expandedSeries, setExpandedSeries] = useState<Set<number>>(
+    () => new Set(),
+  );
+
+  const displayItems = useMemo<DisplayItem[]>(() => {
+    const seriesMap = new Map<number, EventListItem[]>();
+    const standaloneEvents: EventListItem[] = [];
+
+    events.forEach((event) => {
+      if (event.series?.id) {
+        const bucket = seriesMap.get(event.series.id) ?? [];
+        bucket.push(event);
+        seriesMap.set(event.series.id, bucket);
+      } else {
+        standaloneEvents.push(event);
+      }
+    });
+
+    const groups: DisplayItem[] = [];
+
+    seriesMap.forEach((occurrences, seriesId) => {
+      if (occurrences.length > 1) {
+        const sorted = [...occurrences].sort(
+          (a, b) =>
+            new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+        );
+        groups.push({
+          type: 'series',
+          seriesId,
+          seriesName: sorted[0].series?.name ?? 'Series',
+          events: sorted,
+          startTime: sorted[0].start_time,
+        });
+      } else if (occurrences.length === 1) {
+        standaloneEvents.push(occurrences[0]);
+      }
+    });
+
+    const singles: DisplayItem[] = standaloneEvents.map((event) => ({
+      type: 'single',
+      event,
+      startTime: event.start_time,
+    }));
+
+    return [...groups, ...singles].sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+    );
+  }, [events]);
+
+  const toggleSeries = (seriesId: number) => {
+    setExpandedSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(seriesId)) next.delete(seriesId);
+      else next.add(seriesId);
+      return next;
+    });
+  };
 
   if (isLoading) return <LoadingSkeleton count={3} />;
 
-  if (events.length === 0) {
+  if (displayItems.length === 0) {
     return (
       <EmptyState
         icon={<Calendar className="h-12 w-12 text-gray-400" />}
@@ -88,88 +344,20 @@ export function EventsTab() {
 
   return (
     <div className="space-y-3">
-      {events.map((event: any, idx: number) => {
-        const badge = LIFECYCLE_BADGE_STYLES[event.lifecycle_state] || {
-          bg: '#f3f4f6',
-          text: '#6b7280',
-          border: '#d1d5db',
-        };
+      {displayItems.map((item) => {
+        if (item.type === 'series') {
+          return (
+            <RecurringSeriesGroup
+              key={`series-${item.seriesId}`}
+              group={item}
+              isExpanded={expandedSeries.has(item.seriesId)}
+              onToggle={() => toggleSeries(item.seriesId)}
+            />
+          );
+        }
+
         return (
-          <div
-            key={event.id}
-            className="flex items-center gap-4 border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
-            style={{ transform: `rotate(${idx % 2 === 0 ? -0.3 : 0.3}deg)` }}
-          >
-            <Link to={`/events/${event.id}`} className="flex-shrink-0 block">
-              {event.cover_image ? (
-                <div
-                  className="h-16 w-24 border-2 border-white shadow-md overflow-hidden"
-                  style={{ transform: 'rotate(-2deg)' }}
-                >
-                  <Media
-                    src={event.cover_image}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="h-16 w-24 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-300 relative group overflow-hidden">
-                  <Calendar className="h-6 w-6" />
-                </div>
-              )}
-            </Link>
-            <div className="flex-1 min-w-0">
-              <Link to={`/events/${event.id}`} className="hover:underline">
-                <h3
-                  className="font-bold text-gray-900 truncate"
-                  style={{
-                    fontFamily: '"Caveat", cursive',
-                    fontSize: '1.2rem',
-                  }}
-                >
-                  {event.title}
-                </h3>
-              </Link>
-              <p
-                className="text-gray-500 text-sm"
-                style={{ fontFamily: '"Caveat", cursive' }}
-              >
-                {new Date(event.start_time).toLocaleDateString()} ·{' '}
-                {event.location_name}
-              </p>
-              <EventNeedsSummary eventId={event.id} />
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <span
-                className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
-                style={{
-                  fontFamily: '"Permanent Marker", cursive',
-                  fontSize: '0.65rem',
-                  background: badge.bg,
-                  color: badge.text,
-                  borderColor: badge.border,
-                  transform: 'rotate(2deg)',
-                  boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
-                }}
-              >
-                {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
-              </span>
-              <Link
-                to={`/events/${event.id}/manage`}
-                className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
-                style={{
-                  fontFamily: '"Permanent Marker", cursive',
-                  transform: 'rotate(-1deg)',
-                  boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-                }}
-              >
-                MANAGE EVENT
-              </Link>
-            </div>
-          </div>
+          <EventCardRow key={item.event.id} event={item.event} actionsEnabled />
         );
       })}
     </div>

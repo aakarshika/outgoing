@@ -14,7 +14,7 @@ interface LiveAttendanceStepProps {
 
 export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps) {
     const transitionLifecycle = useTransitionEventLifecycle();
-    const { data: attendeesResponse, refetch: refetchAttendees } = useEventAttendees(event.id);
+    const { data: attendeesResponse, refetch: refetchAttendees } = useEventAttendees(event?.id);
     const attendees = attendeesResponse?.data || [];
 
     const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -35,7 +35,7 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
         error: admitError
     } = useTicketAdmission();
 
-    const isLive = event.lifecycle_state === 'live';
+    const isLive = event?.lifecycle_state === 'live';
 
     const handleGoLive = async () => {
         try {

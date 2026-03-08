@@ -1,8 +1,7 @@
 /** ManageForHostPage — redesigned host event management UI. */
 
-import { ArrowLeft } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMatch, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { updateEvent } from '@/features/events/api';
@@ -42,6 +41,7 @@ export const HOST_STEPS = [
     {
         stepId: 1,
         title: 'Basic Details',
+        routeSlug: 'basic-details',
         isHalfStep: false,
         components: [
             { id: 'basic-details', component: BasicDetailsForm as any },
@@ -54,6 +54,7 @@ export const HOST_STEPS = [
     {
         stepId: 1.5,
         title: 'Publish',
+        routeSlug: 'publish',
         isHalfStep: true,
         components: [
             { id: 'publish', component: PublishStep as any },
@@ -62,6 +63,7 @@ export const HOST_STEPS = [
     {
         stepId: 2,
         title: 'Services Prep',
+        routeSlug: 'services-prep',
         isHalfStep: false,
         components: [
             { id: 'services-prep', component: ServicesPrepStep as any },
@@ -70,6 +72,7 @@ export const HOST_STEPS = [
     {
         stepId: 2.5,
         title: 'Event Readiness',
+        routeSlug: 'event-readiness',
         isHalfStep: true,
         components: [
             { id: 'event-readiness', component: EventReadinessStep as any },
@@ -78,6 +81,7 @@ export const HOST_STEPS = [
     {
         stepId: 3,
         title: 'Live & Attendance',
+        routeSlug: 'live-attendance',
         isHalfStep: false,
         components: [
             { id: 'live-attendance', component: LiveAttendanceStep as any },
@@ -86,6 +90,7 @@ export const HOST_STEPS = [
     {
         stepId: 4,
         title: 'Wrap Up',
+        routeSlug: 'wrap-up',
         isHalfStep: false,
         components: [
             { id: 'wrap-up', component: WrapUpStep as any },
@@ -98,7 +103,34 @@ export default function ManageForHostPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [currentStep, setCurrentStep] = useState(1);
+    const hostStepMatch = useMatch('/events/:id/host-event-management/:step');
+    const activeSlug = hostStepMatch?.params.step;
+    const hostBasePath = id ? `/events/${id}/host-event-management` : '/events/host-event-management';
+    const fallbackStep = HOST_STEPS[0];
+    const matchedStep = activeSlug ? HOST_STEPS.find((step) => step.routeSlug === activeSlug) : null;
+    const hasValidSlug = Boolean(matchedStep);
+    const activeStep = matchedStep ?? fallbackStep;
+    const activeStepIndex = HOST_STEPS.findIndex((step) => step.stepId === activeStep.stepId);
+    const goToStep = useCallback(
+        (stepId: number) => {
+            if (!id) return;
+            const targetStep = HOST_STEPS.find((step) => step.stepId === stepId);
+            if (!targetStep) return;
+            navigate(`${hostBasePath}/${targetStep.routeSlug}`);
+        },
+        [hostBasePath, id, navigate],
+    );
+
+    useEffect(() => {
+        if (!id) return;
+        if (!activeSlug) {
+            navigate(`${hostBasePath}/${fallbackStep.routeSlug}`, { replace: true });
+            return;
+        }
+        if (activeSlug && !hasValidSlug) {
+            navigate(`${hostBasePath}/${fallbackStep.routeSlug}`, { replace: true });
+        }
+    }, [activeSlug, hasValidSlug, hostBasePath, fallbackStep.routeSlug, id, navigate]);
 
     // ── Remote data ───────────────────────────────────────────────────────────
     const { data: eventResponse, refetch: refetchEvent } = useEvent(Number(id));
@@ -250,7 +282,7 @@ export default function ManageForHostPage() {
 
         console.group('💾 [ManageForHostPage] Starting Update');
         console.log('Event ID:', id);
-        console.log('Step:', currentStep);
+        console.log('Step:', activeStep.routeSlug);
         console.log('Apply to Series:', applyToSeries);
 
         // Capacity + tier validation
@@ -409,7 +441,7 @@ export default function ManageForHostPage() {
 
     // ── Step renderer ─────────────────────────────────────────────────────────
     const renderCurrentStepComponents = () => {
-        const stepConfig = HOST_STEPS.find((s) => s.stepId === currentStep);
+        const stepConfig = activeStep;
         if (!stepConfig) return null;
 
         const commonProps = { event, readonly: false };
@@ -514,38 +546,14 @@ export default function ManageForHostPage() {
             }}
         >
             <div className="mx-auto max-w-4xl">
-                {/* Header */}
-                <div className="relative mb-8 flex items-center gap-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
-                    >
-                        <ArrowLeft className="h-5 w-5" />
-                    </button>
-                    <div>
-                        <h1
-                            className="text-3xl text-gray-900"
-                            style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-1deg)' }}
-                        >
-                            {event?.title || 'Host Event Management'}
-                        </h1>
-                        <p
-                            className="text-gray-500 text-lg"
-                            style={{ fontFamily: '"Caveat", cursive', transform: 'rotate(1deg)' }}
-                        >
-                            Step-by-step configuration
-                        </p>
-                    </div>
-                </div>
-
                 {/* Series timeline (always visible) */}
                 <SeriesTimeline occurrences={occurrences} currentEventId={Number(id)} />
 
                 {/* Horizontal Step Tabs */}
                 <StepTabs
-                    currentStep={currentStep}
+                    currentStep={activeStep.stepId}
                     stepsConfig={HOST_STEPS}
-                    onStepSelect={setCurrentStep}
+                    onStepSelect={goToStep}
                 />
 
                 {/* Step content */}
@@ -582,8 +590,11 @@ export default function ManageForHostPage() {
                         <div className="flex gap-3 ml-auto">
                             <button
                                 type="button"
-                                disabled={currentStep === 1}
-                                onClick={() => setCurrentStep((p) => Math.max(1, p - 1))}
+                                disabled={activeStepIndex <= 0}
+                                onClick={() => {
+                                    if (activeStepIndex <= 0) return;
+                                    goToStep(HOST_STEPS[activeStepIndex - 1].stepId);
+                                }}
                                 className="px-5 py-2 bg-white border-2 border-gray-800 shadow-[2px_2px_0px_#333] font-bold text-sm disabled:opacity-40 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333] transition-all"
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
@@ -597,10 +608,10 @@ export default function ManageForHostPage() {
                             >
                                 {isSubmitting ? 'Saving…' : 'Save Changes'}
                             </button>
-                            {currentStep < HOST_STEPS.length && (
+                            {activeStepIndex < HOST_STEPS.length - 1 && (
                                 <button
                                     type="button"
-                                    onClick={() => setCurrentStep((p) => p + 1)}
+                                    onClick={() => goToStep(HOST_STEPS[activeStepIndex + 1].stepId)}
                                     className="px-5 py-2 bg-gray-900 text-white border-2 border-gray-900 shadow-[2px_2px_0px_#555] font-bold text-sm hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555] transition-all"
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
