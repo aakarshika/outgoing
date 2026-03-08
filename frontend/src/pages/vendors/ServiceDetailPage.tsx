@@ -20,7 +20,7 @@ import { Media } from '@/components/ui/media';
 import { PostItNote } from '@/components/ui/PostItNote';
 import { ProprietorCard } from '@/components/ui/ProprietorCard';
 import { useAuth } from '@/features/auth/hooks';
-import { EventCard } from '@/features/events/EventCard';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useMyEvents } from '@/features/events/hooks';
 import { useVendorService } from '@/features/vendors/hooks';
 
@@ -525,7 +525,7 @@ export default function ServiceDetailPage() {
                     <Grid container spacing={4}>
                       {service.past_events.map((event) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                          <EventCard event={event} />
+                          <ScrapbookEventCard event={event} />
                         </Grid>
                       ))}
                     </Grid>

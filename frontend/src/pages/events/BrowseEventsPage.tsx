@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { CategoryChips } from '@/features/events/CategoryChips';
-import { EventCard } from '@/features/events/EventCard';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useFeed } from '@/features/events/hooks';
 
 export default function BrowseEventsPage() {
@@ -69,7 +69,7 @@ export default function BrowseEventsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <ScrapbookEventCard key={event.id} event={event} />
             ))}
           </div>
         )}
