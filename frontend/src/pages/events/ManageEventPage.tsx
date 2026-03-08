@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Briefcase,
   Calendar,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -17,11 +18,13 @@ import {
   LocateFixed,
   MapPin,
   Repeat,
+  ScanLine,
   Ticket,
   Timer,
   Users,
+  XCircle,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -40,6 +43,7 @@ import {
   useTransitionEventLifecycle,
   useUpdateTicketTiers,
 } from '@/features/events/hooks';
+import { useTicketValidation, useTicketAdmission } from '@/features/tickets/hooks';
 import type { EventLifecycleState } from '@/types/events';
 import {
   canUseBrowserGeolocation,
@@ -219,7 +223,7 @@ export default function ManageEventPage() {
   const { user } = useAuth();
 
   const { data: eventResponse, isLoading: isLoadingEvent } = useEvent(Number(id));
-  const { data: attendeesResponse, isLoading: isLoadingAttendees } = useEventAttendees(
+  const { data: attendeesResponse, isLoading: isLoadingAttendees, refetch: refetchAttendees } = useEventAttendees(
     Number(id),
   );
   const { data: lifecycleHistoryResponse, isLoading: isLoadingLifecycleHistory } =
@@ -234,9 +238,52 @@ export default function ManageEventPage() {
   const lifecycleHistory = lifecycleHistoryResponse?.data || [];
   const categories = catResponse?.data || [];
 
-  const [activeTab, setActiveTab] = useState<'details' | 'attendees' | 'needs'>(
+  const [activeTab, setActiveTab] = useState<'details' | 'attendees' | 'entry' | 'needs'>(
     'details',
   );
+
+  // ── Entry tab state ──
+  const [entryBarcode, setEntryBarcode] = useState('');
+  const entryInputRef = useRef<HTMLInputElement>(null);
+  const {
+    result: validationResult,
+    isLoading: isValidating,
+    error: validationError,
+    errorCode: validationErrorCode,
+    validate: validateBarcode,
+    reset: resetValidation,
+  } = useTicketValidation();
+  const {
+    isLoading: isAdmitting,
+    error: admitError,
+    admitted,
+    admit: admitTicket,
+    reset: resetAdmission,
+  } = useTicketAdmission();
+
+  const handleValidate = useCallback(() => {
+    if (!entryBarcode.trim() || !event) return;
+    resetAdmission();
+    validateBarcode(entryBarcode.trim(), event.id);
+  }, [entryBarcode, event, validateBarcode, resetAdmission]);
+
+  const handleAdmit = useCallback(async () => {
+    if (!validationResult || !event) return;
+    try {
+      await admitTicket(validationResult.ticket_id, event.id);
+      toast.success(`${validationResult.attendee_name} admitted!`);
+      refetchAttendees();
+    } catch (err) {
+      // Error handled by hook
+    }
+  }, [validationResult, event, admitTicket, refetchAttendees]);
+
+  const handleResetEntry = useCallback(() => {
+    setEntryBarcode('');
+    resetValidation();
+    resetAdmission();
+    setTimeout(() => entryInputRef.current?.focus(), 100);
+  }, [resetValidation, resetAdmission]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applyToSeries, setApplyToSeries] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -915,6 +962,7 @@ export default function ManageEventPage() {
               icon: Users,
               label: `Attendees (${event.ticket_count})`,
             },
+            { id: 'entry', icon: ScanLine, label: '🎫 Entry' },
             { id: 'needs', icon: Briefcase, label: 'Needs & Vendors' },
           ].map((t) => (
             <button
@@ -2018,7 +2066,8 @@ export default function ManageEventPage() {
                       <tr>
                         <th className="px-6 py-3 font-medium">Attendee</th>
                         <th className="px-6 py-3 font-medium">Ticket Type</th>
-                        <th className="px-6 py-3 font-medium">Status</th>
+                        <th className="px-6 py-3 font-medium">Barcode</th>
+                        <th className="px-6 py-3 font-medium">Entry</th>
                         <th className="px-6 py-3 font-medium text-right">
                           Purchase Date
                         </th>
@@ -2067,9 +2116,29 @@ export default function ManageEventPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="capitalize text-muted-foreground">
-                              {attendee.status}
+                            <span className="font-mono text-xs text-gray-500 tracking-wider">
+                              {attendee.barcode || '—'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {attendee.status === 'used' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                ✅ Entered
+                                {attendee.used_at && (
+                                  <span className="text-green-600 ml-1">
+                                    · {new Date(attendee.used_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </span>
+                            ) : attendee.status === 'active' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                ⏳ Not Entered
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 capitalize">
+                                {attendee.status}
+                              </span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-right text-muted-foreground">
                             {new Date(attendee.purchased_at).toLocaleDateString()}
@@ -2080,6 +2149,276 @@ export default function ManageEventPage() {
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ Entry Tab ═══ */}
+        {activeTab === 'entry' && (
+          <div className="space-y-6">
+            {/* Entry Header Card */}
+            <div
+              className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative"
+              style={{ transform: 'rotate(0.3deg)' }}
+            >
+              <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-emerald-400 border-2 border-gray-800 shadow-[1px_1px_0px_#333] flex items-center justify-center rotate-12 text-sm">
+                🎫
+              </div>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: '"Permanent Marker", cursive' }}
+              >
+                Ticket Entry
+              </h2>
+              <p
+                className="text-gray-600"
+                style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
+              >
+                Enter the attendee's ticket barcode to validate and admit them.
+              </p>
+            </div>
+
+            {/* Barcode Input */}
+            <div
+              className="bg-white border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333]"
+              style={{ transform: 'rotate(-0.2deg)' }}
+            >
+              <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-800 pb-2 border-dashed">
+                <ScanLine className="h-5 w-5 text-gray-800" />
+                <h3
+                  className="text-lg font-bold"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Scan / Enter Code
+                </h3>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    ref={entryInputRef}
+                    type="text"
+                    value={entryBarcode}
+                    onChange={(e) => setEntryBarcode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handleValidate()}
+                    placeholder="Enter ticket barcode..."
+                    autoFocus
+                    className="w-full rounded-lg border-2 border-gray-800 bg-yellow-50/50 px-4 py-3.5 text-lg font-mono tracking-wider focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-600 transition-all shadow-[2px_2px_0px_#333]"
+                    style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                    disabled={isValidating}
+                  />
+                  {entryBarcode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEntryBarcode('');
+                        resetValidation();
+                        resetAdmission();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <Button
+                  onClick={handleValidate}
+                  disabled={!entryBarcode.trim() || isValidating}
+                  className="border-2 border-gray-800 bg-blue-400 text-gray-900 shadow-[2px_2px_0px_#333] hover:bg-blue-500 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold px-6 py-3.5 text-base"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  {isValidating ? '⏳ Checking...' : '🔍 Validate'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Validation Result */}
+            {validationError && (
+              <div
+                className="bg-red-50 border-2 border-red-400 p-5 shadow-[3px_4px_0px_#dc2626] relative"
+                style={{ transform: 'rotate(0.3deg)' }}
+              >
+                <div className="flex items-start gap-3">
+                  <XCircle className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4
+                      className="text-lg font-bold text-red-800 mb-1"
+                      style={{ fontFamily: '"Permanent Marker", cursive' }}
+                    >
+                      {validationErrorCode === 'ALREADY_USED' ? 'Already Entered' :
+                        validationErrorCode === 'WRONG_EVENT' ? 'Wrong Event' :
+                          validationErrorCode === 'CANCELLED' ? 'Ticket Cancelled' :
+                            validationErrorCode === 'REFUNDED' ? 'Ticket Refunded' :
+                              'Invalid Ticket'}
+                    </h4>
+                    <p className="text-red-700" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}>
+                      {validationError}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleResetEntry}
+                  className="mt-4 px-4 py-2 bg-white border-2 border-red-400 rounded-lg text-red-700 font-bold text-sm hover:bg-red-100 transition-colors"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Try Another Code
+                </button>
+              </div>
+            )}
+
+            {validationResult && !admitted && (
+              <div
+                className="bg-emerald-50 border-2 border-emerald-600 p-6 shadow-[3px_4px_0px_#059669] relative"
+                style={{ transform: 'rotate(-0.3deg)' }}
+              >
+                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-emerald-400 border-2 border-gray-800 shadow-[1px_1px_0px_#333] flex items-center justify-center text-sm">
+                  ✅
+                </div>
+                <h4
+                  className="text-lg font-bold text-emerald-800 mb-4"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Ticket Valid!
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/70 rounded-lg p-3 border border-emerald-200">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Attendee</p>
+                    <p className="text-lg font-bold text-gray-900" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}>
+                      {validationResult.attendee_name}
+                    </p>
+                    <p className="text-xs text-gray-500">@{validationResult.attendee_username}</p>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-3 border border-emerald-200">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Ticket Type</p>
+                    <p className="text-lg font-bold" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem', color: validationResult.tier_color || '#1f2937' }}>
+                      {validationResult.tier_name}
+                    </p>
+                    <p className="text-xs text-gray-500">₹{validationResult.price_paid}</p>
+                  </div>
+                  {validationResult.guest_name && (
+                    <div className="bg-white/70 rounded-lg p-3 border border-emerald-200">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Guest Name</p>
+                      <p className="text-lg font-bold text-gray-900" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}>
+                        {validationResult.guest_name}
+                      </p>
+                    </div>
+                  )}
+                  <div className="bg-white/70 rounded-lg p-3 border border-emerald-200">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Barcode</p>
+                    <p className="text-sm font-mono text-gray-700 tracking-wider">
+                      {validationResult.barcode}
+                    </p>
+                  </div>
+                </div>
+
+                {admitError && (
+                  <div className="bg-red-50 border border-red-300 rounded-lg p-3 mb-4">
+                    <p className="text-red-700 text-sm font-medium">{admitError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleAdmit}
+                    disabled={isAdmitting}
+                    className="flex-1 border-2 border-gray-800 bg-emerald-400 text-gray-900 shadow-[3px_3px_0px_#333] hover:bg-emerald-500 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_#333] transition-all font-bold py-4 text-lg"
+                    style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.2rem' }}
+                  >
+                    {isAdmitting ? '⏳ Admitting...' : '✅ Admit Attendee'}
+                  </Button>
+                  <Button
+                    onClick={handleResetEntry}
+                    variant="outline"
+                    className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
+                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Admission Success */}
+            {admitted && (
+              <div
+                className="bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-600 p-8 shadow-[3px_4px_0px_#15803d] relative text-center"
+                style={{ transform: 'rotate(0.5deg)' }}
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-400 border-2 border-gray-800 shadow-[2px_2px_0px_#333] mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-gray-800" />
+                </div>
+                <h4
+                  className="text-2xl font-bold text-green-800 mb-2"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Admitted! 🎉
+                </h4>
+                <p className="text-green-700 mb-6" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}>
+                  {validationResult?.attendee_name || 'Attendee'} has been checked in successfully.
+                </p>
+                <Button
+                  onClick={handleResetEntry}
+                  className="border-2 border-gray-800 bg-yellow-300 text-gray-900 shadow-[2px_2px_0px_#333] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold px-8"
+                  style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1rem' }}
+                >
+                  Scan Next Ticket →
+                </Button>
+              </div>
+            )}
+
+            {/* Quick Stats */}
+            <div className="flex gap-4">
+              <div
+                className="bg-white border-2 border-gray-800 p-5 shadow-[2px_3px_0px_#333] flex-1 relative"
+                style={{ transform: 'rotate(-0.5deg)' }}
+              >
+                <p
+                  className="text-sm font-bold text-gray-500 mb-1"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Entered
+                </p>
+                <p
+                  className="text-4xl font-bold text-emerald-600"
+                  style={{ fontFamily: '"Caveat", cursive' }}
+                >
+                  {attendees.filter((a) => a.status === 'used').length}
+                </p>
+              </div>
+              <div
+                className="bg-white border-2 border-gray-800 p-5 shadow-[2px_3px_0px_#333] flex-1 relative"
+                style={{ transform: 'rotate(0.5deg)' }}
+              >
+                <p
+                  className="text-sm font-bold text-gray-500 mb-1"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Remaining
+                </p>
+                <p
+                  className="text-4xl font-bold text-amber-600"
+                  style={{ fontFamily: '"Caveat", cursive' }}
+                >
+                  {attendees.filter((a) => a.status === 'active').length}
+                </p>
+              </div>
+              <div
+                className="bg-white border-2 border-gray-800 p-5 shadow-[2px_3px_0px_#333] flex-1 relative"
+                style={{ transform: 'rotate(-0.3deg)' }}
+              >
+                <p
+                  className="text-sm font-bold text-gray-500 mb-1"
+                  style={{ fontFamily: '"Permanent Marker", cursive' }}
+                >
+                  Total Tickets
+                </p>
+                <p
+                  className="text-4xl font-bold text-gray-900"
+                  style={{ fontFamily: '"Caveat", cursive' }}
+                >
+                  {event.ticket_count}
+                </p>
+              </div>
             </div>
           </div>
         )}

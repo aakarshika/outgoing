@@ -546,7 +546,19 @@ class EventAttendeeSerializer(serializers.ModelSerializer):
         """Meta configuration for EventAttendeeSerializer."""
 
         model = Ticket
-        fields = ["id", "user", "tier_id", "ticket_type", "status", "purchased_at"]
+        fields = [
+            "id",
+            "user",
+            "tier_id",
+            "ticket_type",
+            "color",
+            "guest_name",
+            "barcode",
+            "status",
+            "used_at",
+            "price_paid",
+            "purchased_at",
+        ]
 
 
 class EventHighlightSerializer(serializers.ModelSerializer):

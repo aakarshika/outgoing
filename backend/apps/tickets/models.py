@@ -48,6 +48,15 @@ class Ticket(models.Model):
     refund_deadline = models.DateTimeField(null=True, blank=True)
     price_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    used_at = models.DateTimeField(null=True, blank=True, help_text="When the ticket was admitted/scanned")
+    admitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admitted_tickets",
+        help_text="Host who admitted this ticket",
+    )
     purchased_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

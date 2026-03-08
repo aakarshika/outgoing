@@ -347,6 +347,36 @@ export function TicketManagementModal({
                         </Typography>
                       </Box>
                     )}
+                    {t.status === 'used' && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        <Typography
+                          variant="h3"
+                          sx={{
+                            color: '#059669',
+                            fontWeight: 'bold',
+                            border: '5px solid #059669',
+                            px: 3,
+                            py: 1,
+                            transform: 'rotate(15deg)',
+                            fontFamily: '"Permanent Marker", cursive',
+                            opacity: 0.85,
+                            boxShadow: '0 0 15px rgba(5,150,105,0.3)',
+                          }}
+                        >
+                          ADMITTED
+                        </Typography>
+                      </Box>
+                    )}
                     <Typography variant="subtitle2" color="text.secondary">
                       Event
                     </Typography>

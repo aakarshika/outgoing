@@ -29,6 +29,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "refund_deadline",
             "price_paid",
             "status",
+            "used_at",
             "purchased_at",
             "updated_at",
             "needs_aadhar_verification",
@@ -39,6 +40,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "refund_deadline",
             "price_paid",
             "status",
+            "used_at",
             "purchased_at",
             "updated_at",
         ]
@@ -68,3 +70,17 @@ class TicketPurchaseSerializer(serializers.Serializer):
     """Serializer for ticket purchase requests."""
 
     tickets = GuestDetailSerializer(many=True, min_length=1, max_length=5)
+
+
+class TicketValidateInputSerializer(serializers.Serializer):
+    """Input serializer for ticket validation."""
+
+    barcode = serializers.CharField(max_length=100)
+    event_id = serializers.IntegerField()
+
+
+class TicketAdmitInputSerializer(serializers.Serializer):
+    """Input serializer for ticket admission."""
+
+    ticket_id = serializers.IntegerField()
+    event_id = serializers.IntegerField()

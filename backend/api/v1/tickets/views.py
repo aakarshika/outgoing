@@ -8,9 +8,15 @@ from rest_framework.views import APIView
 
 from apps.events.models import Event, EventTicketTier
 from apps.tickets.models import Ticket
+from apps.tickets.services import TicketValidationError, validate_ticket, admit_ticket
 from core.responses import error_response, success_response
 
-from .serializers import TicketPurchaseSerializer, TicketSerializer
+from .serializers import (
+    TicketAdmitInputSerializer,
+    TicketPurchaseSerializer,
+    TicketSerializer,
+    TicketValidateInputSerializer,
+)
 
 
 class TicketPurchaseView(APIView):
@@ -136,4 +142,86 @@ class TicketDetailView(APIView):
         return success_response(
             message=f"Ticket cancelled. Refund amount: ${refund_amount:.2f}",
             data=TicketSerializer(ticket).data
+        )
+
+
+class TicketValidateView(APIView):
+    """Validate a ticket barcode for event entry.
+
+    This endpoint is input-method agnostic — it works for manual entry,
+    barcode scanning, and QR scanning.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Validate a barcode against an event."""
+        serializer = TicketValidateInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        barcode = serializer.validated_data["barcode"]
+        event_id = serializer.validated_data["event_id"]
+
+        # Verify the caller is the event host
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(
+                message="Only the event host can validate tickets.",
+                status=403,
+            )
+
+        try:
+            result = validate_ticket(barcode, event_id)
+        except TicketValidationError as e:
+            return error_response(
+                message=e.message, error_code=e.error_code, status=e.status
+            )
+
+        return success_response(data=result)
+
+
+class TicketAdmitView(APIView):
+    """Admit an attendee by marking their ticket as used.
+
+    This endpoint records the admission timestamp and the admitting host.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Admit a ticket holder."""
+        serializer = TicketAdmitInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        ticket_id = serializer.validated_data["ticket_id"]
+        event_id = serializer.validated_data["event_id"]
+
+        # Verify the caller is the event host
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(
+                message="Only the event host can admit attendees.",
+                status=403,
+            )
+
+        try:
+            ticket = admit_ticket(ticket_id, event_id, request.user)
+        except TicketValidationError as e:
+            return error_response(
+                message=e.message, error_code=e.error_code, status=e.status
+            )
+
+        return success_response(
+            data=TicketSerializer(ticket).data,
+            message="Attendee admitted successfully.",
         )
