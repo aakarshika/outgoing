@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import Barcode from 'react-barcode';
+import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 
 import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
@@ -347,6 +347,36 @@ export function TicketManagementModal({
                         </Typography>
                       </Box>
                     )}
+                    {t.status === 'used' && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        <Typography
+                          variant="h3"
+                          sx={{
+                            color: '#059669',
+                            fontWeight: 'bold',
+                            border: '5px solid #059669',
+                            px: 3,
+                            py: 1,
+                            transform: 'rotate(15deg)',
+                            fontFamily: '"Permanent Marker", cursive',
+                            opacity: 0.85,
+                            boxShadow: '0 0 15px rgba(5,150,105,0.3)',
+                          }}
+                        >
+                          ADMITTED
+                        </Typography>
+                      </Box>
+                    )}
                     <Typography variant="subtitle2" color="text.secondary">
                       Event
                     </Typography>
@@ -406,15 +436,23 @@ export function TicketManagementModal({
                         color="text.secondary"
                         sx={{ alignSelf: 'flex-start', mb: 1 }}
                       >
-                        BARCODE
+                        BARCODE / QR
                       </Typography>
-                      {t.barcode ? (
-                        <Barcode
-                          value={t.barcode}
-                          width={1.5}
-                          height={40}
-                          displayValue={true}
-                        />
+                      {t.qr_token || t.barcode ? (
+                        <>
+                          <QRCodeSVG
+                            value={t.qr_token || t.barcode}
+                            size={120}
+                            level="M"
+                            includeMargin={true}
+                          />
+                          <Typography
+                            variant="caption"
+                            sx={{ mt: 1, fontFamily: 'monospace', letterSpacing: 2, fontWeight: 'bold' }}
+                          >
+                            {t.barcode}
+                          </Typography>
+                        </>
                       ) : (
                         <Typography
                           variant="body2"

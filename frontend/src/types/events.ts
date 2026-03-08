@@ -149,20 +149,29 @@ export interface TicketInfo {
   };
   ticket_type: string;
   guest_name?: string;
+  barcode?: string;
   is_refundable: boolean;
   refund_deadline: string | null;
   price_paid: string;
   status: string;
+  used_at?: string | null;
   purchased_at: string;
   updated_at: string;
   needs_aadhar_verification?: boolean;
+  qr_token?: string;
 }
 
 export interface EventAttendee {
   id: number;
   user: EventHost;
-  ticket_type: 'standard' | 'flexible';
+  tier_id?: number;
+  ticket_type: string;
+  color?: string;
+  guest_name?: string;
+  barcode?: string;
   status: string;
+  used_at?: string | null;
+  price_paid?: string;
   purchased_at: string;
 }
 

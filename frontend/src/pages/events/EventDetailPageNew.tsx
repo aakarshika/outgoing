@@ -10,7 +10,7 @@ import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
-import { TicketManagementModal } from '@/components/events/TicketManagementModal';
+
 import { useAuth } from '@/features/auth/hooks';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
@@ -69,8 +69,7 @@ export default function EventDetailPageNew() {
   const [isTicketingModalOpen, setIsTicketingModalOpen] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
-  const [isManageTicketOpen, setIsManageTicketOpen] = useState(false);
-  const [manageInitialIndex, setManageInitialIndex] = useState(0);
+
   const [quickBuyData, setQuickBuyData] = useState<{
     tierId: number;
     quantity: number;
@@ -235,15 +234,6 @@ export default function EventDetailPageNew() {
     );
   };
 
-  const handleManageTicket = (ticketId?: number) => {
-    if (ticketId && event?.user_tickets) {
-      const idx = event.user_tickets.findIndex((t: any) => t.id === ticketId);
-      setManageInitialIndex(idx >= 0 ? idx : 0);
-    } else {
-      setManageInitialIndex(0);
-    }
-    setIsManageTicketOpen(true);
-  };
 
   const handleTicketingSuccess = (ticketsData: any[]) => {
     setIsTicketingModalOpen(false);
@@ -310,6 +300,7 @@ export default function EventDetailPageNew() {
             {/* Section 1: Status Banner & Top Bar */}
             <StatusBannerSection
               event={event}
+              isHost={isHost}
               isAuthenticated={isAuthenticated}
               navigate={navigate}
               toggleInterest={toggleInterest}
@@ -348,7 +339,6 @@ export default function EventDetailPageNew() {
                     handleBuyTicket={handleBuyTicket}
                     handleOneClickBuy={handleOneClickBuy}
                     clearTicketformTrigger={clearTicketformTrigger}
-                  // handleManageTicket={handleManageTicket}
                   />
                 </Box>
 
@@ -450,12 +440,7 @@ export default function EventDetailPageNew() {
           selectedTierId={selectedTierId}
           onSuccess={handleTicketingSuccess}
         />
-        <TicketManagementModal
-          isOpen={isManageTicketOpen}
-          onClose={() => setIsManageTicketOpen(false)}
-          tickets={event?.user_tickets || []}
-          initialIndex={manageInitialIndex}
-        />
+
         <TicketConfirmationModal
           isOpen={!!confirmedTicket}
           onClose={() => {

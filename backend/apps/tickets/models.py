@@ -43,11 +43,21 @@ class Ticket(models.Model):
     guest_name = models.CharField(max_length=200, blank=True, help_text="Name of the guest")
     is_18_plus = models.BooleanField(default=False, help_text="Is the guest 18+?")
     barcode = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    qr_secret = models.CharField(max_length=64, null=True, blank=True, help_text="Secret used to sign the QR token")
     is_refundable = models.BooleanField(default=False)
     refund_percentage = models.PositiveIntegerField(default=100, help_text="Percentage to refund, 0-100")
     refund_deadline = models.DateTimeField(null=True, blank=True)
     price_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    used_at = models.DateTimeField(null=True, blank=True, help_text="When the ticket was admitted/scanned")
+    admitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admitted_tickets",
+        help_text="Host who admitted this ticket",
+    )
     purchased_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,10 +66,16 @@ class Ticket(models.Model):
         pass
 
     def save(self, *args, **kwargs):
-        """Auto-compute barcode if empty, and manage refundability."""
+        """Auto-compute barcode and qr_secret if empty."""
+        import uuid
+        import secrets
+        
         if not self.barcode:
-            import uuid
             self.barcode = str(uuid.uuid4()).replace("-", "").upper()[:12]
+        
+        if not self.qr_secret:
+            self.qr_secret = secrets.token_hex(32)
+            
         super().save(*args, **kwargs)
 
     def __str__(self):

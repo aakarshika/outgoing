@@ -178,41 +178,45 @@ export const PurchasedTicketStack = ({
                         </Typography>
                         <Grid
                         >
-                            <Box
-                                sx={{
-                                    border: '3px solid #ef4444',
-                                    color: '#ef4444',
-                                    transform: 'rotate(-5deg)',
-                                    px: 1,
-                                    py: 0.5,
-                                    zIndex: 30,
-                                    fontFamily: '"Permanent Marker"',
-                                    fontSize: '1.2rem',
-                                    letterSpacing: 2,
-                                    borderRadius: 1,
-                                    opacity: 0.8,
-                                }}
-                            >
-                                BOUGHT
-                            </Box>
+                            {ticket.status !== 'used' && (
+                                <Box
+                                    sx={{
+                                        border: '3px solid #ef4444',
+                                        color: '#ef4444',
+                                        transform: 'rotate(-5deg)',
+                                        px: 1,
+                                        py: 0.5,
+                                        zIndex: 30,
+                                        fontFamily: '"Permanent Marker"',
+                                        fontSize: '1.2rem',
+                                        letterSpacing: 2,
+                                        borderRadius: 1,
+                                        opacity: 0.8,
+                                    }}
+                                >
+                                    BOUGHT
+                                </Box>
+                            )}
 
-                            <Box
-                                sx={{
-                                    border: '3px solid #529254ff',
-                                    color: '#529254ff',
-                                    transform: 'rotate(10deg)',
-                                    px: 1,
-                                    py: 0.5,
-                                    zIndex: 30,
-                                    fontFamily: '"Permanent Marker"',
-                                    fontSize: '1.2rem',
-                                    letterSpacing: 2,
-                                    borderRadius: 1,
-                                    opacity: 0.8,
-                                }}
-                            >
-                                ATTENDED
-                            </Box>
+                            {ticket.status === 'used' && (
+                                <Box
+                                    sx={{
+                                        border: '3px solid #059669', // emerald
+                                        color: '#059669',
+                                        transform: 'rotate(10deg)',
+                                        px: 1,
+                                        py: 0.5,
+                                        zIndex: 30,
+                                        fontFamily: '"Permanent Marker"',
+                                        fontSize: '1.2rem',
+                                        letterSpacing: 2,
+                                        borderRadius: 1,
+                                        opacity: 0.8,
+                                    }}
+                                >
+                                    ADMITTED
+                                </Box>
+                            )}
                         </Grid>
                     </Box>
 

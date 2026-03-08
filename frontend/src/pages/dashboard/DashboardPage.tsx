@@ -121,8 +121,8 @@ export default function DashboardPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${tab === t.key
-                ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
                 }`}
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
             >
@@ -302,6 +302,16 @@ export default function DashboardPage() {
                                   ? ticket.refund_percentage / 100
                                   : 0)
                               ).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        {ticket.status === 'used' && (
+                          <div className="absolute inset-0 bg-white/30 flex flex-col items-center justify-center p-2 z-10 pointer-events-none">
+                            <span
+                              className="text-emerald-600 font-bold border-4 border-emerald-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest bg-white/80"
+                              style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                              ADMITTED
                             </span>
                           </div>
                         )}

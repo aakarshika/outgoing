@@ -13,10 +13,12 @@ class TicketAdmin(admin.ModelAdmin):
         "goer",
         "event",
         "ticket_type",
+        "barcode",
         "price_paid",
         "status",
+        "used_at",
         "purchased_at",
     ]
     list_filter = ["status", "ticket_type"]
-    search_fields = ["goer__username", "event__title"]
-    readonly_fields = ["purchased_at"]
+    search_fields = ["goer__username", "event__title", "barcode"]
+    readonly_fields = ["purchased_at", "barcode", "used_at"]
