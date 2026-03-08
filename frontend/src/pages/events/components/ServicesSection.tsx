@@ -45,7 +45,6 @@ export const ServicesSection = ({
 
   const participatingVendors = event?.participating_vendors || [];
 
-  if (displayNeeds.length === 0 && participatingVendors.length === 0) return null;
 
   const myServices = myServicesResponse?.data || [];
   const isCenter = highlights.length === 0;

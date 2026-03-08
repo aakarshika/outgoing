@@ -2,8 +2,6 @@ import { Box, Chip, Collapse, Grid, Paper, Typography } from '@mui/material';
 import {
   Calendar,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   MapPin,
   Navigation,
@@ -99,42 +97,33 @@ const WhenWhereCard = ({ event }: { event: any }) => {
   else summaryParts.push('happening today!');
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       onClick={() => setExpanded(!expanded)}
       sx={{
         position: expanded ? 'absolute' : 'relative',
         top: 0,
         left: 0,
-        width: expanded ? 'calc(100% - 24px)' : 'auto',
+        background: expanded ? 'rgba(253, 253, 253, 1)' : 'transparent',
         zIndex: expanded ? 100 : 10,
         mb: expanded ? 0 : 3,
         px: 2,
         py: expanded ? 3 : 1, // More padding when expanded
-        bgcolor: '#fff9e6', // Aged Paper
-        border: '1.5px solid #e0d8c0',
-        borderRadius: '4px', // Slightly sharper corners for paper feel
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         transform: expanded
           ? 'rotate(0deg) translateX(12px)'
           : 'rotate(-0.5deg) translateX(12px)',
-        boxShadow: expanded ? '4px 4px 15px rgba(0,0,0,0.15)' : 'none',
         '&:hover': {
-          bgcolor: '#fffaf0',
           transform: expanded
             ? 'rotate(0deg) scale(1.01)  translateX(12px)'
             : 'rotate(0deg) scale(1.01)  translateX(12px)',
-          boxShadow: expanded
-            ? '4px 4px 15px rgba(0,0,0,0.2)'
-            : '2px 2px 8px rgba(0,0,0,0.08)',
         },
         overflow: 'visible', // For WashiTape
       }}
     >
       {/* Collapsed summary */}
       <Box
-        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        sx={{ alignItems: 'center', justifyContent: 'space-between' }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Navigation size={14} style={{ opacity: 0.6, color: '#2563eb' }} />
@@ -150,14 +139,6 @@ const WhenWhereCard = ({ event }: { event: any }) => {
             {summaryParts.join(' · ')}
           </Typography>
         </Box>
-        <ChevronDown
-          size={16}
-          style={{
-            transition: 'transform 0.3s ease',
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            opacity: 0.5,
-          }}
-        />
       </Box>
 
       {/* Expanded content */}
@@ -284,34 +265,20 @@ const WhenWhereCard = ({ event }: { event: any }) => {
           </Typography>
         </Box>
       </Collapse>
-    </Paper>
+    </Box>
   );
 };
 
-// --- Hero Auto-Rotating Gallery ---
-const HeroAutoGallery = ({ images, title }: { images: string[]; title: string }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+// --- Hero Photo Negative Strip Gallery ---
+const HeroNegativeStripGallery = ({ images, title, host }: { images: string[]; title: string, host: any }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
-    if (images.length <= 1 || isHovered) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [images.length, isHovered]);
-
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
+  // We double/triple the images for infinite scrolling effect
+  const extendedImages = useMemo(() => {
+    if (images.length === 0) return [];
+    // Repeat enough to ensure smooth continuous loop
+    return [...images, ...images, ...images, ...images];
+  }, [images]);
 
   if (!images.length) return null;
 
@@ -320,131 +287,137 @@ const HeroAutoGallery = ({ images, title }: { images: string[]; title: string })
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       sx={{
+        transform: 'scale(1.15)',
         width: '100%',
-        minHeight: { xs: 300, md: 450 },
-        height: '100%',
+        height: { xs: 300, md: 350 },
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '12px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-        '&:hover .gallery-nav': { opacity: 1 },
+        bgcolor: '#5234136d', // Deep black for negative strip
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        // Truly transparent sprocket holes using Mask
+        WebkitMaskImage: `
+          radial-gradient(circle at 16px 14px, transparent 7px, black 7.5px),
+          radial-gradient(circle at 16px calc(100% - 14px), transparent 7px, black 7.5px)
+        `,
+        WebkitMaskSize: '32px 100%',
+        WebkitMaskRepeat: 'repeat-x',
+        WebkitMaskComposite: 'source-in',
+        maskComposite: 'intersect',
       }}
     >
-      <Media
-        src={images[currentIndex]}
-        alt={`${title}-${currentIndex}`}
-        style={{
-          width: '100%',
-          objectFit: 'fill',
-          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+      {/* The Moving Strip */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          px: 6,
+          py: 4.5,
+          width: 'max-content',
+          animation: isHovered ? 'none' : 'scrollStrip 40s linear infinite',
+          '@keyframes scrollStrip': {
+            '0%': { transform: 'translateX(0)' },
+            '100%': { transform: `translateX(calc(-50%))` }, // Adjust based on doubling/tripling
+          },
+        }}
+      >
+        {extendedImages.map((src, idx) => (
+          <Box
+            key={`${idx}-${src}`}
+            sx={{
+              position: 'relative',
+              flexShrink: 0,
+              width: { xs: 200, md: 320 },
+              height: { xs: 180, md: 300 },
+              borderRadius: '4px',
+              overflow: 'hidden',
+              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(0.95)',
+              opacity: 0.7,
+              '&:hover': {
+                transform: 'scale(1.1) rotate(1deg)',
+                opacity: 1,
+                zIndex: 10,
+              },
+              // Film grain / texture overlay
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+              }
+            }}
+          >
+            <Media
+              src={src}
+              alt={`${title}-${idx}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'contrast(1.1) brightness(0.9)',
+              }}
+            />
+            {/* Frame labels - typical of film negatives */}
+            <Typography
+              sx={{
+                position: 'absolute',
+                bottom: 4,
+                right: 8,
+                color: 'rgba(255,255,255,0.8)',
+                fontFamily: 'monospace',
+                fontSize: '0.8rem',
+                letterSpacing: '2px',
+              }}
+            >
+              @{host.username}-
+              07.11.2026
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Center Focus Overlay (Subtle) */}
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%)',
+          zIndex: 4,
         }}
       />
 
-      {/* Navigation Arrows */}
-      {images.length > 1 && (
-        <>
-          <Box
-            className="gallery-nav"
-            onClick={handlePrev}
-            sx={{
-              position: 'absolute',
-              left: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              bgcolor: 'rgba(255,255,255,0.8)',
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              opacity: 0,
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              zIndex: 2,
-              boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,1)',
-                transform: 'translateY(-50%) scale(1.1)',
-              },
-            }}
-          >
-            <ChevronLeft size={20} />
-          </Box>
-          <Box
-            className="gallery-nav"
-            onClick={handleNext}
-            sx={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              bgcolor: 'rgba(255,255,255,0.8)',
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              opacity: 0,
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              zIndex: 2,
-              boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,1)',
-                transform: 'translateY(-50%) scale(1.1)',
-              },
-            }}
-          >
-            <ChevronRight size={20} />
-          </Box>
-        </>
-      )}
-
-      {/* Indicator Dots */}
-      {images.length > 1 && (
-        <Box
+      {/* Navigation Hint */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bgcolor: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(8px)',
+          px: 2,
+          py: 0.5,
+          borderRadius: '20px',
+          border: '1px solid rgba(255,255,255,0.1)',
+          zIndex: 10,
+          opacity: isHovered ? 1 : 0.4,
+          transition: 'opacity 0.3s',
+        }}
+      >
+        <Typography
           sx={{
-            position: 'absolute',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 1,
-            zIndex: 3,
-            bgcolor: 'rgba(0,0,0,0.2)',
-            backdropFilter: 'blur(4px)',
-            px: 1.5,
-            py: 0.8,
-            borderRadius: '20px',
+            color: 'white',
+            fontFamily: '"Caveat"',
+            fontSize: '0.9rem',
           }}
         >
-          {images.map((_, idx) => (
-            <Box
-              key={idx}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentIndex(idx);
-              }}
-              sx={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                bgcolor: idx === currentIndex ? 'white' : 'rgba(255,255,255,0.4)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.8)',
-                  transform: 'scale(1.2)',
-                },
-              }}
-            />
-          ))}
-        </Box>
-      )}
+          {isHovered ? 'Paused - Hover to inspect' : 'Glance at the negatives...'}
+        </Typography>
+      </Box>
     </Box>
   );
 };
@@ -639,11 +612,6 @@ export const HeroSection = ({
                 />
               </Box>
 
-              {/* When and Where Card - wrapped in relative box to allow overlapping expansion */}
-              <Box sx={{ position: 'relative', height: '40px', mb: 3 }}>
-                <WhenWhereCard event={event} />
-              </Box>
-
               {/* Event Name */}
               <Box
                 sx={{
@@ -657,7 +625,7 @@ export const HeroSection = ({
                 <Typography
                   variant="h1"
                   sx={{
-                    fontSize: { xs: '2.5rem', md: '4rem' },
+                    fontSize: { xs: '2.0rem', md: '3rem' },
                     position: 'relative',
                     zIndex: 1,
                     color: 'inherit',
@@ -676,8 +644,6 @@ export const HeroSection = ({
             {/* Host Card - bottom right overlapped area */}
             <Box
               sx={{
-                position: 'absolute',
-                bottom: -40,
                 right: { xs: 0, md: -20 },
                 zIndex: 10,
                 display: { xs: 'none', sm: 'block' },
@@ -694,6 +660,13 @@ export const HeroSection = ({
                 displayNeedsCount={displayNeedsCount}
               />
             </Box>
+
+            {/* When and Where Card - wrapped in relative box to allow overlapping expansion */}
+            <Box sx={{ position: 'relative', height: '40px', mb: 3 }}>
+              <WhenWhereCard event={event} />
+            </Box>
+
+
           </Box>
 
           {/* Save the Date stamp */}
@@ -797,7 +770,7 @@ export const HeroSection = ({
             </Box>
           ) : (
             <Box sx={{ width: '100%' }}>
-              <HeroAutoGallery images={galleryImages} title={event.title} />
+              <HeroNegativeStripGallery images={galleryImages} title={event.title} host={event.host} />
             </Box>
           )}
         </Grid>

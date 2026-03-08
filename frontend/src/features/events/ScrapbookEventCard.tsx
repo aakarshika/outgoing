@@ -99,6 +99,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
       component={Link}
       to={`/events/${event.id}`}
       sx={{
+        aspectRatio: '1 / 1',
         display: 'block',
         textDecoration: 'none',
         position: 'relative',
@@ -234,7 +235,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
           <>
             <Box
               sx={{
-                aspectRatio: '1.5 / 1',
+                aspectRatio: '1.85 / 1',
                 bgcolor: '#eee',
                 overflow: 'hidden',
                 mb: 2,
