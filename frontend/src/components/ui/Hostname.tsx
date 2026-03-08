@@ -27,6 +27,7 @@ interface HostnameProps {
         };
     };
     className?: string;
+    sx?: any;
 }
 
 export const Hostname = ({
@@ -41,7 +42,8 @@ export const Hostname = ({
         joinedDate: '2022',
         stats: { going: 5, hosting: 2, providing: 1 }
     },
-    className
+    className,
+    sx
 }: HostnameProps) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const navigate = useNavigate();
@@ -73,7 +75,8 @@ export const Hostname = ({
                     borderRadius: 1,
                     '&:hover': {
                         opacity: 0.8
-                    }
+                    },
+                    ...sx
                 }}
                 className={className}
             >

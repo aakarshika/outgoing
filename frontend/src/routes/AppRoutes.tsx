@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { profileRouteElements } from '@/pages/profile/ProfileRoutes';
+import { dashboardRouteElements } from '@/pages/dashboard/DashboardRoutes';
 import { ThemeWrapper } from '@/theme/ThemeWrapper';
 
 import { RoleGuard } from './RoleGuard';
@@ -89,7 +90,9 @@ export const AppRoutes = () => {
       <Route key={route.path} path={route.path} element={content}>
         {route.path === '/profile'
           ? profileRouteElements
-          : route.children?.map(renderRoute)}
+          : route.path === '/dashboard'
+            ? dashboardRouteElements
+            : route.children?.map(renderRoute)}
       </Route>
     );
   };

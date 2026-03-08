@@ -1,0 +1,15 @@
+the highlight page - when on web and on mobile the layout needs to be completely different. 
+
+on web - 
+a middle of the page popup that is divided in 2 columns. left - picture. right - comments section. 
+to change the page - have a large button at the bottom. 
+the popup needs to have comic theme. 
+
+on phone - like it is now. we need to have the scroll to change page functionality like tiktok. 
+comic theme for buttons 
+
+
+
+for the commenst section - use the comments drawer UI we already have. use common component. 
+
+

@@ -16,7 +16,8 @@ function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
   const stored = localStorage.getItem(THEME_KEY) as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
+  // Disable automatic dark mode detection to maintain scrapbook aesthetic
+  // if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
   return 'light';
 }
 

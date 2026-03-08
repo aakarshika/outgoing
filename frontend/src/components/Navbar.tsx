@@ -421,22 +421,20 @@ export function Navbar() {
                   </Button>
                 </div>
               )}
-              {isAuthenticated && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsMenuOpen((open) => !open)}
-                  aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-                  aria-expanded={isMenuOpen}
-                  className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
-                >
-                  {isMenuOpen ? (
-                    <X className="h-4 w-4" />
-                  ) : (
-                    <Menu className="h-4 w-4" />
-                  )}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsMenuOpen((open) => !open)}
+                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMenuOpen}
+                className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
+              >
+                {isMenuOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -532,7 +530,35 @@ export function Navbar() {
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
+                <p
+                  className="mb-3 text-sm uppercase tracking-wider text-gray-600"
+                  style={{
+                    fontFamily: '"Permanent Marker"',
+                    transform: 'rotate(-1deg)',
+                  }}
+                >
+                  Account
+                </p>
+                <div className="grid gap-2">
+                  <Link
+                    to="/signin"
+                    className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 text-gray-700"
+                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 text-gray-700"
+                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              </div>
+            )}
             {isAuthenticated && (
               <button
                 onClick={logout}
