@@ -8,7 +8,6 @@ export * from './Hostname';
 export * from './TicketStub';
 export * from './PurchasedTicketStack';
 export * from './TermsDialog';
-export * from './CapacityInfographic';
 export * from './CuteTimer';
 export * from './SkewedBox';
 export * from './HostBusinessCard';

@@ -26,7 +26,6 @@ import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
-import { AttendanceSection } from './components/AttendanceSection';
 import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
@@ -352,9 +351,6 @@ export default function EventDetailPageNew() {
                   />
                 </Box>
 
-                <Box id="attendance">
-                  <AttendanceSection event={event} />
-                </Box>
               </Grid>
             </Grid>
 
