@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from apps.events.models import Event, EventTicketTier
 from apps.tickets.models import Ticket
-from apps.tickets.services import TicketValidationError, validate_ticket, admit_ticket
+from apps.tickets.services import TicketValidationError, validate_ticket, admit_ticket, validate_qr_token
 from core.responses import error_response, success_response
 
 from .serializers import (
@@ -86,7 +86,7 @@ class TicketPurchaseView(APIView):
                 ticket.save()
                 purchased_tickets.append(ticket)
 
-        result = TicketSerializer(purchased_tickets, many=True)
+        result = TicketSerializer(purchased_tickets, many=True, context={'request': request})
         return success_response(
             data=result.data, message=f"{len(purchased_tickets)} tickets purchased successfully", status=201
         )
@@ -105,7 +105,7 @@ class MyTicketsView(APIView):
         if status_filter:
             tickets = tickets.filter(status=status_filter)
 
-        serializer = TicketSerializer(tickets, many=True)
+        serializer = TicketSerializer(tickets, many=True, context={'request': request})
         return success_response(data=serializer.data)
 
 
@@ -124,7 +124,7 @@ class TicketDetailView(APIView):
         if guest_name is not None:
             ticket.guest_name = guest_name
             ticket.save()
-        return success_response(data=TicketSerializer(ticket).data)
+        return success_response(data=TicketSerializer(ticket, context={'request': request}).data)
 
     def delete(self, request, pk):
         """Cancel ticket."""
@@ -141,7 +141,7 @@ class TicketDetailView(APIView):
 
         return success_response(
             message=f"Ticket cancelled. Refund amount: ${refund_amount:.2f}",
-            data=TicketSerializer(ticket).data
+            data=TicketSerializer(ticket, context={'request': request}).data
         )
 
 
@@ -158,10 +158,14 @@ class TicketValidateView(APIView):
         """Validate a barcode against an event."""
         serializer = TicketValidateInputSerializer(data=request.data)
         if not serializer.is_valid():
+            print(f"[DEBUG] Serializer Invalid: {serializer.errors}")
             return error_response(message="Validation Error", errors=serializer.errors)
 
-        barcode = serializer.validated_data["barcode"]
+        barcode = serializer.validated_data.get("barcode")
+        token = serializer.validated_data.get("token")
         event_id = serializer.validated_data["event_id"]
+        
+        print(f"[DEBUG] TicketValidateView: event_id={event_id}, token={token[:20] if token else 'None'}..., barcode={barcode}")
 
         # Verify the caller is the event host
         try:
@@ -176,7 +180,10 @@ class TicketValidateView(APIView):
             )
 
         try:
-            result = validate_ticket(barcode, event_id)
+            if token:
+                result = validate_qr_token(token, event_id)
+            else:
+                result = validate_ticket(barcode, event_id)
         except TicketValidationError as e:
             return error_response(
                 message=e.message, error_code=e.error_code, status=e.status

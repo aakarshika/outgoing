@@ -112,7 +112,7 @@ export default function SignUpPage() {
               Sign Up
             </h1>
             <p
-              className="text-gray-500"
+              className="text-gray-800"
               style={{ fontFamily: '"Caveat", cursive', fontSize: '1.3rem' }}
             >
               join the party! 🎉
@@ -124,7 +124,7 @@ export default function SignUpPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label
-                  className="block font-bold text-gray-700"
+                  className="block font-bold text-gray-900"
                   style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
                 >
                   First Name
@@ -146,7 +146,7 @@ export default function SignUpPage() {
               </div>
               <div className="space-y-1.5">
                 <label
-                  className="block font-bold text-gray-700"
+                  className="block font-bold text-gray-900"
                   style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
                 >
                   Last Name
@@ -170,7 +170,7 @@ export default function SignUpPage() {
 
             <div className="space-y-1.5">
               <label
-                className="block font-bold text-gray-700"
+                className="block font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Email
@@ -194,7 +194,7 @@ export default function SignUpPage() {
 
             <div className="space-y-1.5">
               <label
-                className="block font-bold text-gray-700"
+                className="block font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Phone Number
@@ -209,7 +209,7 @@ export default function SignUpPage() {
 
             <div className="space-y-1.5">
               <label
-                className="block font-bold text-gray-700"
+                className="block font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Username
@@ -232,7 +232,7 @@ export default function SignUpPage() {
 
             <div className="space-y-1.5">
               <label
-                className="block font-bold text-gray-700"
+                className="block font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Password
@@ -256,7 +256,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full border-2 border-gray-800 bg-pink-400 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full border-2 border-gray-800 bg-pink-400 px-4 py-3 text-gray-900 shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.1rem' }}
             >
               {isSubmitting ? 'Signing up...' : 'Sign Up 🚀'}
@@ -267,7 +267,7 @@ export default function SignUpPage() {
           <div className="mt-6 text-center">
             <p
               style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-              className="text-gray-600"
+              className="text-gray-800"
             >
               Already have an account?{' '}
               <Link

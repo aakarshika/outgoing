@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import Barcode from 'react-barcode';
+import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 
 import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
@@ -426,15 +426,23 @@ export function TicketManagementModal({
                         color="text.secondary"
                         sx={{ alignSelf: 'flex-start', mb: 1 }}
                       >
-                        BARCODE
+                        BARCODE / QR
                       </Typography>
-                      {t.barcode ? (
-                        <Barcode
-                          value={t.barcode}
-                          width={1.5}
-                          height={40}
-                          displayValue={true}
-                        />
+                      {t.qr_token || t.barcode ? (
+                        <>
+                          <QRCodeSVG
+                            value={t.qr_token || t.barcode}
+                            size={120}
+                            level="M"
+                            includeMargin={true}
+                          />
+                          <Typography
+                            variant="caption"
+                            sx={{ mt: 1, fontFamily: 'monospace', letterSpacing: 2, fontWeight: 'bold' }}
+                          >
+                            {t.barcode}
+                          </Typography>
+                        </>
                       ) : (
                         <Typography
                           variant="body2"

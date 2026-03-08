@@ -100,7 +100,7 @@ export default function SignInPage() {
               Sign In
             </h1>
             <p
-              className="text-lg text-gray-500"
+              className="text-lg text-gray-800"
               style={{ fontFamily: '"Caveat", cursive', fontSize: '1.3rem' }}
             >
               welcome back, friend! ✌️
@@ -110,7 +110,7 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1.5">
               <label
-                className="block text-base font-bold text-gray-700"
+                className="block text-base font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Username
@@ -133,7 +133,7 @@ export default function SignInPage() {
 
             <div className="space-y-1.5">
               <label
-                className="block text-base font-bold text-gray-700"
+                className="block text-base font-bold text-gray-900"
                 style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
               >
                 Password
@@ -157,7 +157,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full border-2 border-gray-800 bg-blue-400 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full border-2 border-gray-800 bg-blue-400 px-4 py-3 text-gray-900 shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '1.1rem' }}
             >
               {isSubmitting ? 'Signing in...' : 'Sign In ✨'}
@@ -168,7 +168,7 @@ export default function SignInPage() {
           <div className="mt-6 text-center">
             <p
               style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-              className="text-gray-600"
+              className="text-gray-800"
             >
               Don't have an account?{' '}
               <Link

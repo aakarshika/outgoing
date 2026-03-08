@@ -10,6 +10,7 @@ class TicketSerializer(serializers.ModelSerializer):
 
     event_summary = serializers.SerializerMethodField()
     needs_aadhar_verification = serializers.SerializerMethodField()
+    qr_token = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for TicketSerializer."""
@@ -33,6 +34,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "purchased_at",
             "updated_at",
             "needs_aadhar_verification",
+            "qr_token",
         ]
         read_only_fields = [
             "id",
@@ -60,6 +62,18 @@ class TicketSerializer(serializers.ModelSerializer):
             return True
         return not bool(profile.aadhar_number or profile.aadhar_image)
 
+    def get_qr_token(self, obj):
+        """Generate a signed QR token for the ticket."""
+        # Only return the qr_token if the request user is the ticket owner
+        request = self.context.get("request")
+        if request and request.user == obj.goer:
+            from apps.tickets.qr import generate_qr_token
+            try:
+                return generate_qr_token(obj)
+            except ValueError:
+                return None
+        return None
+
 
 class GuestDetailSerializer(serializers.Serializer):
     tier_id = serializers.IntegerField(required=False, allow_null=True)
@@ -75,8 +89,14 @@ class TicketPurchaseSerializer(serializers.Serializer):
 class TicketValidateInputSerializer(serializers.Serializer):
     """Input serializer for ticket validation."""
 
-    barcode = serializers.CharField(max_length=100)
+    barcode = serializers.CharField(max_length=100, required=False)
+    token = serializers.CharField(required=False)
     event_id = serializers.IntegerField()
+    
+    def validate(self, data):
+        if not data.get("barcode") and not data.get("token"):
+            raise serializers.ValidationError("Either barcode or token is required.")
+        return data
 
 
 class TicketAdmitInputSerializer(serializers.Serializer):

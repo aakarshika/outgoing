@@ -12,7 +12,7 @@ interface UseTicketValidationReturn {
     isLoading: boolean;
     error: string | null;
     errorCode: string | null;
-    validate: (barcode: string, eventId: number) => Promise<void>;
+    validate: (params: { barcode?: string; token?: string; eventId: number }) => Promise<void>;
     reset: () => void;
 }
 
@@ -22,13 +22,13 @@ export function useTicketValidation(): UseTicketValidationReturn {
     const [error, setError] = useState<string | null>(null);
     const [errorCode, setErrorCode] = useState<string | null>(null);
 
-    const validate = useCallback(async (barcode: string, eventId: number) => {
+    const validate = useCallback(async (params: { barcode?: string; token?: string; eventId: number }) => {
         setIsLoading(true);
         setError(null);
         setErrorCode(null);
         setResult(null);
         try {
-            const response = await validateTicket(barcode, eventId);
+            const response = await validateTicket(params);
             if (response.success) {
                 setResult(response.data);
             } else {

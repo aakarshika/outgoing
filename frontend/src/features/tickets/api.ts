@@ -34,12 +34,18 @@ export interface TicketAdmitResult {
 }
 
 /** Validate a ticket barcode for a specific event. */
-export async function validateTicket(
-    barcode: string,
-    eventId: number,
-): Promise<ApiResponse<TicketValidationResult>> {
+export async function validateTicket({
+    barcode,
+    token,
+    eventId,
+}: {
+    barcode?: string;
+    token?: string;
+    eventId: number;
+}): Promise<ApiResponse<TicketValidationResult>> {
     const res = await client.post('/tickets/validate/', {
         barcode,
+        token,
         event_id: eventId,
     });
     return res.data;

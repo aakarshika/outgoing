@@ -157,6 +157,7 @@ export interface TicketInfo {
   purchased_at: string;
   updated_at: string;
   needs_aadhar_verification?: boolean;
+  qr_token?: string;
 }
 
 export interface EventAttendee {

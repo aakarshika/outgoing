@@ -553,7 +553,6 @@ class EventAttendeeSerializer(serializers.ModelSerializer):
             "ticket_type",
             "color",
             "guest_name",
-            "barcode",
             "status",
             "used_at",
             "price_paid",
