@@ -89,9 +89,6 @@ export default function HomePage() {
         sx={{
           minHeight: '100vh',
           overflowX: 'hidden',
-          bgcolor: '#f4f1ea',
-          backgroundImage:
-            'radial-gradient(#d1d5db 0.5px, transparent 0.5px), radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
           backgroundSize: '20px 20px',
           backgroundPosition: '0 0, 10px 10px',
           pb: 12,

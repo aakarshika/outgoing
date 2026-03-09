@@ -205,8 +205,8 @@ export default function UserProfilePage() {
       <Box
         sx={{
           minHeight: '100vh',
-          bgcolor: '#f4f1ea', // Classic notebook background
-          backgroundImage: 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
+          // bgcolor: '#f4f1ea', // Classic notebook background
+          // backgroundImage: 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
           backgroundSize: '15px 15px',
           backgroundAttachment: 'fixed',
           p: { xs: 2, sm: 4, md: 8 },

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { scan } from 'react-scan';
 
 import { Toaster } from '@/components/ui/sonner';
@@ -20,6 +20,24 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   });
 }
 
+function AppContent() {
+  const location = useLocation();
+  const isGallery = location.pathname.includes('/gallery/');
+
+  return (
+    <div className="flex flex-col min-h-screen bg-red-500 text-foreground transition-colors duration-300">
+      <Navbar />
+      <Toaster />
+      <main className="flex-1 bg-transparent">
+        <AppRoutes />
+      </main>
+      {!isGallery && <div className="mt-50 bg-red-500">
+        <Footer />
+      </div>}
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -27,15 +45,7 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <ScrollToTop />
-            <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
-              <Navbar />
-              <Toaster />
-              <main className="flex-1 bg-background">
-                <AppRoutes />
-              </main>
-              <div className="h-100"></div>
-              <Footer />
-            </div>
+            <AppContent />
           </BrowserRouter>
           {process.env.NODE_ENV === 'development' && (
             <ReactQueryDevtools initialIsOpen={false} />

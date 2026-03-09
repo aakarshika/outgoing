@@ -6,16 +6,15 @@ import { useVendorServices } from '@/features/vendors/hooks';
 
 export default function VendorPortfolioPage() {
   const { vendorId } = useParams<{ vendorId: string }>();
-  const parsedVendorId = Number(vendorId || 0);
   const { data: response, isLoading } = useVendorServices({
-    vendor_id: parsedVendorId,
+    vendor_id: Number(vendorId || 0),
     page_size: 100,
   });
 
   const services = response?.data || [];
   const vendorName = services[0]?.vendor_name || 'Vendor';
 
-  if (!parsedVendorId) {
+  if (!Number(vendorId || 0)) {
     return (
       <div className="p-8 text-center text-muted-foreground">Vendor not found.</div>
     );
@@ -46,8 +45,16 @@ export default function VendorPortfolioPage() {
           ))}
         </div>
       ) : services.length === 0 ? (
-        <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground">
-          This vendor has no active services right now.
+        <div className="rounded-xl border bg-card p-12 text-center">
+          <div className="text-4xl mb-4">🔍</div>
+          <h2 className="text-xl font-semibold mb-2">Portfolio Not Found</h2>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            This vendor has no active services, or you may be using an incorrect ID.
+            Remember to use a <strong>Vendor ID</strong> for portfolios, not a Service ID.
+          </p>
+          <Button variant="outline" className="mt-6" asChild>
+            <Link to="/vendors">Browse All Vendors</Link>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

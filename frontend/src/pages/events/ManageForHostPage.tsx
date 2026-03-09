@@ -500,8 +500,8 @@ export default function ManageForHostPage() {
                             />
                             <span
                                 className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${inputMode === 'quick'
-                                        ? 'bg-yellow-300 border-gray-800 text-gray-900'
-                                        : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                    ? 'bg-yellow-300 border-gray-800 text-gray-900'
+                                    : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
                                     }`}
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
@@ -519,8 +519,8 @@ export default function ManageForHostPage() {
                             />
                             <span
                                 className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${inputMode === 'advanced'
-                                        ? 'bg-gray-900 border-gray-900 text-white'
-                                        : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                    ? 'bg-gray-900 border-gray-900 text-white'
+                                    : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
                                     }`}
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
@@ -673,8 +673,8 @@ export default function ManageForHostPage() {
         <div
             className="min-h-screen px-4 sm:px-6 py-8"
             style={{
-                background: '#f4f1ea',
-                backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+                background: 'hsl(235, 45%, 97%)',
+                backgroundImage: 'radial-gradient(hsl(235, 25%, 85%) 0.5px, transparent 0.5px)',
                 backgroundSize: '15px 15px',
             }}
         >
@@ -743,8 +743,8 @@ export default function ManageForHostPage() {
                                     type="submit"
                                     disabled={isSubmitting}
                                     className={`px-5 py-2 min-w-48 border-2 shadow-[2px_2px_0px_#333] font-bold text-sm transition-all disabled:opacity-60 ${isDirty
-                                            ? 'bg-yellow-300 border-gray-800 text-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
-                                            : 'bg-yellow-200/40 border-gray-300 text-gray-500'
+                                        ? 'bg-yellow-300 border-gray-800 text-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                        : 'bg-yellow-200/40 border-gray-300 text-gray-500'
                                         }`}
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
@@ -756,8 +756,8 @@ export default function ManageForHostPage() {
                                     type="button"
                                     onClick={() => goToStep(HOST_STEPS[activeStepIndex + 1].stepId)}
                                     className={`px-5 py-2 border-2 shadow-[2px_2px_0px_#555] font-bold text-sm transition-all ${isDirty
-                                            ? 'bg-yellow-300 text-gray-900 border-gray-800 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
-                                            : 'bg-gray-900 text-white border-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555]'
+                                        ? 'bg-yellow-300 text-gray-900 border-gray-800 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                        : 'bg-gray-900 text-white border-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555]'
                                         }`}
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >

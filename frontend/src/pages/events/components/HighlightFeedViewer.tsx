@@ -61,9 +61,17 @@ const ComicIconButton = ({
 const HighlightInteractionsMobile = ({
   highlight,
   onOpenComments,
+  handlePrev,
+  handleNext,
+  activeIndex,
+  highlights,
 }: {
   highlight: any;
   onOpenComments: () => void;
+  handlePrev: () => void;
+  handleNext: () => void;
+  activeIndex: number;
+  highlights: any[];
 }) => {
   const { isAuthenticated } = useAuth();
   const toggleLike = useToggleHighlightLike();
@@ -132,6 +140,36 @@ const HighlightInteractionsMobile = ({
           {highlight.comments_count}
         </Typography>
       </Box>
+
+      {/* Navigation Buttons Mobile */}
+      <Box
+        sx={{
+          textAlign: 'center'
+        }}
+      >
+        <ComicIconButton
+          onClick={handlePrev}
+          sx={{
+            opacity: activeIndex > 0 ? 1 : 0.5,
+
+            color: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'white',
+          }}
+        >
+          <ChevronLeft />
+        </ComicIconButton>
+        <ComicIconButton
+          onClick={handleNext}
+          sx={{
+            opacity: activeIndex < highlights.length - 1 ? 1 : 0.5,
+
+            color: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'white',
+          }}
+        >
+          <ChevronRight />
+        </ComicIconButton>
+      </Box>
     </Stack>
   );
 };
@@ -198,25 +236,41 @@ export const HighlightFeedViewer = ({
 
   const handleNext = () => {
     if (activeIndex < highlights.length - 1) {
-      const nextHighlight = highlights[activeIndex + 1];
+      const nextIndex = activeIndex + 1;
+      const nextHighlight = highlights[nextIndex];
       setActiveHighlightId(nextHighlight.id);
       window.history.replaceState(
         null,
         '',
         `/events/${eventId}/gallery/${nextHighlight.id}`,
       );
+
+      if (isMobile && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: nextIndex * window.innerHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
   const handlePrev = () => {
     if (activeIndex > 0) {
-      const prevHighlight = highlights[activeIndex - 1];
+      const prevIndex = activeIndex - 1;
+      const prevHighlight = highlights[prevIndex];
       setActiveHighlightId(prevHighlight.id);
       window.history.replaceState(
         null,
         '',
         `/events/${eventId}/gallery/${prevHighlight.id}`,
       );
+
+      if (isMobile && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: prevIndex * window.innerHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
@@ -342,6 +396,10 @@ export const HighlightFeedViewer = ({
               <HighlightInteractionsMobile
                 highlight={h}
                 onOpenComments={() => setIsCommentsOpen(true)}
+                handlePrev={handlePrev}
+                handleNext={handleNext}
+                activeIndex={activeIndex}
+                highlights={highlights}
               />
             </Box>
           ))}
@@ -433,7 +491,7 @@ export const HighlightFeedViewer = ({
             sx={{
               position: 'absolute',
               bottom: 24,
-              right: { md: '41%' }, // Positioned near the split
+              right: { md: '10%' }, // Positioned near the split
               display: 'flex',
               gap: 2,
               zIndex: 20,

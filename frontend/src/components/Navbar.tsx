@@ -37,6 +37,8 @@ export function Navbar() {
   const { isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  if (location.pathname.includes('/gallery/')) return null;
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const {
     enabled: nearYouEnabled,
@@ -108,16 +110,16 @@ export function Navbar() {
   const { data: response } = useAlerts({ enabled: isAuthenticated });
   const alertsCount = response?.data?.length || 0;
 
-  const hostManagementMatch =
+  const eventManagementMatch =
     matchPath(
       { path: '/events/:id/host-event-management/*', end: false },
       location.pathname,
     ) ??
     matchPath(
-      { path: '/events/host-event-management/*', end: false },
+      { path: '/events/:id/service-event-management/*', end: false },
       location.pathname,
     );
-  const isHostEventManagementRoute = Boolean(hostManagementMatch);
+  const isEventManagementRoute = Boolean(eventManagementMatch);
   const eventMatch = matchPath(
     { path: '/events/:id/*', end: false },
     location.pathname,
@@ -198,8 +200,8 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-[#f4f1ea]/95 ">
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+      <nav className="sticky top-0 z-50 ">
+        <div className="mx-auto max-w-[1600px] bg-transparent px-4 sm:px-6 lg:px-8">
           <div className="flex w-full flex-col gap-2">
             <div className="flex h-16 items-center justify-between gap-2">
               <div className="flex items-center gap-4">
@@ -429,12 +431,12 @@ export function Navbar() {
                 )}
               </div>
 
-              {isHostEventManagementRoute && (
+              {isEventManagementRoute && (
                 <div className="w-full">
                   <div className="mx-auto flex w-full max-w-4xl items-center gap-4 pt-2 pb-3">
                     <button
                       type="button"
-                      onClick={() => navigate(-1)}
+                      onClick={() => navigate('/events/' + event?.id + '')}
                       className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
                     >
                       <ArrowLeft className="h-5 w-5" />
@@ -483,7 +485,7 @@ export function Navbar() {
                         variant="default"
                         size="sm"
                         asChild
-                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-green-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-green-500 transition-all font-bold"
+                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-[#00CCCC] text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-[#0eacacff] transition-all font-bold"
                         style={{ fontFamily: '"Permanent Marker"' }}
                       >
                         <Link to={`/events/${eventId}/service-event-management/application`}>
@@ -499,11 +501,11 @@ export function Navbar() {
                           variant="default"
                           size="sm"
                           asChild
-                          className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all font-bold"
+                          className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-[#AF90F9] text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-[#9A72F8] transition-all font-bold"
                           style={{ fontFamily: '"Permanent Marker"' }}
                         >
                           <Link to={`/events/${eventId}/host-event-management/basic-details`}>
-                            <FileEdit className="h-4 w-4" /> Edit the event
+                            <FileEdit className="h-4 w-4" /> Manage event
                           </Link>
                         </Button>
 

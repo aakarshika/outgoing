@@ -252,12 +252,12 @@ export default function EventDetailPageNew() {
       <Box
         sx={{
           minHeight: '100vh',
-          bgcolor: event.lifecycle_state === 'live' ? '#fef3c7' : '#f4f1ea',
-          backgroundAttachment: 'fixed',
-          backgroundImage:
-            event.lifecycle_state === 'live'
-              ? 'radial-gradient(#fde68a 0.5px, #fef3c7 0.5px)'
-              : 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
+          // bgcolor: event.lifecycle_state === 'live' ? '#fef3c7' : '#f4f1ea',
+          // backgroundAttachment: 'fixed',
+          // backgroundImage:
+          //   event.lifecycle_state === 'live'
+          //     ? 'radial-gradient(#fde68a 0.5px, #fef3c7 0.5px)'
+          //     : 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
           backgroundSize: '15px 15px',
           p: { xs: 2, sm: 4, md: 8 },
           color: 'inherit',
@@ -324,8 +324,8 @@ export default function EventDetailPageNew() {
               {/* Left Column: Details */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Box id="details">
-                  <DetailsSection event={event} isHost={isHost} 
-                  displayNeeds={displayNeeds}
+                  <DetailsSection event={event} isHost={isHost}
+                    displayNeeds={displayNeeds}
                   />
                 </Box>
               </Grid>
@@ -346,17 +346,17 @@ export default function EventDetailPageNew() {
                 </Box>
               </Grid>
             </Grid>
-              <Box id="services">
-                <ServicesSection
-                  event={event}
-                  displayNeeds={displayNeeds}
-                  myServicesResponse={myServicesResponse}
-                  isAuthenticated={isAuthenticated}
-                  setSelectedNeed={setSelectedNeed}
-                  setIsApplyModalOpen={setIsApplyModalOpen}
-                  highlights={highlights}
-                />
-              </Box>
+            <Box id="services">
+              <ServicesSection
+                event={event}
+                displayNeeds={displayNeeds}
+                myServicesResponse={myServicesResponse}
+                isAuthenticated={isAuthenticated}
+                setSelectedNeed={setSelectedNeed}
+                setIsApplyModalOpen={setIsApplyModalOpen}
+                highlights={highlights}
+              />
+            </Box>
             {/* Section 4: Attending List */}
             <Box id="attending">
               <AttendingList attendees={event?.attendees || []} />

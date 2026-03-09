@@ -163,7 +163,7 @@ export const ScrapbookEventCard = ({
         component={Link}
         to={`/events/${event.id}`}
         sx={{
-          aspectRatio: isFocused && !isNoImageCard ? 'auto' : '1 / 1',
+          aspectRatio: '1 / 1',
           transformOrigin: 'top center',
           transform: `rotate(${baseRotation}deg)`,
           display: 'block',
@@ -329,8 +329,8 @@ export const ScrapbookEventCard = ({
             <>
               <Box
                 sx={{
-                  aspectRatio: isFocused ? 'auto' : '1.85 / 1',
-                  minHeight: isFocused ? 260 : 'auto',
+                  aspectRatio: '1.85 / 1',
+                  minHeight: 'auto',
                   overflow: 'hidden',
                   mb: 2,
                   position: 'relative',
@@ -502,7 +502,7 @@ export const ScrapbookEventCard = ({
                 position: 'absolute',
                 bottom: event.lifecycle_state === 'live' ? 36 : 10,
                 left: 10,
-                bgcolor: isHost ? '#8b5cf6' : '#14b8a6', // Purple for host, Teal for vendor
+                bgcolor: isHost ? '#8b5cf6' : '#0eacacff', // Purple for host, Teal for vendor
                 color: '#fff',
                 p: '2px 8px',
                 borderRadius: '2px',

@@ -89,8 +89,7 @@ export default function ManageForVendorPage() {
         <div
             className="min-h-screen px-4 sm:px-6 py-8"
             style={{
-                background: '#f4f1ea',
-                backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+                // backgroundImage: 'radial-gradient(hsl(174, 20%, 80%) 0.5px, transparent 0.5px)',
                 backgroundSize: '15px 15px',
             }}
         >

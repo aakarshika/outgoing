@@ -1,21 +1,23 @@
 import { Box, Typography } from '@mui/material';
 import { Facebook, Instagram, Twitter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export function Footer() {
+  const location = useLocation();
+  if (location.pathname.includes('/gallery/')) return null;
+
   const currentYear = new Date().getFullYear();
 
   return (
     <Box
       component="footer"
       sx={{
-        bgcolor: '#eae6da', // Slightly darker old paper tone
+        bgcolor: '#ffd78dff', // Slightly darker old paper tone
         borderTop: '3px dashed #d1d5db',
         pt: 8,
         pb: 4,
         px: { xs: 4, sm: 6, lg: 8 },
         position: 'relative',
-        mt: 'auto',
         overflow: 'hidden',
       }}
     >

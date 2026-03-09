@@ -5,12 +5,14 @@ import { Media } from '@/components/ui/media';
 
 interface ProprietorCardProps {
   vendor: {
+    id?: number;
     vendor_name: string;
     vendor_avatar: string | null;
   };
   rating?: number;
   tag?: string;
   rotation?: number;
+  showPortfolioLink?: boolean;
 }
 
 export const ProprietorCard = ({
@@ -18,6 +20,7 @@ export const ProprietorCard = ({
   rating,
   tag = 'Certified Proprietor',
   rotation: customRotation,
+  showPortfolioLink = false,
 }: ProprietorCardProps) => {
   const grade = rating
     ? rating >= 4.8
@@ -179,6 +182,28 @@ export const ProprietorCard = ({
             {tag}
           </Box>
         </Box>
+
+        {showPortfolioLink && vendor.id && (
+          <Box
+            component="a"
+            href={`/vendors/portfolio/${vendor.id}`}
+            sx={{
+              mt: 2,
+              fontSize: '0.7rem',
+              fontWeight: 'bold',
+              textDecoration: 'underline',
+              color: '#1a1a1a',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              zIndex: 2,
+              '&:hover': {
+                color: '#666',
+              },
+            }}
+          >
+            Full Portfolio
+          </Box>
+        )}
       </Box>
     </Box>
   );

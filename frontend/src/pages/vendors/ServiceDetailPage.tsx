@@ -335,11 +335,13 @@ export default function ServiceDetailPage() {
                   <Grid size={{ xs: 12, md: 4 }}>
                     <ProprietorCard
                       vendor={{
+                        id: service.vendor_id,
                         vendor_name: service.vendor_name,
                         vendor_avatar: service.vendor_avatar,
                       }}
                       rating={rating}
                       tag={service.category}
+                      showPortfolioLink={true}
                     />
 
                     <Box sx={{ mt: 3 }}>

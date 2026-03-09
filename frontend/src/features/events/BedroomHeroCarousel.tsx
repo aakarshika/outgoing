@@ -360,7 +360,7 @@ export function BedroomHeroCarousel() {
         onClick={() => setCenteredIndex((prev) => prev - 1)}
         sx={{
           position: 'absolute',
-          left: { xs: 0, lg: -40 },
+          left: 0,
           top: '50%',
           zIndex: 100,
           bgcolor: 'white',
@@ -374,7 +374,7 @@ export function BedroomHeroCarousel() {
         onClick={() => setCenteredIndex((prev) => prev + 1)}
         sx={{
           position: 'absolute',
-          right: { xs: 0, lg: -40 },
+          right: 0,
           top: '50%',
           zIndex: 100,
           bgcolor: 'white',
