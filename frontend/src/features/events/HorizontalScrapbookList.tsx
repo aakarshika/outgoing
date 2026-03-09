@@ -6,7 +6,9 @@ import { ScrapbookEventCard } from './ScrapbookEventCard';
 
 interface HorizontalScrapbookListProps {
   title?: string;
-  events: any[];
+  items?: any[];
+  renderItem?: (item: any) => ReactNode;
+  events?: any[]; // Legacy alias
   isLoading?: boolean;
   emptyMessage?: ReactNode;
   forceShowHeader?: boolean;
@@ -15,12 +17,15 @@ interface HorizontalScrapbookListProps {
 
 export function HorizontalScrapbookList({
   title,
+  items,
+  renderItem,
   events,
   isLoading,
   emptyMessage,
   forceShowHeader,
   onSeeAll,
 }: HorizontalScrapbookListProps) {
+  const displayItems = items || events || [];
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftChevron, setShowLeftChevron] = useState(false);
   const [showRightChevron, setShowRightChevron] = useState(true);
@@ -172,12 +177,12 @@ export function HorizontalScrapbookList({
               }}
             />
           ))
-        ) : events.length > 0 ? (
-          events.map((event) => {
+        ) : displayItems.length > 0 ? (
+          displayItems.map((item, idx) => {
             return (
               <Box
-                key={`group-${event.id}`}
-                sx={{ display: 'flex', gap: { xs: 3, sm: 4, md: 6 } }}
+                key={item.id || idx}
+                sx={{ display: 'flex', gap: { xs: 3, sm: 4, md: 6 }, alignItems: 'center' }}
               >
                 <Box
                   sx={{
@@ -186,7 +191,7 @@ export function HorizontalScrapbookList({
                     scrollSnapAlign: 'start',
                   }}
                 >
-                  <ScrapbookEventCard event={event} />
+                  {renderItem ? renderItem(item) : <ScrapbookEventCard event={item} />}
                 </Box>
               </Box>
             );

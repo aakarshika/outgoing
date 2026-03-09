@@ -117,7 +117,7 @@ const HighlightInteractionsMobile = ({
 
       <Box sx={{ textAlign: 'center' }}>
         <ComicIconButton onClick={onOpenComments}>
-          <MessageCircle fill="none" />
+          <MessageCircle fill="none" color="black" />
         </ComicIconButton>
         <Typography
           sx={{
@@ -231,7 +231,7 @@ export const HighlightFeedViewer = ({
           left: 0,
           width: '100vw',
           height: '100vh',
-          zIndex: 2000,
+          zIndex: 9999,
           bgcolor: 'black',
           display: 'flex',
           flexDirection: 'column',
@@ -239,7 +239,11 @@ export const HighlightFeedViewer = ({
       >
         <ComicIconButton
           onClick={onClose}
-          sx={{ position: 'absolute', top: 16, left: 16, zIndex: 3000 }}
+          sx={{
+            position: 'absolute', top: 32, left: 16, zIndex: 10000,
+            color: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'white',
+          }}
         >
           <X />
         </ComicIconButton>
@@ -360,6 +364,7 @@ export const HighlightFeedViewer = ({
       open={isOpen}
       onClose={onClose}
       TransitionComponent={Fade}
+      sx={{ zIndex: 9999 }}
       PaperProps={{
         sx: {
           bgcolor: 'rgba(0,0,0,0.85)',
@@ -372,7 +377,16 @@ export const HighlightFeedViewer = ({
     >
       <ComicIconButton
         onClick={onClose}
-        sx={{ position: 'absolute', top: 24, left: 24, zIndex: 10 }}
+        sx={{
+          position: 'absolute',
+          top: 32,
+          left: 32,
+          zIndex: 10000,
+          color: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'white',
+          border: '1px solid #eee',
+          boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
+        }}
       >
         <X />
       </ComicIconButton>
@@ -414,6 +428,40 @@ export const HighlightFeedViewer = ({
             }}
           />
 
+          {/* Navigation Buttons Web */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 24,
+              right: { md: '41%' }, // Positioned near the split
+              display: 'flex',
+              gap: 2,
+              zIndex: 20,
+            }}
+          >
+            <ComicIconButton
+              onClick={handlePrev}
+              sx={{
+                visibility: activeIndex > 0 ? 'visible' : 'hidden',
+
+                color: 'rgba(0,0,0,0.5)',
+                backgroundColor: 'white',
+              }}
+            >
+              <ChevronLeft />
+            </ComicIconButton>
+            <ComicIconButton
+              onClick={handleNext}
+              sx={{
+                visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
+
+                color: 'rgba(0,0,0,0.5)',
+                backgroundColor: 'white',
+              }}
+            >
+              <ChevronRight />
+            </ComicIconButton>
+          </Box>
           {/* Caption Overlay Web */}
           <Box
             sx={{
@@ -469,32 +517,6 @@ export const HighlightFeedViewer = ({
           </Box>
         </Box>
 
-        {/* Navigation Buttons Web */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 24,
-            right: { md: '41%' }, // Positioned near the split
-            display: 'flex',
-            gap: 2,
-            zIndex: 20,
-          }}
-        >
-          <ComicIconButton
-            onClick={handlePrev}
-            sx={{ visibility: activeIndex > 0 ? 'visible' : 'hidden' }}
-          >
-            <ChevronLeft />
-          </ComicIconButton>
-          <ComicIconButton
-            onClick={handleNext}
-            sx={{
-              visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
-            }}
-          >
-            <ChevronRight />
-          </ComicIconButton>
-        </Box>
       </Box>
     </Dialog>
   );

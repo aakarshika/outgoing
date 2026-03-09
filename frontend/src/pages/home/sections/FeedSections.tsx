@@ -2,8 +2,9 @@ import { Box, Button, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useFeed, useHighlightsFeed } from '@/features/events/hooks';
+import { useFeed, useHighlightsFeed, useTrendingHighlights } from '@/features/events/hooks';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
+import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { useNearYou } from '@/utils/useNearYou';
 
 // --- Reusable Feed Section ---
@@ -235,8 +236,32 @@ export const LastWeekMemoriesSection = () => {
   return (
     <HorizontalScrapbookList
       title="📸 Popular Memories"
-      events={data?.data || []}
+      items={data?.data || []}
       isLoading={isLoading}
+      renderItem={(highlight) => (
+        <HighlightCard
+          highlight={highlight}
+          rotation={(highlight.id % 2 === 0 ? 1 : -1) * (1 + (highlight.id % 3))}
+        />
+      )}
+    />
+  );
+};
+
+// --- Trending Highlights ---
+export const TrendingHighlightsSection = () => {
+  const { data, isLoading } = useTrendingHighlights(12);
+  return (
+    <HorizontalScrapbookList
+      title="✨ Trending Highlights"
+      items={data?.data || []}
+      isLoading={isLoading}
+      renderItem={(highlight) => (
+        <HighlightCard
+          highlight={highlight}
+          rotation={(highlight.id % 2 === 0 ? 1 : -1) * (1 + (highlight.id % 3))}
+        />
+      )}
     />
   );
 };

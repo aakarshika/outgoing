@@ -13,14 +13,11 @@ export const PlatformDescriptionCard = () => {
         backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)',
         backgroundSize: '16px 16px',
         boxShadow: '3px 4px 10px rgba(0,0,0,0.1)',
-        transform: 'rotate(-2deg)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         position: 'relative',
         border: '1px solid #e2e8f0',
-        '&:hover': { zIndex: 5, transform: 'scale(1.02) rotate(-1deg)' },
-        transition: 'all 0.3s ease',
       }}
     >
       {/* Top Tape */}

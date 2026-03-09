@@ -35,6 +35,7 @@ import {
   fetchRecentlyViewed,
   fetchReviewComments,
   fetchTopVendorsFeed,
+  fetchTrendingHighlights,
   fetchUpcomingFeed,
   generateEventSeriesOccurrences,
   purchaseTicket,
@@ -95,6 +96,14 @@ export function useHighlightsFeed() {
   return useQuery({
     queryKey: ['feed', 'highlights'],
     queryFn: () => fetchHighlightsFeed(20),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useTrendingHighlights(pageSize = 20) {
+  return useQuery({
+    queryKey: ['feed', 'trending-highlights', pageSize],
+    queryFn: () => fetchTrendingHighlights(pageSize),
     staleTime: 1000 * 60 * 5,
   });
 }

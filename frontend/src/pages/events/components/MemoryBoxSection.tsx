@@ -1,10 +1,8 @@
 import { Box, Button as MuiButton, Grid, Paper, Typography } from '@mui/material';
 import { Camera, Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { HighlightCard } from './HighlightCard';
-import { HighlightFeedViewer } from './HighlightFeedViewer';
 import {
   DoodleArrow,
   DoodleCloud,
@@ -26,15 +24,9 @@ export const MemoryBoxSection = ({
 }) => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
 
   const displayedHighlights = highlights.slice(0, 8); // Show a bit more now that they are smaller
 
-  const handleHighlightClick = (highlightId: number) => {
-    setSelectedHighlightId(highlightId);
-    setViewerOpen(true);
-  };
 
   return (
     <Box sx={{ mt: 6, position: 'relative' }}>
@@ -78,11 +70,11 @@ export const MemoryBoxSection = ({
               position: 'relative',
             }}
           >
-            { (event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ? 
-            (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories to come</Highlighter>) 
-            : (event.lifecycle_state === 'live')
-            ? (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>)
-            : (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>)}
+            {(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ?
+              (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories to come</Highlighter>)
+              : (event.lifecycle_state === 'live')
+                ? (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>)
+                : (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>)}
           </Typography>
         </Box>
 
@@ -264,7 +256,6 @@ export const MemoryBoxSection = ({
                   <HighlightCard
                     highlight={h}
                     rotation={((index % 4) - 1.5) * 3}
-                    onClick={() => handleHighlightClick(h.id)}
                   />
                 </Grid>
               );
@@ -289,17 +280,17 @@ export const MemoryBoxSection = ({
                 color: 'text.secondary',
               }}
             >
-              { (event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ? 
-              ('Check back later to pile on your highlights!') 
-              : (event.lifecycle_state === 'live')
-              ? ('Be the first to add your highlights to the pile!')
-              : ('Add your best memories!')}
+              {(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ?
+                ('Check back later to pile on your highlights!')
+                : (event.lifecycle_state === 'live')
+                  ? ('Be the first to add your highlights to the pile!')
+                  : ('Add your best memories!')}
             </Typography>
           </Box>
         )}
 
         {/* Action Buttons - Sticker Style moved inside container for cohesiveness */}
-        {!(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' ) && (<Box
+        {!(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published') && (<Box
           sx={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -365,12 +356,7 @@ export const MemoryBoxSection = ({
         </Box>)}
       </Paper>
 
-      <HighlightFeedViewer
-        isOpen={viewerOpen}
-        highlights={highlights}
-        initialHighlightId={selectedHighlightId || undefined}
-        onClose={() => setViewerOpen(false)}
-      />
+      {/* Navigation is now handled by HighlightCard default click */}
     </Box>
   );
 };

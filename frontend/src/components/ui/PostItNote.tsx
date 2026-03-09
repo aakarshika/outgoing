@@ -53,13 +53,10 @@ export const PostItNote = ({
         p: 3,
         bgcolor: color,
         boxShadow: '5px 5px 7px rgba(33,33,33,.3)',
-        transform: `rotate(${rot}deg)`,
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        '&:hover': { zIndex: 5, transform: 'scale(1.02)' },
         mb: 4,
-        transition: 'transform 0.2s ease',
       }}
     >
       <Box

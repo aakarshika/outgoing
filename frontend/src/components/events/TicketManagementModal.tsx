@@ -316,14 +316,17 @@ export function TicketManagementModal({
                         }}
                       >
                         <Typography
-                          variant="h4"
+                          variant="h3"
                           sx={{
-                            color: 'red',
+                            color: '#ef4444',
                             fontWeight: 'bold',
-                            border: '4px solid red',
-                            px: 2,
+                            border: '5px solid #ef4444',
+                            px: 3,
+                            py: 1,
                             transform: 'rotate(-15deg)',
-                            fontFamily: '"Permanent Marker"',
+                            fontFamily: '"Permanent Marker", cursive',
+                            opacity: 0.85,
+                            boxShadow: '0 0 15px rgba(239,68,68,0.3)',
                             mb: 2,
                           }}
                         >
@@ -516,7 +519,7 @@ export function TicketManagementModal({
         </Box>
 
         {/* Actions & info for currentTicket */}
-        {currentTicket && currentTicket.status !== 'cancelled' && (
+        {currentTicket && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {currentTicket.needs_aadhar_verification && (
               <Box
@@ -552,7 +555,7 @@ export function TicketManagementModal({
                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                   Guest Name
                 </Typography>
-                {!isEditing ? (
+                {!isEditing && currentTicket.status !== 'cancelled' ? (
                   <IconButton
                     size="small"
                     onClick={() => {
@@ -608,17 +611,19 @@ export function TicketManagementModal({
                 Export PDF
               </MuiButton>
 
-              <MuiButton
-                variant="outlined"
-                color="error"
-                fullWidth
-                startIcon={<Trash2 size={18} />}
-                onClick={handleCancelTicket}
-                disabled={cancelTicket.isPending}
-                sx={{ border: '2px solid', fontWeight: 'bold' }}
-              >
-                Cancel Ticket
-              </MuiButton>
+              {currentTicket.status !== 'cancelled' && (
+                <MuiButton
+                  variant="outlined"
+                  color="error"
+                  fullWidth
+                  startIcon={<Trash2 size={18} />}
+                  onClick={handleCancelTicket}
+                  disabled={cancelTicket.isPending}
+                  sx={{ border: '2px solid', fontWeight: 'bold' }}
+                >
+                  Cancel Ticket
+                </MuiButton>
+              )}
             </Box>
 
             {currentTicket.is_refundable && (

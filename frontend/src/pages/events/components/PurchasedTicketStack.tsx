@@ -68,7 +68,7 @@ export const PurchasedTicketStack = ({
         }}
       >
         {/* purchased bookmark tag */}
-        {count > 0 && (
+        {count >= 0 && (
           <Box
             sx={{
               position: 'absolute',
@@ -181,7 +181,27 @@ export const PurchasedTicketStack = ({
               ${tierPrice ? parseFloat(tierPrice.toString()) : 0}
             </Typography>
             <Grid>
-              {ticket.status !== 'used' && (
+              {ticket.status === 'cancelled' && (
+                <Box
+                  sx={{
+                    border: '3px solid #ef4444',
+                    color: '#ef4444',
+                    transform: 'rotate(-10deg)',
+                    px: 1,
+                    py: 0.5,
+                    zIndex: 30,
+                    fontFamily: '"Permanent Marker"',
+                    fontSize: '1.2rem',
+                    letterSpacing: 2,
+                    borderRadius: 1,
+                    opacity: 0.8,
+                  }}
+                >
+                  CANCELLED
+                </Box>
+              )}
+
+              {ticket.status !== 'used' && ticket.status !== 'cancelled' && (
                 <Box
                   sx={{
                     border: '3px solid #ef4444',

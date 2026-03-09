@@ -3,15 +3,16 @@
 from datetime import datetime, time, timedelta
 from math import cos, radians
 
+from django.db import models
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from api.v1.events.serializers import EventListSerializer
+from api.v1.events.serializers import EventHighlightSerializer, EventListSerializer
 from api.v1.profiles.serializers import IconicHostSerializer
 from api.v1.vendors.serializers import VendorServiceSerializer
-from apps.events.models import Event, EventView
+from apps.events.models import Event, EventHighlight, EventView
 from apps.profiles.models import UserProfile
 from apps.vendors.models import VendorService
 from core.responses import success_response
@@ -323,5 +324,37 @@ class TopVendorsFeedView(APIView):
 
         serializer = VendorServiceSerializer(
             vendors, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+class TrendingHighlightsFeedView(APIView):
+    """
+    Trending Highlights — returns the most 'viral' highlights.
+    Viral score = likes_count + (comments_count * 2)
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get highlights ordered by viral score."""
+        page_size = int(request.query_params.get("page_size", 20))
+
+        highlights = (
+            EventHighlight.objects.filter(moderation_status="approved")
+            .annotate(
+                likes_count_annotated=Count("likes", distinct=True),
+                comments_count_annotated=Count("comments", distinct=True),
+            )
+            .annotate(
+                viral_score=(
+                    models.F("likes_count_annotated")
+                    + (models.F("comments_count_annotated") * 2)
+                )
+            )
+            .order_by("-viral_score", "-created_at")[:page_size]
+        )
+
+        serializer = EventHighlightSerializer(
+            highlights, many=True, context={"request": request}
         )
         return success_response(data=serializer.data)

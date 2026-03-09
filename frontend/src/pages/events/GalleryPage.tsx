@@ -52,8 +52,18 @@ export default function GalleryPage() {
 
   const handleCloseViewer = () => {
     setViewerOpen(false);
-    // Restore gallery URL
-    window.history.pushState(null, '', `/events/${id}/gallery`);
+
+    const returnTo = location.state?.returnTo;
+    if (returnTo) {
+      navigate(returnTo.pathname + returnTo.search, { replace: true });
+      // Restore scroll in the next tick
+      setTimeout(() => {
+        window.scrollTo({ top: returnTo.scroll, behavior: 'instant' });
+      }, 0);
+    } else {
+      // Restore gallery URL
+      window.history.pushState(null, '', `/events/${id}/gallery`);
+    }
   };
 
   return (

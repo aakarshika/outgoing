@@ -4,6 +4,7 @@ export type SectionId =
   | 'upcoming_rsvps'
   | 'trending'
   | 'nearby'
+  | 'trending_highlights'
   | 'this_week'
   | 'online'
   | 'iconic_hosts'
@@ -19,6 +20,7 @@ export const SIGNED_IN_SECTIONS: SectionId[] = [
   'upcoming_rsvps',
   'trending',
   'nearby',
+  'trending_highlights',
   'online',
   'this_week',
   'iconic_hosts',
@@ -33,6 +35,7 @@ export const SIGNED_OUT_SECTIONS: SectionId[] = [
   'featured_carousel',
   'trending',
   'nearby',
+  'trending_highlights',
   'online',
   'this_week',
   'iconic_hosts',

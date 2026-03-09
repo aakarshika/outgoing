@@ -87,6 +87,7 @@ interface CategoricalBackgroundProps {
   children?: React.ReactNode;
   sx?: any;
   showDecoration?: boolean;
+  className?: string;
 }
 
 export const CategoricalBackground = ({
@@ -94,6 +95,7 @@ export const CategoricalBackground = ({
   children,
   sx,
   showDecoration = true,
+  className,
 }: CategoricalBackgroundProps) => {
   const theme = CATEGORY_THEMES[slug || ''] || {
     bg: '#ffffff',
@@ -105,6 +107,7 @@ export const CategoricalBackground = ({
 
   return (
     <Box
+      className={className}
       sx={{
         position: 'relative',
         bgcolor: theme.bg,

@@ -176,6 +176,10 @@ export const StatusBannerSection = ({
               <TicketStatusBadge
                 ticketCount={event.ticket_count}
                 capacity={event.capacity}
+                highlighted={
+                  event.user_has_ticket ||
+                  (event.user_tickets && event.user_tickets.length > 0)
+                }
               />
             </Box>
           )}

@@ -63,6 +63,13 @@ export async function fetchHighlightsFeed(page_size = 20) {
   return data;
 }
 
+export async function fetchTrendingHighlights(page_size = 20) {
+  const { data } = await client.get<ApiResponse<any[]>>('/feed/trending-highlights/', {
+    params: { page_size },
+  });
+  return data;
+}
+
 export async function fetchUpcomingFeed(page_size = 20) {
   const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/upcoming/', {
     params: { page_size },

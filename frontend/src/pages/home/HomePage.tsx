@@ -19,6 +19,7 @@ import {
   RecommendedSection,
   SignUpCTASection,
   TrendingSection,
+  TrendingHighlightsSection,
   UpcomingRSVPsSection,
 } from './HomeSections';
 import {
@@ -61,6 +62,8 @@ export default function HomePage() {
         return <TrendingSection key={id} />;
       case 'nearby':
         return <NearbySection key={id} />;
+      case 'trending_highlights':
+        return <TrendingHighlightsSection key={id} />;
       case 'online':
         return <OnlineSection key={id} />;
       case 'iconic_hosts':

@@ -9,11 +9,17 @@ from .views import (
     IconicHostsFeedView,
     RecentlyViewedFeedView,
     TopVendorsFeedView,
+    TrendingHighlightsFeedView,
     UpcomingFeedView,
 )
 
 urlpatterns = [
     path("carousel/", CarouselFeedView.as_view(), name="carousel_feed"),
+    path(
+        "trending-highlights/",
+        TrendingHighlightsFeedView.as_view(),
+        name="feed_trending_highlights",
+    ),
     path(
         "recently-viewed/",
         RecentlyViewedFeedView.as_view(),

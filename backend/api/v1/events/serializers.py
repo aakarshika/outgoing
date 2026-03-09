@@ -79,6 +79,7 @@ class EventListSerializer(serializers.ModelSerializer):
     series = serializers.SerializerMethodField()
     user_is_interested = serializers.SerializerMethodField()
     user_has_ticket = serializers.SerializerMethodField()
+    user_is_vendor = serializers.SerializerMethodField()
     media = serializers.SerializerMethodField()
     ticket_tiers = EventTicketTierSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
@@ -117,6 +118,7 @@ class EventListSerializer(serializers.ModelSerializer):
             "average_rating",
             "user_is_interested",
             "user_has_ticket",
+            "user_is_vendor",
         ]
 
     def get_series(self, obj):
@@ -136,6 +138,14 @@ class EventListSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.tickets.filter(goer=request.user, status="active").exists()
+        return False
+
+    def get_user_is_vendor(self, obj):
+        """Check if the current user is a vendor for this event."""
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            from apps.needs.models import NeedApplication
+            return NeedApplication.objects.filter(vendor=request.user, need__event=obj).exists()
         return False
 
     def get_media(self, obj):
@@ -258,7 +268,7 @@ class EventDetailSerializer(EventListSerializer):
         """Get the specific tickets the current user has for this event."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            tickets = obj.tickets.filter(goer=request.user, status="active")
+            tickets = obj.tickets.filter(goer=request.user, status__in=["active", "used", "cancelled"])
             from api.v1.tickets.serializers import TicketSerializer
             return TicketSerializer(tickets, many=True, context=self.context).data
         return []
@@ -632,6 +642,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
+    event_id = serializers.IntegerField(source="event.id", read_only=True)
 
     class Meta:
         """Meta configuration for EventHighlightSerializer."""
@@ -649,6 +660,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "user_has_liked",
+            "event_id",
         ]
         read_only_fields = [
             "id",
@@ -660,6 +672,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "user_has_liked",
+            "event_id",
         ]
 
     def get_likes_count(self, obj):

@@ -3,34 +3,56 @@ import { Heart, MessageCircle } from 'lucide-react';
 
 import { PolaroidFrame } from './scrapbookHelpers';
 
+import { useNavigate, useLocation } from 'react-router-dom';
+
 interface HighlightCardProps {
   highlight: any;
   onClick?: () => void;
   rotation?: number;
+  showClip?: boolean;
+  isFocused?: boolean;
 }
 
 export const HighlightCard = ({
   highlight,
   onClick,
   rotation = 0,
+  showClip = false,
+  isFocused = false,
 }: HighlightCardProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleDefaultClick = () => {
+    // Preserve current URL and scroll position
+    const returnTo = {
+      pathname: location.pathname,
+      search: location.search,
+      scroll: window.scrollY,
+    };
+
+    navigate(`/events/${highlight.event_id}/gallery/${highlight.id}`, {
+      state: { returnTo },
+    });
+  };
+
   return (
     <Box
-      onClick={onClick}
+      onClick={onClick || handleDefaultClick}
       sx={{
-        cursor: 'pointer',
-        transition: 'transform 0.2s',
-        '&:hover': {
-          transform: `scale(1.02) rotate(${rotation + 2}deg)`,
-        },
       }}
     >
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{
+        position: 'relative',
+        cursor: 'pointer',
+      }}>
         <PolaroidFrame
           src={highlight.media_file}
           caption={highlight.text}
           author={highlight.author_username}
           rotation={rotation}
+          showClip={showClip}
+          isFocused={isFocused}
         />
 
         {/* Cute Interaction Badges */}

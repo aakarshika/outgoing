@@ -17,9 +17,6 @@ export const StarCutoutCard = () => {
         justifyContent: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        transform: 'rotate(-15deg)',
-        '&:hover': { zIndex: 5, transform: 'scale(1.05) rotate(0deg)' },
-        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       }}
     >
       <Box sx={{ mt: 4, mb: 1, color: '#854d0e' }}>

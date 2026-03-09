@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Bell,
   Briefcase,
+  Calendar,
   CalendarDays,
   FileEdit,
   LocateFixed,
@@ -468,6 +469,12 @@ export function Navbar() {
                     <Button variant="ghost" size="icon" asChild>
                       <Link to="/events/create" aria-label="Create Event">
                         <Plus className="h-5 w-5" />
+                      </Link>
+                    </Button>
+
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/calendar" aria-label="Calendar">
+                        <Calendar className="h-5 w-5" />
                       </Link>
                     </Button>
 

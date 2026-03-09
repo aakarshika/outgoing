@@ -12,15 +12,12 @@ export const UserActionCard = () => {
         p: 3,
         bgcolor: '#ebf8ff', // Soft blue
         boxShadow: '3px 4px 10px rgba(0,0,0,0.1)',
-        transform: 'rotate(3deg)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         position: 'relative',
         border: '2px dashed #93c5fd',
         borderRadius: '4px',
-        '&:hover': { zIndex: 5, transform: 'scale(1.02) rotate(2deg)' },
-        transition: 'all 0.3s ease',
       }}
     >
       {/* Cute sticker */}

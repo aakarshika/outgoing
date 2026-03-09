@@ -57,6 +57,7 @@ export interface EventListItem {
   ticket_count: number;
   user_is_interested: boolean;
   user_has_ticket: boolean;
+  user_is_vendor: boolean;
   series?: { id: number; name: string } | null;
   occurrence_index?: number | null;
   media?: EventMedia[];
