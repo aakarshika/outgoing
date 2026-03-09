@@ -23,7 +23,7 @@ export interface EventNeed {
   criticality: 'essential' | 'replaceable' | 'non_substitutable';
   budget_min: string | null;
   budget_max: string | null;
-  status: 'open' | 'filled' | 'cancelled';
+  status: 'open' | 'filled' | 'cancelled' | 'override_filled';
   assigned_vendor: number | null;
   application_count: number;
   applications: NeedApplication[];

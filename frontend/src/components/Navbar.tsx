@@ -65,8 +65,8 @@ export function Navbar() {
   useEffect(() => {
     if (!isAuthenticated || !canUseBrowserGeolocation()) return;
     navigator.geolocation.getCurrentPosition(
-      () => {},
-      () => {},
+      () => { },
+      () => { },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
     );
   }, [isAuthenticated]);
@@ -127,6 +127,8 @@ export function Navbar() {
   const { user } = useAuth();
   const isEventHost =
     isAuthenticated && user && event && user.username === event.host?.username;
+  const isVendor =
+    isAuthenticated && user && event && !!(event.user_applications && event.user_applications.length > 0 && event.user_applications[0].status === 'accepted');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const shouldShowSearch = location.pathname === '/';
 
@@ -425,113 +427,127 @@ export function Navbar() {
               </div>
 
               {isHostEventManagementRoute && (
-              <div className="w-full">
-                <div className="mx-auto flex w-full max-w-4xl items-center gap-4 pt-2 pb-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate(-1)}
-                    className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                  <div>
-                    <h1
-                      className="text-3xl text-gray-900"
-                      style={{
-                        fontFamily: '"Permanent Marker", cursive',
-                        transform: 'rotate(-1deg)',
-                      }}
+                <div className="w-full">
+                  <div className="mx-auto flex w-full max-w-4xl items-center gap-4 pt-2 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => navigate(-1)}
+                      className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
                     >
-                      {event?.title || 'Host Event Management'}
-                    </h1>
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <div>
+                      <h1
+                        className="text-3xl text-gray-900"
+                        style={{
+                          fontFamily: '"Permanent Marker", cursive',
+                          transform: 'rotate(-1deg)',
+                        }}
+                      >
+                        {event?.title || 'Host Event Management'}
+                      </h1>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
               <div className="flex items-center gap-2">
                 {isAuthenticated ? (
-                <>
-                  <Button variant="ghost" size="icon" asChild className="relative">
-                    <Link to="/alerts" aria-label="Alerts">
-                      <Bell className="h-5 w-5" />
-                      {alertsCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                          {alertsCount}
-                        </span>
-                      )}
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/events/create" aria-label="Create Event">
-                      <Plus className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                  <>
+                    <Button variant="ghost" size="icon" asChild className="relative">
+                      <Link to="/alerts" aria-label="Alerts">
+                        <Bell className="h-5 w-5" />
+                        {alertsCount > 0 && (
+                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                            {alertsCount}
+                          </span>
+                        )}
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link to="/events/create" aria-label="Create Event">
+                        <Plus className="h-5 w-5" />
+                      </Link>
+                    </Button>
 
-                  {isEventHost && isNotOnManagePage && (
-                    <>
-                      {/* Desktop Button */}
+                    {isVendor && isNotOnManagePage && (
                       <Button
                         variant="default"
                         size="sm"
                         asChild
-                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all font-bold"
+                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-green-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-green-500 transition-all font-bold"
                         style={{ fontFamily: '"Permanent Marker"' }}
                       >
-                        <Link to={`/events/${eventId}/host-event-management/basic-details`}>
-                          <FileEdit className="h-4 w-4" /> Edit the event
+                        <Link to={`/events/${eventId}/service-event-management/application`}>
+                          <Briefcase className="h-4 w-4" /> Manage Service
                         </Link>
                       </Button>
+                    )}
 
-                      {/* Small screens Pencil Icon */}
-                      <Button
-                        variant="default"
-                        size="icon"
-                        asChild
-                        className="inline-flex md:hidden rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all"
-                      >
-                        <Link
-                          to={`/events/${eventId}/host-event-management/basic-details`}
-                          aria-label="Edit the event"
+                    {isEventHost && isNotOnManagePage && (
+                      <>
+                        {/* Desktop Button */}
+                        <Button
+                          variant="default"
+                          size="sm"
+                          asChild
+                          className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all font-bold"
+                          style={{ fontFamily: '"Permanent Marker"' }}
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="hidden gap-2 sm:flex">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="font-bold font-serif hover:bg-yellow-200 hover:rotate-2 transition-all"
-                  >
-                    <Link to="/signin">Sign In</Link>
-                  </Button>
-                  <Button
-                    size="sm"
-                    asChild
-                    className="rounded-none border-2 border-gray-800 bg-pink-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 transition-all font-bold"
-                    style={{ fontFamily: '"Permanent Marker"' }}
-                  >
-                    <Link to="/signup">Sign Up</Link>
-                  </Button>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsMenuOpen((open) => !open)}
-                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-                aria-expanded={isMenuOpen}
-                className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
-              >
-                {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              </Button>
+                          <Link to={`/events/${eventId}/host-event-management/basic-details`}>
+                            <FileEdit className="h-4 w-4" /> Edit the event
+                          </Link>
+                        </Button>
+
+                        {/* Small screens Pencil Icon */}
+                        <Button
+                          variant="default"
+                          size="icon"
+                          asChild
+                          className="inline-flex md:hidden rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all"
+                        >
+                          <Link
+                            to={`/events/${eventId}/host-event-management/basic-details`}
+                            aria-label="Edit the event"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="hidden gap-2 sm:flex">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="font-bold font-serif hover:bg-yellow-200 hover:rotate-2 transition-all"
+                    >
+                      <Link to="/signin">Sign In</Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      asChild
+                      className="rounded-none border-2 border-gray-800 bg-pink-400 text-white shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-pink-500 transition-all font-bold"
+                      style={{ fontFamily: '"Permanent Marker"' }}
+                    >
+                      <Link to="/signup">Sign Up</Link>
+                    </Button>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsMenuOpen((open) => !open)}
+                  aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMenuOpen}
+                  className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
+                >
+                  {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </nav>
 

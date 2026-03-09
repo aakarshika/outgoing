@@ -14,14 +14,14 @@ import { TicketStatusBadge } from './TicketStatusBadge';
 interface EventListItem {
   id: number;
   title: string;
-  description: string;
+  description?: string;
   cover_image: string | null;
   start_time: string;
   location_name: string;
   location_address?: string;
   latitude?: number | null;
   longitude?: number | null;
-  category?: { name: string; icon: string; slug?: string };
+  category?: { name: string; icon: string; slug?: string } | null;
   ticket_price_standard: string | null;
   ticket_price_flexible: string | null;
   lifecycle_state: string;
@@ -202,8 +202,8 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                 <Typography
                   sx={{ fontSize: '0.82rem', color: '#555', fontFamily: 'serif' }}
                 >
-                  {event.description.slice(0, 500)}
-                  {event.description.length > 500 ? '...' : ''}
+                  {event.description?.slice(0, 500) || ''}
+                  {(event.description?.length || 0) > 500 ? '...' : ''}
                 </Typography>
               </Box>
               <Box
@@ -300,8 +300,8 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
                 <Typography
                   sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'serif' }}
                 >
-                  {event.description.slice(0, 160)}
-                  {event.description.length > 160 ? '...' : ''}
+                  {event.description?.slice(0, 160) || ''}
+                  {(event.description?.length || 0) > 160 ? '...' : ''}
                 </Typography>
               </Box>
               <Box
@@ -452,36 +452,36 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
 
         {(event.lifecycle_state === 'published' ||
           event.lifecycle_state === 'live') && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 15,
-              right: -10,
-              bgcolor: '#fbbf24',
-              color: '#000',
-              p: '4px 15px 4px 10px',
-              transform: 'rotate(-10deg)',
-              boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
-              zIndex: 2,
-              '&::before': {
-                content: '""',
+            <Box
+              sx={{
                 position: 'absolute',
-                left: -5,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 10,
-                height: 10,
-                bgcolor: 'inherit',
-                borderRadius: '50%',
-                borderRight: '1px solid rgba(0,0,0,0.1)',
-              },
-            }}
-          >
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
-              {price}
-            </Typography>
-          </Box>
-        )}
+                bottom: 15,
+                right: -10,
+                bgcolor: '#fbbf24',
+                color: '#000',
+                p: '4px 15px 4px 10px',
+                transform: 'rotate(-10deg)',
+                boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
+                zIndex: 2,
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: -5,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 10,
+                  height: 10,
+                  bgcolor: 'inherit',
+                  borderRadius: '50%',
+                  borderRight: '1px solid rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                {price}
+              </Typography>
+            </Box>
+          )}
 
         {event.lifecycle_state === 'completed' && (
           <Box

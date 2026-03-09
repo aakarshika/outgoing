@@ -37,7 +37,7 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
-    path: '/events/:id/event-vendor-management/*',
+    path: '/events/:id/service-event-management/*',
     componentName: 'ManageForVendor',
     roles: [UserRole.USER, UserRole.ADMIN],
   },

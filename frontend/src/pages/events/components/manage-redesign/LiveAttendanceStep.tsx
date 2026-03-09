@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Scan, Users, MessageSquare, Play, QrCode, XCircle, Ticket as TicketIcon } from 'lucide-react';
+import { Scan, Users, MessageSquare, QrCode, XCircle, Ticket as TicketIcon, Box } from 'lucide-react';
 import { EventDetail } from '@/types/events';
 import { useTransitionEventLifecycle, useEventAttendees } from '@/features/events/hooks';
 import { toast } from 'sonner';
 import { QRScannerModal } from '@/components/events/QRScannerModal';
 import { useTicketValidation, useTicketAdmission } from '@/features/tickets/hooks';
 import { admitTicket, validateTicket } from '@/features/tickets/api';
+import { StatusSquareBox } from './StatusSquareBox';
 
 interface LiveAttendanceStepProps {
     event: EventDetail;
@@ -35,7 +36,12 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
         error: admitError
     } = useTicketAdmission();
 
-    const isLive = event?.lifecycle_state === 'live';
+    const lifecycleState = event?.lifecycle_state;
+    const isLive = lifecycleState === 'live';
+    const isCompleted = lifecycleState === 'completed';
+    const isDraftOrPublished = lifecycleState === 'draft' || lifecycleState === 'published';
+    const isEventReady = lifecycleState === 'event_ready';
+    const canGoLive = isEventReady;
 
     const handleGoLive = async () => {
         try {
@@ -74,26 +80,6 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
 
     return (
         <div className="space-y-8">
-            {/* Go Live Action */}
-            {!isLive && event.lifecycle_state === 'event_ready' && !readonly && (
-                <div className="bg-red-50 border-4 border-red-500 p-8 shadow-[6px_6px_0px_#991b1b] relative overflow-hidden animate-pulse">
-                    <div className="relative z-10 flex flex-col items-center">
-                        <Play className="h-16 w-16 text-red-600 mb-4 fill-red-600" />
-                        <h2 className="text-3xl font-black text-red-900 mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                            READY TO GO LIVE?
-                        </h2>
-                        <button
-                            onClick={handleGoLive}
-                            disabled={transitionLifecycle.isPending}
-                            className="px-12 py-4 bg-red-600 text-white border-2 border-gray-900 shadow-[4px_4px_0px_#333] font-bold text-2xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#333] transition-all"
-                            style={{ fontFamily: '"Permanent Marker", cursive' }}
-                        >
-                            {transitionLifecycle.isPending ? 'Starting...' : 'START LIVE EVENT'}
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Attendance & Scanning */}
             <div className="bg-white border-2 border-gray-800 p-8 shadow-[4px_4px_0px_#333] relative">
                 <div className="absolute -top-4 left-10 px-4 py-1 bg-yellow-400 text-gray-900 font-bold border-2 border-gray-800 rotate-1 shadow-[2px_2px_0px_#333]">
@@ -113,7 +99,7 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
                         </div>
                     </div>
 
-                    {!readonly && (
+                    {!readonly && (isEventReady || isLive) && (
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={() => setIsScannerOpen(true)}
@@ -126,7 +112,7 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
                     )}
                 </div>
 
-                {!readonly && (
+                {!readonly && (isEventReady || isLive) && (
                     <div className="mb-8 border-2 border-gray-100 p-6 bg-gray-50/50 rounded-xl">
                         <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 pb-2 border-dashed">
                             <QrCode className="h-5 w-5 text-gray-800" />
@@ -413,19 +399,31 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
                 </div>
             </div>
 
+            <div className="relative flex bg-red-500 justify-center items-center">
+            <div className="absolute bg-green-500 h-full w-full z-10">
+                <div
+                    className="bg-blue-500  absolute top-0 right-0"
+                >
+                    <StatusSquareBox
+                        readonly={readonly}
+                        isDraftOrPublished={isDraftOrPublished}
+                        isEventReady={isEventReady}
+                        isLive={isLive}
+                        isCompleted={isCompleted}
+                        isPending={transitionLifecycle.isPending}
+                        canGoLive={canGoLive}
+                        onGoLive={handleGoLive}
+                    />
+                </div>
+
+            </div>
+            </div>
+
             {/* Live Chat / Messages */}
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                        <MessageSquare className="h-5 w-5" /> Live Chat
-                    </h3>
-                    <div className="h-32 border-2 border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 italic" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}>
-                        Chat will appear once live...
-                    </div>
-                </div>
-                <div className="bg-white border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] relative">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                        <MessageSquare className="h-5 w-5" /> Host Notes
+                        <MessageSquare className="h-5 w-5" /> Host broadcasts to Guests
                     </h3>
                     <div className="h-32 border-2 border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 italic" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.1rem' }}>
                         Broadcast messages to all goers...

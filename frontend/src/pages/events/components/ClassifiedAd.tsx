@@ -1,15 +1,24 @@
-import { Avatar, Box, Button as MuiButton, Paper, Popover, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Button as MuiButton,
+  Paper,
+  Popover,
+  Typography,
+} from '@mui/material';
 import { type MouseEvent, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { HostCard } from '@/components/ui/HostCard';
 export const ClassifiedAd = ({
   need,
+  event,
   onInquire,
   isEligible = false,
   isOpportunity = false,
 }: {
   need: any;
+  event?: any;
   onInquire: (n: any) => void;
   isEligible?: boolean;
   isOpportunity?: boolean;
@@ -18,6 +27,10 @@ export const ClassifiedAd = ({
   const [hostAnchorEl, setHostAnchorEl] = useState<HTMLElement | null>(null);
   const assigned_vendor = need.applications.find(
     (app: any) => app.status === 'accepted',
+  );
+
+  const userApplication = event?.user_applications?.find(
+    (app: any) => app.need_id === need.id,
   );
   const hostProfile = useMemo(
     () => ({
@@ -55,8 +68,7 @@ export const ClassifiedAd = ({
           transform: `rotate(${(Math.random() * 2 - 1).toFixed(1)}deg)`,
           pointerEvents: need.status === 'filled' ? 'none' : 'auto',
           transition: 'all 0.3s ease',
-          boxShadow:
-            '10px 12px 0 rgba(43,43,43,0.12), 0 12px 25px rgba(0,0,0,0.12)',
+          boxShadow: '10px 12px 0 rgba(43,43,43,0.12), 0 12px 25px rgba(0,0,0,0.12)',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -108,8 +120,7 @@ export const ClassifiedAd = ({
           >
             {need.category.split('_').join(' ')}{' '}
           </span>
-          {need.title? `: ${need.title}` : ''}
-          
+          {need.title ? `: ${need.title}` : ''}
         </Typography>
         <Typography
           variant="body2"
@@ -132,7 +143,27 @@ export const ClassifiedAd = ({
           }}
         >
           {need.status === 'open' &&
-            (isEligible ? (
+            (userApplication ? (
+              <MuiButton
+                variant="outlined"
+                size="small"
+                onClick={() =>
+                  navigate(
+                    `/events/${(event as any)?.id}/service-event-management/application`,
+                  )
+                }
+                sx={{
+                  borderRadius: 0,
+                  borderColor: '#0284c7',
+                  color: '#0284c7',
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#0284c7', color: '#fff' },
+                }}
+              >
+                VIEW APPLICATION →
+              </MuiButton>
+            ) : isEligible ? (
               <MuiButton
                 variant="outlined"
                 size="small"

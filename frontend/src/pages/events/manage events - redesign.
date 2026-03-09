@@ -142,10 +142,10 @@ attendance section: [component]
 
 
 ----------
-
+new route '/events/:id/service-event-management'
 on navbar - edit the event button is there for the hosts.- rename it to "manage event" 
 another button - for the vendors who have applied to this event - "servicing" also with a pencil icon
-new page - "vendor service" 
+new page - "vendor service page" 
 
 will also have a step by step look similar to the host's manage event page.
 
@@ -192,8 +192,8 @@ both places. component reusable.
 4. **Needs & Vendors**: How does the Vendor Agreement barcode work on the host side? Are we storing the exact payment details immediately or keeping them as placeholders for now?
 on host side - in the attendees section - we will accept vendor check in in the same way as the goer.
 placeholders for payment. build only for 0Rs. but have arcitecture ready.
-5. **ManageForVendorPage ("Vendor Service") Route**: Should this page exist at a completely separate URL like `/events/:id/vendor-service`, or as part of the dashboard navigation?
-yes separate. `/events/:id/event-vendor-management` and `/events/:id/host-event-management`
+5. **ManageForVendorPage ("Vendor Service") Route**: 
+yes separate. `/events/:id/service-event-management` and `/events/:id/host-event-management`
 ******************
 ******************
 thing to note - we must design all the [components] for this plan as separate . 

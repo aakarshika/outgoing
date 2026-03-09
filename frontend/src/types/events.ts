@@ -114,6 +114,7 @@ export interface EventDetail extends EventListItem {
   participating_vendors?: any[];
   host_events_count?: number;
   user_tickets?: TicketInfo[];
+  user_applications?: VendorApplicationInfo[];
   attendees?: AttendeeInfo[];
 }
 
@@ -135,6 +136,15 @@ export interface EventLifecycleTransition {
   metadata: Record<string, unknown>;
   actor_username: string | null;
   created_at: string;
+}
+
+export interface VendorApplicationInfo {
+  id: number;
+  need_id: number;
+  need_title: string;
+  service_id: number | null;
+  status: string;
+  proposed_price: string | null;
 }
 
 export interface TicketInfo {

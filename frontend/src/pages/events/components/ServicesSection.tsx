@@ -100,6 +100,7 @@ export const ServicesSection = ({
                     <Grid size={{ xs: 12, md: 6 }} key={need.id}>
                       <ClassifiedAd
                         need={need}
+                        event={event}
                         isEligible={isEligible}
                         isOpportunity={isOpportunity}
                         onInquire={(n) => {

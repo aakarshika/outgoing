@@ -210,7 +210,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                         <div className="flex-1 px-4 py-3 space-y-3">
                                             {/* Tier name */}
                                             <div style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                                                <div className="text-[9px] uppercase tracking-wider mb-1 opacity-60" style={{ color: theme.dark }}>
+                                                <div className="text-[9px] uppercase tracking-wider mb-1 opacity-60" >
                                                     Tier Name
                                                 </div>
                                                 {readonly ? (
@@ -233,7 +233,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                             {/* Row: Price, Admits, Max/Txn */}
                                             <div className="grid grid-cols-3 gap-3">
                                                 <div>
-                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: theme.dark, opacity: 0.7 }}>
+                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{opacity: 0.7 }}>
                                                         Price ($)
                                                     </div>
                                                     <ScrapbookInput
@@ -248,7 +248,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: theme.dark, opacity: 0.7 }}>
+                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{opacity: 0.7 }}>
                                                         Admits
                                                     </div>
                                                     <ScrapbookInput
@@ -261,7 +261,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: theme.dark, opacity: 0.7 }}>
+                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ opacity: 0.7 }}>
                                                         Max / Txn
                                                     </div>
                                                     <ScrapbookInput
@@ -278,7 +278,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                             {/* Row: Capacity + Description */}
                                             <div className="grid grid-cols-3 gap-3">
                                                 <div>
-                                                    <div className="text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: theme.dark, opacity: 0.7 }}>
+                                                    <div className="text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ opacity: 0.7 }}>
                                                         Capacity
                                                         {isLastTier && totalCapacityNum > 0 && (
                                                             <span className="text-[8px] italic opacity-60">(auto)</span>
@@ -304,7 +304,7 @@ export const TicketsAndCapacityForm: React.FC<TicketsAndCapacityFormProps> = ({
                                                     )}
                                                 </div>
                                                 <div className="col-span-2">
-                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: theme.dark, opacity: 0.7 }}>
+                                                    <div className="text-[9px] uppercase tracking-wider mb-1" style={{ opacity: 0.7 }}>
                                                         Description
                                                     </div>
                                                     <ScrapbookInput

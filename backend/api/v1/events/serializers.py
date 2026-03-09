@@ -226,6 +226,7 @@ class EventDetailSerializer(EventListSerializer):
     participating_vendors = serializers.SerializerMethodField()
     host_events_count = serializers.SerializerMethodField()
     user_tickets = serializers.SerializerMethodField()
+    user_applications = serializers.SerializerMethodField()
     attendees = serializers.SerializerMethodField()
 
     class Meta(EventListSerializer.Meta):
@@ -249,6 +250,7 @@ class EventDetailSerializer(EventListSerializer):
             "participating_vendors",
             "host_events_count",
             "user_tickets",
+            "user_applications",
             "attendees",
         ]
 
@@ -259,6 +261,25 @@ class EventDetailSerializer(EventListSerializer):
             tickets = obj.tickets.filter(goer=request.user, status="active")
             from api.v1.tickets.serializers import TicketSerializer
             return TicketSerializer(tickets, many=True, context=self.context).data
+        return []
+
+    def get_user_applications(self, obj):
+        """Get the specific need applications the current user has for this event."""
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            from apps.needs.models import NeedApplication
+            applications = NeedApplication.objects.filter(vendor=request.user, need__event=obj)
+            return [
+                {
+                    "id": app.id,
+                    "need_id": app.need.id,
+                    "need_title": app.need.title,
+                    "service_id": app.service_id,
+                    "status": app.status,
+                    "proposed_price": str(app.proposed_price) if app.proposed_price else None,
+                }
+                for app in applications
+            ]
         return []
 
     def get_tickets_remaining(self, obj):

@@ -35,20 +35,20 @@ import { ServicesPrepStep } from './components/manage-redesign/ServicesPrepStep'
 import { EventReadinessStep } from './components/manage-redesign/EventReadinessStep';
 import { LiveAttendanceStep } from './components/manage-redesign/LiveAttendanceStep';
 import { WrapUpStep } from './components/manage-redesign/WrapUpStep';
-
+import { BasicQuick } from './components/manage-redesign/BasicQuick';
 // ── Configurable Steps Array ──────────────────────────────────────────────────
 export const HOST_STEPS = [
     {
         stepId: 1,
-        title: 'Basic Details',
+        title: 'Info',
         routeSlug: 'basic-details',
         isHalfStep: false,
         components: [
             { id: 'basic-details', component: BasicDetailsForm as any },
-            { id: 'when-where', component: WhenAndWhereForm as any },
-            { id: 'checkin-instructions', component: CheckInInstructions as any },
-            { id: 'tickets-capacity', component: TicketsAndCapacityForm as any },
+            { id: 'basic-quick', component: BasicQuick as any },
             { id: 'event-features', component: EventFeaturesTags as any },
+            { id: 'when-where', component: WhenAndWhereForm as any },
+            { id: 'tickets-capacity', component: TicketsAndCapacityForm as any },
         ],
     },
     {
@@ -62,7 +62,7 @@ export const HOST_STEPS = [
     },
     {
         stepId: 2,
-        title: 'Services Prep',
+        title: 'Prepare',
         routeSlug: 'services-prep',
         isHalfStep: false,
         components: [
@@ -71,7 +71,7 @@ export const HOST_STEPS = [
     },
     {
         stepId: 2.5,
-        title: 'Event Readiness',
+        title: 'Ready',
         routeSlug: 'event-readiness',
         isHalfStep: true,
         components: [
@@ -80,7 +80,7 @@ export const HOST_STEPS = [
     },
     {
         stepId: 3,
-        title: 'Live & Attendance',
+        title: 'Live',
         routeSlug: 'live-attendance',
         isHalfStep: false,
         components: [
@@ -142,6 +142,8 @@ export default function ManageForHostPage() {
         name: c.name,
         icon: CATEGORY_ICON_MAP[c.icon] || '📌',
     }));
+    const canSaveBasicInfo = !event?.lifecycle_state
+        || ['draft', 'published'].includes(event.lifecycle_state);
 
 
     const { data: occurrencesResponse, refetch: refetchOccurrences } = useEventSeriesOccurrences(event?.series?.id ?? 0);
@@ -214,6 +216,8 @@ export default function ManageForHostPage() {
     // ── Apply to series toggle ────────────────────────────────────────────────
     const [applyToSeries, setApplyToSeries] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [inputMode, setInputMode] = useState<'quick' | 'advanced'>('quick');
+    const [isDirty, setIsDirty] = useState(false);
 
     // ── Seed state from event ─────────────────────────────────────────────────
     useEffect(() => {
@@ -248,6 +252,7 @@ export default function ManageForHostPage() {
             if (event.title) setTitle(event.title);
             if (event.category?.id) setCategory(String(event.category.id));
             if (event.description) setDescription(event.description);
+            setIsDirty(false);
         }
     }, [event]);
 
@@ -275,6 +280,7 @@ export default function ManageForHostPage() {
     const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!event) return;
+        if (!canSaveBasicInfo) return;
         setIsSubmitting(true);
 
         const form = e.currentTarget;
@@ -424,6 +430,7 @@ export default function ManageForHostPage() {
 
             console.groupEnd();
             toast.success('Event updated successfully!');
+            setIsDirty(false);
         } catch (err: any) {
             console.error('❌ Update Failed:', err);
             console.groupEnd();
@@ -445,10 +452,66 @@ export default function ManageForHostPage() {
         if (!stepConfig) return null;
 
         const commonProps = { event, readonly: false };
+        const isBasicStep = stepConfig.routeSlug === 'basic-details';
+        const quickOnlyIds = new Set(['basic-quick']);
+        const advancedOnlyIds = new Set([
+            'basic-details',
+            'event-features',
+            'when-where',
+            'tickets-capacity',
+        ]);
 
         return (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                {isBasicStep && (
+                    <div className="flex items-center gap-3">
+                        <label className="cursor-pointer">
+                            <input
+                                type="radio"
+                                name="input_mode"
+                                value="quick"
+                                checked={inputMode === 'quick'}
+                                onChange={() => setInputMode('quick')}
+                                className="sr-only"
+                            />
+                            <span
+                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${
+                                    inputMode === 'quick'
+                                        ? 'bg-yellow-300 border-gray-800 text-gray-900'
+                                        : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                }`}
+                                style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                                Quick Input
+                            </span>
+                        </label>
+                        <label className="cursor-pointer">
+                            <input
+                                type="radio"
+                                name="input_mode"
+                                value="advanced"
+                                checked={inputMode === 'advanced'}
+                                onChange={() => setInputMode('advanced')}
+                                className="sr-only"
+                            />
+                            <span
+                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${
+                                    inputMode === 'advanced'
+                                        ? 'bg-gray-900 border-gray-900 text-white'
+                                        : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                }`}
+                                style={{ fontFamily: '"Permanent Marker", cursive' }}
+                            >
+                                Advanced Input
+                            </span>
+                        </label>
+                    </div>
+                )}
                 {stepConfig.components.map(({ id: cId, component: Component }) => {
+                    if (isBasicStep) {
+                        if (inputMode === 'quick' && advancedOnlyIds.has(cId)) return null;
+                        if (inputMode === 'advanced' && quickOnlyIds.has(cId)) return null;
+                    }
                     if (cId === 'basic-details') {
                         return (
                             <Component
@@ -466,6 +529,57 @@ export default function ManageForHostPage() {
                             />
                         );
                     }
+                    if (cId === 'basic-quick') {
+                        return (
+                            <Component
+                                key={cId}
+                                props={{
+                                    ...commonProps,
+                                    categories,
+                                    coverPreview,
+                                    handleCoverChange,
+                                    title,
+                                    setTitle,
+                                    category,
+                                    setCategory,
+                                    description,
+                                    setDescription,
+                                }}
+                                eprops={{
+                                    ...commonProps,
+                                    eventFeatures,
+                                    setEventFeatures,
+                                }}
+                                tprops={{
+                                    ...commonProps,
+                                    capacity,
+                                    setCapacity,
+                                    ticketTiers,
+                                    setTicketTiers,
+                                }}
+                                wprops={{
+                                    ...commonProps,
+                                    latitude,
+                                    longitude,
+                                    isDetectingLocation,
+                                    locationNameRef,
+                                    locationAddressRef,
+                                    onlineUrl,
+                                    setOnlineUrl,
+                                    locationMode,
+                                    setLocationMode,
+                                    handleUseCurrentLocation,
+                                    dateToLocalValue,
+                                    eventDuration,
+                                    setEventDuration,
+                                    generateUntil,
+                                    setGenerateUntil,
+                                    previewDates,
+                                }}
+                            />
+                        );
+                    }
+                    
                     if (cId === 'when-where') {
                         return (
                             <Component
@@ -512,9 +626,6 @@ export default function ManageForHostPage() {
                             />
                         );
                     }
-                    if (cId === 'checkin-instructions') {
-                        return <Component key={cId} {...commonProps} />;
-                    }
                     if (cId === 'publish') {
                         return <Component key={cId} {...commonProps} />;
                     }
@@ -547,7 +658,6 @@ export default function ManageForHostPage() {
         >
             <div className="mx-auto max-w-4xl">
                 {/* Series timeline (always visible) */}
-                <SeriesTimeline occurrences={occurrences} currentEventId={Number(id)} />
 
                 {/* Horizontal Step Tabs */}
                 <StepTabs
@@ -557,13 +667,18 @@ export default function ManageForHostPage() {
                 />
 
                 {/* Step content */}
-                <form onSubmit={handleUpdate}>
+                <form
+                    onSubmit={handleUpdate}
+                    onChange={() => {
+                        if (!isDirty) setIsDirty(true);
+                    }}
+                >
                     {renderCurrentStepComponents()}
 
                     {/* Save actions */}
-                    <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t-2 border-dashed border-gray-800 pt-6">
+                    {activeStep.stepId == 1 && (<div className="mt-10 flex flex-wrap items-center justify-between gap-4  pt-6">
                         {/* Apply to series toggle */}
-                        {event?.series && (
+                        {canSaveBasicInfo && event?.series && (
                             <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
@@ -582,13 +697,14 @@ export default function ManageForHostPage() {
                                     className="text-sm font-bold text-gray-700"
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
-                                    Apply to entire series
+                                    Apply to all drafts
                                 </span>
                             </label>
                         )}
+                <SeriesTimeline occurrences={occurrences} currentEventId={Number(id)} />
 
                         <div className="flex gap-3 ml-auto">
-                            <button
+                            {activeStepIndex > 0 && (<button
                                 type="button"
                                 disabled={activeStepIndex <= 0}
                                 onClick={() => {
@@ -599,27 +715,37 @@ export default function ManageForHostPage() {
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
                                 ← Back
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="px-5 py-2 bg-yellow-300 border-2 border-gray-800 shadow-[2px_2px_0px_#333] font-bold text-sm hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333] transition-all disabled:opacity-60"
-                                style={{ fontFamily: '"Permanent Marker", cursive' }}
-                            >
-                                {isSubmitting ? 'Saving…' : 'Save Changes'}
-                            </button>
+                            </button>)}
+                            {canSaveBasicInfo && (
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className={`px-5 py-2 min-w-48 border-2 shadow-[2px_2px_0px_#333] font-bold text-sm transition-all disabled:opacity-60 ${
+                                        isDirty
+                                            ? 'bg-yellow-300 border-gray-800 text-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                            : 'bg-yellow-200/40 border-gray-300 text-gray-500'
+                                    }`}
+                                    style={{ fontFamily: '"Permanent Marker", cursive' }}
+                                >
+                                    {isSubmitting ? 'Saving…' : 'Save'}
+                                </button>
+                            )}
                             {activeStepIndex < HOST_STEPS.length - 1 && (
                                 <button
                                     type="button"
                                     onClick={() => goToStep(HOST_STEPS[activeStepIndex + 1].stepId)}
-                                    className="px-5 py-2 bg-gray-900 text-white border-2 border-gray-900 shadow-[2px_2px_0px_#555] font-bold text-sm hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555] transition-all"
+                                    className={`px-5 py-2 border-2 shadow-[2px_2px_0px_#555] font-bold text-sm transition-all ${
+                                        isDirty
+                                            ? 'bg-yellow-300 text-gray-900 border-gray-800 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
+                                            : 'bg-gray-900 text-white border-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555]'
+                                    }`}
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
                                     Next →
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </div>)}
                 </form>
             </div>
         </div>

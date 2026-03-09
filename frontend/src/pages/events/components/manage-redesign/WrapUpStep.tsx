@@ -11,9 +11,11 @@ interface WrapUpStepProps {
 
 export function WrapUpStep({ event, readonly }: WrapUpStepProps) {
     const transitionLifecycle = useTransitionEventLifecycle();
+    const isDraftOrPublished = event?.lifecycle_state === 'draft' || event?.lifecycle_state === 'published' ;
     const isCompleted = event?.lifecycle_state === 'completed';
     const isCancelled = event?.lifecycle_state === 'cancelled';
-
+    const markEnabled = !readonly && isDraftOrPublished && event?.lifecycle_state !== 'event_ready';
+    const cancelEnabled = !readonly && !isDraftOrPublished  && event?.lifecycle_state !== 'event_ready';
     const handleComplete = async () => {
         try {
             await transitionLifecycle.mutateAsync({
@@ -51,32 +53,36 @@ export function WrapUpStep({ event, readonly }: WrapUpStepProps) {
                         THAT'S A WRAP!
                     </h2>
 
-                    {!isCompleted && !isCancelled && !readonly && (
-                        <div className="flex flex-wrap justify-center gap-6">
-                            <button
+                        {isCompleted ? null : (<div className="flex flex-wrap justify-center gap-6">
+                            {!markEnabled ? (<button
                                 onClick={handleComplete}
                                 disabled={transitionLifecycle.isPending}
-                                className="px-10 py-4 bg-yellow-300 border-2 border-gray-800 shadow-[4px_4px_0px_#333] font-bold text-xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#333] transition-all"
+                                className="px-10 py-4 bg-yellow-100 border-2 border-gray-800 shadow-[4px_4px_0px_#333] font-bold text-xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#333] transition-all"
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
                                 MARK AS COMPLETED
-                            </button>
-                            <button
+                            </button>) : (<button
+                                disabled={true}
+                                className="px-10 py-4 bg-yellow-100 border-2 border-gray-400 shadow-[4px_4px_0px_#aaa] font-bold text-xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#333] transition-all"
+                                style={{ fontFamily: '"Permanent Marker", cursive' , color: '#aaa' }}
+                            >
+                                MARK AS COMPLETED
+                            </button>)}
+                            {!cancelEnabled ? (<button
                                 onClick={handleCancel}
                                 disabled={transitionLifecycle.isPending}
                                 className="px-10 py-4 bg-white text-red-600 border-2 border-red-200 shadow-[4px_4px_0px_#fee2e2] font-bold text-xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#fee2e2] transition-all"
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
                                 CANCEL EVENT
-                            </button>
-                        </div>
-                    )}
-
-                    {(isCompleted || isCancelled) && (
-                        <div className={`px-8 py-3 border-2 font-bold text-xl rotate-1 ${isCompleted ? 'bg-green-100 border-green-800 text-green-800' : 'bg-red-100 border-red-800 text-red-800'}`} style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                            STATUS: {event.lifecycle_state.toUpperCase()}
-                        </div>
-                    )}
+                            </button>) : (<button
+                                disabled={true}
+                                className="px-10 py-4 bg-white text-red-400 border-2 border-red-100 shadow-[4px_4px_0px_#f87171] font-bold text-xl hover:-translate-y-[1px] hover:shadow-[5px_5px_0px_#f87171] transition-all"
+                                style={{ fontFamily: '"Permanent Marker", cursive' , color: '#red-400' }}
+                            >
+                                CANCEL EVENT
+                            </button>)}
+                        </div>)}
                 </div>
             </div>
 

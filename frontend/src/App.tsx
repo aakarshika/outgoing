@@ -33,6 +33,7 @@ function App() {
               <main className="flex-1 bg-background">
                 <AppRoutes />
               </main>
+              <div className="h-100"></div>
               <Footer />
             </div>
           </BrowserRouter>

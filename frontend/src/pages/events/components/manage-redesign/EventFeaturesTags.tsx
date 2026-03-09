@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
     EventFeature,
@@ -23,6 +23,7 @@ export const EventFeaturesTags: React.FC<EventFeaturesTagsProps> = ({
 }) => {
     const tags = Object.keys(TAG_COLORS) as FeatureTag[];
 
+    const [isActiveMode, setIsActiveMode] = useState(tags[0]);
     return (
         <EnclosingBox background="bg-[#fcf8f2] border-2 border-dashed border-gray-300" rotation={-0.2}>
 
@@ -39,17 +40,18 @@ export const EventFeaturesTags: React.FC<EventFeaturesTagsProps> = ({
                 <div className="flex gap-2">
                     {tags.map((tag) => {
                         const cfg = TAG_COLORS[tag];
-                        const isActiveMode = eventFeatures.some((f) => f.tag === tag);
+                        const isActive = isActiveMode === tag;
                         return (
                             <span
+                                onClick={() => setIsActiveMode(tag)}
                                 key={tag}
                                 className="px-2 py-0.5 text-[10px] font-bold border transition-all"
                                 style={{
-                                    backgroundColor: isActiveMode ? cfg.bg : '#f3f4f6',
-                                    borderColor: isActiveMode ? cfg.border : '#d1d5db',
-                                    color: isActiveMode ? cfg.text : '#9ca3af',
+                                    backgroundColor: isActive ? cfg.bg : '#f3f4f6',
+                                    borderColor: isActive ? cfg.border : '#d1d5db',
+                                    color: isActive ? cfg.text : '#9ca3af',
                                     fontFamily: '"Permanent Marker", cursive',
-                                    boxShadow: isActiveMode ? '1px 1px 0px rgba(0,0,0,0.2)' : 'none',
+                                    boxShadow: isActive ? '1px 1px 0px rgba(0,0,0,0.2)' : 'none',
                                 }}
                             >
                                 {cfg.emoji} {cfg.label}
@@ -80,7 +82,7 @@ export const EventFeaturesTags: React.FC<EventFeaturesTagsProps> = ({
                                         if (selected) {
                                             setEventFeatures(eventFeatures.filter((f) => f.name !== item.name));
                                         } else {
-                                            setEventFeatures([...eventFeatures, { name: item.name, tag: 'featured' }]);
+                                            setEventFeatures([...eventFeatures, { name: item.name, tag: isActiveMode }]);
                                         }
                                     }}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 border-2 text-sm font-medium transition-all
@@ -102,32 +104,6 @@ export const EventFeaturesTags: React.FC<EventFeaturesTagsProps> = ({
                                     {selected && <span className="text-xs ml-0.5">✓</span>}
                                 </button>
 
-                                {/* Inline tag type switcher — only visible when selected */}
-                                {selected && !readonly && (
-                                    <div className="flex gap-0.5 ml-1">
-                                        {tags.map((tag) => (
-                                            <button
-                                                key={tag}
-                                                type="button"
-                                                onClick={() =>
-                                                    setEventFeatures(
-                                                        eventFeatures.map((f) =>
-                                                            f.name === item.name ? { ...f, tag } : f,
-                                                        ),
-                                                    )
-                                                }
-                                                title={TAG_COLORS[tag].label}
-                                                className={`w-5 h-5 flex items-center justify-center text-[9px] transition-all border
-                          ${selected.tag === tag
-                                                        ? 'bg-gray-900 border-gray-900 scale-110 shadow-sm'
-                                                        : 'bg-white border-gray-300 opacity-50 hover:opacity-100 hover:scale-105'
-                                                    }`}
-                                            >
-                                                {TAG_COLORS[tag].emoji}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
                         );
                     })}
