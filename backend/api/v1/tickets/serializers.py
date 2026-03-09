@@ -104,3 +104,4 @@ class TicketAdmitInputSerializer(serializers.Serializer):
 
     ticket_id = serializers.IntegerField()
     event_id = serializers.IntegerField()
+    is_vendor = serializers.BooleanField(default=False, required=False)

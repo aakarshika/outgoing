@@ -71,6 +71,32 @@ def verify_qr_token(token: str) -> dict:
     
     print(f"[DEBUG] verify_qr_token: Decoded payload: {payload}")
         
+    if payload.get("type") == "vendor":
+        application_id = payload.get("application_id")
+        barcode = payload.get("barcode")
+        if not application_id or not barcode:
+            raise InvalidQRTokenError("Missing required data in vendor token.")
+            
+        from apps.needs.models import NeedApplication
+        try:
+            app = NeedApplication.objects.select_related("need").get(id=application_id)
+        except NeedApplication.DoesNotExist:
+            raise InvalidQRTokenError("Vendor application not found.")
+            
+        if not app.qr_secret:
+            raise InvalidQRTokenError("Application does not support QR tokens.")
+            
+        expected_signature = _sign(payload_b64, app.qr_secret)
+        if not hmac.compare_digest(signature, expected_signature):
+            print(f"[DEBUG] verify_qr_token: Error - Vendor Signature mismatch.")
+            raise InvalidQRTokenError("Invalid token signature.")
+            
+        return {
+            "is_vendor": True,
+            "application_id": application_id,
+            "event_id": app.need.event_id,
+        }
+        
     ticket_id = payload.get("t")
     event_id = payload.get("e")
     
@@ -99,6 +125,7 @@ def verify_qr_token(token: str) -> dict:
     print("[DEBUG] verify_qr_token: SUCCESS")
         
     return {
+        "is_vendor": False,
         "ticket_id": ticket_id,
-        "event_id": event_id
+        "event_id": event_id,
     }

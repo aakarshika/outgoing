@@ -60,7 +60,7 @@ interface UseTicketAdmissionReturn {
   isLoading: boolean;
   error: string | null;
   admitted: boolean;
-  admit: (ticketId: number, eventId: number) => Promise<void>;
+  admit: (ticketId: number, eventId: number, isVendor?: boolean) => Promise<void>;
   reset: () => void;
 }
 
@@ -69,11 +69,11 @@ export function useTicketAdmission(): UseTicketAdmissionReturn {
   const [error, setError] = useState<string | null>(null);
   const [admitted, setAdmitted] = useState(false);
 
-  const admit = useCallback(async (ticketId: number, eventId: number) => {
+  const admit = useCallback(async (ticketId: number, eventId: number, isVendor?: boolean) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await admitTicket(ticketId, eventId);
+      const response = await admitTicket(ticketId, eventId, isVendor);
       if (response.success) {
         setAdmitted(true);
       } else {

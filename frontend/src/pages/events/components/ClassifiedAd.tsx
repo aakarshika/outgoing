@@ -10,6 +10,7 @@ import { type MouseEvent, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { HostCard } from '@/components/ui/HostCard';
+import { useAuth } from '@/features/auth/hooks';
 export const ClassifiedAd = ({
   need,
   event,
@@ -23,6 +24,7 @@ export const ClassifiedAd = ({
   isEligible?: boolean;
   isOpportunity?: boolean;
 }) => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [hostAnchorEl, setHostAnchorEl] = useState<HTMLElement | null>(null);
   const assigned_vendor = need.applications.find(
@@ -46,6 +48,10 @@ export const ClassifiedAd = ({
   );
   const isHostCardOpen = Boolean(hostAnchorEl);
 
+  const isHost =
+    event?.host?.username === user?.username ||
+    event?.host?.id === user?.username ||
+    event?.host === user?.username;
   return (
     <Box sx={{ position: 'relative', width: '100%' }}>
       <Paper
@@ -142,7 +148,7 @@ export const ClassifiedAd = ({
             mt: 0,
           }}
         >
-          {need.status === 'open' &&
+          {need.status === 'open' && !isHost &&
             (userApplication ? (
               <MuiButton
                 variant="outlined"

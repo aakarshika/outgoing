@@ -174,7 +174,7 @@ function EventCardRow({
         </span>
         {actionsEnabled ? (
           <Link
-            to={`/events/${event.id}/host-event-management/basic-details`}
+            to={`/events/${event.id}/host-event-management`}
             className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
             style={{
               fontFamily: '"Permanent Marker", cursive',

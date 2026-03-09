@@ -29,7 +29,7 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                 className="text-[10px] uppercase tracking-widest text-gray-400 mb-3 ml-1"
                 style={{ fontFamily: '"Permanent Marker", cursive' }}
             >
-                Step-by-step configuration of your event ↓
+                Quick step guide ↓
 
             </div>
 
@@ -67,7 +67,7 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                         ${isActive
                                             ? 'bg-yellow-300 border-gray-900 shadow-[3px_3px_0px_#333] text-gray-900'
                                             : isPast
-                                                ? 'bg-white border-gray-700 shadow-[2px_2px_0px_#555] text-gray-700'
+                                                ? 'bg-yellow-100 border-gray-700 shadow-[2px_2px_0px_#555] text-gray-700'
                                                 : 'bg-white border-gray-300 shadow-[1px_1px_0px_#ccc] text-gray-400'
                                         }
                       `}
@@ -84,7 +84,7 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                       `}
                                     style={{ fontFamily: '"Permanent Marker", cursive', fontSize: isActive ? '0.85rem' : '0.78rem' }}
                                 >
-                                    
+
                                 </span>
 
                                 {/* Active underline pen-stroke */}
@@ -112,20 +112,20 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                                             <button
                                                 onClick={() => onStepSelect(halfStep.stepId)}
                                                 className={`
-                              relative flex flex-col items-center transition-all
-                              ${isHalfActive ? 'z-10' : ''}
-                            `}
+                                                        relative flex flex-col items-center transition-all
+                                                        ${isHalfActive ? 'z-10' : ''}
+                                                    `}
                                                 style={{
                                                     transform: isHalfActive ? 'translateY(-2px)' : 'rotate(1deg)',
                                                 }}
                                             >
                                                 <div
                                                     className={`
-                                px-8 py-1 text-xs font-bold border-2 transition-all leading-tight whitespace-nowrap
-                                ${isHalfActive
+                                                        px-8 py-1 text-xs font-bold border-2 transition-all leading-tight whitespace-nowrap
+                                                        ${isHalfActive
                                                             ? 'bg-orange-200 border-orange-700 text-orange-900 shadow-[2px_2px_0px_#c05621]'
                                                             : isHalfPast
-                                                                ? 'bg-white border-gray-400 text-gray-500 shadow-[1px_1px_0px_#ccc]'
+                                                                ? 'bg-orange-100 border-gray-400 text-gray-500 shadow-[1px_1px_0px_#ccc]'
                                                                 : 'bg-white border-gray-200 text-gray-300 shadow-[1px_1px_0px_#e5e7eb]'
                                                         }
                               `}
@@ -133,11 +133,20 @@ export const StepTabs: React.FC<StepTabsProps> = ({
                                                         fontFamily: '"Permanent Marker", cursive',
                                                         borderRadius: '20px',
                                                         fontSize: '1.2rem',
-                                                        textDecoration: 'underline',
                                                     }}
                                                 >
-                                                {halfStep.title}
+                                                    {halfStep.title}
                                                 </div>
+                                                {/* Active underline pen-stroke */}
+                                                {isHalfActive && (
+                                                    <div
+                                                        className="mt-2 px-3 h-0.5 w-full bg-orange-900"
+                                                        style={{
+                                                            borderRadius: '1px',
+                                                            filter: 'blur(0.3px)',
+                                                        }}
+                                                    />
+                                                )}
                                             </button>
 
                                             {/* right arrow */}

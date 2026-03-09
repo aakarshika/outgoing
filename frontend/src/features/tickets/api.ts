@@ -14,6 +14,7 @@ export interface TicketValidationResult {
   tier_name: string;
   tier_color: string;
   status: string;
+  is_vendor?: boolean;
   price_paid: string;
   purchased_at: string;
 }
@@ -55,10 +56,12 @@ export async function validateTicket({
 export async function admitTicket(
   ticketId: number,
   eventId: number,
+  isVendor?: boolean,
 ): Promise<ApiResponse<TicketAdmitResult>> {
   const res = await client.post('/tickets/admit/', {
     ticket_id: ticketId,
     event_id: eventId,
+    is_vendor: isVendor,
   });
   return res.data;
 }

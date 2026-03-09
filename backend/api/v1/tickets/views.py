@@ -208,6 +208,7 @@ class TicketAdmitView(APIView):
 
         ticket_id = serializer.validated_data["ticket_id"]
         event_id = serializer.validated_data["event_id"]
+        is_vendor = serializer.validated_data.get("is_vendor", False)
 
         # Verify the caller is the event host
         try:
@@ -222,13 +223,13 @@ class TicketAdmitView(APIView):
             )
 
         try:
-            ticket = admit_ticket(ticket_id, event_id, request.user)
+            admit_result = admit_ticket(ticket_id, event_id, request.user, is_vendor=is_vendor)
         except TicketValidationError as e:
             return error_response(
                 message=e.message, error_code=e.error_code, status=e.status
             )
 
         return success_response(
-            data=TicketSerializer(ticket).data,
-            message="Attendee admitted successfully.",
+            data=admit_result,
+            message="Attendee admitted successfully." if not is_vendor else "Vendor admitted successfully.",
         )

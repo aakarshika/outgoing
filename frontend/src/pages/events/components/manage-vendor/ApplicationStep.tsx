@@ -90,13 +90,12 @@ export const ApplicationStep: React.FC<ApplicationStepProps> = ({ event }) => {
                       </span>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider
-                                                ${
-                                                  application.status === 'accepted'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : application.status === 'rejected'
-                                                      ? 'bg-red-100 text-red-800'
-                                                      : 'bg-yellow-100 text-yellow-800'
-                                                }`}
+                                                ${application.status === 'accepted'
+                            ? 'bg-green-100 text-green-800'
+                            : application.status === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
                       >
                         {application.status}
                       </span>
@@ -145,6 +144,8 @@ export const ApplicationStep: React.FC<ApplicationStepProps> = ({ event }) => {
                         ? parseFloat(application.proposed_price)
                         : 0
                     }
+                    barcode={application.barcode}
+                    qrToken={application.qr_token}
                     isHostView={false}
                   />
                 )}

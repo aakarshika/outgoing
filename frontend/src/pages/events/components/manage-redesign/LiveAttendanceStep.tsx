@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Scan, Users, MessageSquare, QrCode, XCircle, Ticket as TicketIcon, Box } from 'lucide-react';
 import { EventDetail } from '@/types/events';
 import { useTransitionEventLifecycle, useEventAttendees } from '@/features/events/hooks';
+import { useEventNeeds } from '@/features/needs/hooks';
 import { toast } from 'sonner';
 import { QRScannerModal } from '@/components/events/QRScannerModal';
 import { useTicketValidation, useTicketAdmission } from '@/features/tickets/hooks';
@@ -17,6 +18,12 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
     const transitionLifecycle = useTransitionEventLifecycle();
     const { data: attendeesResponse, refetch: refetchAttendees } = useEventAttendees(event?.id);
     const attendees = attendeesResponse?.data || [];
+
+    const { data: needsResponse, refetch: refetchNeeds } = useEventNeeds(event?.id);
+    const needs = needsResponse?.data || [];
+    const vendorApplications = needs.flatMap((need) =>
+        (need.applications || []).filter((app) => app.status === 'accepted')
+    );
 
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [entryBarcode, setEntryBarcode] = useState('');
@@ -64,9 +71,13 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
     const handleAdmit = async () => {
         if (!validationResult) return;
         try {
-            await performAdmit(validationResult.ticket_id, event.id);
+            await performAdmit(validationResult.ticket_id, event.id, validationResult.is_vendor);
             toast.success(`${validationResult.attendee_name} admitted!`);
-            refetchAttendees();
+            if (validationResult.is_vendor) {
+                refetchNeeds();
+            } else {
+                refetchAttendees();
+            }
         } catch (err) {
             // Error handled by hook
         }
@@ -397,26 +408,84 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
                         </div>
                     )}
                 </div>
+
+                {/* Vendor Services Placeholder */}
+                <div className="mt-8 border-t-4 border-dashed border-gray-200 pt-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Box className="h-7 w-7 text-gray-800" />
+                        <h4 className="text-xl font-bold text-gray-800" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                            Vendor Services ({vendorApplications.filter(app => app.admitted_at).length} / {vendorApplications.length})
+                        </h4>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto border-2 border-gray-100 rounded-lg p-4 no-scrollbar">
+                        {vendorApplications.length === 0 ? (
+                            <p className="text-center text-gray-400 py-10 italic" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.3rem' }}>
+                                No services confirmed yet...
+                            </p>
+                        ) : (
+                            <div className="grid gap-3">
+                                {vendorApplications.map((app, idx) => (
+                                    <div
+                                        key={app.id}
+                                        className="flex items-center justify-between p-3 bg-indigo-50/30 border-2 border-indigo-200 rounded transition-all hover:border-indigo-400"
+                                        style={{ transform: `rotate(${idx % 2 === 0 ? -0.3 : 0.3}deg)` }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-full border-2 border-gray-800 bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold overflow-hidden shadow-[1px_1px_0px_#333]" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+                                                {app.vendor_name ? app.vendor_name[0].toUpperCase() : 'V'}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}>
+                                                    {app.vendor_name}
+                                                </p>
+                                                <p className="text-[10px] uppercase font-bold text-indigo-600">
+                                                    {app.need_title}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {app.admitted_at ? (
+                                            <div
+                                                className="px-3 py-1 border-2 border-indigo-600 font-bold text-[10px] tracking-tight bg-indigo-50 text-indigo-700 opacity-90 shadow-sm"
+                                                style={{
+                                                    fontFamily: '"Permanent Marker", cursive',
+                                                    transform: 'rotate(5deg)',
+                                                    boxShadow: '2px 2px 0px rgba(79, 70, 229, 0.2)'
+                                                }}
+                                            >
+                                                ADMITTED
+                                            </div>
+                                        ) : (
+                                            <div className="px-3 py-1.5 rounded bg-gray-100 border border-gray-300">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">PENDING</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="relative flex bg-red-500 justify-center items-center">
-            <div className="absolute bg-green-500 h-full w-full z-10">
-                <div
-                    className="bg-blue-500  absolute top-0 right-0"
-                >
-                    <StatusSquareBox
-                        readonly={readonly}
-                        isDraftOrPublished={isDraftOrPublished}
-                        isEventReady={isEventReady}
-                        isLive={isLive}
-                        isCompleted={isCompleted}
-                        isPending={transitionLifecycle.isPending}
-                        canGoLive={canGoLive}
-                        onGoLive={handleGoLive}
-                    />
-                </div>
+                <div className="absolute bg-green-500 h-full w-full z-10">
+                    <div
+                        className="bg-blue-500  absolute top-0 right-0"
+                    >
+                        <StatusSquareBox
+                            readonly={readonly}
+                            isDraftOrPublished={isDraftOrPublished}
+                            isEventReady={isEventReady}
+                            isLive={isLive}
+                            isCompleted={isCompleted}
+                            isPending={transitionLifecycle.isPending}
+                            canGoLive={canGoLive}
+                            onGoLive={handleGoLive}
+                        />
+                    </div>
 
-            </div>
+                </div>
             </div>
 
             {/* Live Chat / Messages */}
@@ -439,10 +508,14 @@ export function LiveAttendanceStep({ event, readonly }: LiveAttendanceStepProps)
                         const res = await validateTicket({ barcode: barcode.trim(), eventId: event.id });
                         return res.success ? res.data : null;
                     }}
-                    onAdmitEvent={async (ticketId) => {
-                        const res = await admitTicket(ticketId, event.id);
+                    onAdmitEvent={async (ticketId, isVendor) => {
+                        const res = await admitTicket(ticketId, event.id, isVendor);
                         if (res.success) {
-                            refetchAttendees();
+                            if (isVendor) {
+                                refetchNeeds();
+                            } else {
+                                refetchAttendees();
+                            }
                             return true;
                         }
                         return false;

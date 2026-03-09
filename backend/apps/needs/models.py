@@ -87,6 +87,18 @@ class NeedApplication(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    barcode = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    qr_secret = models.CharField(max_length=64, null=True, blank=True, help_text="Secret used to sign the QR token")
+    
+    admitted_at = models.DateTimeField(null=True, blank=True)
+    admitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="admitted_vendors",
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -94,6 +106,20 @@ class NeedApplication(models.Model):
 
         unique_together = ["need", "vendor"]
         ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        """Auto-compute barcode and qr_secret if status is accepted."""
+        import uuid
+        import secrets
+        
+        if self.status == "accepted":
+            if not self.barcode:
+                self.barcode = str(uuid.uuid4()).replace("-", "").upper()[:12]
+            
+            if not self.qr_secret:
+                self.qr_secret = secrets.token_hex(32)
+                
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """String representation of the NeedApplication."""

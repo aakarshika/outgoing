@@ -32,11 +32,44 @@ def validate_ticket(barcode: str, event_id: int) -> dict:
             "goer", "goer__profile", "tier", "event"
         ).get(barcode=barcode)
     except Ticket.DoesNotExist:
-        raise TicketValidationError(
-            "Ticket not found. Please check the code and try again.",
-            error_code="TICKET_NOT_FOUND",
-            status=404,
-        )
+        # Check NeedApplication fallback
+        from apps.needs.models import NeedApplication
+        try:
+            app = NeedApplication.objects.select_related("vendor", "need", "service").get(barcode=barcode)
+        except NeedApplication.DoesNotExist:
+            raise TicketValidationError(
+                "Ticket not found. Please check the code and try again.",
+                error_code="TICKET_NOT_FOUND",
+                status=404,
+            )
+            
+        if app.need.event_id != event_id:
+            raise TicketValidationError(
+                "This vendor pass does not belong to this event.",
+                error_code="WRONG_EVENT",
+            )
+            
+        if app.admitted_at is not None:
+            used_at_str = app.admitted_at.strftime("%b %d, %Y at %I:%M %p")
+            raise TicketValidationError(
+                f"This vendor pass has already been used ({used_at_str}).",
+                error_code="ALREADY_USED",
+            )
+            
+        return {
+            "valid": True,
+            "is_vendor": True,
+            "ticket_id": app.id,
+            "barcode": app.barcode,
+            "attendee_name": app.vendor.get_full_name() or app.vendor.username,
+            "attendee_username": app.vendor.username,
+            "guest_name": app.vendor.username,
+            "ticket_type": app.need.title,
+            "tier_name": app.service.title if app.service else "Service",
+            "tier_color": "#8b5cf6",
+            "status": "active" if not app.admitted_at else "used",
+            "purchased_at": app.created_at.isoformat(),
+        }
 
     if ticket.event_id != event_id:
         raise TicketValidationError(
@@ -74,6 +107,7 @@ def validate_ticket(barcode: str, event_id: int) -> dict:
         "tier_name": ticket.tier.name if ticket.tier else ticket.ticket_type,
         "tier_color": ticket.tier.color if ticket.tier else ticket.color,
         "status": ticket.status,
+        "is_vendor": False,
         "purchased_at": ticket.purchased_at.isoformat(),
     }
 
@@ -102,6 +136,18 @@ def validate_qr_token(token: str, event_id: int) -> dict:
             error_code="WRONG_EVENT",
         )
         
+    if payload.get("is_vendor"):
+        from apps.needs.models import NeedApplication
+        try:
+            app = NeedApplication.objects.select_related("need").get(id=payload.get("application_id"))
+        except NeedApplication.DoesNotExist:
+            raise TicketValidationError(
+                "Vendor application not found for this QR code.",
+                error_code="TICKET_NOT_FOUND",
+                status=404,
+            )
+        return validate_ticket(app.barcode, event_id)
+        
     # Get barcode to reuse validate_ticket logic
     try:
         ticket = Ticket.objects.get(id=payload.get("ticket_id"))
@@ -115,13 +161,64 @@ def validate_qr_token(token: str, event_id: int) -> dict:
     return validate_ticket(ticket.barcode, event_id)
 
 
-def admit_ticket(ticket_id: int, event_id: int, admitted_by_user) -> Ticket:
-    """Mark a ticket as admitted (used).
+def admit_ticket(ticket_id: int, event_id: int, admitted_by_user, is_vendor: bool = False) -> dict:
+    """Mark a ticket or vendor pass as admitted (used).
 
     Sets status to 'used', records used_at timestamp and admitting user.
-    Returns the updated Ticket instance.
+    Returns the ticket payload dict.
     Raises TicketValidationError on failure.
     """
+    if is_vendor:
+        from apps.needs.models import NeedApplication
+        try:
+            app = NeedApplication.objects.select_related("vendor", "need", "service").get(
+                pk=ticket_id
+            )
+        except NeedApplication.DoesNotExist:
+            raise TicketValidationError(
+                "Vendor application not found.",
+                error_code="TICKET_NOT_FOUND",
+                status=404,
+            )
+
+        if app.need.event_id != event_id:
+            raise TicketValidationError(
+                "This pass does not belong to this event.",
+                error_code="WRONG_EVENT",
+            )
+
+        if app.admitted_at is not None:
+            used_at_str = app.admitted_at.strftime("%b %d, %Y at %I:%M %p")
+            raise TicketValidationError(
+                f"This vendor pass has already been admitted ({used_at_str}).",
+                error_code="ALREADY_USED",
+            )
+
+        if app.status != "accepted":
+            raise TicketValidationError(
+                f"Cannot admit an application with status '{app.status}'.",
+                error_code="INVALID_STATUS",
+            )
+
+        app.admitted_at = timezone.now()
+        app.admitted_by = admitted_by_user
+        app.save(update_fields=["admitted_at", "admitted_by"])
+
+        return {
+            "id": app.id,
+            "barcode": app.barcode,
+            "status": "used",
+            "used_at": app.admitted_at.isoformat(),
+            "ticket_type": app.need.title,
+            "guest_name": app.vendor.get_full_name() or app.vendor.username,
+            "event_summary": {
+                "id": app.need.event.id,
+                "title": app.need.event.title,
+                "start_time": app.need.event.start_time,
+                "location_name": app.need.event.location_name,
+            }
+        }
+
     try:
         ticket = Ticket.objects.select_related("goer", "tier", "event").get(
             pk=ticket_id
@@ -157,4 +254,17 @@ def admit_ticket(ticket_id: int, event_id: int, admitted_by_user) -> Ticket:
     ticket.admitted_by = admitted_by_user
     ticket.save(update_fields=["status", "used_at", "admitted_by", "updated_at"])
 
-    return ticket
+    return {
+        "id": ticket.id,
+        "barcode": ticket.barcode,
+        "status": ticket.status,
+        "used_at": ticket.used_at.isoformat() if ticket.used_at else None,
+        "ticket_type": ticket.ticket_type,
+        "guest_name": ticket.guest_name,
+        "event_summary": {
+            "id": ticket.event.id,
+            "title": ticket.event.title,
+            "start_time": ticket.event.start_time,
+            "location_name": ticket.event.location_name,
+        }
+    }

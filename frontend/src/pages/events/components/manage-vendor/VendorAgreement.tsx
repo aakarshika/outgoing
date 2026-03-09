@@ -2,10 +2,12 @@ import { QRCodeSVG } from 'qrcode.react';
 import React, { useState } from 'react';
 export interface VendorAgreementProps {
     vendorName?: string;
-    applicationStatus: 'sent' | 'accepted' | 'rejected';
+    applicationStatus: 'pending' | 'sent' | 'accepted' | 'rejected' | 'withdrawn';
     vendorSigned: boolean;
     hostSigned: boolean;
     price?: number;
+    barcode?: string;
+    qrToken?: string;
     isHostView: boolean;
     onVendorConfirm?: () => void;
     onHostConfirm?: () => void;
@@ -17,6 +19,8 @@ export const VendorAgreement: React.FC<VendorAgreementProps> = ({
     vendorSigned,
     hostSigned,
     price = 0,
+    barcode,
+    qrToken,
     isHostView,
     onVendorConfirm,
     onHostConfirm,
@@ -107,15 +111,21 @@ export const VendorAgreement: React.FC<VendorAgreementProps> = ({
                             Show this QR code to the host when you arrive at the event for quick check-in.
                         </p>
                         <div className="bg-white p-4 border rounded-xl shadow-sm inline-block">
-                            <QRCodeSVG
-                                value={`vendor-pass-${vendorName}-${price}`}
-                                size={160}
-                                level="M"
-                                includeMargin={true}
-                            />
+                            {qrToken || barcode ? (
+                                <QRCodeSVG
+                                    value={qrToken || barcode || ''}
+                                    size={160}
+                                    level="M"
+                                    includeMargin={true}
+                                />
+                            ) : (
+                                <div className="h-[160px] w-[160px] flex items-center justify-center bg-gray-50 text-gray-400 border border-dashed rounded">
+                                    PENDING
+                                </div>
+                            )}
                         </div>
                         <div className="mt-4 font-mono text-sm tracking-widest text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded">
-                            VNDR-{Math.floor(Math.random() * 90000) + 10000}
+                            {barcode || `VNDR-${Math.floor(Math.random() * 90000) + 10000}`}
                         </div>
                     </div>
                 )}
@@ -123,27 +133,55 @@ export const VendorAgreement: React.FC<VendorAgreementProps> = ({
                 {/* Vendor Confirm Modal */}
                 {showVendorConfirmModal && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirm Agreement?</h2>
-                            <p className="text-gray-600 mb-6">
-                                By confirming, you agree to the terms and the set price of <span className="font-bold text-gray-900">${price.toFixed(2)}</span>. This action cannot be undone.
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowVendorConfirmModal(false)}
-                                    className="px-5 py-2 rounded text-gray-600 font-medium hover:bg-gray-100 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowVendorConfirmModal(false);
-                                        if (onVendorConfirm) onVendorConfirm();
-                                    }}
-                                    className="px-5 py-2 rounded bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
-                                >
-                                    Confirm Agreement
-                                </button>
+                        <div
+                            className="bg-[#2a2a2a] rounded shadow-xl max-w-md w-full relative overflow-hidden"
+                            style={{
+                                borderTop: '1px solid #e0d8c0',
+                                borderBottom: '1px solid #e0d8c0',
+                                borderLeft: '1px dashed #e0d8c0',
+                                borderRight: '1px dashed #e0d8c0',
+                                boxShadow: '4px 6px 0px #1a1a1a',
+                            }}
+                        >
+                            {/* Decorative hole punches */}
+                            <div className="absolute left-[-6px] top-0 bottom-0 w-[12px]"
+                                style={{
+                                    background: 'radial-gradient(circle at 0 0, transparent 0, transparent 4px, #2a2a2a 5px)',
+                                    backgroundSize: '12px 12px',
+                                    backgroundPosition: '0 0'
+                                }}>
+                            </div>
+                            <div className="absolute right-[-6px] top-0 bottom-0 w-[12px]"
+                                style={{
+                                    background: 'radial-gradient(circle at 100% 0, transparent 0, transparent 4px, #2a2a2a 5px)',
+                                    backgroundSize: '12px 12px',
+                                    backgroundPosition: '0 0'
+                                }}>
+                            </div>
+
+                            <div className="p-6 relative z-10 text-white">
+                                <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive', color: '#FFD700' }}>Confirm Agreement?</h2>
+                                <p className="mb-6" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem', lineHeight: 1.2 }}>
+                                    By confirming, you agree to the terms and the set price of <span className="font-bold text-[#FFD700]">${price.toFixed(2)}</span>. This action cannot be undone.
+                                </p>
+
+                                <div className="mt-4 pt-4 border-t border-dashed border-gray-600 flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setShowVendorConfirmModal(false)}
+                                        className="px-5 py-2 rounded text-gray-300 font-medium hover:bg-gray-800 transition-colors border border-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowVendorConfirmModal(false);
+                                            if (onVendorConfirm) onVendorConfirm();
+                                        }}
+                                        className="px-5 py-2 rounded bg-[#059669] text-white font-bold hover:bg-[#047857] transition-colors border-2 border-transparent hover:border-white shadow-[0_0_10px_rgba(5,150,105,0.5)]"
+                                    >
+                                        CONFIRM
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

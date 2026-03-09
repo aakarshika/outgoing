@@ -12,6 +12,7 @@ class NeedApplicationSerializer(serializers.ModelSerializer):
     need_title = serializers.CharField(source="need.title", read_only=True)
     event_title = serializers.CharField(source="need.event.title", read_only=True)
     event_id = serializers.IntegerField(source="need.event.id", read_only=True)
+    qr_token = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for NeedApplicationSerializer."""
@@ -27,9 +28,37 @@ class NeedApplicationSerializer(serializers.ModelSerializer):
             "message",
             "proposed_price",
             "status",
+            "barcode",
+            "qr_token",
+            "admitted_at",
             "created_at",
         ]
-        read_only_fields = ["id", "status", "created_at"]
+        read_only_fields = ["id", "status", "barcode", "qr_token", "admitted_at", "created_at"]
+
+    def get_qr_token(self, obj):
+        """Generate a signed QR token if accepted."""
+        if obj.status == "accepted" and obj.barcode and obj.qr_secret:
+            import base64
+            import hmac
+            import hashlib
+            import json
+            
+            payload = {
+                "type": "vendor",
+                "application_id": obj.id,
+                "barcode": obj.barcode,
+            }
+            payload_json = json.dumps(payload).encode("utf-8")
+            payload_b64 = base64.urlsafe_b64encode(payload_json).decode("utf-8").rstrip("=")
+            
+            signature = hmac.new(
+                obj.qr_secret.encode("utf-8"),
+                payload_b64.encode("utf-8"),
+                hashlib.sha256
+            ).hexdigest()
+            
+            return f"{payload_b64}.{signature}"
+        return None
 
 
 class EventNeedSerializer(serializers.ModelSerializer):

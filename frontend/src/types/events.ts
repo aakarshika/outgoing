@@ -142,9 +142,13 @@ export interface VendorApplicationInfo {
   id: number;
   need_id: number;
   need_title: string;
+  vendor_name: string;
   service_id: number | null;
   status: string;
   proposed_price: string | null;
+  barcode?: string;
+  qr_token?: string;
+  admitted_at?: string | null;
 }
 
 export interface TicketInfo {

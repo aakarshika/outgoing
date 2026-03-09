@@ -128,7 +128,9 @@ export function Navbar() {
   const isEventHost =
     isAuthenticated && user && event && user.username === event.host?.username;
   const isVendor =
-    isAuthenticated && user && event && !!(event.user_applications && event.user_applications.length > 0 && event.user_applications[0].status === 'accepted');
+    isAuthenticated && user && event &&
+    !!(event.user_applications
+      && event.user_applications.length > 0);
   const isNotOnManagePage = !location.pathname.includes('manage');
   const shouldShowSearch = location.pathname === '/';
 

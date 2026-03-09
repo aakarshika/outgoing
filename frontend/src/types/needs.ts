@@ -12,6 +12,9 @@ export interface NeedApplication {
   message: string;
   proposed_price: string | null;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  barcode?: string;
+  qr_token?: string;
+  admitted_at?: string | null;
   created_at: string;
 }
 

@@ -106,10 +106,37 @@ export default function ManageForHostPage() {
     const hostStepMatch = useMatch('/events/:id/host-event-management/:step');
     const activeSlug = hostStepMatch?.params.step;
     const hostBasePath = id ? `/events/${id}/host-event-management` : '/events/host-event-management';
-    const fallbackStep = HOST_STEPS[0];
+
+    // ── Remote data ───────────────────────────────────────────────────────────
+    const { data: eventResponse, refetch: refetchEvent, isLoading: isEventLoading } = useEvent(Number(id));
+    const { data: catResponse } = useCategories();
+
+    const event = eventResponse?.data;
+
+    const getDefaultStepSlug = () => {
+        if (!event) return HOST_STEPS[0].routeSlug;
+        switch (event.lifecycle_state) {
+            case 'published':
+                return 'services-prep';
+            case 'event_ready':
+                return 'event-readiness';
+            case 'live':
+                return 'live-attendance';
+            case 'completed':
+                return 'wrap-up';
+            case 'draft':
+            case 'cancelled':
+            case 'postponed':
+            case 'at_risk':
+            default:
+                return 'basic-details';
+        }
+    };
+    const defaultStepSlug = getDefaultStepSlug();
+
     const matchedStep = activeSlug ? HOST_STEPS.find((step) => step.routeSlug === activeSlug) : null;
     const hasValidSlug = Boolean(matchedStep);
-    const activeStep = matchedStep ?? fallbackStep;
+    const activeStep = matchedStep ?? HOST_STEPS.find((step) => step.routeSlug === defaultStepSlug) ?? HOST_STEPS[0];
     const activeStepIndex = HOST_STEPS.findIndex((step) => step.stepId === activeStep.stepId);
     const goToStep = useCallback(
         (stepId: number) => {
@@ -123,20 +150,17 @@ export default function ManageForHostPage() {
 
     useEffect(() => {
         if (!id) return;
+        if (isEventLoading) return;
+
         if (!activeSlug) {
-            navigate(`${hostBasePath}/${fallbackStep.routeSlug}`, { replace: true });
+            navigate(`${hostBasePath}/${defaultStepSlug}`, { replace: true });
             return;
         }
         if (activeSlug && !hasValidSlug) {
-            navigate(`${hostBasePath}/${fallbackStep.routeSlug}`, { replace: true });
+            navigate(`${hostBasePath}/${defaultStepSlug}`, { replace: true });
         }
-    }, [activeSlug, hasValidSlug, hostBasePath, fallbackStep.routeSlug, id, navigate]);
+    }, [activeSlug, hasValidSlug, hostBasePath, defaultStepSlug, id, navigate, isEventLoading]);
 
-    // ── Remote data ───────────────────────────────────────────────────────────
-    const { data: eventResponse, refetch: refetchEvent } = useEvent(Number(id));
-    const { data: catResponse } = useCategories();
-
-    const event = eventResponse?.data;
     const categories = (catResponse?.data || []).map((c: any) => ({
         id: c.id,
         name: c.name,
@@ -475,11 +499,10 @@ export default function ManageForHostPage() {
                                 className="sr-only"
                             />
                             <span
-                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${
-                                    inputMode === 'quick'
+                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${inputMode === 'quick'
                                         ? 'bg-yellow-300 border-gray-800 text-gray-900'
                                         : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
-                                }`}
+                                    }`}
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
                                 Quick Input
@@ -495,11 +518,10 @@ export default function ManageForHostPage() {
                                 className="sr-only"
                             />
                             <span
-                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${
-                                    inputMode === 'advanced'
+                                className={`px-4 py-2 border-2 font-bold text-xs uppercase tracking-wider shadow-[2px_2px_0px_#333] transition-all ${inputMode === 'advanced'
                                         ? 'bg-gray-900 border-gray-900 text-white'
                                         : 'bg-white border-gray-300 text-gray-600 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
-                                }`}
+                                    }`}
                                 style={{ fontFamily: '"Permanent Marker", cursive' }}
                             >
                                 Advanced Input
@@ -579,7 +601,7 @@ export default function ManageForHostPage() {
                             />
                         );
                     }
-                    
+
                     if (cId === 'when-where') {
                         return (
                             <Component
@@ -701,7 +723,7 @@ export default function ManageForHostPage() {
                                 </span>
                             </label>
                         )}
-                <SeriesTimeline occurrences={occurrences} currentEventId={Number(id)} />
+                        <SeriesTimeline occurrences={occurrences} currentEventId={Number(id)} />
 
                         <div className="flex gap-3 ml-auto">
                             {activeStepIndex > 0 && (<button
@@ -720,11 +742,10 @@ export default function ManageForHostPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className={`px-5 py-2 min-w-48 border-2 shadow-[2px_2px_0px_#333] font-bold text-sm transition-all disabled:opacity-60 ${
-                                        isDirty
+                                    className={`px-5 py-2 min-w-48 border-2 shadow-[2px_2px_0px_#333] font-bold text-sm transition-all disabled:opacity-60 ${isDirty
                                             ? 'bg-yellow-300 border-gray-800 text-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
                                             : 'bg-yellow-200/40 border-gray-300 text-gray-500'
-                                    }`}
+                                        }`}
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
                                     {isSubmitting ? 'Saving…' : 'Save'}
@@ -734,11 +755,10 @@ export default function ManageForHostPage() {
                                 <button
                                     type="button"
                                     onClick={() => goToStep(HOST_STEPS[activeStepIndex + 1].stepId)}
-                                    className={`px-5 py-2 border-2 shadow-[2px_2px_0px_#555] font-bold text-sm transition-all ${
-                                        isDirty
+                                    className={`px-5 py-2 border-2 shadow-[2px_2px_0px_#555] font-bold text-sm transition-all ${isDirty
                                             ? 'bg-yellow-300 text-gray-900 border-gray-800 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#333]'
                                             : 'bg-gray-900 text-white border-gray-900 hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_#555]'
-                                    }`}
+                                        }`}
                                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                                 >
                                     Next →
