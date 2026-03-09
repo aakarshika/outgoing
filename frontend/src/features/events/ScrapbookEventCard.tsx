@@ -11,6 +11,7 @@ import { CategoricalBackground, CATEGORY_THEMES } from './CategoricalBackground'
 import { LikeButton } from './LikeButton';
 import { LocationTag } from './LocationTag';
 import { TicketStatusBadge } from './TicketStatusBadge';
+import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 
 interface EventListItem {
   id: number;
@@ -101,10 +102,16 @@ export const ScrapbookEventCard = ({
   event,
   isFocused,
   showClip = false,
+  rotation,
+  rotationhover,
+  disableHover,
 }: {
   event: EventListItem;
   isFocused?: boolean;
   showClip?: boolean;
+  rotation?: number;
+  rotationhover?: number;
+  disableHover?: boolean;
 }) => {
   const { user, isAuthenticated } = useAuth();
   const isHost =
@@ -138,9 +145,15 @@ export const ScrapbookEventCard = ({
   //   () => (1 + Math.random() * 2),
   //   [],
   // );
-  const rotation = Math.random() * 8 - 4;
+  const baseRotation = useMemo(
+    () => (rotation !== undefined ? rotation : Math.random() * 8 - 4),
+    [rotation],
+  );
 
-  const rotationhover = rotation + (1 + Math.random() * 2);
+  const hoverRotation = useMemo(
+    () => (rotationhover !== undefined ? rotationhover : baseRotation + (1 + Math.random() * 2)),
+    [rotationhover, baseRotation],
+  );
 
   return (
     <Box
@@ -152,13 +165,13 @@ export const ScrapbookEventCard = ({
         sx={{
           aspectRatio: isFocused && !isNoImageCard ? 'auto' : '1 / 1',
           transformOrigin: 'top center',
-          transform: 'rotate(' + rotation + 'deg) ',
-
+          transform: `rotate(${baseRotation}deg)`,
           display: 'block',
           textDecoration: 'none',
           position: 'relative',
+          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            transform: 'rotate(' + rotationhover + 'deg) ',
+            transform: disableHover ? 'none' : `rotate(${hoverRotation}deg)`,
           },
         }}
       >
@@ -168,15 +181,16 @@ export const ScrapbookEventCard = ({
           showDecoration={false}
           sx={{
             bgcolor: '#fff',
-            p: isNoImageCard ? '14px 12px 18px 12px' : '12px 12px 40px 12px',
+            p: isNoImageCard ? '14px 12px 18px 12px' : '0px 0px 40px 12px',
             minHeight: isNoImageCard ? { xs: 300, sm: 320 } : 'auto',
             boxShadow: isFocused
               ? '0 20px 40px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1)'
               : '0 10px 25px rgba(0,0,0,0.1), 0 5px 10px rgba(0,0,0,0.05)',
             border: '1px solid #e5e7eb',
             transformOrigin: 'top center',
-            transform: isFocused ? 'scale(1.15)' : 'scale(1)',
+            transform: isFocused ? 'scale(1.1)' : 'scale(1)',
             position: 'relative',
+            // overflow: isFocused ? 'visible' : 'hidden', // Allow poster elements to peek out if needed
             overflow: 'hidden',
             transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
@@ -241,21 +255,22 @@ export const ScrapbookEventCard = ({
                   fontSize: '1.25rem',
                   color: '#1a1a1a',
                   lineHeight: 1.2,
-                  mt: 0.5,
+                  mt: 1.5,
                   mb: 2,
                   display: '-webkit-box',
                   WebkitLineClamp: 3,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
+                  textAlign: 'center',
                 }}
               >
                 {event.title}
               </Typography>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                   <Typography
-                    sx={{ fontSize: '0.82rem', color: '#555', fontFamily: 'serif' }}
+                    sx={{ fontSize: '0.82rem', color: '#555', fontFamily: 'serif', textAlign: 'center' }}
                   >
                     {isFocused
                       ? event.description || ''
@@ -287,7 +302,6 @@ export const ScrapbookEventCard = ({
                       {relativeTime}
                     </Typography>
                   </Box>
-
                   <Box
                     sx={{
                       minWidth: 0,
@@ -316,29 +330,31 @@ export const ScrapbookEventCard = ({
               <Box
                 sx={{
                   aspectRatio: isFocused ? 'auto' : '1.85 / 1',
-                  bgcolor: '#eee',
+                  minHeight: isFocused ? 260 : 'auto',
                   overflow: 'hidden',
                   mb: 2,
-                  border: '1px solid rgba(0,0,0,0.05)',
                   position: 'relative',
                 }}
               >
-                <Media
-                  src={event.cover_image || undefined}
-                  alt={event.title}
+                <Box
                   className="polaroid-img"
-                  style={{
+                  sx={{
                     width: '100%',
                     height: '100%',
                     maxHeight: isFocused ? '400px' : 'auto',
                     objectFit: isFocused ? 'contain' : 'cover',
-                    transition: 'transform 0.5s ease',
+                    transition: 'all 0.5s ease',
                     transformOrigin: 'top center',
                   }}
-                />
+                >
+                  <PosterForEventCard
+                    imageUrl={event?.cover_image || ''}
+                    title={event.title}
+                  />
+                </Box>
               </Box>
 
-              <Box sx={{ px: 0.5 }}>
+              <Box sx={{ px: 0.5, pl: '12px' }}>
                 <Typography
                   sx={{
                     fontFamily: '"Permanent Marker"',

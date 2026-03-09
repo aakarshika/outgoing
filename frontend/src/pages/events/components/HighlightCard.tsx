@@ -9,16 +9,20 @@ interface HighlightCardProps {
   highlight: any;
   onClick?: () => void;
   rotation?: number;
+  rotationhover?: number;
   showClip?: boolean;
   isFocused?: boolean;
+  disableHover?: boolean;
 }
 
 export const HighlightCard = ({
   highlight,
   onClick,
   rotation = 0,
+  rotationhover,
   showClip = false,
   isFocused = false,
+  disableHover = false,
 }: HighlightCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,8 +55,10 @@ export const HighlightCard = ({
           caption={highlight.text}
           author={highlight.author_username}
           rotation={rotation}
+          rotationhover={rotationhover}
           showClip={showClip}
           isFocused={isFocused}
+          disableHover={disableHover}
         />
 
         {/* Cute Interaction Badges */}

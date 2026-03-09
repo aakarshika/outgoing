@@ -1,4 +1,5 @@
 import { Box, Paper, Typography } from '@mui/material';
+import { useMemo } from 'react';
 
 import { Media } from '@/components/ui/media';
 
@@ -36,18 +37,26 @@ export const PolaroidFrame = ({
   author,
   type = 'image',
   rotation,
+  rotationhover,
   showClip = false,
   isFocused = false,
+  disableHover = false,
 }: {
   src?: string | null;
   caption?: string;
   author?: string;
   type?: 'image' | 'video';
   rotation?: number;
+  rotationhover?: number;
   showClip?: boolean;
   isFocused?: boolean;
+  disableHover?: boolean;
 }) => {
-  const rot = rotation ?? Math.random() * 8 - 4;
+  const baseRotation = useMemo(() => rotation ?? (Math.random() * 8 - 4), [rotation]);
+  const hoverRotation = useMemo(
+    () => (rotationhover !== undefined ? rotationhover : baseRotation + (1 + Math.random() * 2)),
+    [rotationhover, baseRotation],
+  );
 
   return (
     <Box sx={{ position: 'relative', display: 'inline-block', width: '100%' }}>
@@ -64,9 +73,14 @@ export const PolaroidFrame = ({
           pb: 6,
           bgcolor: 'white',
           position: 'relative',
-
           maxWidth: '100%',
           border: '1px solid #efefef',
+          transformOrigin: 'top center',
+          transform: `rotate(${baseRotation}deg)`,
+          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: disableHover ? 'none' : `rotate(${hoverRotation}deg)`,
+          },
         }}
       >
         <Box

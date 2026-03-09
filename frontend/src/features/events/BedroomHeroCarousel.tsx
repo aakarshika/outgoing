@@ -139,7 +139,7 @@ const CustomCardCarouselWrapper = ({
     [index],
   );
 
-  const rotationhover = rotation + (1 + Math.random() * 2);
+  const rotationhover = useMemo(() => rotation + (2 + Math.random() * 2), [rotation]);
 
   return (
     <Box
@@ -169,21 +169,30 @@ const CustomCardCarouselWrapper = ({
           width: '100%',
           height: '100%',
           transformOrigin: 'top center',
-          transform: 'rotate(' + rotation + 'deg)',
+          transform: `rotate(${rotation}deg)`,
+          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           '& > *': { width: '100%', height: isFocused ? 'auto' : '100%', m: 0 },
           '&:hover': {
-            transform: 'rotate(' + rotationhover + 'deg) ',
+            transform: `rotate(${rotationhover}deg)`,
           },
-
         }}
       >
         {event ?
-          <ScrapbookEventCard event={eventdata} isFocused={isFocused} showClip />
+          <ScrapbookEventCard
+            event={eventdata}
+            isFocused={isFocused}
+            showClip
+            rotation={rotation}
+            rotationhover={rotationhover}
+            disableHover
+          />
           : highlight ? (
             <HighlightCard
               highlight={highlight}
               showClip
               isFocused={isFocused}
+              rotation={rotation}
+              disableHover
             />
           ) : (
             <>

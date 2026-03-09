@@ -232,7 +232,7 @@ export const HighlightFeedViewer = ({
           width: '100vw',
           height: '100vh',
           zIndex: 9999,
-          bgcolor: 'black',
+          bgcolor: 'rgba(0,0,0,0.8)',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -367,7 +367,7 @@ export const HighlightFeedViewer = ({
       sx={{ zIndex: 9999 }}
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(0,0,0,0.85)',
+          bgcolor: 'rgba(0,0,0,0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -518,6 +518,6 @@ export const HighlightFeedViewer = ({
         </Box>
 
       </Box>
-    </Dialog>
+    </Dialog >
   );
 };

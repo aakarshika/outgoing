@@ -39,7 +39,7 @@ export const HighlightCommentDrawer = ({
         },
       }}
       sx={{
-        zIndex: 2500,
+        zIndex: 10005,
       }}
     >
       {/* Header */}
