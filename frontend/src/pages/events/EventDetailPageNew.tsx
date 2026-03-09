@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
+import { useBackground } from '@/theme/BackgroundProvider';
+
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
@@ -39,6 +41,7 @@ import { WhenWhereCard } from './components/WhenWhereCard';
 // --- Main Page Component ---
 
 export default function EventDetailPageNew() {
+  const { setBackgroundComponent } = useBackground();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -98,6 +101,38 @@ export default function EventDetailPageNew() {
       recordView.mutate();
     }
   }, [id, isAuthenticated]);
+
+  useEffect(() => {
+    if (event) {
+      if (event.lifecycle_state === 'live') {
+        setBackgroundComponent(
+          <div
+            className="fixed inset-0"
+            style={{
+              backgroundColor: '#fef3c7',
+              backgroundImage: 'radial-gradient(#fde68a 0.5px, #ffdebdff 0.5px)',
+              backgroundSize: '15px 15px',
+              zIndex: -1,
+              pointerEvents: 'none',
+            }}
+          />
+        );
+      } else {
+        setBackgroundComponent(
+          <div
+            className="fixed inset-0"
+            style={{
+              backgroundColor: '#fcfcf3ff',
+              backgroundImage: 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
+              backgroundSize: '15px 15px',
+              zIndex: -1,
+              pointerEvents: 'none',
+            }}
+          />
+        );
+      }
+    }
+  }, [event, setBackgroundComponent]);
 
   useEffect(() => {
     const handleScroll = (e: any) => {
@@ -252,13 +287,6 @@ export default function EventDetailPageNew() {
       <Box
         sx={{
           minHeight: '100vh',
-          // bgcolor: event.lifecycle_state === 'live' ? '#fef3c7' : '#f4f1ea',
-          // backgroundAttachment: 'fixed',
-          // backgroundImage:
-          //   event.lifecycle_state === 'live'
-          //     ? 'radial-gradient(#fde68a 0.5px, #fef3c7 0.5px)'
-          //     : 'radial-gradient(#d1d5db 0.5px, #f4f1ea 0.5px)',
-          backgroundSize: '15px 15px',
           p: { xs: 2, sm: 4, md: 8 },
           color: 'inherit',
           transition: 'all 0.5s ease',

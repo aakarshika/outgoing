@@ -113,10 +113,10 @@ export const AppRoutes = () => {
 
   // Debug: log filtered routes
   if (process.env.NODE_ENV === 'development') {
-    console.log(
-      'Filtered routes:',
-      filteredRoutes.map((r) => r.path),
-    );
+    // console.log(
+    //   'Filtered routes:',
+    //   filteredRoutes.map((r) => r.path),
+    // );
   }
 
   return (

@@ -2,7 +2,6 @@ import {
   Box,
   Dialog,
   Fade,
-  IconButton,
   Stack,
   Typography,
   useMediaQuery,
@@ -11,6 +10,8 @@ import {
 import { ChevronLeft, ChevronRight, Heart, MessageCircle, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+
+import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
@@ -22,39 +23,27 @@ import { HighlightComments } from './HighlightComments';
 // --- Comic Theme Constants ---
 const COMIC_BORDER = '3px solid #1a1a1a';
 const COMIC_SHADOW = '4px 4px 0px #1a1a1a';
-const COMIC_SHADOW_HOVER = '2px 2px 0px #1a1a1a';
 
 // --- Comic Styled Components ---
 const ComicIconButton = ({
   children,
   onClick,
-  active,
-  color = 'white',
-  activeColor = '#ef4444',
   sx = {},
+  Icon,
+  iconProps,
 }: any) => (
-  <IconButton
+  <SharedComicIconButton
     onClick={onClick}
-    sx={{
-      color: active ? activeColor : color,
-      bgcolor: 'white',
-      border: COMIC_BORDER,
-      boxShadow: COMIC_SHADOW,
-      transition: 'all 0.1s ease',
-      '&:hover': {
-        bgcolor: '#f3f4f6',
-        transform: 'translate(2px, 2px)',
-        boxShadow: COMIC_SHADOW_HOVER,
-      },
-      '&:active': {
-        transform: 'translate(4px, 4px)',
-        boxShadow: 'none',
-      },
-      ...sx,
-    }}
+    variant="solid"
+    shape="round"
+    Icon={Icon}
+    iconProps={iconProps}
+    color={'black'}
+    accentColor={"white"}
+    style={sx}
   >
     {children}
-  </IconButton>
+  </SharedComicIconButton>
 );
 
 // --- Highlight Interaction Section (Mobile) ---
@@ -104,11 +93,10 @@ const HighlightInteractionsMobile = ({
 
       <Box sx={{ textAlign: 'center' }}>
         <ComicIconButton
-          active={highlight.user_has_liked}
           onClick={() => isAuthenticated && toggleLike.mutate(highlight.id)}
-        >
-          <Heart fill={highlight.user_has_liked ? '#ef4444' : 'none'} />
-        </ComicIconButton>
+          Icon={Heart}
+          iconProps={{ fill: highlight.user_has_liked ? '#ef4444' : 'none' }}
+        />
         <Typography
           sx={{
             fontSize: '0.9rem',
@@ -124,9 +112,11 @@ const HighlightInteractionsMobile = ({
       </Box>
 
       <Box sx={{ textAlign: 'center' }}>
-        <ComicIconButton onClick={onOpenComments}>
-          <MessageCircle fill="none" color="black" />
-        </ComicIconButton>
+        <ComicIconButton
+          onClick={onOpenComments}
+          Icon={MessageCircle}
+          iconProps={{ fill: "none", color: "black" }}
+        />
         <Typography
           sx={{
             fontSize: '0.9rem',
@@ -149,26 +139,12 @@ const HighlightInteractionsMobile = ({
       >
         <ComicIconButton
           onClick={handlePrev}
-          sx={{
-            opacity: activeIndex > 0 ? 1 : 0.5,
-
-            color: 'rgba(0,0,0,0.5)',
-            backgroundColor: 'white',
-          }}
-        >
-          <ChevronLeft />
-        </ComicIconButton>
+          Icon={ChevronLeft}
+        />
         <ComicIconButton
           onClick={handleNext}
-          sx={{
-            opacity: activeIndex < highlights.length - 1 ? 1 : 0.5,
-
-            color: 'rgba(0,0,0,0.5)',
-            backgroundColor: 'white',
-          }}
-        >
-          <ChevronRight />
-        </ComicIconButton>
+          Icon={ChevronRight}
+        />
       </Box>
     </Stack>
   );
@@ -293,14 +269,8 @@ export const HighlightFeedViewer = ({
       >
         <ComicIconButton
           onClick={onClose}
-          sx={{
-            position: 'absolute', top: 32, left: 16, zIndex: 10000,
-            color: 'rgba(0,0,0,0.5)',
-            backgroundColor: 'white',
-          }}
-        >
-          <X />
-        </ComicIconButton>
+          Icon={X}
+        />
 
         <Box
           ref={scrollContainerRef}
@@ -435,19 +405,14 @@ export const HighlightFeedViewer = ({
     >
       <ComicIconButton
         onClick={onClose}
+        Icon={X}
         sx={{
           position: 'absolute',
           top: 32,
           left: 32,
           zIndex: 10000,
-          color: 'rgba(0,0,0,0.5)',
-          backgroundColor: 'white',
-          border: '1px solid #eee',
-          boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
         }}
-      >
-        <X />
-      </ComicIconButton>
+      />
 
       <Box
         sx={{
@@ -499,26 +464,18 @@ export const HighlightFeedViewer = ({
           >
             <ComicIconButton
               onClick={handlePrev}
+              Icon={ChevronLeft}
               sx={{
                 visibility: activeIndex > 0 ? 'visible' : 'hidden',
-
-                color: 'rgba(0,0,0,0.5)',
-                backgroundColor: 'white',
               }}
-            >
-              <ChevronLeft />
-            </ComicIconButton>
+            />
             <ComicIconButton
               onClick={handleNext}
+              Icon={ChevronRight}
               sx={{
                 visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
-
-                color: 'rgba(0,0,0,0.5)',
-                backgroundColor: 'white',
               }}
-            >
-              <ChevronRight />
-            </ComicIconButton>
+            />
           </Box>
           {/* Caption Overlay Web */}
           <Box

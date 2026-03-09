@@ -83,10 +83,10 @@
   }
 
   html {
-    @apply bg-background transition-colors duration-300;
+    @apply bg-transparent transition-colors duration-300;
   }
 
   body {
-    @apply min-h-screen bg-background text-foreground font-sans transition-colors duration-300;
+    @apply min-h-screen bg-transparent text-foreground font-sans transition-colors duration-300;
   }
 }

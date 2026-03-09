@@ -99,7 +99,26 @@ export const HOST_STEPS = [
 ];
 
 
+import { useBackground } from '@/theme/BackgroundProvider';
+
 export default function ManageForHostPage() {
+    const { setBackgroundComponent } = useBackground();
+
+    useEffect(() => {
+        setBackgroundComponent(
+            <div
+                className="fixed inset-0"
+                style={{
+                    // backgroundImage: 'radial-gradient(hsla(267, 81%, 72%, 1.00) 0.5px, transparent 0.5px)',
+                    backgroundSize: '15px 15px',
+                    backgroundColor: '#f4f2f9ff',
+                    zIndex: -1,
+                    pointerEvents: 'none',
+                }}
+            />
+        );
+    }, [setBackgroundComponent]);
+
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -670,14 +689,7 @@ export default function ManageForHostPage() {
     };
 
     return (
-        <div
-            className="min-h-screen px-4 sm:px-6 py-8"
-            style={{
-                background: 'hsl(235, 45%, 97%)',
-                backgroundImage: 'radial-gradient(hsl(235, 25%, 85%) 0.5px, transparent 0.5px)',
-                backgroundSize: '15px 15px',
-            }}
-        >
+        <div className="min-h-screen px-4 sm:px-6 py-8">
             <div className="mx-auto max-w-4xl">
                 {/* Series timeline (always visible) */}
 

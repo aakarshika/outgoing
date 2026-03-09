@@ -13,9 +13,9 @@ export default function ProfilePage() {
     <div
       className="flex min-h-screen w-full"
       style={{
-        background: '#f4f1ea',
-        backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-        backgroundSize: '15px 15px',
+        // background: '#f4f1ea',
+        // backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+        // backgroundSize: '15px 15px',
       }}
     >
       <ProfileSidebar />

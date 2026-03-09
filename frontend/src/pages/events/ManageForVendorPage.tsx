@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useBackground } from '@/theme/BackgroundProvider';
 import { useMatch, useNavigate, useParams } from 'react-router-dom';
 
 import { useEvent } from '@/features/events/hooks';
@@ -38,6 +39,23 @@ export const VENDOR_STEPS = [
 ];
 
 export default function ManageForVendorPage() {
+    const { setBackgroundComponent } = useBackground();
+
+    useEffect(() => {
+        setBackgroundComponent(
+            <div
+                className="fixed inset-0"
+                style={{
+                    // backgroundImage: 'radial-gradient(hsla(174, 99%, 42%, 1.00) 0.5px, transparent 0.5px)',
+                    backgroundSize: '15px 15px',
+                    backgroundColor: '#f3fbfaff',
+                    zIndex: -1,
+                    pointerEvents: 'none',
+                }}
+            />
+        );
+    }, [setBackgroundComponent]);
+
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const vendorStepMatch = useMatch('/events/:id/service-event-management/:step');
@@ -86,13 +104,7 @@ export default function ManageForVendorPage() {
     };
 
     return (
-        <div
-            className="min-h-screen px-4 sm:px-6 py-8"
-            style={{
-                // backgroundImage: 'radial-gradient(hsl(174, 20%, 80%) 0.5px, transparent 0.5px)',
-                backgroundSize: '15px 15px',
-            }}
-        >
+        <div className="min-h-screen px-4 sm:px-6 py-8">
             <div className="mx-auto max-w-4xl">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: '"Permanent Marker", cursive' }}>

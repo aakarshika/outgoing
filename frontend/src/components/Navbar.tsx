@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { ComicIconButton } from '@/components/ui/ComicIconButton';
 import { useAlerts } from '@/features/alerts/hooks';
 import { useAuth } from '@/features/auth/hooks';
 import { useEvent, useEventAutocomplete } from '@/features/events/hooks';
@@ -204,19 +205,49 @@ export function Navbar() {
         <div className="mx-auto max-w-[1600px] bg-transparent px-4 sm:px-6 lg:px-8">
           <div className="flex w-full flex-col gap-2">
             <div className="flex h-16 items-center justify-between gap-2">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center">
+              <div className="absolute -inset-1 bg-[#f8c163ff] opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
+              <div className="">
+                </div>
+                <div className="sm:hidden xs:hidden flex">
+                  {/* Logo for small screens */}
                 <Link
-                  to="/"
-                  className="flex flex-shrink-0 items-center mr-4 relative group"
-                >
-                  <div className="absolute -inset-1 bg-[#f8c163ff] opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
-                  <span
-                    className="text-4xl font-bold text-gray-900 relative z-10"
-                    style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
+                    to="/"
+                    className="flex flex-shrink-0 items-center mr-4 relative group"
                   >
-                    Outgoing
-                  </span>
-                </Link>
+
+                    {/* Outgoing Logo */}
+                    <span
+                      className="text-4xl font-bold text-gray-900 relative z-10"
+                      style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
+                    >
+                      <img src="assets/go-symbol.png" alt="Outgoing" title="Outgoing" className="h-10 w-10"
+                      style={{ filter: 'drop-shadow(2px 2px 1px #E2BF00) ',
+                         transform: 'scale(1.3)',
+                        }}
+                       />
+                    </span>
+                  </Link>
+                </div>
+                <div className="sm:flex xs:flex hidden">
+                  {/* Logo for medium screens */}
+                  <Link
+                    to="/"
+                    className="flex flex-shrink-0 items-center relative group"
+                  >
+                    <span
+                      className="text-4xl inline-flex items-center font-bold text-gray-900 relative z-10"
+                      style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
+                    >
+                      Out
+                      <img src="assets/go-symbol.png" alt="Outgoing" title="Outgoing" className="h-10 w-10"
+                      style={{ filter: 'drop-shadow(2px 2px 1px #E2BF00) ',
+                         transform: 'scale(1.3)',
+                        }}
+                       />ing
+                    </span>
+                  </Link>
+                </div>
                 {shouldShowSearch && (
                   <div className="hidden md:flex relative flex-1 min-w-0 max-w-[900px] mx-4 mt-4 lg:mx-8">
                     <form
@@ -396,13 +427,14 @@ export function Navbar() {
                           </div>
                         )}
                       </div>
-                      <button
-                        type="submit"
-                        className="ml-2 rounded-none border-2 border-gray-800 bg-[#f8c163] p-3 text-gray-900 shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
-                        style={{ fontFamily: '"Permanent Marker"' }}
-                      >
-                        <Search size={20} strokeWidth={3} />
-                      </button>
+                      <ComicIconButton
+                        // variant="outline"
+                        variant="solid"
+                        accentColor="#f8c163"
+                        Icon={Search}
+                        className="ml-2"
+                        iconProps={{ size: 20, strokeWidth: 3 }}
+                      />
                     </form>
                     {showSuggestions && suggestions.length > 0 && (
                       <div className="absolute top-[4rem] left-0 z-50 w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-2 shadow-[4px_5px_0px_#333] overflow-hidden">
@@ -439,7 +471,7 @@ export function Navbar() {
                       onClick={() => navigate('/events/' + event?.id + '')}
                       className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
                     >
-                      <ArrowLeft className="h-5 w-5" />
+                      <ArrowLeft className="h-5 w-5" strokeWidth={3} />
                     </button>
                     <div>
                       <h1
@@ -458,40 +490,63 @@ export function Navbar() {
               <div className="flex items-center gap-2">
                 {isAuthenticated ? (
                   <>
-                    <Button variant="ghost" size="icon" asChild className="relative">
+                  <div className="hidden sm:flex xs:flex items-center gap-2">
+                    <ComicIconButton
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      Icon={Bell}
+                    >
                       <Link to="/alerts" aria-label="Alerts">
-                        <Bell className="h-5 w-5" />
-                        {alertsCount > 0 && (
-                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                            {alertsCount}
-                          </span>
-                        )}
+                        <div className="absolute top-0 right-0 h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white z-10">
+                          {alertsCount > 0 && <span>{alertsCount}</span>}
+                        </div>
                       </Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to="/events/create" aria-label="Create Event">
-                        <Plus className="h-5 w-5" />
-                      </Link>
-                    </Button>
+                    </ComicIconButton>
+                    <ComicIconButton
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      Icon={Plus}
+                    >
+                      <Link to="/events/create" aria-label="Create Event" />
+                    </ComicIconButton>
 
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to="/calendar" aria-label="Calendar">
-                        <Calendar className="h-5 w-5" />
-                      </Link>
-                    </Button>
-
+                    <ComicIconButton
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      Icon={Calendar}
+                    >
+                      <Link to="/calendar" aria-label="Calendar" />
+                    </ComicIconButton>
+                    </div>
                     {isVendor && isNotOnManagePage && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        asChild
-                        className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-[#00CCCC] text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-[#0eacacff] transition-all font-bold"
-                        style={{ fontFamily: '"Permanent Marker"' }}
-                      >
-                        <Link to={`/events/${eventId}/service-event-management/application`}>
-                          <Briefcase className="h-4 w-4" /> Manage Service
-                        </Link>
-                      </Button>
+                      <>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          asChild
+                          className="hidden gap-1.5 md:inline-flex rounded-none border-2 border-gray-800 bg-[#00CCCC] text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-[#0eacacff] transition-all font-bold"
+                          style={{ fontFamily: '"Permanent Marker"' }}
+                        >
+                          <Link to={`/events/${eventId}/service-event-management/application`}>
+                            <Pencil className="h-4 w-4" /> Manage Service
+                          </Link>
+                        </Button>
+                        {/* Small screens Pencil Icon */}
+                        <div className="md:hidden lg:hidden">
+                          <ComicIconButton
+                            variant="solid"
+                            accentColor="#00CCCC"
+                            size="sm"
+                            asChild
+                            Icon={Pencil}
+                          >
+                            <Link to={`/events/${eventId}/service-event-management/application`} aria-label="Manage Service" />
+                          </ComicIconButton>
+                        </div>
+                      </>
                     )}
 
                     {isEventHost && isNotOnManagePage && (
@@ -508,26 +563,23 @@ export function Navbar() {
                             <FileEdit className="h-4 w-4" /> Manage event
                           </Link>
                         </Button>
-
-                        {/* Small screens Pencil Icon */}
-                        <Button
-                          variant="default"
-                          size="icon"
-                          asChild
-                          className="inline-flex md:hidden rounded-none border-2 border-gray-800 bg-yellow-400 text-black shadow-[2px_3px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-yellow-500 transition-all"
-                        >
-                          <Link
-                            to={`/events/${eventId}/host-event-management/basic-details`}
-                            aria-label="Edit the event"
+                        <div className="md:hidden lg:hidden">
+                          {/* Small screens Pencil Icon */}
+                          <ComicIconButton
+                            accentColor="#AF90F9"
+                            size="sm"
+                            asChild
+                            Icon={Pencil}
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                            <Link to={`/events/${eventId}/host-event-management/basic-details`} aria-label="Edit the event" />
+                          </ComicIconButton>
+                        </div>
+
                       </>
                     )}
                   </>
                 ) : (
-                  <div className="hidden gap-2 sm:flex">
+                  <div className="hidden gap-2 sm:flex xs:flex">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -546,16 +598,16 @@ export function Navbar() {
                     </Button>
                   </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="icon"
+                <ComicIconButton
+                  variant="solid"
+                  size="sm"
+                  shape="square"
                   onClick={() => setIsMenuOpen((open) => !open)}
                   aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={isMenuOpen}
-                  className="border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] rounded-md transition-all ml-2"
-                >
-                  {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                </Button>
+                  className="ml-2"
+                  Icon={isMenuOpen ? X : Menu}
+                />
               </div>
             </div>
           </div>
@@ -587,14 +639,14 @@ export function Navbar() {
                   className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-blue-400 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_3px_0px_#333] hover:bg-blue-500 font-bold"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  <Plus className="h-5 w-5" /> Create Event
+                  <Plus className="h-5 w-5" strokeWidth={3} /> Create Event
                 </Link>
                 <Link
                   to="/vendors/create"
                   className="flex w-full items-center justify-center gap-2 rounded-none border-2 border-gray-800 bg-green-500 px-4 py-3 text-white shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_3px_0px_#333] hover:bg-green-600 font-bold"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  <Briefcase className="h-5 w-5" /> Create Service
+                  <Briefcase className="h-5 w-5" strokeWidth={3} /> Create Service
                 </Link>
               </div>
             )}

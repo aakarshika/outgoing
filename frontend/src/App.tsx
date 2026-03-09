@@ -20,18 +20,22 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   });
 }
 
+import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
+
 function AppContent() {
   const location = useLocation();
+  const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
 
   return (
-    <div className="flex flex-col min-h-screen bg-red-500 text-foreground transition-colors duration-300">
+    <div className="relative flex flex-col min-h-screen text-foreground transition-colors duration-300">
+      {backgroundComponent}
       <Navbar />
       <Toaster />
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
-      {!isGallery && <div className="mt-50 bg-red-500">
+      {!isGallery && <div className="mt-50">
         <Footer />
       </div>}
     </div>
@@ -44,8 +48,10 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-            <ScrollToTop />
-            <AppContent />
+            <BackgroundProvider>
+              <ScrollToTop />
+              <AppContent />
+            </BackgroundProvider>
           </BrowserRouter>
           {process.env.NODE_ENV === 'development' && (
             <ReactQueryDevtools initialIsOpen={false} />
