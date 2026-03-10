@@ -8,10 +8,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
-import {
-  CategoricalBackground,
-  getCategoryTheme,
-} from './CategoricalBackground';
+import { CategoricalBackground, getCategoryTheme } from './CategoricalBackground';
 import { LikeButton } from './LikeButton';
 import { LocationTag } from './LocationTag';
 import {
@@ -449,10 +446,7 @@ export const ScrapbookEventCard = ({
           />
 
           {event.category && (
-            <CategorySticker
-              categoryName={event.category.name!}
-              theme={theme}
-            />
+            <CategorySticker categoryName={event.category.name!} theme={theme} />
           )}
 
           {event.lifecycle_state === 'live' && <LiveBadge />}
@@ -561,10 +555,7 @@ export const ScrapbookEventCardLandscape = ({
               '& img': { objectFit: 'cover', width: '100%', height: '100%' },
             }}
           >
-            <Media
-              src={event.cover_image || ''}
-              alt={event.title}
-            />
+            <Media src={event.cover_image || ''} alt={event.title} />
           </Box>
         )}
       </Box>
@@ -585,10 +576,7 @@ export const ScrapbookEventCardLandscape = ({
         }}
       >
         {event.category && (
-          <CategoryStickerCompact
-            categoryName={event.category.name!}
-            theme={theme}
-          />
+          <CategoryStickerCompact categoryName={event.category.name!} theme={theme} />
         )}
 
         <Typography

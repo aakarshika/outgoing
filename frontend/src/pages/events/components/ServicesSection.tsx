@@ -1,17 +1,12 @@
-import {
-  Box,
-  Collapse,
-  Grid,
-  IconButton,
-  Typography,
-} from '@mui/material';
+import { Box, Collapse, Grid, IconButton, Typography } from '@mui/material';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
+import { getCategoryLabel } from '@/constants/categories';
 
 import { ClassifiedAd } from './ClassifiedAd';
 import { HostBusinessCard } from './HostBusinessCard';
 import { MiniBusinessCard } from './MiniBusinessCard';
-import { getCategoryLabel } from '@/constants/categories';
 
 export const ServicesSection = ({
   event,
@@ -52,7 +47,7 @@ export const ServicesSection = ({
   const isCenter = highlights.length === 0;
 
   // return displayNeeds.filter(n => n.status !== 'override_filled' && n.status !== 'filled').length > 0 && (
-    return (
+  return (
     <Box sx={{ mt: 6 }}>
       {/* Services Header Toggle */}
       <Box
@@ -77,7 +72,6 @@ export const ServicesSection = ({
           }}
         >
           hustler APPLICATIONS OPEN!
-
         </Typography>
         <IconButton size="small">
           {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -89,35 +83,38 @@ export const ServicesSection = ({
           <Grid container spacing={2}>
             {displayNeeds.length > 0 && (
               <>
-                {displayNeeds.filter(n => n.status !== 'override_filled').map((need: any) => {
-                  const isEligible = myServices.some(
-                    (s: any) =>
-                      s.category.toLowerCase().includes(need.category.toLowerCase()) ||
-                      need.category.toLowerCase().includes(s.category.toLowerCase()),
-                  );
-                  const isOpportunity =
-                    isAuthenticated && !isEligible && need.status === 'open';
-                  return (
-                    <Grid size={{ xs: 12, md: 6 }} key={need.id}>
-                      <ClassifiedAd
-                        need={need}
-                        event={event}
-                        isEligible={isEligible}
-                        isOpportunity={isOpportunity}
-                        onInquire={(n) => {
-                          setSelectedNeed(n);
-                          setIsApplyModalOpen(true);
-                        }}
-                      />
-                    </Grid>
-                  );
-                })}
+                {displayNeeds
+                  .filter((n) => n.status !== 'override_filled')
+                  .map((need: any) => {
+                    const isEligible = myServices.some(
+                      (s: any) =>
+                        s.category
+                          .toLowerCase()
+                          .includes(need.category.toLowerCase()) ||
+                        need.category.toLowerCase().includes(s.category.toLowerCase()),
+                    );
+                    const isOpportunity =
+                      isAuthenticated && !isEligible && need.status === 'open';
+                    return (
+                      <Grid size={{ xs: 12, md: 6 }} key={need.id}>
+                        <ClassifiedAd
+                          need={need}
+                          event={event}
+                          isEligible={isEligible}
+                          isOpportunity={isOpportunity}
+                          onInquire={(n) => {
+                            setSelectedNeed(n);
+                            setIsApplyModalOpen(true);
+                          }}
+                        />
+                      </Grid>
+                    );
+                  })}
               </>
             )}
           </Grid>
         </Box>
       </Collapse>
-
     </Box>
   );
 };

@@ -9,13 +9,11 @@ import {
   MapPin,
   Menu,
   MessageSquare,
-  Moon,
   Pencil,
   Plus,
   Search,
   Settings,
   Shield,
-  Sun,
   Ticket,
   User,
   X,
@@ -27,10 +25,10 @@ import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal
 import { Button } from '@/components/ui/button';
 import { ComicButton } from '@/components/ui/ComicButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
+import { NavbarSidebar } from '@/components/NavbarSidebar';
 import { useAlerts } from '@/features/alerts/hooks';
 import { useAuth } from '@/features/auth/hooks';
 import { useEvent, useEventAutocomplete } from '@/features/events/hooks';
-import { useTheme } from '@/theme/ThemeProvider';
 import { canUseBrowserGeolocation } from '@/utils/geolocation';
 import { type LocationSuggestion, searchLocation } from '@/utils/geolocation';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
@@ -38,7 +36,6 @@ import { useNearYou } from '@/utils/useNearYou';
 
 export function Navbar() {
   const { isAuthenticated, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   if (location.pathname.includes('/gallery/')) return null;
 
@@ -135,9 +132,10 @@ export function Navbar() {
   const isEventHost =
     isAuthenticated && user && event && user.username === event.host?.username;
   const isVendor =
-    isAuthenticated && user && event &&
-    !!(event.user_applications
-      && event.user_applications.length > 0);
+    isAuthenticated &&
+    user &&
+    event &&
+    !!(event.user_applications && event.user_applications.length > 0);
   const isNotOnManagePage = !location.pathname.includes('manage');
   const shouldShowSearch = location.pathname === '/';
 
@@ -190,17 +188,30 @@ export function Navbar() {
   };
 
   const dashboardLinks = [
-    { to: '/dashboard/events', label: 'My Events', icon: CalendarDays },
-    { to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket },
-    { to: '/dashboard/services', label: 'Services', icon: Briefcase },
-    { to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare },
+    { label: 'Going', icon: CalendarDays, type: 'heading', indent: 1 },
+    { to: '/dashboard/saved', label: 'Saved Dates', icon: Ticket, indent: 2 },
+    { to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket, indent: 2 },
+
+    { label: 'Activities', icon: CalendarDays, type: 'heading', indent: 1 },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays, indent: 2 },
+    { to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare, indent: 1 },
+
+    { label: 'Organizing', icon: Menu, type: 'heading', indent: 1 },
+    { to: '/dashboard/events', label: 'My Events', icon: CalendarDays, indent: 2 },
+
+    { label: 'Services', icon: Briefcase, type: 'heading', indent: 1 },
+    { to: '/dashboard/services', label: 'My Services', indent: 2 },
+    { to: '/dashboard/services/opportunities', label: 'Service Opportunities', indent: 2 },
+
+
+
+    { label: 'Profile + Settings', type: 'heading', indent: 1 },
+    { to: '/profile/user-info', label: 'User Info', icon: User, indent: 2 },
+    { to: '/profile/settings', label: 'Account Settings', icon: Settings, indent: 2 },
+    { to: '/profile/privacy', label: 'Privacy', icon: Shield, indent: 2 },
+
   ];
 
-  const profileLinks = [
-    { path: 'user-info', label: 'User Info', icon: User },
-    { path: 'settings', label: 'Account Settings', icon: Settings },
-    { path: 'privacy', label: 'Privacy', icon: Shield },
-  ];
 
   return (
     <>
@@ -210,21 +221,23 @@ export function Navbar() {
             <div className="flex h-16 items-center justify-between gap-2">
               <div className="flex items-center">
                 <div className="absolute -inset-1 bg-[#f8c163ff] opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
-                <div className="">
-                </div>
+                <div className=""></div>
                 <div className="sm:hidden xs:hidden flex">
                   {/* Logo for small screens */}
                   <Link
                     to="/"
                     className="flex flex-shrink-0 items-center mr-4 relative group"
                   >
-
                     {/* Outgoing Logo */}
                     <span
                       className="text-4xl font-bold text-gray-900 relative z-10"
                       style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
                     >
-                      <img src="assets/go-symbol.png" alt="Outgoing" title="Outgoing" className="h-10 w-10"
+                      <img
+                        src="assets/go-symbol.png"
+                        alt="Outgoing"
+                        title="Outgoing"
+                        className="h-10 w-10"
                         style={{
                           filter: 'drop-shadow(2px 2px 1px #E2BF00) ',
                           transform: 'scale(1.3)',
@@ -244,12 +257,17 @@ export function Navbar() {
                       style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
                     >
                       Out
-                      <img src="assets/go-symbol.png" alt="Outgoing" title="Outgoing" className="h-10 w-10"
+                      <img
+                        src="assets/go-symbol.png"
+                        alt="Outgoing"
+                        title="Outgoing"
+                        className="h-10 w-10"
                         style={{
                           filter: 'drop-shadow(2px 2px 1px #E2BF00) ',
                           transform: 'scale(1.3)',
                         }}
-                      />ing
+                      />
+                      ing
                     </span>
                   </Link>
                 </div>
@@ -264,18 +282,13 @@ export function Navbar() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onFocus={() => setShowSuggestions(true)}
-                        onBlur={() =>
-                          setTimeout(() => setShowSuggestions(false), 150)
-                        }
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                         placeholder="Search events..."
                         className="flex-1 min-w-[140px] bg-transparent text-base outline-none text-gray-800 placeholder:text-gray-500"
                         style={{ fontFamily: '"Permanent Marker"' }}
                       />
                       <div className="h-7 w-[2px] bg-gray-400 mx-3 flex-shrink-0" />
-                      <div
-                        className="relative flex-shrink-0"
-                        ref={locationDropdownRef}
-                      >
+                      <div className="relative flex-shrink-0" ref={locationDropdownRef}>
                         <button
                           type="button"
                           onClick={() => setLocationDropdownOpen((o) => !o)}
@@ -361,9 +374,7 @@ export function Navbar() {
                                         type="button"
                                         onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => {
-                                          handleLocationSuggestionClick(
-                                            suggestion,
-                                          );
+                                          handleLocationSuggestionClick(suggestion);
                                           setShowLocationSuggestions(false);
                                           setLocationDropdownOpen(false);
                                         }}
@@ -496,12 +507,7 @@ export function Navbar() {
                 {isAuthenticated ? (
                   <>
                     <div className="hidden sm:flex xs:flex items-center gap-2">
-                      <ComicIconButton
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        Icon={Bell}
-                      >
+                      <ComicIconButton variant="ghost" size="icon" asChild Icon={Bell}>
                         <Link to="/alerts" aria-label="Alerts">
                           <div className="absolute top-0 right-0 h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white z-10">
                             {alertsCount > 0 && <span>{alertsCount}</span>}
@@ -518,12 +524,13 @@ export function Navbar() {
                       </ComicIconButton>
                       {!isVendor && !isEventHost && (
                         <ComicIconButton
-                        variant="ghost"
-                        size="icon"
-                        Icon={Plus}
-                        color="#AF90F9"
-                        onClick={() => setIsQuickCreateOpen(true)}
-                      />)}
+                          variant="ghost"
+                          size="icon"
+                          Icon={Plus}
+                          color="#AF90F9"
+                          onClick={() => setIsQuickCreateOpen(true)}
+                        />
+                      )}
                     </div>
                     {isVendor && isNotOnManagePage && (
                       <ComicButton
@@ -535,7 +542,9 @@ export function Navbar() {
                         label="Manage Service"
                         className="min-w-[140px]"
                       >
-                        <Link to={`/events/${eventId}/service-event-management/application`} />
+                        <Link
+                          to={`/events/${eventId}/service-event-management/application`}
+                        />
                       </ComicButton>
                     )}
 
@@ -549,7 +558,9 @@ export function Navbar() {
                         label="Manage event"
                         className="min-w-[140px]"
                       >
-                        <Link to={`/events/${eventId}/host-event-management/basic-details`} />
+                        <Link
+                          to={`/events/${eventId}/host-event-management/basic-details`}
+                        />
                       </ComicButton>
                     )}
                   </>
@@ -589,217 +600,21 @@ export function Navbar() {
         </div>
       </nav>
 
-      {
-        <>
-          {isMenuOpen && (
-            <button
-              type="button"
-              aria-label="Close sidebar"
-              className="fixed inset-0 top-16 z-40 bg-black/40"
-              onClick={() => setIsMenuOpen(false)}
-            />
-          )}
-          <aside
-            className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-            style={{
-              background: '#f4f1ea',
-              backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-              backgroundSize: '12px 12px',
-            }}
-          >
-            {isAuthenticated && (
-              <div className="mb-6 border-b-2 border-dashed border-gray-300 pb-6">
-                <ComicButton
-                  type="button"
-                  variant="solid"
-                  size="default"
-                  shape="square"
-                  Icon={Plus}
-                  iconProps={{ strokeWidth: 3 }}
-                  color="#1e3a5f"
-                  accentColor="#AF90F9"
-                  onClick={() => setIsQuickCreateOpen(true)}
-                  className="h-12 w-full"
-                >
-                  Create Event
-                </ComicButton>
-                <ComicButton
-                  type="button"
-                  variant="solid"
-                  size="default"
-                  shape="square"
-                  Icon={Plus}
-                  iconProps={{ strokeWidth: 3 }}
-                  accentColor="#00CCCC"
-                  color="#1e3a5f"
-                  onClick={() => navigate('/vendors/create')}
-                  className="h-12 w-full mt-4"
-                >
-                  Create Service
-                </ComicButton>
-              </div>
-            )}
-            {isAuthenticated ? (
-              <div>
-                {/* User Details Header */}
-                <div className="mb-6 relative group">
-                  <div
-                    className="absolute -inset-2 bg-yellow-200/40 border-2 border-dashed border-gray-400 -rotate-2 group-hover:rotate-0 transition-transform"
-                    style={{ borderRadius: '4px' }}
-                  />
-                  <div className="relative flex items-center gap-4 p-2 bg-white/40 border border-gray-200">
-                    <div className="w-16 h-16 rounded-none border-2 border-gray-800 bg-white overflow-hidden shadow-[2px_2px_0] p-1 rotate-3">
-                      {user?.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <User className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h3
-                        className="text-xl text-gray-900 leading-tight"
-                        style={{ fontFamily: '"Permanent Marker", cursive' }}
-                      >
-                        {user ? `${user.first_name} ${user.last_name}` : 'Logged In'}
-                      </h3>
-                      <p
-                        className="text-gray-500 text-sm"
-                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}
-                      >
-                        @{user?.username}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Washi tape accent */}
-                  <div
-                    className="absolute -top-3 -left-2 w-12 h-6 pointer-events-none z-10"
-                    style={{
-                      background: 'rgba(59, 130, 246, 0.4)',
-                      transform: 'rotate(-15deg)',
-                      border: '1px solid rgba(0,0,0,0.05)',
-                    }}
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <button
-                    onClick={toggleTheme}
-                    aria-label="Toggle theme"
-                    className="rounded-md border-2 border-gray-800 bg-white p-2 shadow-[2px_2px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
-                  >
-                    {theme === 'light' ? (
-                      <Sun className="h-4 w-4 text-yellow-600" />
-                    ) : (
-                      <Moon className="h-4 w-4 text-indigo-600" />
-                    )}
-                  </button>
-                </div>
-
-                <p
-                  className="mb-3 text-sm uppercase tracking-wider text-gray-600"
-                  style={{
-                    fontFamily: '"Permanent Marker"',
-                    transform: 'rotate(-1deg)',
-                  }}
-                >
-                  Dashboard
-                </p>
-                <div className="grid gap-1 ml-2">
-                  {dashboardLinks.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
-                      style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-                    >
-                      {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
-                      {item.label}
-                    </Link>
-                  ))}
-                  <Link
-                    to="/calendar"
-                    className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === '/calendar' ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
-                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-                  >
-                    <CalendarDays className="h-4 w-4 shrink-0" />
-                    Calendar
-                  </Link>
-                </div>
-
-                <p
-                  className="mb-3 mt-5 text-sm uppercase tracking-wider text-gray-600"
-                  style={{
-                    fontFamily: '"Permanent Marker"',
-                    transform: 'rotate(1deg)',
-                  }}
-                >
-                  Profile & Settings
-                </p>
-                <div className="grid gap-1 ml-2">
-                  {profileLinks.map((item) => {
-                    const fullPath = `/profile/${item.path}`;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={fullPath}
-                        className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-blue-200/60 hover:translate-x-1 ${location.pathname === fullPath ? 'bg-blue-300/50 rotate-1 border-l-4 border-blue-500 font-bold' : 'text-gray-700'}`}
-                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
-                      >
-                        {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
-                <p
-                  className="mb-3 text-sm uppercase tracking-wider text-gray-600"
-                  style={{
-                    fontFamily: '"Permanent Marker"',
-                    transform: 'rotate(-1deg)',
-                  }}
-                >
-                  Account
-                </p>
-                <div className="grid gap-2">
-                  <Link
-                    to="/signin"
-                    className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 text-gray-700"
-                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 text-gray-700"
-                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              </div>
-            )}
-            {isAuthenticated && (
-              <button
-                onClick={logout}
-                className="w-full rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-red-100"
-                style={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}
-              >
-                Logout
-              </button>
-            )}
-          </aside>
-        </>
-      }
-      <QuickCreateEventModal isOpen={isQuickCreateOpen} onClose={() => setIsQuickCreateOpen(false)} />
+      <NavbarSidebar
+        isOpen={isMenuOpen}
+        isAuthenticated={isAuthenticated}
+        user={user}
+        dashboardLinks={dashboardLinks}
+        currentPath={location.pathname}
+        onClose={() => setIsMenuOpen(false)}
+        onOpenQuickCreate={() => setIsQuickCreateOpen(true)}
+        onCreateService={() => navigate('/vendors/create')}
+        onLogout={logout}
+      />
+      <QuickCreateEventModal
+        isOpen={isQuickCreateOpen}
+        onClose={() => setIsQuickCreateOpen(false)}
+      />
     </>
   );
 }

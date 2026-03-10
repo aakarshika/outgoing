@@ -182,7 +182,11 @@ export function HorizontalScrapbookList({
             return (
               <Box
                 key={item.id || idx}
-                sx={{ display: 'flex', gap: { xs: 3, sm: 4, md: 6 }, alignItems: 'center' }}
+                sx={{
+                  display: 'flex',
+                  gap: { xs: 3, sm: 4, md: 6 },
+                  alignItems: 'center',
+                }}
               >
                 <Box
                   sx={{

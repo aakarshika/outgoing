@@ -127,13 +127,18 @@ const ComicIconButton = React.forwardRef<HTMLButtonElement, ComicIconButtonProps
           {renderIcon({
             strokeWidth: 5,
             style: {
-                margin: '6px',
+              margin: '6px',
               color: 'var(--accent-color)',
               fill: isTransparent ? 'none' : 'var(--accent-color)',
             },
           })}
         </span>
-        <span className={cn('absolute inset-0 flex items-center justify-center ',iconPaddingClass)}>
+        <span
+          className={cn(
+            'absolute inset-0 flex items-center justify-center ',
+            iconPaddingClass,
+          )}
+        >
           {renderIcon({
             style: {
               color: 'var(--comic-color)',
@@ -150,7 +155,7 @@ const ComicIconButton = React.forwardRef<HTMLButtonElement, ComicIconButtonProps
           {renderIcon({
             strokeWidth: 4,
             style: {
-                margin: '6px',
+              margin: '6px',
               color: 'var(--comic-color)',
               fill: 'var(--comic-color)',
             },

@@ -2,7 +2,11 @@ import { Box, Button, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useFeed, useHighlightsFeed, useTrendingHighlights } from '@/features/events/hooks';
+import {
+  useFeed,
+  useHighlightsFeed,
+  useTrendingHighlights,
+} from '@/features/events/hooks';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { useNearYou } from '@/utils/useNearYou';

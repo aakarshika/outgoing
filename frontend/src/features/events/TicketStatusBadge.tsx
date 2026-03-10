@@ -27,7 +27,9 @@ export const TicketStatusBadge = ({
         px: 1,
         py: '2px',
         borderRadius: '4px',
-        boxShadow: highlighted ? '1px 2px 5px rgba(234, 179, 8, 0.3)' : '1px 1px 3px rgba(0,0,0,0.1)',
+        boxShadow: highlighted
+          ? '1px 2px 5px rgba(234, 179, 8, 0.3)'
+          : '1px 1px 3px rgba(0,0,0,0.1)',
         transform: 'rotate(-2deg)',
         display: 'flex',
         alignItems: 'center',
@@ -36,7 +38,7 @@ export const TicketStatusBadge = ({
         ...sx,
       }}
     >
-      <Ticket size={12} color={highlighted ? "#ca8a04" : "#1a1a1a"} />
+      <Ticket size={12} color={highlighted ? '#ca8a04' : '#1a1a1a'} />
       <Typography
         sx={{
           fontSize: '0.7rem',

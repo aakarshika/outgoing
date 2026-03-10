@@ -69,23 +69,26 @@ export function useTicketAdmission(): UseTicketAdmissionReturn {
   const [error, setError] = useState<string | null>(null);
   const [admitted, setAdmitted] = useState(false);
 
-  const admit = useCallback(async (ticketId: number, eventId: number, isVendor?: boolean) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await admitTicket(ticketId, eventId, isVendor);
-      if (response.success) {
-        setAdmitted(true);
-      } else {
-        setError(response.message);
+  const admit = useCallback(
+    async (ticketId: number, eventId: number, isVendor?: boolean) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await admitTicket(ticketId, eventId, isVendor);
+        if (response.success) {
+          setAdmitted(true);
+        } else {
+          setError(response.message);
+        }
+      } catch (err: any) {
+        const data = err?.response?.data;
+        setError(data?.message || 'Failed to admit attendee');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      const data = err?.response?.data;
-      setError(data?.message || 'Failed to admit attendee');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     setAdmitted(false);

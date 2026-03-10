@@ -37,12 +37,10 @@ export const ReviewsSection = ({
   return (
     <Box>
       {reviews.length > 0 && (
-
         <Typography variant="h3" sx={{ mb: 4 }}>
           What they thought
         </Typography>
       )}
-
 
       {reviews.length > 0 ? (
         reviews.map((rev: any, idx: number) => {
@@ -101,7 +99,11 @@ export const ReviewsSection = ({
             textAlign: 'center',
           }}
         >
-          {isHost ? 'No notes yet.' : userReview ? 'Be the first to review this event!' : ''}
+          {isHost
+            ? 'No notes yet.'
+            : userReview
+              ? 'Be the first to review this event!'
+              : ''}
         </Typography>
       )}
 

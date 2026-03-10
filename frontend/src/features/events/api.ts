@@ -178,6 +178,21 @@ export async function addHighlightComment(
   return data;
 }
 
+export async function fetchHostVendorMessages(eventId: number) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/${eventId}/host-vendor-messages/`,
+  );
+  return data;
+}
+
+export async function addHostVendorMessage(eventId: number, payload: { text: string }) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/${eventId}/host-vendor-messages/`,
+    payload,
+  );
+  return data;
+}
+
 export async function addEventReview(eventId: number, formData: FormData) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/${eventId}/reviews/`,

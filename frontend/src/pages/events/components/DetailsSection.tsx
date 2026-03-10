@@ -1,11 +1,11 @@
 import { Box, Chip, Paper, Typography } from '@mui/material';
 
 import { CheckInMemo } from '@/components/ui/CheckInMemo';
-
-import { WashiTape } from './scrapbookHelpers';
 import { Media } from '@/components/ui/media';
 
-export  const FEATURE_EMOJI_MAP: Record<string, string> = {
+import { WashiTape } from './scrapbookHelpers';
+
+export const FEATURE_EMOJI_MAP: Record<string, string> = {
   Food: '🍕',
   'Non-Alcoholic Drinks': '🧃',
   'Alcoholic Drinks': '🍷',
@@ -37,7 +37,15 @@ export  const FEATURE_EMOJI_MAP: Record<string, string> = {
   'VIP Lounge': '✨',
   Parking: '🅿️',
 };
-export const DetailsSection = ({ event, isHost, displayNeeds }: { event: any; isHost: boolean; displayNeeds: any[] }) => {
+export const DetailsSection = ({
+  event,
+  isHost,
+  displayNeeds,
+}: {
+  event: any;
+  isHost: boolean;
+  displayNeeds: any[];
+}) => {
   const TAG_DISPLAY: Record<
     string,
     {
@@ -94,7 +102,7 @@ export const DetailsSection = ({ event, isHost, displayNeeds }: { event: any; is
   });
 
   return (
-    <Box sx={{  }}>
+    <Box sx={{}}>
       {/* Description */}
       <Paper
         sx={{

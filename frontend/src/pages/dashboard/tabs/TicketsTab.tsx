@@ -84,16 +84,13 @@ export function TicketsTab() {
             {/* Event card (background) */}
             <div
               className=" p-3  transition-all hover:translate-x-[1px] hover:translate-y-[1px] flex flex-col h-full"
-              style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` ,
-              }}
+              style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` }}
             >
               <div
                 className="aspect-[12/10] overflow-hidden  mb-3 relative cursor-pointer"
                 onClick={() => setManagingTicket(ticket)}
               >
-
-
-{ticket.status && (
+                {ticket.status && (
                   <div className="absolute inset-0  flex flex-col items-center justify-start p-2 pt-24 pr-16 z-10">
                     <span
                       className="text-green-600 font-bold border-4 border-green-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest"
@@ -108,9 +105,7 @@ export function TicketsTab() {
                   <div className="absolute inset-0  flex flex-col items-center justify-center p-2 z-10">
                     <span
                       className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform rotate-[30deg] mb-2 text-xl tracking-widest"
-                      style={{ fontFamily: '"Permanent Marker", cursive' ,
-
-                      }}
+                      style={{ fontFamily: '"Permanent Marker", cursive' }}
                     >
                       CANCELLED
                     </span>
@@ -149,10 +144,7 @@ export function TicketsTab() {
                   className="absolute inset-0  flex flex-col items-center justify-center cursor-pointer "
                   onClick={() => setManagingTicket(ticket)}
                 >
-                  <div
-                    className=""
-                    onClick={() => setManagingTicket(ticket)}
-                  >
+                  <div className="" onClick={() => setManagingTicket(ticket)}>
                     <ScrapbookEventCard event={ticket.event_summary} />
                   </div>
                 </div>
@@ -161,31 +153,30 @@ export function TicketsTab() {
                   className="absolute inset-0  flex flex-col items-center justify-end cursor-pointer "
                   onClick={() => setManagingTicket(ticket)}
                 >
-              <div className="flex gap-2 mt-4 justify-between">
-                <Link
-                  to={`/events/${ticket.event_summary.id}`}
-                  className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
-                  style={{
-                    fontFamily: '"Permanent Marker", cursive',
-                    boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  EVENT PAGE
-                </Link>
-                <button
-                  onClick={() => setManagingTicket(ticket)}
-                  className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1"
-                  style={{
-                    fontFamily: '"Permanent Marker", cursive',
-                    boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  MANAGE TICKET
-                </button>
+                  <div className="flex gap-2 mt-4 justify-between">
+                    <Link
+                      to={`/events/${ticket.event_summary.id}`}
+                      className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
+                      style={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                      }}
+                    >
+                      EVENT PAGE
+                    </Link>
+                    <button
+                      onClick={() => setManagingTicket(ticket)}
+                      className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1"
+                      style={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                      }}
+                    >
+                      MANAGE TICKET
+                    </button>
+                  </div>
+                </div>
               </div>
-              </div>
-              </div>
-
             </div>
 
             {/* Ticket stub overlay */}
@@ -226,17 +217,17 @@ export function TicketsTab() {
         tickets={
           managingTicket
             ? sortedTickets.filter(
-              (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-            )
+                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+              )
             : []
         }
         initialIndex={
           managingTicket
             ? sortedTickets
-              .filter(
-                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-              )
-              .findIndex((t: any) => t.id === managingTicket.id)
+                .filter(
+                  (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+                )
+                .findIndex((t: any) => t.id === managingTicket.id)
             : 0
         }
       />

@@ -12,7 +12,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
-
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import { useToggleHighlightLike } from '@/features/events/hooks';
@@ -25,13 +24,7 @@ const COMIC_BORDER = '3px solid #1a1a1a';
 const COMIC_SHADOW = '4px 4px 0px #1a1a1a';
 
 // --- Comic Styled Components ---
-const ComicIconButton = ({
-  children,
-  onClick,
-  sx = {},
-  Icon,
-  iconProps,
-}: any) => (
+const ComicIconButton = ({ children, onClick, sx = {}, Icon, iconProps }: any) => (
   <SharedComicIconButton
     onClick={onClick}
     variant="solid"
@@ -39,7 +32,7 @@ const ComicIconButton = ({
     Icon={Icon}
     iconProps={iconProps}
     color={'black'}
-    accentColor={"white"}
+    accentColor={'white'}
     style={sx}
   >
     {children}
@@ -115,7 +108,7 @@ const HighlightInteractionsMobile = ({
         <ComicIconButton
           onClick={onOpenComments}
           Icon={MessageCircle}
-          iconProps={{ fill: "none", color: "black" }}
+          iconProps={{ fill: 'none', color: 'black' }}
         />
         <Typography
           sx={{
@@ -134,17 +127,11 @@ const HighlightInteractionsMobile = ({
       {/* Navigation Buttons Mobile */}
       <Box
         sx={{
-          textAlign: 'center'
+          textAlign: 'center',
         }}
       >
-        <ComicIconButton
-          onClick={handlePrev}
-          Icon={ChevronLeft}
-        />
-        <ComicIconButton
-          onClick={handleNext}
-          Icon={ChevronRight}
-        />
+        <ComicIconButton onClick={handlePrev} Icon={ChevronLeft} />
+        <ComicIconButton onClick={handleNext} Icon={ChevronRight} />
       </Box>
     </Stack>
   );
@@ -267,10 +254,7 @@ export const HighlightFeedViewer = ({
           flexDirection: 'column',
         }}
       >
-        <ComicIconButton
-          onClick={onClose}
-          Icon={X}
-        />
+        <ComicIconButton onClick={onClose} Icon={X} />
 
         <Box
           ref={scrollContainerRef}
@@ -531,8 +515,7 @@ export const HighlightFeedViewer = ({
             />
           </Box>
         </Box>
-
       </Box>
-    </Dialog >
+    </Dialog>
   );
 };

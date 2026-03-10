@@ -38,7 +38,8 @@ const iconSizeClass = {
 } as const;
 
 export interface ComicButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof comicButtonVariants> {
   asChild?: boolean;
   Icon?: React.ElementType;
@@ -159,11 +160,7 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
       </span>
     );
 
-    const iconContent = Icon
-      ? isGhost
-        ? renderFrontGhostIcon()
-        : renderIcon()
-      : null;
+    const iconContent = Icon ? (isGhost ? renderFrontGhostIcon() : renderIcon()) : null;
 
     const overlayContent =
       asChild && React.isValidElement(children) ? children.props.children : null;
@@ -179,14 +176,10 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
         {/* Invisible sizer so the button gets correct dimensions; layers are in the absolute wrapper below */}
         <span
           aria-hidden
-          className={cn(
-            'invisible flex items-center justify-center gap-2',
-          )}
+          className={cn('invisible flex items-center justify-center gap-2')}
         >
           {iconContent}
-          {textContent != null && (
-            <span className="leading-none">{textContent}</span>
-          )}
+          {textContent != null && <span className="leading-none">{textContent}</span>}
         </span>
         <span className="absolute inset-0">
           <span
@@ -198,7 +191,8 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
               shape === 'square' && 'rounded-none',
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
-              !isGhost && 'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
+              !isGhost &&
+                'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
             )}
           >
             {isGhost && Icon ? (
@@ -232,9 +226,7 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
             )}
           >
             {iconContent}
-            {textContent != null && (
-              <span className="leading-none">{textContent}</span>
-            )}
+            {textContent != null && <span className="leading-none">{textContent}</span>}
             {overlayContent}
           </span>
         </span>
@@ -244,9 +236,7 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
     if (asChild && React.isValidElement(children)) {
       return (
         <Comp
-          className={cn(
-            comicButtonVariants({ variant, size, shape, className }),
-          )}
+          className={cn(comicButtonVariants({ variant, size, shape, className }))}
           ref={ref}
           style={dynamicStyles}
           {...props}
@@ -260,9 +250,7 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
 
     return (
       <Comp
-        className={cn(
-          comicButtonVariants({ variant, size, shape, className }),
-        )}
+        className={cn(comicButtonVariants({ variant, size, shape, className }))}
         ref={ref}
         style={dynamicStyles}
         {...props}

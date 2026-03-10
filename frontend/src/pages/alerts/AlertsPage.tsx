@@ -20,11 +20,13 @@ export default function AlertsPage() {
   return (
     <div
       className="min-h-screen px-4 sm:px-6 py-8"
-      style={{
-        // background: '#f4f1ea',
-        // backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-        // backgroundSize: '15px 15px',
-      }}
+      style={
+        {
+          // background: '#f4f1ea',
+          // backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+          // backgroundSize: '15px 15px',
+        }
+      }
     >
       <div className="mx-auto max-w-3xl">
         <div className="relative mb-8">
@@ -92,8 +94,9 @@ export default function AlertsPage() {
                     <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
                   </div>
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${PRIORITY_STYLES[alert.priority] || PRIORITY_STYLES.low
-                      }`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                      PRIORITY_STYLES[alert.priority] || PRIORITY_STYLES.low
+                    }`}
                   >
                     {alert.priority}
                   </span>

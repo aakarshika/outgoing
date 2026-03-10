@@ -35,9 +35,11 @@ function AppContent() {
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
-      {!isGallery && <div className="mt-50">
-        <Footer />
-      </div>}
+      {!isGallery && (
+        <div className="mt-50">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

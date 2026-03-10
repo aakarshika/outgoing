@@ -27,7 +27,6 @@ export const MemoryBoxSection = ({
 
   const displayedHighlights = highlights.slice(0, 8); // Show a bit more now that they are smaller
 
-
   return (
     <Box sx={{ mt: 6, position: 'relative' }}>
       {/* Highlights Grid in a Decorative Container */}
@@ -70,11 +69,17 @@ export const MemoryBoxSection = ({
               position: 'relative',
             }}
           >
-            {(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ?
-              (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories to come</Highlighter>)
-              : (event.lifecycle_state === 'live')
-                ? (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>)
-                : (<Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>)}
+            {event.lifecycle_state === 'draft' ||
+            event.lifecycle_state === 'published' ||
+            event.lifecycle_state === 'event_ready' ? (
+              <Highlighter color="rgba(252, 211, 77, 0.4)">
+                Memories to come
+              </Highlighter>
+            ) : event.lifecycle_state === 'live' ? (
+              <Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>
+            ) : (
+              <Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>
+            )}
           </Typography>
         </Box>
 
@@ -253,10 +258,7 @@ export const MemoryBoxSection = ({
             {displayedHighlights.map((h: any, index: number) => {
               return (
                 <Grid size={{ xs: 6, sm: 4, md: 3 }} key={h.id}>
-                  <HighlightCard
-                    highlight={h}
-                    rotation={((index % 4) - 1.5) * 3}
-                  />
+                  <HighlightCard highlight={h} rotation={((index % 4) - 1.5) * 3} />
                 </Grid>
               );
             })}
@@ -280,80 +282,86 @@ export const MemoryBoxSection = ({
                 color: 'text.secondary',
               }}
             >
-              {(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' || event.lifecycle_state === 'event_ready') ?
-                ('Check back later to pile on your highlights!')
-                : (event.lifecycle_state === 'live')
-                  ? ('Be the first to add your highlights to the pile!')
-                  : ('Add your best memories!')}
+              {event.lifecycle_state === 'draft' ||
+              event.lifecycle_state === 'published' ||
+              event.lifecycle_state === 'event_ready'
+                ? 'Check back later to pile on your highlights!'
+                : event.lifecycle_state === 'live'
+                  ? 'Be the first to add your highlights to the pile!'
+                  : 'Add your best memories!'}
             </Typography>
           </Box>
         )}
 
         {/* Action Buttons - Sticker Style moved inside container for cohesiveness */}
-        {!(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published') && (<Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: 3,
-            mt: 4,
-            position: 'relative',
-            zIndex: 2,
-          }}
-        >
-          <MuiButton
-            variant="outlined"
-            onClick={() => setIsHighlightOpen(true)}
-            startIcon={<Camera size={20} />}
+        {!(
+          event.lifecycle_state === 'draft' || event.lifecycle_state === 'published'
+        ) && (
+          <Box
             sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '0.9rem',
-              py: 1.2,
-              px: 3,
-              border: '2px dashed #999',
-              color: '#666',
-              bgcolor: 'white',
-              transform: 'rotate(-2deg)',
-              transition: 'all 0.2s',
-              '&:hover': {
-                border: '2px dashed #333',
-                color: '#333',
-                bgcolor: '#fdf6e3',
-                transform: 'rotate(0deg) scale(1.05)',
-                boxShadow: '4px 4px 10px rgba(0,0,0,0.1)',
-              },
-              borderRadius: '2px',
-              textTransform: 'none',
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 3,
+              mt: 4,
+              position: 'relative',
+              zIndex: 2,
             }}
           >
-            Add to the pile
-          </MuiButton>
+            <MuiButton
+              variant="outlined"
+              onClick={() => setIsHighlightOpen(true)}
+              startIcon={<Camera size={20} />}
+              sx={{
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.9rem',
+                py: 1.2,
+                px: 3,
+                border: '2px dashed #999',
+                color: '#666',
+                bgcolor: 'white',
+                transform: 'rotate(-2deg)',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  border: '2px dashed #333',
+                  color: '#333',
+                  bgcolor: '#fdf6e3',
+                  transform: 'rotate(0deg) scale(1.05)',
+                  boxShadow: '4px 4px 10px rgba(0,0,0,0.1)',
+                },
+                borderRadius: '2px',
+                textTransform: 'none',
+              }}
+            >
+              Add to the pile
+            </MuiButton>
 
-          <MuiButton
-            variant="contained"
-            onClick={() => navigate(`/events/${id}/gallery`)}
-            startIcon={<ImageIcon size={20} />}
-            sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '0.9rem',
-              py: 1.2,
-              px: 3,
-              background: '#333',
-              color: 'white',
-              transform: 'rotate(1deg)',
-              transition: 'all 0.2s',
-              '&:hover': {
-                background: '#000',
-                transform: 'rotate(0deg) scale(1.05)',
-                boxShadow: '4px 4px 15px rgba(0,0,0,0.2)',
-              },
-              borderRadius: '2px',
-              textTransform: 'none',
-            }}
-          >
-            Go to gallery
-          </MuiButton>
-        </Box>)}
+            <MuiButton
+              variant="contained"
+              onClick={() => navigate(`/events/${id}/gallery`)}
+              startIcon={<ImageIcon size={20} />}
+              sx={{
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.9rem',
+                py: 1.2,
+                px: 3,
+                background: '#333',
+                color: 'white',
+                transform: 'rotate(1deg)',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: '#000',
+                  transform: 'rotate(0deg) scale(1.05)',
+                  boxShadow: '4px 4px 15px rgba(0,0,0,0.2)',
+                },
+                borderRadius: '2px',
+                textTransform: 'none',
+              }}
+            >
+              Go to gallery
+            </MuiButton>
+          </Box>
+        )}
       </Paper>
 
       {/* Navigation is now handled by HighlightCard default click */}

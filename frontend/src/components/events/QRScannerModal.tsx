@@ -240,8 +240,9 @@ export function QRScannerModal({
         <div className="flex-1 flex flex-col justify-center items-center overflow-hidden relative">
           {/* Scanner Container */}
           <div
-            className={`w-full h-full max-w-lg mx-auto overflow-hidden relative transition-opacity duration-300 ${scanResult || scanError ? 'opacity-30 blur-sm' : 'opacity-100'
-              }`}
+            className={`w-full h-full max-w-lg mx-auto overflow-hidden relative transition-opacity duration-300 ${
+              scanResult || scanError ? 'opacity-30 blur-sm' : 'opacity-100'
+            }`}
             style={{ background: '#000' }}
           >
             <div

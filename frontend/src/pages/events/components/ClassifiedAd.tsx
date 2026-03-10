@@ -10,8 +10,8 @@ import { type MouseEvent, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { HostCard } from '@/components/ui/HostCard';
-import { useAuth } from '@/features/auth/hooks';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
+import { useAuth } from '@/features/auth/hooks';
 export const ClassifiedAd = ({
   need,
   event,
@@ -149,7 +149,8 @@ export const ClassifiedAd = ({
             mt: 0,
           }}
         >
-          {need.status === 'open' && !isHost &&
+          {need.status === 'open' &&
+            !isHost &&
             (userApplication ? (
               <MuiButton
                 variant="outlined"
@@ -276,10 +277,7 @@ export const ClassifiedAd = ({
                 rating={hostProfile.rating}
                 rotation={-1.5}
               /> */}
-              <VendorBusinessCard
-                vendor={hostProfile}
-                rotation={-1.5}
-              />
+              <VendorBusinessCard vendor={hostProfile} rotation={-1.5} />
             </Box>
           </Popover>
         </>

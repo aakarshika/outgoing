@@ -12,8 +12,8 @@ import {
   fetchMyVendorOpportunities,
   inviteVendorToNeed,
   reviewNeedApplication,
-  updateNeedApplication,
   updateEventNeed,
+  updateNeedApplication,
 } from './api';
 
 export function useEventNeeds(eventId: number) {

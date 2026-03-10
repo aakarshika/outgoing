@@ -7,6 +7,9 @@ const EventsTab = lazy(() =>
 const TicketsTab = lazy(() =>
   import('./tabs/TicketsTab').then((m) => ({ default: m.TicketsTab })),
 );
+const SavedDatesTab = lazy(() =>
+  import('./tabs/SavedDatesTab').then((m) => ({ default: m.SavedDatesTab })),
+);
 const ServicesTab = lazy(() =>
   import('./tabs/ServicesTab').then((m) => ({ default: m.ServicesTab })),
 );
@@ -43,6 +46,15 @@ export const dashboardRouteElements = [
     element={
       <Suspense fallback={fallback}>
         <TicketsTab />
+      </Suspense>
+    }
+  />,
+  <Route
+    key="saved"
+    path="saved"
+    element={
+      <Suspense fallback={fallback}>
+        <SavedDatesTab />
       </Suspense>
     }
   />,

@@ -30,10 +30,18 @@ export const TicketsSection = ({
   return (
     <>
       <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
-      <Typography variant="h6" sx={{
-        fontFamily: '"Caveat"', mb: 2, fontSize: '1.1rem', fontWeight: 'bold', color: 'text.secondary'
-
-      }}>Get Your Tickets</Typography>
+      <Typography
+        variant="h6"
+        sx={{
+          fontFamily: '"Caveat"',
+          mb: 2,
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          color: 'text.secondary',
+        }}
+      >
+        Get Your Tickets
+      </Typography>
       {/* Purchased Tickets (if applicable) */}
       {hasPurchasedTickets && (
         <Box sx={{ mt: 0 }}>
@@ -57,7 +65,9 @@ export const TicketsSection = ({
               return (
                 <PurchasedTicketStack
                   key={type}
-                  ticket={tickets.find((t: any) => t.status !== 'cancelled') || tickets[0]}
+                  ticket={
+                    tickets.find((t: any) => t.status !== 'cancelled') || tickets[0]
+                  }
                   count={tickets.filter((t: any) => t.status !== 'cancelled').length}
                   tierPrice={tier?.price}
                   description={tier?.description}
@@ -97,8 +107,9 @@ export const TicketsSection = ({
           <Box sx={{ mt: 0 }}>
             {event.ticket_tiers.map((tier: any, index: number) => {
               const userPurchasedCount =
-                event.user_tickets?.filter((t: any) => t.ticket_type === tier.name && t.status !== 'cancelled')
-                  .length || 0;
+                event.user_tickets?.filter(
+                  (t: any) => t.ticket_type === tier.name && t.status !== 'cancelled',
+                ).length || 0;
 
               const themeColor = TICKET_COLORS[index % TICKET_COLORS.length];
 

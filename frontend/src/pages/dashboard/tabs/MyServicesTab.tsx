@@ -3,11 +3,12 @@ import { Briefcase, Edit2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { ComicButton } from '@/components/ui/ComicButton';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { useMyApplications } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
+
 import { ApplicationDetailsList } from '../../events/components/manage-vendor/ApplicationDetailsList';
-import { ComicButton } from '@/components/ui/ComicButton';
 
 // Internal shared components from DashboardPage
 function LoadingSkeleton({ count }: { count: number }) {
@@ -92,10 +93,15 @@ export function MyServicesTab() {
 
         <div className="space-y-12">
           {services.map((service: any, idx: number) => {
-            const serviceApps = applications.filter((app: any) => app.service === service.id);
+            const serviceApps = applications.filter(
+              (app: any) => app.service === service.id,
+            );
             const isOpen = openServiceIds[service.id] ?? true;
             return (
-              <div key={service.id} className="relative grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 ">
+              <div
+                key={service.id}
+                className="relative grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 "
+              >
                 {/* Service Card */}
                 <div className="col-span-1">
                   <Box
@@ -151,7 +157,6 @@ export function MyServicesTab() {
           })}
         </div>
       </div>
-
     </>
   );
 }

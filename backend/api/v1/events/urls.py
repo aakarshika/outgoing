@@ -21,7 +21,9 @@ from .views import (
     EventTicketTierListView,
     EventViewView,
     MyEventsView,
+    MyEventsView,
     MyInterestedEventsView,
+    EventHostVendorMessageListCreateView,
 )
 
 urlpatterns = [
@@ -78,4 +80,9 @@ urlpatterns = [
     path("reviews/<int:review_id>/", EventReviewDetailView.as_view(), name="review_detail"),
     path("reviews/<int:review_id>/like/", EventReviewLikeToggleView.as_view(), name="review_like_toggle"),
     path("reviews/<int:review_id>/comments/", EventReviewCommentCreateListView.as_view(), name="review_comments"),
+    path(
+        "<int:event_id>/host-vendor-messages/",
+        EventHostVendorMessageListCreateView.as_view(),
+        name="event_host_vendor_messages",
+    ),
 ]

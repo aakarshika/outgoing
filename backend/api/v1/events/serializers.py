@@ -21,7 +21,9 @@ from apps.events.models import (
     EventHighlightLike,
     EventHighlightComment,
     EventReviewLike,
+    EventReviewLike,
     EventReviewComment,
+    EventHostVendorMessage,
 )
 from apps.tickets.models import Ticket
 
@@ -849,5 +851,38 @@ class EventReviewSerializer(serializers.ModelSerializer):
             request = self.context.get("request")
             if request:
                 return request.build_absolute_uri(profile.avatar.url)
+        return None
+
+
+class EventHostVendorMessageSerializer(serializers.ModelSerializer):
+    """Serializer for host-vendor messages."""
+
+    sender_username = serializers.CharField(source="sender.username", read_only=True)
+    sender_avatar = serializers.SerializerMethodField()
+    sender_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventHostVendorMessage
+        fields = [
+            "id",
+            "sender_username",
+            "sender_avatar",
+            "sender_role",
+            "text",
+            "created_at",
+        ]
+        read_only_fields = ["id", "sender_username", "sender_avatar", "sender_role", "created_at"]
+
+    def get_sender_avatar(self, obj):
+        profile = getattr(obj.sender, "profile", None)
+        if profile and profile.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
+
+    def get_sender_role(self, obj):
+        if obj.event.host_id == obj.sender_id:
+            return "host"
+        return "vendor"

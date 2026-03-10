@@ -1,14 +1,4 @@
-import {
-  Briefcase,
-  CalendarClock,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  MapPin,
-  Megaphone,
-  Sparkles,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -17,12 +7,14 @@ import {
   useMyInterestedEvents,
   useMyTickets,
 } from '@/features/events/hooks';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useMyApplications, useMyNeedInvites } from '@/features/needs/hooks';
-import type { EventListItem, TicketInfo } from '@/types/events';
+import type { EventDetail, EventListItem, TicketInfo } from '@/types/events';
 import type { NeedApplication, NeedInvite } from '@/types/needs';
 
 type CalendarFilter = 'all' | 'hosting' | 'attending' | 'saved' | 'vendor';
+
 type CalendarKind =
   | 'hosting'
   | 'attending'
@@ -30,8 +22,11 @@ type CalendarKind =
   | 'vendor_request'
   | 'vendor_application';
 
+type CalendarEvent = EventListItem | EventDetail;
+
 interface CalendarItem {
   id: string;
+  event?: CalendarEvent;
   kind: CalendarKind;
   title: string;
   subtitle: string;
@@ -43,37 +38,71 @@ interface CalendarItem {
   isPast: boolean;
 }
 
-const KIND_STYLES: Record<CalendarKind, string> = {
-  hosting:
-    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-[Caveat] text-base border border-blue-300',
-  attending:
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 font-[Caveat] text-base border border-emerald-300',
-  saved:
-    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 font-[Caveat] text-base border border-red-300',
-  vendor_request:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 font-[Caveat] text-base border border-amber-300',
-  vendor_application:
-    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-[Caveat] text-base border border-purple-300',
-};
+// color lighteing funciton
+function adjustColor(color: string, scale: number, opacity?: number): string {
+  const match = color
+    .replace(/\s+/g, '')
+    .match(/^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3})(?:,([0-9]*\.?[0-9]+))?\)$/i);
 
-const KIND_DOT_STYLES: Record<CalendarKind, string> = {
-  hosting: 'bg-blue-500',
-  attending: 'bg-emerald-500',
-  saved: 'bg-red-500',
-  vendor_request: 'bg-amber-500',
-  vendor_application: 'bg-purple-500',
+  if (!match) {
+    throw new Error(`Invalid color format: ${color}`);
+  }
+
+  let r = Number(match[1]);
+  let g = Number(match[2]);
+  let b = Number(match[3]);
+  let a = match[4] !== undefined ? Number(match[4]) : 1;
+
+  // Clamp base values
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  a = isNaN(a) ? 1 : Math.max(0, Math.min(1, a));
+
+  // Normalize scale to [-1, 1]
+  const s = Math.max(-1, Math.min(1, scale));
+
+  if (s !== 0) {
+    if (s > 0) {
+      // Darken: move toward 0
+      r = Math.round(r * (1 - s));
+      g = Math.round(g * (1 - s));
+      b = Math.round(b * (1 - s));
+    } else {
+      // Lighten: move toward 255
+      const t = -s;
+      r = Math.round(r + (255 - r) * t);
+      g = Math.round(g + (255 - g) * t);
+      b = Math.round(b + (255 - b) * t);
+    }
+  }
+
+  if (opacity !== undefined) {
+    a = Math.max(0, Math.min(1, opacity));
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+const ROLE_COLORS = {
+  hosting: { key: 'hosting', label: 'Hosting', color: 'rgb(61, 71, 255)' },
+  attending: { key: 'attending', label: 'Attending', color: 'rgb(255, 228, 25)' },
+  vendor: { key: 'vendor', label: 'Servicing', color: 'rgb(0, 159, 132)' },
+  vendor_request: {
+    key: 'vendor_request',
+    label: 'Servicing',
+    color: 'rgb(92, 205, 186)',
+  },
+  saved: { key: 'saved', label: 'Saved', color: 'rgb(236, 80, 80)' },
+};
+const KIND_DOT_COLORS: Record<CalendarKind, string> = {
+  hosting: ROLE_COLORS.hosting.color,
+  attending: ROLE_COLORS.attending.color,
+  saved: ROLE_COLORS.saved.color,
+  vendor_request: ROLE_COLORS.vendor_request.color,
+  vendor_application: ROLE_COLORS.vendor.color,
 };
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function formatRelative(date: string) {
-  const delta = new Date(date).getTime() - Date.now();
-  const hours = Math.ceil(delta / (1000 * 60 * 60));
-  if (hours <= 0) return 'Happening now / passed';
-  if (hours < 24) return `in ${hours} hour${hours === 1 ? '' : 's'}`;
-  const days = Math.ceil(hours / 24);
-  return `in ${days} day${days === 1 ? '' : 's'}`;
-}
 
 function toDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
@@ -83,6 +112,17 @@ function toDateKey(date: Date) {
 
 function monthLabel(date: Date) {
   return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function clipText(text: string, maxChars: number) {
+  if (text.length <= maxChars) return text;
+  if (maxChars <= 1) return text.slice(0, maxChars);
+  return `${text.slice(0, maxChars - 1)}…`;
+}
+
+function eventIdFromRoute(route: string) {
+  const match = route.match(/^\/events\/(\d+)(?:\/|$)/);
+  return match?.[1] ?? null;
 }
 
 function buildMonthGrid(visibleMonth: Date) {
@@ -124,33 +164,77 @@ export default function CalendarPage() {
     loadingEvents || loadingTickets || loadingSaved || loadingApps || loadingInvites;
   const now = Date.now();
 
+  const savedEventIds = useMemo(
+    () => new Set(mySaved.map((event) => String(event.id))),
+    [mySaved],
+  );
+
+  const eventReasons = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        hosting?: boolean;
+        attending?: boolean;
+        saved?: boolean;
+        vendor_application?: boolean;
+        vendor_request?: boolean;
+      }
+    >();
+
+    const ensure = (eventId: string) => {
+      if (!map.has(eventId)) map.set(eventId, {});
+      return map.get(eventId)!;
+    };
+
+    myEvents.forEach((e) => {
+      ensure(String(e.id)).hosting = true;
+    });
+    myTickets.forEach((t) => {
+      ensure(String(t.event_summary.id)).attending = true;
+    });
+    mySaved.forEach((e) => {
+      ensure(String(e.id)).saved = true;
+    });
+    myApplications.forEach((app) => {
+      if (app.event_id) ensure(String(app.event_id)).vendor_application = true;
+    });
+    myInvites.forEach((invite) => {
+      if (invite.event_id) ensure(String(invite.event_id)).vendor_request = true;
+    });
+
+    return map;
+  }, [myEvents, myTickets, mySaved, myApplications, myInvites]);
+
   const timeline = useMemo<CalendarItem[]>(() => {
     const hosted: CalendarItem[] = myEvents.map((event) => {
       const isPast = new Date(event.start_time).getTime() < now;
       return {
         id: `host-${event.id}`,
+        event,
         kind: 'hosting',
         title: event.title,
         subtitle: isPast ? 'Hosted event' : 'Upcoming hosted event',
         location: event.location_name || 'Location TBD',
         eventTime: event.start_time,
-        route: `/events/${event.id}/manage`,
-        cta: 'Manage Event',
+        route: `/events/${event.id}`,
+        cta: 'Go To Event',
         tag: isPast ? 'Hosted' : 'Hosting',
         isPast,
       };
     });
 
     const attending: CalendarItem[] = myTickets.map((ticket) => {
-      const isPast = new Date(ticket.event_summary.start_time).getTime() < now;
+      const detail = ticket.event_summary;
+      const isPast = new Date(detail.start_time).getTime() < now;
       return {
         id: `ticket-${ticket.id}`,
+        event: detail,
         kind: 'attending',
-        title: ticket.event_summary.title,
+        title: detail.title,
         subtitle: isPast ? 'Attended event' : 'Upcoming event',
-        location: ticket.event_summary.location_name || 'Location TBD',
-        eventTime: ticket.event_summary.start_time,
-        route: `/events/${ticket.event_summary.id}`,
+        location: detail.location_name || 'Location TBD',
+        eventTime: detail.start_time,
+        route: `/events/${detail.id}`,
         cta: 'View Event',
         tag: isPast ? 'Attended' : 'Attending',
         isPast,
@@ -161,6 +245,7 @@ export default function CalendarPage() {
       const isPast = new Date(event.start_time).getTime() < now;
       return {
         id: `saved-${event.id}`,
+        event,
         kind: 'saved',
         title: event.title,
         subtitle: isPast ? 'Saved event (past)' : 'Saved event',
@@ -208,20 +293,67 @@ export default function CalendarPage() {
       };
     });
 
-    return [
-      ...hosted,
-      ...attending,
-      ...saved,
-      ...vendorRequests,
-      ...vendorApplications,
-    ].sort((a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime());
+    return [...hosted, ...attending, ...saved, ...vendorRequests, ...vendorApplications]
+      .sort((a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime())
+      .reduce<CalendarItem[]>((acc, item) => {
+        // De-dupe the same underlying event across sources (hosting/attending/saved).
+        // Example: an event can show up in both "my events" and "saved".
+        if (
+          item.kind !== 'hosting' &&
+          item.kind !== 'attending' &&
+          item.kind !== 'saved'
+        ) {
+          acc.push(item);
+          return acc;
+        }
+
+        const eventId = eventIdFromRoute(item.route);
+        if (!eventId) {
+          acc.push(item);
+          return acc;
+        }
+
+        const dayKey = toDateKey(new Date(item.eventTime));
+        const dedupeKey = `${eventId}-${dayKey}`;
+
+        const existingIndex = acc.findIndex((x) => {
+          if (x.kind !== 'hosting' && x.kind !== 'attending' && x.kind !== 'saved')
+            return false;
+          const xEventId = eventIdFromRoute(x.route);
+          if (!xEventId) return false;
+          return `${xEventId}-${toDateKey(new Date(x.eventTime))}` === dedupeKey;
+        });
+
+        if (existingIndex === -1) {
+          acc.push(item);
+          return acc;
+        }
+
+        const priority: Record<CalendarKind, number> = {
+          hosting: 3,
+          attending: 2,
+          saved: 1,
+          vendor_request: 0,
+          vendor_application: 0,
+        };
+
+        const existing = acc[existingIndex];
+        if (priority[item.kind] > priority[existing.kind]) {
+          acc[existingIndex] = item;
+        }
+        return acc;
+      }, []);
   }, [myEvents, myTickets, mySaved, myInvites, myApplications, now]);
 
   const typeFiltered = timeline.filter((item) => {
     if (filter === 'all') return true;
     if (filter === 'hosting') return item.kind === 'hosting';
     if (filter === 'attending') return item.kind === 'attending';
-    if (filter === 'saved') return item.kind === 'saved';
+    if (filter === 'saved') {
+      const eventId = eventIdFromRoute(item.route);
+      if (!eventId) return false;
+      return savedEventIds.has(eventId);
+    }
     return item.kind === 'vendor_request' || item.kind === 'vendor_application';
   });
   const dayFiltered = selectedDateKey
@@ -248,107 +380,64 @@ export default function CalendarPage() {
         backgroundSize: '20px 20px',
       }}
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <section
-          className="mb-8 p-6 sm:p-8"
-          style={{
-            ...(scrapbookTheme as any).paperCard,
-            transform: 'rotate(-0.5deg)',
-            backgroundColor: '#fffdf0',
-          }}
-        >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-6xl px-4 mt-5 sm:px-6">
+        <section className="mb-6 flex flex-wrap gap-3">
+          {[
+            { key: 'all', label: 'All', color: 'rgb(233, 133, 133)' },
+            { key: 'hosting', label: 'Hosting', color: 'rgb(109, 174, 255)' },
+            { key: 'attending', label: 'Attending', color: 'rgb(255, 228, 25)' },
+            { key: 'vendor', label: 'Servicing', color: 'rgb(67, 237, 209)' },
+            { key: 'saved', label: 'Saved', color: 'rgb(236, 80, 80)' },
+          ].map((tab) => (
             <div>
-              <p
-                className="text-sm font-bold uppercase tracking-widest text-[#ef4444]"
-                style={{ fontFamily: '"Permanent Marker"' }}
-              >
-                Unified Timeline
-              </p>
-              <h1
-                className="text-4xl font-black mt-2"
-                style={{ fontFamily: '"Permanent Marker"', color: '#1f2937' }}
-              >
-                My Calendar
-              </h1>
-              <p
-                className="text-base font-medium mt-2"
-                style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}
-              >
-                Hosting, attending, saving, and vendor request milestones in one place.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
               <span
-                className="px-4 py-2 font-bold"
+                key={tab.key}
+                onClick={() => setFilter(tab.key as CalendarFilter)}
+                className="px-4 py-2 font-bold cursor-pointer inline-flex items-center gap-2"
                 style={{
                   ...(scrapbookTheme as any).stickyNote,
-                  backgroundColor: '#bfdbfe',
-                  transform: 'rotate(2deg)',
-                }}
-              >
-                {myEvents.length} hosted
-              </span>
-              <span
-                className="px-4 py-2 font-bold"
-                style={{
-                  ...(scrapbookTheme as any).stickyNote,
-                  backgroundColor: '#a7f3d0',
-                  transform: 'rotate(-1deg)',
-                }}
-              >
-                {myTickets.length} tickets
-              </span>
-              <span
-                className="px-4 py-2 font-bold"
-                style={{
-                  ...(scrapbookTheme as any).stickyNote,
-                  backgroundColor: '#fecaca',
-                  transform: 'rotate(1deg)',
-                }}
-              >
-                {mySaved.length} saved
-              </span>
-              <span
-                className="px-4 py-2 font-bold"
-                style={{
-                  ...(scrapbookTheme as any).stickyNote,
-                  backgroundColor: '#fde68a',
+                  backgroundColor: adjustColor(
+                    tab.color,
+                    filter === tab.key ? 0.05 : -0.6,
+                  ),
+                  // border: `2px solid ${tab.color}`,
+                  color: filter !== tab.key ? '#000000' : '#ffffff',
                   transform: 'rotate(-2deg)',
                 }}
               >
-                {myInvites.filter((invite) => invite.status === 'pending').length}{' '}
-                requests
+                {tab.key === 'hosting' && (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                    style={{ backgroundColor: KIND_DOT_COLORS.hosting }}
+                  />
+                )}
+                {tab.key === 'attending' && (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                    style={{ backgroundColor: KIND_DOT_COLORS.attending }}
+                  />
+                )}
+                {tab.key === 'saved' && (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                    style={{ backgroundColor: KIND_DOT_COLORS.saved }}
+                  />
+                )}
+                {tab.key === 'vendor' && (
+                  <span className="inline-flex items-center gap-1">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                      style={{ backgroundColor: KIND_DOT_COLORS.vendor_request }}
+                    />
+                    <span
+                      className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                      style={{ backgroundColor: KIND_DOT_COLORS.vendor_application }}
+                    />
+                  </span>
+                )}
+                {tab.label}
               </span>
             </div>
-          </div>
-        </section>
-
-        <section className="mb-6 flex flex-wrap gap-3">
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'hosting', label: 'Hosting' },
-            { key: 'attending', label: 'Attending' },
-            { key: 'saved', label: 'Saved' },
-            { key: 'vendor', label: 'Vendor' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as CalendarFilter)}
-              className={`px-4 py-2 font-bold transition-transform hover:scale-105 active:scale-95 ${
-                filter === tab.key ? 'text-black' : 'text-gray-600'
-              }`}
-              style={{
-                ...(scrapbookTheme as any).border,
-                fontFamily: '"Caveat"',
-                fontSize: '1.25rem',
-                backgroundColor: filter === tab.key ? '#fde047' : '#fdfdfd',
-                boxShadow: filter === tab.key ? '3px 4px 0px #333' : '2px 2px 0px #333',
-                transform: `rotate(${Math.random() * 2 - 1}deg)`,
-              }}
-            >
-              {tab.label}
-            </button>
           ))}
         </section>
         <section
@@ -359,7 +448,7 @@ export default function CalendarPage() {
             backgroundColor: '#fcfcfc',
           }}
         >
-          <div className="mb-6 flex items-center justify-between border-b-2 border-gray-800 pb-4">
+          <div className="mb-6 flex items-center justify-between pb-4">
             <h2
               className="text-3xl font-black"
               style={{ fontFamily: '"Permanent Marker"' }}
@@ -390,7 +479,7 @@ export default function CalendarPage() {
             </div>
           </div>
           <div
-            className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold mb-3 border-b-2 border-gray-800 pb-2"
+            className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold pb-2"
             style={{ fontFamily: '"Permanent Marker"' }}
           >
             {WEEKDAYS.map((day) => (
@@ -399,12 +488,9 @@ export default function CalendarPage() {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1 sm:gap-2 border-t-2 border-gray-800 pt-2">
+          <div className="grid grid-cols-7  pt-2">
             {monthDays.map((day) => {
               const dayItems = eventsByDay[day.key] || [];
-              const uniqueKinds = Array.from(
-                new Set(dayItems.map((item) => item.kind)),
-              ).slice(0, 4);
               const isSelected = selectedDateKey === day.key;
               return (
                 <button
@@ -412,38 +498,66 @@ export default function CalendarPage() {
                   onClick={() =>
                     setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
                   }
-                  className={`min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${
+                  className={`relative min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${
                     day.inMonth
                       ? 'bg-[#fdfdfd] border-gray-800 hover:-translate-y-1 hover:shadow-[2px_2px_0px_#333]'
                       : 'bg-gray-100 border-gray-400 text-gray-400'
                   } ${isSelected ? 'ring-4 ring-yellow-400 bg-yellow-50 shadow-[2px_2px_0px_#333]' : ''}`}
                 >
                   <div
-                    className={`text-sm font-bold w-full ${
+                    className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${
                       day.isToday
                         ? 'text-red-500 underline decoration-2 underline-offset-2'
                         : day.inMonth
                           ? 'text-gray-900'
                           : 'text-gray-400'
                     }`}
-                    style={{ fontFamily: '"Permanent Marker"' }}
+                    style={{
+                      fontFamily: '"Permanent Marker"',
+                      color: '#000000',
+                      backgroundColor: isSelected ? '#fde68a' : '#fdfdfd',
+                      // border: isSelected ? '2px solid #333' : '2px solid #888',
+                      borderRadius: '50%',
+                      padding: '5px',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
                   >
                     {day.date.getDate()}
                   </div>
                   {dayItems.length > 0 && (
                     <div className="mt-2 w-full">
-                      <div
+                      {/* <div
                         className="text-xs font-medium text-gray-600 mb-1"
                         style={{ fontFamily: '"Caveat"', fontSize: '1rem' }}
                       >
                         {dayItems.length} item{dayItems.length === 1 ? '' : 's'}
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {uniqueKinds.map((kind) => (
-                          <span
-                            key={`${day.key}-${kind}`}
-                            className={`h-2.5 w-2.5 rounded-full border border-gray-800 ${KIND_DOT_STYLES[kind]}`}
-                          />
+                      </div> */}
+                      <div className="mt-1 flex flex-col gap-1.5">
+                        {dayItems.slice(0, 4).map((item) => (
+                          <div
+                            key={`${day.key}-${item.id}`}
+                            className="flex flex-row items-center gap-1.5"
+                          >
+                            <span
+                              className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                              style={{ backgroundColor: KIND_DOT_COLORS[item.kind] }}
+                            />
+
+                            {/* Exactly one of these is visible at any breakpoint */}
+                            <span className="block md:hidden text-[11px] leading-tight">
+                              {clipText(item.title || 'Untitled event', 10)}
+                            </span>
+                            <span className="hidden md:block lg:hidden text-[11px] leading-tight">
+                              {clipText(item.title || 'Untitled event', 18)}
+                            </span>
+                            <span className="hidden lg:block text-[11px] leading-tight">
+                              {clipText(item.title || 'Untitled event', 30)}
+                            </span>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -503,83 +617,109 @@ export default function CalendarPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {dayFiltered.map((item, i) => (
+            {dayFiltered.map((item) => (
               <article
                 key={item.id}
-                className="p-5 transition-transform hover:-translate-y-1"
-                style={{
-                  ...(scrapbookTheme as any).paperCard,
-                  backgroundColor: item.kind === 'saved' ? '#fee2e2' : '#fdfdfd',
-                  transform: `rotate(${i % 2 === 0 ? 0.5 : -0.5}deg)`,
-                }}
+                className="transition-transform hover:-translate-y-1"
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h2
-                        className="text-2xl font-black line-clamp-1"
-                        style={{ fontFamily: '"Permanent Marker"' }}
-                      >
-                        {item.title}
-                      </h2>
-                      <span
-                        className={`px-3 py-1 font-bold ${KIND_STYLES[item.kind]}`}
-                        style={{ transform: 'rotate(-2deg)' }}
-                      >
-                        {item.tag}
-                      </span>
+                <div className="flex flex-row items-center justify-center gap-4">
+                  {item.event && (
+                    <ScrapbookEventCardLandscape event={item.event} isFocused={false} />
+                  )}
+                  <div className="min-w-[240px] max-w-[320px] flex flex-col gap-2">
+                    <div
+                      className="border-2 border-gray-800 bg-white px-3 py-2 shadow-[2px_2px_0px_#333]"
+                      style={{
+                        fontFamily: '"Permanent Marker"',
+                        transform: 'rotate(-1deg)',
+                      }}
+                    >
+                      Why it’s here
                     </div>
-                    <p
-                      className="text-lg font-medium mt-2 text-gray-700"
+                    <div
+                      className="border-2 border-gray-800 bg-[#fffdf0] px-3 py-2 shadow-[2px_2px_0px_#333] flex flex-col gap-2"
                       style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}
                     >
-                      {item.subtitle}
-                    </p>
-                    <div
-                      className="mt-3 flex flex-wrap gap-4 text-sm font-bold border-t-2 border-dashed border-gray-400 pt-3"
-                      style={{ fontFamily: '"Space Mono", monospace' }}
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <CalendarClock className="h-4 w-4 text-blue-500" />
-                        {new Date(item.eventTime).toLocaleString(undefined, {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock3 className="h-4 w-4 text-green-500" />
-                        {formatRelative(item.eventTime)}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4 text-red-500" />
-                        {item.location}
-                      </span>
+                      {(() => {
+                        const eventId = eventIdFromRoute(item.route);
+                        const reasons = eventId ? eventReasons.get(eventId) : undefined;
+                        const chips: Array<{ key: string; label: string }> = [];
+                        if (reasons?.hosting)
+                          chips.push({ key: 'hosting', label: 'You’re hosting' });
+                        if (reasons?.attending)
+                          chips.push({ key: 'attending', label: 'You have tickets' });
+                        if (reasons?.saved)
+                          chips.push({ key: 'saved', label: 'You liked/saved it' });
+                        if (reasons?.vendor_request)
+                          chips.push({
+                            key: 'vendor_request',
+                            label: 'A service was requested',
+                          });
+                        if (reasons?.vendor_application)
+                          console.log(item, "reasons?.vendor_application", reasons?.vendor_application);
+                          chips.push({
+                            key: 'vendor_application',
+                            label: 'You applied to service it',
+                          });
+                        if (chips.length === 0)
+                          chips.push({
+                            key: item.kind,
+                            label: item.subtitle || 'On your calendar',
+                          });
+
+                        return (
+                          <>
+                            <div className="flex flex-wrap gap-2">
+                              {chips.map((c) => (
+                                <span
+                                  key={c.key}
+                                  className="px-2 py-0.5 border border-gray-800 bg-white font-bold"
+                                >
+                                  {c.label}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex flex-col gap-2 pt-1">
+                              {eventId && reasons?.hosting && (
+                                <Link
+                                  to={`/events/${eventId}/host-event-management/overview`}
+                                  className="bg-blue-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
+                                  style={{ fontFamily: '"Permanent Marker"' }}
+                                >
+                                  Manage as Host
+                                </Link>
+                              )}
+                              {eventId &&
+                                (reasons?.vendor_application ||
+                                  reasons?.vendor_request) && (
+                                  <Link
+                                    to={`/events/${eventId}/service-event-management/overview`}
+                                    className="bg-emerald-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
+                                    style={{ fontFamily: '"Permanent Marker"' }}
+                                  >
+                                    Manage as Vendor
+                                  </Link>
+                                )}
+                              <Link
+                                to={item.route}
+                                className="bg-yellow-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
+                                style={{ fontFamily: '"Permanent Marker"' }}
+                              >
+                                {item.cta}
+                              </Link>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    {item.kind === 'vendor_request' ? (
-                      <Megaphone className="h-6 w-6 text-amber-500" />
-                    ) : item.kind === 'vendor_application' ? (
-                      <Briefcase className="h-6 w-6 text-purple-500" />
-                    ) : item.kind === 'saved' ? (
-                      <Sparkles className="h-6 w-6 text-red-500" />
-                    ) : (
-                      <CheckCircle2
-                        className={`h-6 w-6 ${item.isPast ? 'text-gray-400' : 'text-emerald-500'}`}
-                      />
-                    )}
-                    <Link
-                      to={item.route}
-                      className="bg-yellow-300 text-black px-4 py-2 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center justify-center whitespace-nowrap"
-                      style={{ fontFamily: '"Permanent Marker"' }}
-                    >
-                      {item.cta}
-                    </Link>
-                  </div>
+                  <Link
+                    to={item.route}
+                    className="bg-yellow-300 text-black px-4 py-2 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center justify-center whitespace-nowrap"
+                    style={{ fontFamily: '"Permanent Marker"' }}
+                  >
+                    {item.cta}
+                  </Link>
                 </div>
               </article>
             ))}

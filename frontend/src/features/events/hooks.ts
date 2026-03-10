@@ -8,6 +8,7 @@ import {
   addEventHighlight,
   addEventReview,
   addHighlightComment,
+  addHostVendorMessage,
   addReviewComment,
   cancelTicket,
   createEventSeries,
@@ -28,6 +29,7 @@ import {
   fetchFeed,
   fetchHighlightComments,
   fetchHighlightsFeed,
+  fetchHostVendorMessages,
   fetchIconicHostsFeed,
   fetchMyEvents,
   fetchMyInterestedEvents,
@@ -332,7 +334,8 @@ export function useMyTickets() {
 export function useEventStory(eventId: number) {
   return useQuery({
     queryKey: ['eventStory', eventId],
-    queryFn: () => Promise.resolve({ success: true, message: '', data: null, meta: {} }),
+    queryFn: () =>
+      Promise.resolve({ success: true, message: '', data: null, meta: {} }),
     enabled: !!eventId,
   });
 }
@@ -403,6 +406,33 @@ export function useAddHighlightComment() {
         queryKey: ['highlightComments', variables.highlightId],
       });
       queryClient.invalidateQueries({ queryKey: ['eventHighlights'] });
+    },
+  });
+}
+
+export function useHostVendorMessages(eventId: number) {
+  return useQuery({
+    queryKey: ['hostVendorMessages', eventId],
+    queryFn: () => fetchHostVendorMessages(eventId),
+    enabled: !!eventId,
+    refetchInterval: 5000,
+  });
+}
+
+export function useAddHostVendorMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      payload,
+    }: {
+      eventId: number;
+      payload: { text: string };
+    }) => addHostVendorMessage(eventId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['hostVendorMessages', variables.eventId],
+      });
     },
   });
 }

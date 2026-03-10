@@ -20,7 +20,9 @@ from apps.events.models import (
     EventHighlightLike,
     EventHighlightComment,
     EventReviewLike,
+    EventReviewLike,
     EventReviewComment,
+    EventHostVendorMessage,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -37,7 +39,9 @@ from .serializers import (
     EventTransitionRequestSerializer,
     EventTicketTierSerializer,
     EventHighlightCommentSerializer,
+    EventHighlightCommentSerializer,
     EventReviewCommentSerializer,
+    EventHostVendorMessageSerializer,
 )
 
 
@@ -855,3 +859,53 @@ class EventViewView(APIView):
             EventView.objects.filter(pk=view_obj.pk).update(last_viewed_at=tz.now())
 
         return success_response(data={"recorded": True}, status=201 if created else 200)
+
+
+class EventHostVendorMessageListCreateView(APIView):
+    """List or create chat messages between host and vendors for an event."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _is_authorized(self, event, user):
+        """Check if user is host or confirmed vendor."""
+        if event.host == user:
+            return True
+        from apps.needs.models import NeedApplication
+        return NeedApplication.objects.filter(vendor=user, need__event=event).exists()
+
+    def get(self, request, event_id):
+        """Get all messages for this event's host-vendor chat."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if not self._is_authorized(event, request.user):
+            return error_response(message="Not authorized to view this chat", status=403)
+
+        messages = event.host_vendor_messages.select_related("sender", "sender__profile")
+        serializer = EventHostVendorMessageSerializer(
+            messages, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+    def post(self, request, event_id):
+        """Post a new message in the host-vendor chat."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if not self._is_authorized(event, request.user):
+            return error_response(message="Not authorized to post in this chat", status=403)
+
+        serializer = EventHostVendorMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            message = serializer.save(event=event, sender=request.user)
+            return success_response(
+                data=EventHostVendorMessageSerializer(
+                    message, context={"request": request}
+                ).data,
+                status=201,
+            )
+        return error_response(message="Validation Error", errors=serializer.errors)

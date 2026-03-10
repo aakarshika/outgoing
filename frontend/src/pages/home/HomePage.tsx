@@ -18,8 +18,8 @@ import {
   OnlineSection,
   RecommendedSection,
   SignUpCTASection,
-  TrendingSection,
   TrendingHighlightsSection,
+  TrendingSection,
   UpcomingRSVPsSection,
 } from './HomeSections';
 import {

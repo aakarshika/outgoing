@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import { ArrowLeft, ChevronDown, ChevronUp, Globe, Heart, MapPin } from 'lucide-react';
+import { useState } from 'react';
 
 import { TicketStatusBadge } from '@/features/events/TicketStatusBadge';
 
@@ -30,9 +30,7 @@ export const StatusBannerSection = ({
   const currentOccurrence =
     occurrences.find((occ) => occ.id === event.id) ?? occurrences[0];
   const collapsedOccurrences = currentOccurrence ? [currentOccurrence] : [];
-  const occurrencesToDisplay = occurrencesExpanded
-    ? occurrences
-    : collapsedOccurrences;
+  const occurrencesToDisplay = occurrencesExpanded ? occurrences : collapsedOccurrences;
 
   return (
     <Box sx={{ mb: 4, position: 'relative', zIndex: 25 }}>
@@ -47,9 +45,6 @@ export const StatusBannerSection = ({
       >
         {/* Right: Status text, Heart, Manage */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
-
-
-
           {/* Save the Date stamp */}
           {['live', 'completed'].includes(event.lifecycle_state) &&
             event.category?.icon !== 'cpu' && (
@@ -66,10 +61,11 @@ export const StatusBannerSection = ({
                   transform: 'rotate(-15deg)',
                   cursor: 'pointer',
                   '&:hover': {
-                    transform: 'rotate(-10deg) scale(1.05)'
+                    transform: 'rotate(-10deg) scale(1.05)',
                   },
                   transition: 'all 0.2s',
-                }}>
+                }}
+              >
                 <Heart
                   onClick={() => {
                     if (!isAuthenticated) {
@@ -125,9 +121,7 @@ export const StatusBannerSection = ({
                   },
                 }}
               >
-
                 {isAuthenticated && (
-
                   <Heart
                     size={18}
                     fill={event.user_is_interested ? '#ef4444' : '#eeeeee'}
@@ -144,9 +138,7 @@ export const StatusBannerSection = ({
                   }}
                 >
                   {event.user_is_interested ? (
-                    <>
-                      SAVED!
-                    </>
+                    <>SAVED!</>
                   ) : (
                     <>
                       SAVE THE
@@ -186,7 +178,7 @@ export const StatusBannerSection = ({
         </Box>
         <Box sx={{ display: 'inline-flex', alignSelf: 'flex-end', mb: 1 }}>
           {/* Status Text Row 1 */}
-          {(
+          {
             <Box sx={{ mr: { xs: 0.5, sm: 1 } }}>
               {event.lifecycle_state === 'live' ? (
                 <Box sx={{ textAlign: 'right', transform: 'rotate(-2deg)' }}>
@@ -282,22 +274,22 @@ export const StatusBannerSection = ({
                     Live in...
                   </Typography>
                 </Box>
-              ) :
-                event.lifecycle_state === 'published' ? (
-                  <Box sx={{ textAlign: 'right' }}>
-                    <Typography
-                      sx={{
-                        fontFamily: '"Permanent Marker", cursive',
-                        fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
-                        color: '#165aa3ff',
-                        transform: 'rotate(0deg)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Coming up in ...
-                    </Typography>
-                  </Box>
-                ) : <Box sx={{ textAlign: 'right' }}>
+              ) : event.lifecycle_state === 'published' ? (
+                <Box sx={{ textAlign: 'right' }}>
+                  <Typography
+                    sx={{
+                      fontFamily: '"Permanent Marker", cursive',
+                      fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.6rem' },
+                      color: '#165aa3ff',
+                      transform: 'rotate(0deg)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Coming up in ...
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'right' }}>
                   <Typography
                     sx={{
                       fontFamily: '"Permanent Marker", cursive',
@@ -309,12 +301,11 @@ export const StatusBannerSection = ({
                   >
                     DRAFT !
                   </Typography>
-                </Box>}
+                </Box>
+              )}
             </Box>
-          )}
-          {showTimer && (
-            <CuteTimer targetDate={event.start_time} />
-          )}
+          }
+          {showTimer && <CuteTimer targetDate={event.start_time} />}
         </Box>
       </Box>
 
@@ -341,73 +332,74 @@ export const StatusBannerSection = ({
             }}
           >
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {occurrencesToDisplay && occurrencesToDisplay.map((occ: any, idx: number) => {
-                const isCurrent = occ.id === event.id;
-                const d = new Date(occ.start_time);
-                // Sketchy border and color logic
-                return (
-                  <Box
-                    key={occ.id}
-                    onClick={() => !isCurrent && navigate(`/events/${occ.id}`)}
-                    sx={{
-                      minWidth: 100,
-                      cursor: isCurrent ? 'default' : 'pointer',
-                      px: 1.5,
-                      py: 0.5,
-                      bgcolor: isCurrent ? 'rgba(239, 68, 68, 0.1)' : 'white',
-                      border: '1.5px solid',
-                      borderColor: isCurrent ? '#ef4444' : 'rgba(0,0,0,0.1)',
-                      borderRadius: '4px',
-                      transform: `rotate(${((idx % 3) - 1) * 2}deg)`,
-                      boxShadow: isCurrent
-                        ? '2px 2px 0px rgba(239, 68, 68, 0.2)'
-                        : '1px 1px 3px rgba(0,0,0,0.05)',
-                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                      '&:hover': !isCurrent
-                        ? {
-                          transform: 'scale(1.1) rotate(0deg)',
-                          boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
-                          borderColor: 'rgba(0,0,0,0.3)',
-                          zIndex: 2,
-                        }
-                        : {},
-                      position: 'relative',
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
+              {occurrencesToDisplay &&
+                occurrencesToDisplay.map((occ: any, idx: number) => {
+                  const isCurrent = occ.id === event.id;
+                  const d = new Date(occ.start_time);
+                  // Sketchy border and color logic
+                  return (
+                    <Box
+                      key={occ.id}
+                      onClick={() => !isCurrent && navigate(`/events/${occ.id}`)}
                       sx={{
-                        fontFamily: 'serif',
-                        fontSize: '0.65rem',
-                        color: isCurrent ? '#ef4444' : '#666',
-                        display: 'block',
-                        whiteSpace: 'nowrap',
-                        pointerEvents: 'none',
+                        minWidth: 100,
+                        cursor: isCurrent ? 'default' : 'pointer',
+                        px: 1.5,
+                        py: 0.5,
+                        bgcolor: isCurrent ? 'rgba(239, 68, 68, 0.1)' : 'white',
+                        border: '1.5px solid',
+                        borderColor: isCurrent ? '#ef4444' : 'rgba(0,0,0,0.1)',
+                        borderRadius: '4px',
+                        transform: `rotate(${((idx % 3) - 1) * 2}deg)`,
+                        boxShadow: isCurrent
+                          ? '2px 2px 0px rgba(239, 68, 68, 0.2)'
+                          : '1px 1px 3px rgba(0,0,0,0.05)',
+                        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        '&:hover': !isCurrent
+                          ? {
+                              transform: 'scale(1.1) rotate(0deg)',
+                              boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
+                              borderColor: 'rgba(0,0,0,0.3)',
+                              zIndex: 2,
+                            }
+                          : {},
+                        position: 'relative',
                       }}
                     >
-                      {d.toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        weekday: 'long',
-                        year: 'numeric',
-                      })}
-                    </Typography>
-                    {isCurrent && (
-                      <Box
+                      <Typography
+                        variant="caption"
                         sx={{
-                          position: 'absolute',
-                          top: -2,
-                          right: -2,
-                          width: 6,
-                          height: 6,
-                          bgcolor: '#ef4444',
-                          borderRadius: '50%',
+                          fontFamily: 'serif',
+                          fontSize: '0.65rem',
+                          color: isCurrent ? '#ef4444' : '#666',
+                          display: 'block',
+                          whiteSpace: 'nowrap',
+                          pointerEvents: 'none',
                         }}
-                      />
-                    )}
-                  </Box>
-                );
-              })}
+                      >
+                        {d.toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          weekday: 'long',
+                          year: 'numeric',
+                        })}
+                      </Typography>
+                      {isCurrent && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            width: 6,
+                            height: 6,
+                            bgcolor: '#ef4444',
+                            borderRadius: '50%',
+                          }}
+                        />
+                      )}
+                    </Box>
+                  );
+                })}
             </Box>
             {hasMultipleOccurrences && (
               <IconButton
@@ -437,47 +429,44 @@ export const StatusBannerSection = ({
         )}
 
         {/* Timer Spacer if no occurrences */}
-        {(!occurrences || occurrences.length === 0) &&
-          (
-
-            <Box
-              key={event.id + '_current'}
+        {(!occurrences || occurrences.length === 0) && (
+          <Box
+            key={event.id + '_current'}
+            sx={{
+              minWidth: 100,
+              cursor: 'default',
+              px: 1.5,
+              py: 0.5,
+              bgcolor: 'rgba(239, 68, 68, 0.1)',
+              border: '1.5px solid',
+              borderColor: '#ef4444',
+              borderRadius: '4px',
+              transform: `rotate(${2}deg)`,
+              boxShadow: '2px 2px 0px rgba(239, 68, 68, 0.2)',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              position: 'relative',
+            }}
+          >
+            <Typography
+              variant="caption"
               sx={{
-                minWidth: 100,
-                cursor: 'default',
-                px: 1.5,
-                py: 0.5,
-                bgcolor: 'rgba(239, 68, 68, 0.1)',
-                border: '1.5px solid',
-                borderColor: '#ef4444',
-                borderRadius: '4px',
-                transform: `rotate(${2}deg)`,
-                boxShadow: '2px 2px 0px rgba(239, 68, 68, 0.2)',
-                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                position: 'relative',
+                fontFamily: 'serif',
+                fontSize: '0.65rem',
+                color: '#ef4444',
+                display: 'block',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
               }}
             >
-              <Typography
-                variant="caption"
-                sx={{
-                  fontFamily: 'serif',
-                  fontSize: '0.65rem',
-                  color: '#ef4444',
-                  display: 'block',
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                }}
-              >
-                {new Date(event.start_time).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  weekday: 'long',
-                  year: 'numeric',
-                })}
-              </Typography>
-
-            </Box>
-          )}
+              {new Date(event.start_time).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                weekday: 'long',
+                year: 'numeric',
+              })}
+            </Typography>
+          </Box>
+        )}
 
         <Box
           key={event.id + '_current_location'}
@@ -490,9 +479,7 @@ export const StatusBannerSection = ({
             position: 'relative',
           }}
         >
-          <
-            >
-
+          <>
             {event.location_address === 'Online Event' && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Globe size={16} style={{ color: 'rgb(86 167 199)' }} />
@@ -528,10 +515,8 @@ export const StatusBannerSection = ({
               </Box>
             )}
           </>
-
         </Box>
       </Box>
-
     </Box>
   );
 };

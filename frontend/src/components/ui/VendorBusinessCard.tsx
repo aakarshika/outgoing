@@ -1,7 +1,9 @@
 import { Box, Typography } from '@mui/material';
-import { Hostname } from './Hostname';
-import { NoImagePlaceholder } from '@/features/events/scrapbookCard/NoImagePlaceholder';
 import { Calendar } from 'lucide-react';
+
+import { NoImagePlaceholder } from '@/features/events/scrapbookCard/NoImagePlaceholder';
+
+import { Hostname } from './Hostname';
 
 interface VendorBusinessCardProps {
   vendor: {
@@ -44,14 +46,14 @@ export const VendorBusinessCard = ({
         flexDirection: 'column',
         justifyContent: 'center',
         transform: `rotate(${rotation}deg)`,
-            boxShadow: '1px 1px 1px rgba(168, 168, 168, 0.8)',
+        boxShadow: '1px 1px 1px rgba(168, 168, 168, 0.8)',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         cursor: onClick ? 'pointer' : 'default',
         '&:hover': onClick
           ? {
-            transform: `rotate(${rotation}deg) translateY(-5px)`,
-            boxShadow: '5px 5px 15px rgba(168, 168, 168, 0.8)',
-          }
+              transform: `rotate(${rotation}deg) translateY(-5px)`,
+              boxShadow: '5px 5px 15px rgba(168, 168, 168, 0.8)',
+            }
           : {},
         '&::before': {
           content: '""',
@@ -111,8 +113,7 @@ export const VendorBusinessCard = ({
             justifyContent: 'center',
             overflow: 'hidden',
           }}
-        >
-        </Box>
+        ></Box>
         <Box sx={{ flex: 1, minWidth: 0, p: 1 }}>
           <Typography
             sx={{
@@ -130,11 +131,11 @@ export const VendorBusinessCard = ({
               textOverflow: 'ellipsis',
             }}
           >
-
             {category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}{' '}
-
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: '', gap: 0.5 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: '', gap: 0.5 }}
+          >
             <Typography
               sx={{
                 fontFamily: '"Permanent Marker"',
@@ -143,15 +144,14 @@ export const VendorBusinessCard = ({
                 textTransform: 'uppercase',
               }}
             >
-
               by
             </Typography>
-            <Hostname username={ownerName}
+            <Hostname
+              username={ownerName}
               sx={{
                 color: 'rgb(160, 158, 156)',
               }}
             />
-
           </Box>
         </Box>
       </Box>
@@ -168,10 +168,10 @@ export const VendorBusinessCard = ({
           sx={{
             display: 'flex',
             flexDirection: 'column',
-          p: 1,
-          pl: 2,
-          pb: 2,
-          alignItems: 'flex-start',
+            p: 1,
+            pl: 2,
+            pb: 2,
+            alignItems: 'flex-start',
             justifyContent: 'flex-start',
           }}
         >
@@ -182,7 +182,6 @@ export const VendorBusinessCard = ({
               color: '#d97706',
             }}
           >
-
             {serviceName}
           </Typography>
           <Typography
@@ -191,7 +190,14 @@ export const VendorBusinessCard = ({
             EST. {year} • {events} HIRES
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.5,
+          }}
+        >
           <Box
             component="img"
             src="/assets/go-symbol.png"

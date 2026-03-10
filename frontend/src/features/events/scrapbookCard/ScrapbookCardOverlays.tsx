@@ -3,8 +3,8 @@
  * All accept optional `sx` for positioning; they use position: 'absolute' by default.
  */
 
-import { Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 type ThemeSlice = { bg: string; accent: string };
 
@@ -113,7 +113,9 @@ export function LiveBadge({ sx = {}, compact }: LiveBadgeProps) {
         borderRadius: compact ? 4 : '4px',
         fontFamily: '"Permanent Marker"',
         fontSize: compact ? '0.7rem' : '0.8rem',
-        ...(compact ? {} : { transform: 'rotate(-5deg)', animation: 'pulse 2s infinite' }),
+        ...(compact
+          ? {}
+          : { transform: 'rotate(-5deg)', animation: 'pulse 2s infinite' }),
         ...sx,
       }}
     >
@@ -159,7 +161,10 @@ export function HostVendorBadge({
         borderRadius: variant === 'short' ? 2 : '2px',
         fontFamily: '"Permanent Marker"',
         fontSize: variant === 'short' ? '0.65rem' : '0.7rem',
-        ...(variant === 'full' && { transform: 'rotate(-3deg)', boxShadow: '2px 2px 4px rgba(0,0,0,0.2)' }),
+        ...(variant === 'full' && {
+          transform: 'rotate(-3deg)',
+          boxShadow: '2px 2px 4px rgba(0,0,0,0.2)',
+        }),
         ...sx,
       }}
     >
@@ -176,11 +181,7 @@ interface PriceBadgeProps {
   sx?: SxProps<Theme>;
 }
 
-export function PriceBadge({
-  price,
-  variant = 'portrait',
-  sx = {},
-}: PriceBadgeProps) {
+export function PriceBadge({ price, variant = 'portrait', sx = {} }: PriceBadgeProps) {
   if (variant === 'landscape') {
     return (
       <Box
@@ -228,9 +229,7 @@ export function PriceBadge({
         ...sx,
       }}
     >
-      <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
-        {price}
-      </Typography>
+      <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{price}</Typography>
     </Box>
   );
 }

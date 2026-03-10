@@ -3,8 +3,8 @@
  * Uses category theme and GO symbol; can be used in portrait card or landscape strip.
  */
 
-import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import { Box } from '@mui/material';
 
 type ThemeSlice = { bg: string; accent: string; pattern: string };
 
@@ -18,7 +18,7 @@ interface NoImagePlaceholderProps {
   sx?: SxProps<Theme>;
 }
 
-const GO_SYMBOL_URL = "/assets/go-symbol.png";
+const GO_SYMBOL_URL = '/assets/go-symbol.png';
 
 export function NoImagePlaceholder({
   theme = { bg: 'rgb(242, 242, 242)', accent: 'rgb(159, 100, 28)', pattern: 'none' },

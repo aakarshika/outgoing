@@ -1,40 +1,16 @@
-import { Calendar } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar, Heart, MapPin, Ticket } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
 import { Media } from '@/components/ui/media';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
-import { useMyEvents } from '@/features/events/hooks';
+import { useMyInterestedEvents } from '@/features/events/hooks';
 import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
 import type { EventListItem } from '@/types/events';
+import { formatEventRelativeTime } from '@/utils/dateUtils';
 
-const LIFECYCLE_BADGE_STYLES: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  draft: { bg: '#fef9c3', text: '#a16207', border: '#facc15' },
-  published: { bg: '#dcfce7', text: '#166534', border: '#4ade80' },
-  at_risk: { bg: '#fff7ed', text: '#9a3412', border: '#fb923c' },
-  postponed: { bg: '#ffedd5', text: '#9a3412', border: '#f97316' },
-  event_ready: { bg: '#d1fae5', text: '#065f46', border: '#34d399' },
-  live: { bg: '#fef3c7', text: '#92400e', border: '#fbbf24' },
-  cancelled: { bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
-  completed: { bg: '#f3e8ff', text: '#6b21a8', border: '#c084fc' },
-};
-
-const LIFECYCLE_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  published: 'Published',
-  at_risk: 'At Risk',
-  postponed: 'Postponed',
-  event_ready: 'Event Ready',
-  live: 'Live',
-  cancelled: 'Cancelled',
-  completed: 'Completed',
-};
-
-// Internal shared components from DashboardPage
+// Internal shared components from DashboardPage (copied to keep tab independent as per EventsTab)
 function LoadingSkeleton({ count }: { count: number }) {
   return (
     <div className="space-y-3">
@@ -96,67 +72,75 @@ function formatSeriesDate(dateStr: string) {
   });
 }
 
-function EventCardRow({
-  event,
-  actionsEnabled = true,
-}: {
-  event: EventListItem;
-  actionsEnabled?: boolean;
-}) {
-  const badge = LIFECYCLE_BADGE_STYLES[event.lifecycle_state] || {
-    bg: '#f3f4f6',
-    text: '#6b7280',
-    border: '#d1d5db',
-  };
+function EventCardRow({ event }: { event: EventListItem }) {
+  const eventDate = new Date(event.start_time);
+  const formattedDate = format(eventDate, 'EEEE, MMMM do, yyyy');
+  const relativeTime = formatEventRelativeTime(event.start_time);
+  const formattedTime = format(eventDate, 'h:mm a');
+  const ticketsSold = event.ticket_count || 0;
+  const tCapacity = event.capacity;
+  const ticketsRemaining = tCapacity ? tCapacity - ticketsSold : 'Unlimited';
 
   return (
     <div className="space-y-1">
-      <div className="flex items-stretch gap-2">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col lg:flex-row items-stretch gap-4">
+        {/* Card on Left */}
+        <div className="flex-1 min-w-0" style={{ maxWidth: '400px' }}>
           <ScrapbookEventCardLandscape event={event} />
         </div>
-        <div className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
-          <span
-            className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
-            style={{
-              fontFamily: '"Permanent Marker", cursive',
-              fontSize: '0.65rem',
-              background: badge.bg,
-              color: badge.text,
-              borderColor: badge.border,
-              transform: 'rotate(2deg)',
-              boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
-            }}
+
+        {/* Info on Right */}
+        <div className="flex-1 flex flex-col justify-center gap-3 p-2 bg-transparent">
+          <div>
+            <div
+              className="text-gray-900 text-lg mb-0.5"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              {formattedDate}
+            </div>
+            <div
+              className="flex items-center gap-1.5 text-gray-600 font-bold"
+              style={{ fontFamily: 'serif', fontSize: '0.85rem' }}
+            >
+              <Calendar className="h-4 w-4 text-gray-500" />
+              {formattedTime} • {relativeTime}
+            </div>
+          </div>
+
+          <div
+            className="flex flex-col gap-0.5"
+            style={{ fontFamily: 'serif', fontSize: '0.85rem' }}
           >
-            {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
-          </span>
-          {actionsEnabled ? (
-            <Link
-              to={`/events/${event.id}/host-event-management`}
-              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
-              style={{
-                fontFamily: '"Permanent Marker", cursive',
-                transform: 'rotate(-1deg)',
-                boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-              }}
-            >
-              MANAGE EVENT
-            </Link>
-          ) : (
-            <span
-              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
-              style={{
-                fontFamily: '"Permanent Marker", cursive',
-                transform: 'rotate(-1deg)',
-                boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
-              }}
-            >
-              MANAGE EVENT
-            </span>
-          )}
+            <div className="flex items-start gap-1.5 text-gray-900 font-bold">
+              <MapPin className="h-4 w-4 text-gray-500 mt-[1px] flex-shrink-0" />
+              <span>{event.location_name}</span>
+            </div>
+            {event.location_address && (
+              <div className="text-gray-500 pl-5.5 ml-5 text-[0.8rem]">
+                {event.location_address}
+              </div>
+            )}
+          </div>
+
+          <div
+            className="flex items-center gap-1.5"
+            style={{ fontFamily: 'serif', fontSize: '0.85rem' }}
+          >
+            <Ticket className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <div className="flex gap-4">
+              <div>
+                <span className="font-bold text-gray-900">{ticketsSold}</span>{' '}
+                <span className="text-gray-500">sold</span>
+              </div>
+              <div className="text-gray-300">|</div>
+              <div>
+                <span className="font-bold text-gray-900">{ticketsRemaining}</span>{' '}
+                <span className="text-gray-500">remaining</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <EventNeedsSummary eventId={event.id} />
     </div>
   );
 }
@@ -203,7 +187,7 @@ function RecurringSeriesGroup({
                   }}
                 />
               ) : (
-                <Calendar className="h-6 w-6 text-gray-400" />
+                <Heart className="h-6 w-6 text-gray-400" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -245,7 +229,7 @@ function RecurringSeriesGroup({
       {isExpanded && (
         <div className="space-y-3">
           {group.events.map((event) => (
-            <EventCardRow key={event.id} event={event} actionsEnabled />
+            <EventCardRow key={event.id} event={event} />
           ))}
         </div>
       )}
@@ -253,8 +237,8 @@ function RecurringSeriesGroup({
   );
 }
 
-export function EventsTab() {
-  const { data: eventsResponse, isLoading } = useMyEvents();
+export function SavedDatesTab() {
+  const { data: eventsResponse, isLoading } = useMyInterestedEvents();
   const events: EventListItem[] = eventsResponse?.data || [];
 
   const [expandedSeries, setExpandedSeries] = useState<Set<number>>(() => new Set());
@@ -333,11 +317,11 @@ export function EventsTab() {
   if (displayItems.length === 0) {
     return (
       <EmptyState
-        icon={<Calendar className="h-12 w-12 text-gray-400" />}
-        title="No events yet"
-        subtitle="Create your first event and start hosting!"
-        actionLabel="Create Event"
-        actionTo="/events/create"
+        icon={<Heart className="h-12 w-12 text-gray-400" />}
+        title="No saved dates yet"
+        subtitle="Go explore and like some events to save them here!"
+        actionLabel="Explore Events"
+        actionTo="/feed"
       />
     );
   }
@@ -356,7 +340,7 @@ export function EventsTab() {
           );
         }
 
-        return <EventCardRow key={item.event.id} event={item.event} actionsEnabled />;
+        return <EventCardRow key={item.event.id} event={item.event} />;
       })}
     </div>
   );

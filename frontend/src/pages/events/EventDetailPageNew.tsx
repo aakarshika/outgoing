@@ -107,18 +107,18 @@ export default function EventDetailPageNew() {
   useEffect(() => {
     if (event) {
       if (event.lifecycle_state === 'live') {
-      setBackgroundComponent(
-        <div
-          className="fixed inset-0"
-          style={{
+        setBackgroundComponent(
+          <div
+            className="fixed inset-0"
+            style={{
               backgroundColor: '#fef3c7',
               backgroundImage: 'radial-gradient(#fde68a 0.5px, #ffdebdff 0.5px)',
               backgroundSize: '15px 15px',
-            zIndex: -1,
-            pointerEvents: 'none',
-          }}
-        />,
-      );
+              zIndex: -1,
+              pointerEvents: 'none',
+            }}
+          />,
+        );
       } else {
         setBackgroundComponent(
           <div
@@ -130,7 +130,7 @@ export default function EventDetailPageNew() {
               zIndex: -1,
               pointerEvents: 'none',
             }}
-          />
+          />,
         );
       }
     }

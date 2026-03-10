@@ -1,9 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { Heart, MessageCircle } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { PolaroidFrame } from './scrapbookHelpers';
-
-import { useNavigate, useLocation } from 'react-router-dom';
 
 interface HighlightCardProps {
   highlight: any;
@@ -41,15 +40,13 @@ export const HighlightCard = ({
   };
 
   return (
-    <Box
-      onClick={onClick || handleDefaultClick}
-      sx={{
-      }}
-    >
-      <Box sx={{
-        position: 'relative',
-        cursor: 'pointer',
-      }}>
+    <Box onClick={onClick || handleDefaultClick} sx={{}}>
+      <Box
+        sx={{
+          position: 'relative',
+          cursor: 'pointer',
+        }}
+      >
         <PolaroidFrame
           src={highlight.media_file}
           caption={highlight.text}

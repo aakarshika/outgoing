@@ -18,7 +18,7 @@ export type EventForRoles = {
  */
 export function getEventCardRoles(
   event: EventForRoles,
-  auth: EventCardAuth
+  auth: EventCardAuth,
 ): { isHost: boolean; isVendor: boolean } {
   const isHost =
     auth.isAuthenticated &&

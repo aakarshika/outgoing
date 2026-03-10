@@ -3,26 +3,44 @@ import React from 'react';
 
 import { EnclosingBox } from '../manage-redesign/ui/EnclosingBox';
 import { ScrapbookHeading } from '../manage-redesign/ui/ScrapbookHeading';
+import { HostVendorGroupChat } from '../manage-shared/HostVendorGroupChat';
 
-export const LiveStep: React.FC = () => {
-    return (
-        <EnclosingBox rotation={0.8}>
-            <div className="mb-8">
-                <ScrapbookHeading title="Live Event" icon={<MessageSquare className="h-6 w-6" />} />
+export const LiveStep: React.FC<{ event?: any }> = ({ event }) => {
+  // We get vendor applications down from the component structure if possible, but for now we might only have event details
+  // Getting the same hook to fetch needs, to get full list of users for this vendor.
+  // In a real scenario we could fetch it via a hook directly here or pass it down. Let's assume `event` contains basic host info.
+  const chatUsers = event
+    ? [
+        {
+          id: event.host?.id || event.host?.username || 'host',
+          username: event.host?.username || 'Host',
+          avatar: event.host?.avatar || undefined,
+          role: 'host',
+        },
+      ]
+    : [];
+  return (
+    <EnclosingBox rotation={0.8}>
+      <div className="mb-8">
+        <ScrapbookHeading
+          title="Live Event"
+          icon={<MessageSquare className="h-6 w-6" />}
+        />
 
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    {/* Messages from host placeholder */}
-                    <div className="h-64 border-2 border-dashed border-orange-400 bg-orange-50 p-4 shadow-[3px_3px_0px_#c2410c] flex flex-col items-center justify-center relative" style={{ transform: 'rotate(1deg)' }}>
-                        <div className="absolute top-0 right-4 h-6 w-12 bg-orange-300/40 -translate-y-2 rotate-[-5deg]" />
-                        <div className="text-4xl mb-2">📢</div>
-                        <h3 className="text-xl font-bold text-orange-900" style={{ fontFamily: '"Permanent Marker", cursive' }}>Host Messages</h3>
-                        <p className="text-orange-700 font-medium text-center mt-2" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem' }}>
-                            (Announcements from host will appear here)
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </EnclosingBox>
-    );
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Messages from host placeholder */}
+          <div className="h-[500px]">
+            {event?.id && (
+              <HostVendorGroupChat
+                eventId={event.id}
+                title="Live Event Chat"
+                authorizedUsers={chatUsers}
+                maxHeight={400}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </EnclosingBox>
+  );
 };

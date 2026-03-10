@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { HostCard } from '@/components/ui/HostCard';
 import { PostItNote } from '@/components/ui/PostItNote';
+import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import type { EventDetail, EventListItem } from '@/types/events';
 
 import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
@@ -14,7 +15,6 @@ import { UserActionCard } from './cards/UserActionCard';
 import { useCarouselEvents, useTrendingHighlights } from './hooks';
 import { ScrapbookEventCardLandscape } from './ScrapbookEventCard';
 import { ScrapbookEventCard } from './ScrapbookEventCard';
-import { HighlightCard } from '@/pages/events/components/HighlightCard';
 
 export type MixedCarouselItem =
   | { type: 'event'; data: EventListItem }
@@ -126,14 +126,14 @@ const CustomCardCarouselWrapper = ({
   index,
   highlight,
   event,
-  eventdata
+  eventdata,
 }: {
   cycleIndex?: number;
   isFocused: boolean;
   index: number;
   highlight?: any;
   event: boolean;
-  eventdata: any
+  eventdata: any;
 }) => {
   const rotation = useMemo(
     () => (index % 2 === 0 ? 1 : -1) * (1 + Math.random() * 2),
@@ -159,11 +159,11 @@ const CustomCardCarouselWrapper = ({
         opacity: isFocused ? 1 : 0.8,
       }}
     >
-      {(
+      {
         <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40 }}>
           <PhotoClip />
         </Box>
-      )}
+      }
       <Box
         className="inner-body"
         sx={{
@@ -178,7 +178,7 @@ const CustomCardCarouselWrapper = ({
           },
         }}
       >
-        {event ?
+        {event ? (
           <ScrapbookEventCard
             event={eventdata}
             isFocused={isFocused}
@@ -187,48 +187,48 @@ const CustomCardCarouselWrapper = ({
             rotationhover={rotationhover}
             disableHover
           />
-          : highlight ? (
-            <HighlightCard
-              highlight={highlight}
-              showClip
-              isFocused={isFocused}
-              rotation={rotation}
-              disableHover
-            />
-          ) : (
-            <>
-              {cycleIndex === 0 && <PlatformDescriptionCard />}
-              {cycleIndex === 1 && <UserActionCard />}
-              {cycleIndex === 2 && (
-                <PostItNote
-                  username="party_animal"
-                  rating={5}
-                  comment="Outgoing changed my weekends forever! Met the coolest people here."
-                  color="#ff9ecd"
-                  rotation="0"
+        ) : highlight ? (
+          <HighlightCard
+            highlight={highlight}
+            showClip
+            isFocused={isFocused}
+            rotation={rotation}
+            disableHover
+          />
+        ) : (
+          <>
+            {cycleIndex === 0 && <PlatformDescriptionCard />}
+            {cycleIndex === 1 && <UserActionCard />}
+            {cycleIndex === 2 && (
+              <PostItNote
+                username="party_animal"
+                rating={5}
+                comment="Outgoing changed my weekends forever! Met the coolest people here."
+                color="#ff9ecd"
+                rotation="0"
+              />
+            )}
+            {cycleIndex === 3 && <StarCutoutCard />}
+            {cycleIndex === 4 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                  bgcolor: 'transparent',
+                }}
+              >
+                <HostCard
+                  host={{ username: 'legendary.host', avatar: null }}
+                  rating={4.9}
+                  tag="Top 1% Host"
+                  rotation={0}
                 />
-              )}
-              {cycleIndex === 3 && <StarCutoutCard />}
-              {cycleIndex === 4 && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                    bgcolor: 'transparent',
-                  }}
-                >
-                  <HostCard
-                    host={{ username: 'legendary.host', avatar: null }}
-                    rating={4.9}
-                    tag="Top 1% Host"
-                    rotation={0}
-                  />
-                </Box>
-              )}
-            </>
-          )}
+              </Box>
+            )}
+          </>
+        )}
       </Box>
     </Box>
   );
@@ -238,7 +238,8 @@ const CustomCardCarouselWrapper = ({
 
 export function BedroomHeroCarousel() {
   const { data: response, isLoading: eventsLoading } = useCarouselEvents();
-  const { data: highlightsResponse, isLoading: highlightsLoading } = useTrendingHighlights(10);
+  const { data: highlightsResponse, isLoading: highlightsLoading } =
+    useTrendingHighlights(10);
 
   const events: EventListItem[] = response?.data || [];
   const highlights = highlightsResponse?.data || [];
@@ -419,7 +420,7 @@ export function BedroomHeroCarousel() {
 
         {displayEvents.map((item, idx) => {
           const isFocused = idx === centeredIndex;
-          console.log("itemitemitemitem", item);
+          console.log('itemitemitemitem', item);
           return (
             <Box
               key={`card-${idx}`}
@@ -443,7 +444,6 @@ export function BedroomHeroCarousel() {
                   index={idx}
                   event={false}
                   eventdata={null}
-
                 />
               ) : (
                 <CustomCardCarouselWrapper

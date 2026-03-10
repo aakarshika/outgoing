@@ -52,9 +52,12 @@ export const PolaroidFrame = ({
   isFocused?: boolean;
   disableHover?: boolean;
 }) => {
-  const baseRotation = useMemo(() => rotation ?? (Math.random() * 8 - 4), [rotation]);
+  const baseRotation = useMemo(() => rotation ?? Math.random() * 8 - 4, [rotation]);
   const hoverRotation = useMemo(
-    () => (rotationhover !== undefined ? rotationhover : baseRotation + (1 + Math.random() * 2)),
+    () =>
+      rotationhover !== undefined
+        ? rotationhover
+        : baseRotation + (1 + Math.random() * 2),
     [rotationhover, baseRotation],
   );
 

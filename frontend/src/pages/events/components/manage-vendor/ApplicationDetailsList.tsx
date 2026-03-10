@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
 import { Edit2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { EditApplicationModal } from '@/components/events/EditApplicationModal';
+
 import { EnclosingBox } from '../manage-redesign/ui/EnclosingBox';
 import { VendorAgreement } from './VendorAgreement';
 
@@ -14,9 +15,9 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
   applications,
 }) => {
   const [editingApplication, setEditingApplication] = useState<any | null>(null);
-  const [openApplicationIds, setOpenApplicationIds] = useState<Record<string | number, boolean>>(
-    {},
-  );
+  const [openApplicationIds, setOpenApplicationIds] = useState<
+    Record<string | number, boolean>
+  >({});
 
   if (!applications || applications.length === 0) {
     return (
@@ -39,11 +40,13 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
 
           return (
             <div key={key} className="space-y-6">
-              <EnclosingBox background="bg-white border text-gray-800 shadow-sm" rotation={0}>
+              <EnclosingBox
+                background="bg-white border text-gray-800 shadow-sm"
+                rotation={0}
+              >
                 <div className="mb-2">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
-
                       {application.event_id && (
                         <div className="mt-1 text-sm">
                           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mr-1">
@@ -82,12 +85,13 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                           </span>
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider
-                                ${application.status === 'accepted'
-                                ? 'bg-green-100 text-green-800'
-                                : application.status === 'rejected'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}
+                                ${
+                                  application.status === 'accepted'
+                                    ? 'bg-green-100 text-green-800'
+                                    : application.status === 'rejected'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                }`}
                           >
                             {application.status}
                           </span>
@@ -105,7 +109,9 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                             Proposed Price
                           </span>
                           <div className="text-sm font-semibold text-gray-900">
-                            {application.proposed_price ? `$${application.proposed_price}` : 'N/A'}
+                            {application.proposed_price
+                              ? `$${application.proposed_price}`
+                              : 'N/A'}
                           </div>
                         </div>
                         <div>
@@ -116,35 +122,36 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                             {new Date(application.created_at).toLocaleDateString()}
                           </div>
                         </div>
-
                       </div>
                       <div className="flex h-full w-full justify-between ">
-
                         {application.message && (
                           <div className="flex-1 w-full h-full mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 italic border border-gray-100">
                             "{application.message}"
                           </div>
                         )}
 
-                        {application.status !== 'pending' && (<button
-                          type="button"
-                          className=" items-center gap-2 focus:outline-none"
-                          onClick={() =>
-                            setOpenApplicationIds((prev) => ({
-                              ...prev,
-                              [key]: !isOpen,
-                            }))
-                          }
-                        >
-                          <span
-                            className="ml-4 items-center border-2 border-[#00CCCC] px-2 py-1 justify-center font-bold text-xs font-black"
-                            style={{ fontFamily: '"Permanent Marker", cursive', color: '#00CCCC' }}
+                        {application.status !== 'pending' && (
+                          <button
+                            type="button"
+                            className=" items-center gap-2 focus:outline-none"
+                            onClick={() =>
+                              setOpenApplicationIds((prev) => ({
+                                ...prev,
+                                [key]: !isOpen,
+                              }))
+                            }
                           >
-                            Barcode {' '}
-                            {!isOpen ? '\\/' : '/\\'}
-                          </span>
-
-                        </button>)}
+                            <span
+                              className="ml-4 items-center border-2 border-[#00CCCC] px-2 py-1 justify-center font-bold text-xs font-black"
+                              style={{
+                                fontFamily: '"Permanent Marker", cursive',
+                                color: '#00CCCC',
+                              }}
+                            >
+                              Barcode {!isOpen ? '\\/' : '/\\'}
+                            </span>
+                          </button>
+                        )}
                       </div>
                     </div>
                     {application.status === 'accepted' && isOpen && (
@@ -153,7 +160,9 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                         vendorSigned={true}
                         hostSigned={true}
                         price={
-                          application.proposed_price ? parseFloat(application.proposed_price) : 0
+                          application.proposed_price
+                            ? parseFloat(application.proposed_price)
+                            : 0
                         }
                         barcode={application.barcode}
                         qrToken={application.qr_token}
@@ -176,5 +185,3 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
     </>
   );
 };
-
-

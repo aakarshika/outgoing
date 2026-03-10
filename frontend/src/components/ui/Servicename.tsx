@@ -3,8 +3,9 @@ import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { UserAvatar } from './UserAvatar';
 import { useVendorService } from '@/features/vendors/hooks';
+
+import { UserAvatar } from './UserAvatar';
 
 interface ServicenameProps {
   service_id: number;
@@ -26,7 +27,7 @@ export const Servicename = ({
     service_name: 'Service Name',
     roles: ['vendor'],
     rating: 4.5,
-    estDate: '2022'
+    estDate: '2022',
   },
   className,
   sx,
@@ -220,9 +221,7 @@ export const Servicename = ({
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Star size={16} fill="#f59e0b" color="#f59e0b" />
-                <Typography
-                  sx={{ fontFamily: '"Caveat"', fontSize: '1.1rem' }}
-                >
+                <Typography sx={{ fontFamily: '"Caveat"', fontSize: '1.1rem' }}>
                   {userData.rating || 0}
                 </Typography>
               </Box>

@@ -11,7 +11,7 @@ export const CATEGORY_THEMES: Record<
     icon: string;
   }
 > = {
-  'default': {
+  default: {
     bg: '#f8fafc',
     pattern:
       'linear-gradient(rgba(130, 153, 186, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(122, 166, 229, 0.1) 1px, transparent 1px)',

@@ -50,7 +50,8 @@ export default function VendorPortfolioPage() {
           <h2 className="text-xl font-semibold mb-2">Portfolio Not Found</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             This vendor has no active services, or you may be using an incorrect ID.
-            Remember to use a <strong>Vendor ID</strong> for portfolios, not a Service ID.
+            Remember to use a <strong>Vendor ID</strong> for portfolios, not a Service
+            ID.
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <Link to="/vendors">Browse All Vendors</Link>

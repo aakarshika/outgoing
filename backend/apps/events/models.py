@@ -635,3 +635,24 @@ class EventReviewComment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on review {self.review.id}"
+
+
+class EventHostVendorMessage(models.Model):
+    """Real-time chat messages between a host and vendors for a specific event."""
+
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, related_name="host_vendor_messages"
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_host_vendor_messages",
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Message by {self.sender.username} in {self.event.title}"
