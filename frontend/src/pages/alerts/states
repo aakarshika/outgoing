@@ -1,0 +1,30 @@
+
+attendee [has ticket status=!cancelled]- 
+1. here is your ticket , wait for check in instructions
+2. prepare to arrive. scan your ticket barcode at entry. dont forget to post 3. pictures. countdown(check in/ready)
+4. attend live - chat with the party and post your highlights ! (live)
+5. post highlights and reviews (completed + completed date < 4 days ago)
+
+vendor - [any one of the following]
+1. prospective vendor - you have been invited by host to apply to this need (published/ready) 
+2. applicant vendor - application is  pending nothing to do but wait  (published/ready)
+3. assigned vendor - prepare to service. all vendors are selected. no backing out now! countdown (ready)
+4. service live - chat with organizers and manage service! (live) 
+5. post highlights and reviews (completed + completed date < 4 days ago)
+
+
+host - 
+1. publish your event (draft) 
+2. prepare for the event then send out check in instructions (published)
+    2.1/3 only published 
+    2.2/3 tickets sold > 20%  XOR needs filled == 100%
+    2.3/3 tickets sold > 20%  AND needs filled == 100%
+3. host live and start attendance scan and manage event (ready)
+4. You are live, 
+    4.1/2 start scanning and admitting guests and vendors (live + 0 admitted)
+    4.2/2 enjoy and host! talk on group chat (live +  >=1 admitted )
+    4.2/2 complete event and post highlights and review the vendors (live +  > end time )
+5. check out the highlights and reviews (completed + completed date < 4 days ago)
+
+
+

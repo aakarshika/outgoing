@@ -7,9 +7,9 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { TinyBusinessCard } from '@/components/ui/TinyBusinessCard';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import { useAlerts } from '@/features/alerts/hooks';
-import type { AppAlert, AlertPriority } from '@/types/alerts';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
+import type { AlertPriority, AppAlert } from '@/types/alerts';
 
 const PRIORITY_STYLES: Record<AlertPriority, string> = {
   high: 'bg-red-200 border-2 border-red-800 text-red-900 shadow-[2px_2px_0px_#991b1b]',
@@ -47,9 +47,11 @@ function AlertTabs({
   const categoriesPresent = new Set<AlertCategory>();
   alerts.forEach((a) => categoriesPresent.add(getAlertCategory(a)));
 
-  const tabs: Array<{ id: AlertCategory | 'all'; label: string; icon?: React.ReactNode }> = [
-    { id: 'all', label: 'All alerts', icon: <LayoutList className="w-3 h-3" /> },
-  ];
+  const tabs: Array<{
+    id: AlertCategory | 'all';
+    label: string;
+    icon?: React.ReactNode;
+  }> = [{ id: 'all', label: 'All alerts', icon: <LayoutList className="w-3 h-3" /> }];
 
   (['events', 'vendors', 'applications', 'other'] as AlertCategory[]).forEach((cat) => {
     if (categoriesPresent.has(cat)) {
@@ -71,10 +73,11 @@ function AlertTabs({
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`relative flex items-center gap-1.5 rounded-full border-2 border-gray-900 px-3 py-1.5 text-xs font-semibold shadow-[2px_2px_0px_rgba(15,23,42,0.9)] transition-all ${isActive
-              ? 'bg-yellow-200 text-gray-900'
-              : 'bg-white/90 text-gray-700 hover:bg-yellow-100'
-              }`}
+            className={`relative flex items-center gap-1.5 rounded-full border-2 border-gray-900 px-3 py-1.5 text-xs font-semibold shadow-[2px_2px_0px_rgba(15,23,42,0.9)] transition-all ${
+              isActive
+                ? 'bg-yellow-200 text-gray-900'
+                : 'bg-white/90 text-gray-700 hover:bg-yellow-100'
+            }`}
             style={{
               transform: `rotate(${isActive ? -1 : 1}deg)`,
             }}
@@ -92,8 +95,9 @@ function AlertTabs({
 function PrioritySticker({ priority }: { priority: AlertPriority }) {
   return (
     <span
-      className={`rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-widest inline-block ${PRIORITY_STYLES[priority]
-        }`}
+      className={`rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-widest inline-block ${
+        PRIORITY_STYLES[priority]
+      }`}
       style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(4deg)' }}
     >
       {priority}
@@ -120,7 +124,10 @@ function DraftEventAlert({ alert }: { alert: AppAlert }) {
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center pointer-events-none"
         style={{ transform: 'translate(-50%, -50%) rotate(-3deg)' }}
       >
-        <div className="bg-red-500 text-white font-bold px-6 py-2 shadow-[4px_4px_0px_#991b1b] border-4 border-red-800 tracking-widest text-lg md:text-xl uppercase whitespace-nowrap" style={{ fontFamily: '"Permanent Marker", cursive' }}>
+        <div
+          className="bg-red-500 text-white font-bold px-6 py-2 shadow-[4px_4px_0px_#991b1b] border-4 border-red-800 tracking-widest text-lg md:text-xl uppercase whitespace-nowrap"
+          style={{ fontFamily: '"Permanent Marker", cursive' }}
+        >
           DRAFT NOT PUBLISHED
         </div>
       </div>
@@ -148,7 +155,10 @@ function VendorRequestsAlert({ alert }: { alert: AppAlert }) {
 
   return (
     <div className="relative mt-8">
-      <div className="absolute -top-6 right-4 md:right-10 z-20" style={{ transform: 'rotate(4deg)' }}>
+      <div
+        className="absolute -top-6 right-4 md:right-10 z-20"
+        style={{ transform: 'rotate(4deg)' }}
+      >
         <TinyBusinessCard
           name={vendor.username || vendor.vendor_name || vendor.name}
           avatar={vendor.avatar || ''}
@@ -183,7 +193,13 @@ function ApplicationsAlert({ alert }: { alert: AppAlert }) {
     <div className="relative mt-6 lg:mt-8">
       <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-8 relative">
         <div className="lg:w-2/5 relative z-20 shrink-0 w-full max-w-sm mx-auto shadow-2xl">
-          <div className="absolute -top-6 -left-4 z-30 bg-yellow-300 px-4 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] text-gray-900 text-sm tracking-wide" style={{ transform: 'rotate(-4deg)', fontFamily: '"Permanent Marker", cursive' }}>
+          <div
+            className="absolute -top-6 -left-4 z-30 bg-yellow-300 px-4 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] text-gray-900 text-sm tracking-wide"
+            style={{
+              transform: 'rotate(-4deg)',
+              fontFamily: '"Permanent Marker", cursive',
+            }}
+          >
             NEW APP!
           </div>
           <VendorBusinessCard vendor={vendor} rotation={-2} />
@@ -211,9 +227,14 @@ function GenericAlertCard({
   return (
     <div className="relative space-y-2 mt-4">
       <div
-        className={`inline-flex items-center gap-1.5 rounded-sm border-2 px-3 py-1 text-xs font-bold uppercase tracking-wide ${accent || 'bg-slate-200 border-slate-800 text-slate-800 shadow-[2px_2px_0px_#333]'
-          }`}
-        style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-2deg)' }}
+        className={`inline-flex items-center gap-1.5 rounded-sm border-2 px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+          accent ||
+          'bg-slate-200 border-slate-800 text-slate-800 shadow-[2px_2px_0px_#333]'
+        }`}
+        style={{
+          fontFamily: '"Permanent Marker", cursive',
+          transform: 'rotate(-2deg)',
+        }}
       >
         <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
         <span>{badgeContent || alert.type.replace(/_/g, ' ')}</span>
@@ -324,7 +345,7 @@ export default function AlertsPage() {
                 className="relative bg-[#fffdf0] border-4 border-gray-900 p-5 md:p-6 transition-transform hover:-translate-y-1 hover:shadow-[8px_8px_0px_rgba(15,23,42,0.95)]"
                 style={{
                   transform: `rotate(${i % 2 === 0 ? 1 : -1}deg)`,
-                  boxShadow: '6px 6px 0px rgba(15,23,42,0.9)'
+                  boxShadow: '6px 6px 0px rgba(15,23,42,0.9)',
                 }}
               >
                 <div className="pointer-events-none absolute -top-3 right-6 h-6 w-16 rotate-3 bg-pink-300/80 shadow-sm border border-pink-400" />
@@ -333,8 +354,18 @@ export default function AlertsPage() {
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3 relative z-30">
                     <div className="pr-20">
-                      <h3 className="text-2xl text-gray-900 font-bold leading-tight" style={{ fontFamily: '"Permanent Marker", cursive' }}>{alert.title}</h3>
-                      <p className="mt-2 text-gray-800 text-lg leading-snug" style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}>{alert.message}</p>
+                      <h3
+                        className="text-2xl text-gray-900 font-bold leading-tight"
+                        style={{ fontFamily: '"Permanent Marker", cursive' }}
+                      >
+                        {alert.title}
+                      </h3>
+                      <p
+                        className="mt-2 text-gray-800 text-lg leading-snug"
+                        style={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}
+                      >
+                        {alert.message}
+                      </p>
                     </div>
                     <div className="absolute top-0 right-0">
                       <PrioritySticker priority={alert.priority} />
@@ -349,7 +380,10 @@ export default function AlertsPage() {
                       size="sm"
                       variant="outline"
                       className="border-2 border-gray-900 bg-yellow-300 text-sm font-bold text-gray-900 shadow-[3px_3px_0px_rgba(15,23,42,0.9)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:bg-yellow-400 hover:shadow-[1px_1px_0px_rgba(15,23,42,0.9)] uppercase tracking-wide px-6 py-4"
-                      style={{ fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-1deg)' }}
+                      style={{
+                        fontFamily: '"Permanent Marker", cursive',
+                        transform: 'rotate(-1deg)',
+                      }}
                     >
                       <Link to={alert.cta_route}>{alert.cta_label}</Link>
                     </Button>

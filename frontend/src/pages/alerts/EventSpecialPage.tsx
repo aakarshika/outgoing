@@ -1,46 +1,24 @@
 import { Box, CircularProgress, Typography } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import client from '@/api/client';
-import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 import { useAuth } from '@/features/auth/hooks';
-import { ApiResponse, EventDetail } from '@/types/events';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
+import { ApiResponse } from '@/types/events';
 
-interface EventOverviewRow {
-  event_id: number;
-  event_created_date: string;
-  event_lifecycle_state: string;
-  event_capacity: number | null;
-  host_user_id: number;
-
-  number_of_total_needs: number;
-  number_of_needs_filled: number;
-  number_of_needs_override_filled: number;
-
-  need_id: number | null;
-  need_application_requested_by_host_vendor_user_id: number | null;
-  need_applied_to_user_id: number | null;
-  need_assigned_user_id: number | null;
-
-  need_application_id: number | null;
-  need_application_status: string | null;
-  need_application_created_date: string | null;
-  need_status: string | null;
-
-  number_of_tickets_purchased_not_cancelled: number;
-  number_of_tickets_used: number;
-
-  attendee_user_id: number | null;
-  ticket_created_date: string | null;
-  ticket_status: string | null;
-
-  // Backend should join EventDetailSerializer here
-  event_details: EventDetail;
-}
+import {
+  EventOverviewRow,
+  getConfirmDateLabel,
+  getEventStep,
+  getEventTimeLabel,
+  getStepStatusLabel,
+} from './utils';
 
 async function fetchEventOverview(): Promise<EventOverviewRow[]> {
   // Backend endpoint backed by the `event_overview` DB view.
-  const { data } = await client.get<ApiResponse<EventOverviewRow[]>>('/alerts/event-overview/');
+  const { data } = await client.get<ApiResponse<EventOverviewRow[]>>(
+    '/alerts/event-overview/',
+  );
   return data.data;
 }
 
@@ -76,15 +54,15 @@ export default function EventsSpecialPage() {
   }, []);
 
   const { hostingEvents, vendorEvents, attendeeEvents } = useMemo(() => {
-    const hosting = new Map<number, EventDetail>();
-    const vendor = new Map<number, EventDetail>();
-    const attendee = new Map<number, EventDetail>();
+    const hosting = new Map<number, EventOverviewRow>();
+    const vendor = new Map<number, EventOverviewRow>();
+    const attendee = new Map<number, EventOverviewRow>();
 
     if (!user) {
       return {
-        hostingEvents: [] as EventDetail[],
-        vendorEvents: [] as EventDetail[],
-        attendeeEvents: [] as EventDetail[],
+        hostingEvents: [] as EventOverviewRow[],
+        vendorEvents: [] as EventOverviewRow[],
+        attendeeEvents: [] as EventOverviewRow[],
       };
     }
 
@@ -99,7 +77,7 @@ export default function EventsSpecialPage() {
 
       // Host role
       if (row.host_user_id === userId) {
-        hosting.set(row.event_id, detail);
+        hosting.set(row.event_id, row);
       }
 
       // Vendor role: applied, invited, or assigned
@@ -108,19 +86,31 @@ export default function EventsSpecialPage() {
         row.need_application_requested_by_host_vendor_user_id === userId ||
         row.need_assigned_user_id === userId
       ) {
-        vendor.set(row.event_id, detail);
+        vendor.set(row.event_id, row);
       }
 
       // Attendee role
-      if (row.attendee_user_id === userId) {
-        attendee.set(row.event_id, detail);
+      if (row.attendee_user_id === userId && row.ticket_status !== 'cancelled') {
+        attendee.set(row.event_id, row);
       }
     }
 
     return {
-      hostingEvents: Array.from(hosting.values()),
-      vendorEvents: Array.from(vendor.values()),
-      attendeeEvents: Array.from(attendee.values()),
+      hostingEvents: Array.from(hosting.values()).sort(
+        (a, b) =>
+          new Date(b.event_created_date || 0).getTime() -
+          new Date(a.event_created_date || 0).getTime(),
+      ),
+      vendorEvents: Array.from(vendor.values()).sort(
+        (a, b) =>
+          new Date(b.need_application_created_date || 0).getTime() -
+          new Date(a.need_application_created_date || 0).getTime(),
+      ),
+      attendeeEvents: Array.from(attendee.values()).sort(
+        (a, b) =>
+          new Date(b.ticket_created_date || 0).getTime() -
+          new Date(a.ticket_created_date || 0).getTime(),
+      ),
     };
   }, [rows, user]);
 
@@ -174,9 +164,24 @@ export default function EventsSpecialPage() {
               gap: 4,
             }}
           >
-            <RoleColumn title="Hosting" events={hostingEvents} />
-            <RoleColumn title="Servicing" events={vendorEvents} />
-            <RoleColumn title="Attending" events={attendeeEvents} />
+            <RoleColumn
+              title="Hosting"
+              rows={hostingEvents}
+              role="host"
+              userId={user.id}
+            />
+            <RoleColumn
+              title="Servicing"
+              rows={vendorEvents}
+              role="vendor"
+              userId={user.id}
+            />
+            <RoleColumn
+              title="Attending"
+              rows={attendeeEvents}
+              role="attendee"
+              userId={user.id}
+            />
           </Box>
         )}
       </Box>
@@ -184,7 +189,89 @@ export default function EventsSpecialPage() {
   );
 }
 
-function RoleColumn({ title, events }: { title: string; events: EventDetail[] }) {
+function StepTabsFlowchart({
+  currentStep,
+  totalSteps,
+}: {
+  currentStep: number;
+  totalSteps: number;
+}) {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        mb: 1,
+        mt: 1,
+      }}
+    >
+      {steps.map((step, idx) => {
+        const isActive = step === currentStep;
+        const isPast = step < currentStep;
+
+        return (
+          <React.Fragment key={step}>
+            <Box
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                fontFamily: '"Permanent Marker", cursive',
+                transition: 'all 0.2s',
+                backgroundColor: isActive ? '#fef08a' : isPast ? '#fef9c3' : '#ffffff',
+                color: isActive ? '#111827' : isPast ? '#4b5563' : '#9ca3af',
+                border: '2px solid',
+                borderColor: isActive ? '#111827' : isPast ? '#6b7280' : '#d1d5db',
+                boxShadow: isActive
+                  ? '2px 2px 0px #333'
+                  : isPast
+                    ? '1px 1px 0px #555'
+                    : 'none',
+                transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                zIndex: isActive ? 10 : 1,
+              }}
+            >
+              {isPast ? '✓' : step}
+            </Box>
+
+            {idx < steps.length - 1 && (
+              <Box
+                sx={{
+                  flex: 1,
+                  height: 2,
+                  mx: 0.5,
+                  backgroundColor: isPast ? '#6b7280' : '#e5e7eb',
+                  transition: 'all 0.2s',
+                }}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </Box>
+  );
+}
+
+function RoleColumn({
+  title,
+  rows,
+  role,
+  userId,
+}: {
+  title: string;
+  rows: EventOverviewRow[];
+  role: 'host' | 'vendor' | 'attendee';
+  userId: number;
+}) {
   return (
     <Box>
       <Typography
@@ -199,7 +286,7 @@ function RoleColumn({ title, events }: { title: string; events: EventDetail[] })
         {title}
       </Typography>
 
-      {events.length === 0 ? (
+      {rows.length === 0 ? (
         <Typography
           sx={{
             fontSize: '0.85rem',
@@ -217,15 +304,73 @@ function RoleColumn({ title, events }: { title: string; events: EventDetail[] })
             gap: 3,
           }}
         >
-          {events.map((event) => (
-            <ScrapbookEventCard
-              key={event.id}
-              event={event}
-              isFocused={false}
-              showClip
-              isBasicEventCard={false}
-            />
-          ))}
+          {rows.map((row) => {
+            const { currentStep, totalSteps } = getEventStep(role, row, userId);
+            const statusLabel = getStepStatusLabel(role, row, userId);
+            const timeLabel = getEventTimeLabel(row.event_details.start_time);
+            const confirmDateLabel = getConfirmDateLabel(role, row);
+
+            return (
+              <Box key={row.event_id} sx={{ display: 'flex', flexDirection: 'column' }}>
+                <StepTabsFlowchart currentStep={currentStep} totalSteps={totalSteps} />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    px: 1,
+                    mb: 1.5,
+                    mt: -0.5,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography
+                      sx={{
+                        fontSize: '0.65rem',
+                        fontFamily: '"Permanent Marker", cursive',
+                        color: '#4b5563',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      {statusLabel}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '0.65rem',
+                        fontFamily: '"Permanent Marker", cursive',
+                        color: '#6b7280',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      Event : {timeLabel}
+                    </Typography>
+                  </Box>
+                  {confirmDateLabel && (
+                    <Typography
+                      sx={{
+                        fontSize: '0.55rem',
+                        fontFamily: '"Permanent Marker", cursive',
+                        color: '#9ca3af',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        textAlign: 'right',
+                        mt: 0.25,
+                      }}
+                    >
+                      {confirmDateLabel}
+                    </Typography>
+                  )}
+                </Box>
+                <ScrapbookEventCard
+                  event={row.event_details}
+                  isFocused={false}
+                  showClip
+                  isBasicEventCard={false}
+                />
+              </Box>
+            );
+          })}
         </Box>
       )}
     </Box>
