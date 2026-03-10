@@ -99,7 +99,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
       <WashiTape color={tapeColor} rotate={`${Math.random() * 10 - 5}deg`} />
 
       <CategoricalBackground
-        slug={event.category?.name?.toLowerCase().replace(/\s+/g, '-')}
+        category={event.category}
         showDecoration={false}
         sx={{
           bgcolor: '#fff',

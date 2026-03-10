@@ -1,7 +1,7 @@
 /** API client functions for ticket validation and admission. */
 
 import client from '@/api/client';
-import { ApiResponse } from '@/types/events';
+import { ApiResponse, EventDetail } from '@/types/events';
 
 export interface TicketValidationResult {
   valid: boolean;
@@ -26,12 +26,7 @@ export interface TicketAdmitResult {
   used_at: string;
   ticket_type: string;
   guest_name: string;
-  event_summary: {
-    id: number;
-    title: string;
-    start_time: string;
-    location_name: string;
-  };
+  event_summary: EventDetail;
 }
 
 /** Validate a ticket barcode for a specific event. */

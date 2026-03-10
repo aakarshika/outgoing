@@ -36,6 +36,7 @@ import { EventReadinessStep } from './components/manage-redesign/EventReadinessS
 import { LiveAttendanceStep } from './components/manage-redesign/LiveAttendanceStep';
 import { WrapUpStep } from './components/manage-redesign/WrapUpStep';
 import { BasicQuick } from './components/manage-redesign/BasicQuick';
+import { RecurringFormProps } from './components/manage-redesign/RecurringForm';
 // ── Configurable Steps Array ──────────────────────────────────────────────────
 export const HOST_STEPS = [
     {
@@ -256,6 +257,39 @@ export default function ManageForHostPage() {
     const [ticketTiers, setTicketTiers] = useState<TicketTier[]>([]);
     const [eventFeatures, setEventFeatures] = useState<EventFeature[]>([]);
 
+    // ── Recurrence logic ──────────────────────────────────────────────────────
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [freq, setFreq] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
+    const [days, setDays] = useState<string[]>(['MO']);
+    const [generateCount, setGenerateCount] = useState('4');
+
+    const handleDayToggle = (day: string) => {
+        setDays((prev) =>
+            prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+        );
+    };
+
+    const buildRrule = () => {
+        if (freq === 'WEEKLY') {
+            const dayStr = days.length > 0 ? days.join(',') : 'MO';
+            return `FREQ=WEEKLY;BYDAY=${dayStr}`;
+        }
+        return `FREQ=${freq}`;
+    };
+
+    const getRecurringProps = (): RecurringFormProps => ({
+        isRecurring,
+        setIsRecurring,
+        freq,
+        setFreq,
+        days,
+        handleDayToggle,
+        generateCount,
+        setGenerateCount,
+        buildRrule,
+        readonly: !!event && event.lifecycle_state !== 'draft' && event.lifecycle_state !== 'published',
+    });
+
     // ── Apply to series toggle ────────────────────────────────────────────────
     const [applyToSeries, setApplyToSeries] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -295,6 +329,31 @@ export default function ManageForHostPage() {
             if (event.title) setTitle(event.title);
             if (event.category?.id) setCategory(String(event.category.id));
             if (event.description) setDescription(event.description);
+
+            // Setting recurrence
+            if (event.series) {
+                setIsRecurring(true);
+                // Try parsing the rrule back
+                // For simplified setup, we could parse freq & days, but it might be easier to just 
+                // handle new edits rather than fully parsing arbitrary rrules. 
+                // Basic attempt:
+                const seriesAny = event.series as any;
+                if (seriesAny.recurrence_rule) {
+                    const rule = seriesAny.recurrence_rule;
+                    if (rule.includes('FREQ=DAILY')) setFreq('DAILY');
+                    else if (rule.includes('FREQ=MONTHLY')) setFreq('MONTHLY');
+                    else if (rule.includes('FREQ=WEEKLY')) {
+                        setFreq('WEEKLY');
+                        const byDayMatch = rule.match(/BYDAY=([^;]+)/);
+                        if (byDayMatch) {
+                            setDays(byDayMatch[1].split(','));
+                        }
+                    }
+                }
+            } else {
+                setIsRecurring(false);
+            }
+
             setIsDirty(false);
         }
     }, [event]);
@@ -616,6 +675,7 @@ export default function ManageForHostPage() {
                                     generateUntil,
                                     setGenerateUntil,
                                     previewDates,
+                                    ...getRecurringProps()
                                 }}
                             />
                         );
@@ -642,6 +702,7 @@ export default function ManageForHostPage() {
                                 generateUntil={generateUntil}
                                 setGenerateUntil={setGenerateUntil}
                                 previewDates={previewDates}
+                                {...getRecurringProps()}
                             />
                         );
                     }

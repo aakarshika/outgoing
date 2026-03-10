@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { HostCard } from '@/components/ui/HostCard';
 import { useAuth } from '@/features/auth/hooks';
+import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 export const ClassifiedAd = ({
   need,
   event,
@@ -270,9 +271,13 @@ export const ClassifiedAd = ({
             }}
           >
             <Box sx={{ p: 1 }}>
-              <HostCard
+              {/* <HostCard
                 host={{ username: hostProfile.username, avatar: hostProfile.avatar }}
                 rating={hostProfile.rating}
+                rotation={-1.5}
+              /> */}
+              <VendorBusinessCard
+                vendor={hostProfile}
                 rotation={-1.5}
               />
             </Box>
@@ -303,17 +308,17 @@ const TinyBusinessCard = ({
         gap: 1,
         px: 1.5,
         py: 1,
-        backgroundColor: '#fff',
-        border: '2px solid #2b2b2b',
+        backgroundColor: '#rgb(232, 255, 255)',
+        border: '2px solid #00CCCC',
         borderRadius: '8px',
-        boxShadow: '4px 5px 0 rgba(43,43,43,0.18)',
+        boxShadow: '4px 5px #00CCCC',
         cursor: 'pointer',
         fontFamily: '"Caveat", cursive',
         textAlign: 'left',
         minWidth: 140,
         '&:hover': {
           transform: 'translate(-1px, -1px)',
-          boxShadow: '6px 7px 0 rgba(43,43,43,0.22)',
+          boxShadow: '6px 7px #00CCCC',
         },
       }}
     >

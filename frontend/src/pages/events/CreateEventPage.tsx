@@ -395,7 +395,7 @@ export default function CreateEventPage() {
 
         <hr className="border-border my-8" />
 
-        {/* Recurring Output */}
+        {/* Recurring Form */}
         <div className="space-y-4 rounded-xl border p-4 bg-muted/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

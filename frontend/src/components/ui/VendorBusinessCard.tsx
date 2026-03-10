@@ -1,4 +1,7 @@
 import { Box, Typography } from '@mui/material';
+import { Hostname } from './Hostname';
+import { NoImagePlaceholder } from '@/features/events/scrapbookCard/NoImagePlaceholder';
+import { Calendar } from 'lucide-react';
 
 interface VendorBusinessCardProps {
   vendor: {
@@ -35,30 +38,26 @@ export const VendorBusinessCard = ({
         width: '100%',
         maxWidth: 320,
         aspectRatio: '1.75 / 1',
-        bgcolor: '#f5f5f0', // Linen/Off-white
-        backgroundImage:
-          'repeating-linear-gradient(45deg, rgba(0,0,0,0.01) 0px, rgba(0,0,0,0.01) 2px, transparent 2px, transparent 4px)',
-        border: '1px solid #d1d5db',
-        boxShadow: '3px 3px 10px rgba(0,0,0,0.1)',
+        bgcolor: 'rgb(232, 255, 255)', // Linen/Off-white
         position: 'relative',
-        p: 2.5,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         transform: `rotate(${rotation}deg)`,
+            boxShadow: '1px 1px 1px rgba(168, 168, 168, 0.8)',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         cursor: onClick ? 'pointer' : 'default',
         '&:hover': onClick
           ? {
-              transform: `rotate(${rotation}deg) translateY(-5px)`,
-              boxShadow: '5px 5px 15px rgba(0,0,0,0.15)',
-            }
+            transform: `rotate(${rotation}deg) translateY(-5px)`,
+            boxShadow: '5px 5px 15px rgba(168, 168, 168, 0.8)',
+          }
           : {},
         '&::before': {
           content: '""',
           position: 'absolute',
           inset: 4,
-          border: '1px solid rgba(0,0,0,0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
           pointerEvents: 'none',
         },
       }}
@@ -69,11 +68,9 @@ export const VendorBusinessCard = ({
           sx={{
             width: 60,
             height: 60,
-            bgcolor: '#ddd',
+            bgcolor: 'rgb(255, 252, 245)',
             flexShrink: 0,
-            border: '1px solid #ccc',
             overflow: 'hidden',
-            boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)',
             position: 'relative',
           }}
         >
@@ -95,45 +92,98 @@ export const VendorBusinessCard = ({
                 fontSize: '1.5rem',
               }}
             >
-              👤
+              <Calendar size={24} color="rgb(5, 116, 116)" />
             </Box>
           )}
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+
+        {/* Brand logo */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 1,
+            width: 68,
+            height: 68,
+            borderRadius: '999px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+        >
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0, p: 1 }}>
           <Typography
             sx={{
               fontFamily: '"Lora", serif',
               fontWeight: 700,
               fontSize: '1.1rem',
-              color: '#1a1a1a',
+              color: 'rgb(3, 110, 110)',
               lineHeight: 1.2,
-              mb: 0.5,
               letterSpacing: '0.5px',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
+              textTransform: 'uppercase',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}
           >
-            {serviceName}
+
+            {category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}{' '}
+
           </Typography>
-          {ownerName && (
-            <Typography sx={{ fontSize: '0.65rem', color: '#666', mb: 0.5 }}>
-              by {ownerName}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: '', gap: 0.5 }}>
+            <Typography
+              sx={{
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.7rem',
+                color: 'rgb(189, 187, 184)',
+                textTransform: 'uppercase',
+              }}
+            >
+
+              by
             </Typography>
-          )}
+            <Hostname username={ownerName}
+              sx={{
+                color: 'rgb(160, 158, 156)',
+              }}
+            />
+
+          </Box>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          mt: 'auto',
+          borderTop: '1px solid rgba(0,0,0,0.05)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          p: 1,
+          pl: 2,
+          pb: 2,
+          alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+          }}
+        >
           <Typography
             sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '0.75rem',
+              fontFamily: '"Lora", serif',
+              fontSize: '1.2rem',
               color: '#d97706',
-              textTransform: 'uppercase',
-              mb: 1,
             }}
           >
-            {category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}{' '}
-            Specialist
+
+            {serviceName}
           </Typography>
           <Typography
             sx={{ fontSize: '0.6rem', color: '#888', fontFamily: 'monospace' }}
@@ -141,47 +191,23 @@ export const VendorBusinessCard = ({
             EST. {year} • {events} HIRES
           </Typography>
         </Box>
-      </Box>
-      <Box
-        sx={{
-          mt: 'auto',
-          borderTop: '1px solid rgba(0,0,0,0.05)',
-          pt: 1,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-        }}
-      >
-        <Box>
-          <Typography sx={{ fontSize: '0.65rem', color: '#888', fontStyle: 'italic' }}>
-            Verified Outgoing™ Vendor
-          </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            component="img"
+            src="/assets/go-symbol.png"
+            alt="GO"
+            sx={{
+              opacity: 0.25,
+              width: '70px',
+              height: '70px',
+              objectFit: 'contain',
+            }}
+          />
+
           <Box sx={{ display: 'flex', color: '#fbbf24', fontSize: '1rem' }}>
             {'★'.repeat(Math.floor(rating))}
             {rating % 1 >= 0.5 ? '½' : ''}
           </Box>
-        </Box>
-        <Box
-          sx={{
-            width: 30,
-            height: 30,
-            borderRadius: '50%',
-            border: '1px solid rgba(0,0,0,0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: 0.4,
-            background:
-              'radial-gradient(circle, transparent 70%, rgba(0,0,0,0.05) 100%)',
-          }}
-        >
-          <Typography
-            sx={{ fontSize: '0.5rem', fontWeight: 'bold', textAlign: 'center' }}
-          >
-            OFFICIAL
-            <br />
-            SEAL
-          </Typography>
         </Box>
       </Box>
     </Box>

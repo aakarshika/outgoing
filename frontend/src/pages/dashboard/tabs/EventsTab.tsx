@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
 import { Media } from '@/components/ui/media';
 import { useMyEvents } from '@/features/events/hooks';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
+import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import type { EventListItem } from '@/types/events';
 
 const LIFECYCLE_BADGE_STYLES: Record<
@@ -107,96 +109,55 @@ function EventCardRow({
     border: '#d1d5db',
   };
 
-  const rotation = event.id % 2 === 0 ? -0.3 : 0.3;
-
   return (
-    <div
-      className="flex items-center gap-4 border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333]"
-      style={{ transform: `rotate(${rotation}deg)` }}
-    >
-      <Link to={`/events/${event.id}`} className="flex-shrink-0 block">
-        {event.cover_image ? (
-          <div
-            className="h-16 w-24 border-2 border-white shadow-md overflow-hidden"
-            style={{ transform: 'rotate(-2deg)' }}
-          >
-            <Media
-              src={event.cover_image}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          </div>
-        ) : (
-          <div className="h-16 w-24 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-300 relative group overflow-hidden">
-            <Calendar className="h-6 w-6" />
-          </div>
-        )}
-      </Link>
-      <div className="flex-1 min-w-0">
-        <Link to={`/events/${event.id}`} className="hover:underline">
-          <h3
-            className="font-bold text-gray-900 truncate"
-            style={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.2rem',
-            }}
-          >
-            {event.title}
-          </h3>
-        </Link>
-        <p
-          className="text-gray-500 text-sm"
-          style={{ fontFamily: '"Caveat", cursive' }}
-        >
-          {new Date(event.start_time).toLocaleDateString()} ·{' '}
-          {event.location_name}
-        </p>
-        <EventNeedsSummary eventId={event.id} />
-      </div>
-      <div className="flex flex-col items-end gap-2">
-        <span
-          className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
-          style={{
-            fontFamily: '"Permanent Marker", cursive',
-            fontSize: '0.65rem',
-            background: badge.bg,
-            color: badge.text,
-            borderColor: badge.border,
-            transform: 'rotate(2deg)',
-            boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
-          }}
-        >
-          {LIFECYCLE_LABELS[event.lifecycle_state] ||
-            event.lifecycle_state}
-        </span>
-        {actionsEnabled ? (
-          <Link
-            to={`/events/${event.id}/host-event-management`}
-            className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
-            style={{
-              fontFamily: '"Permanent Marker", cursive',
-              transform: 'rotate(-1deg)',
-              boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-            }}
-          >
-            MANAGE EVENT
-          </Link>
-        ) : (
+    <div className="space-y-1">
+      <div className="flex items-stretch gap-2">
+        <div className="flex-1 min-w-0">
+          <ScrapbookEventCardLandscape event={event} />
+        </div>
+        <div className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
           <span
-            className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
+            className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
             style={{
               fontFamily: '"Permanent Marker", cursive',
-              transform: 'rotate(-1deg)',
-              boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
+              fontSize: '0.65rem',
+              background: badge.bg,
+              color: badge.text,
+              borderColor: badge.border,
+              transform: 'rotate(2deg)',
+              boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
             }}
           >
-            MANAGE EVENT
+            {LIFECYCLE_LABELS[event.lifecycle_state] ||
+              event.lifecycle_state}
           </span>
-        )}
+          {actionsEnabled ? (
+            <Link
+              to={`/events/${event.id}/host-event-management`}
+              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
+              style={{
+                fontFamily: '"Permanent Marker", cursive',
+                transform: 'rotate(-1deg)',
+                boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+              }}
+            >
+              MANAGE EVENT
+            </Link>
+          ) : (
+            <span
+              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
+              style={{
+                fontFamily: '"Permanent Marker", cursive',
+                transform: 'rotate(-1deg)',
+                boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
+              }}
+            >
+              MANAGE EVENT
+            </span>
+          )}
+        </div>
       </div>
+      <EventNeedsSummary eventId={event.id} />
     </div>
   );
 }
@@ -218,42 +179,71 @@ function RecurringSeriesGroup({
         type="button"
         onClick={onToggle}
         aria-expanded={isExpanded}
-        className="w-full border-2 border-gray-800 bg-white p-4 shadow-[2px_3px_0px_#333] transition-colors hover:bg-gray-50"
+        className="w-full text-left"
       >
-        <div className="flex items-center gap-3">
-          <div className="h-16 w-24 border-2 border-white bg-gray-50 shadow-md overflow-hidden flex items-center justify-center">
-            {firstEvent.cover_image ? (
-              <Media
-                src={firstEvent.cover_image}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
-            ) : (
-              <Calendar className="h-6 w-6 text-gray-400" />
-            )}
+        <CategoricalBackground
+          category={firstEvent.category}
+          showDecoration={false}
+          sx={{
+            borderRadius: 8,
+            border: '1px solid #e5e7eb',
+            boxShadow:
+              '0 6px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
+            px: 12,
+            py: 10,
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-20 w-28 rounded-md bg-white/80 border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
+              {firstEvent.cover_image ? (
+                <Media
+                  src={firstEvent.cover_image}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <Calendar className="h-6 w-6 text-gray-400" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              {firstEvent.category?.name && (
+                <p className="text-[0.65rem] uppercase tracking-widest text-gray-600 mb-0.5">
+                  {firstEvent.category.name}
+                </p>
+              )}
+              <p className="text-[0.65rem] uppercase tracking-widest text-gray-500">
+                Recurring series
+              </p>
+              <h3
+                className="text-base sm:text-lg font-bold text-gray-900 truncate"
+                style={{ fontFamily: '"Permanent Marker", cursive' }}
+              >
+                {group.seriesName}
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600">
+                {group.events.length}{' '}
+                {group.events.length === 1 ? 'date' : 'dates'} · next{' '}
+                {formatSeriesDate(group.startTime)}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-700 truncate">
+                {firstEvent.title} · {firstEvent.location_name}
+              </p>
+            </div>
+            <div className="flex flex-col items-end justify-between gap-1 pl-1">
+              <span className="flex items-center gap-1 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-wide text-gray-700">
+                {isExpanded ? 'Hide dates' : 'View dates'}{' '}
+                <span>{isExpanded ? '▴' : '▾'}</span>
+              </span>
+              <span className="text-[0.6rem] sm:text-[0.65rem] text-gray-500">
+                {group.events.length} event
+                {group.events.length === 1 ? '' : 's'}
+              </span>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[0.65rem] uppercase tracking-widest text-gray-500">
-              Recurring series
-            </p>
-            <h3 className="text-lg font-bold text-gray-900 truncate">
-              {group.seriesName}
-            </h3>
-            <p className="text-sm text-gray-500">
-              {group.events.length} {group.events.length === 1 ? 'date' : 'dates'} ·
-              next {formatSeriesDate(group.startTime)}
-            </p>
-            <p className="text-sm text-gray-700 truncate">
-              {firstEvent.title} · {firstEvent.location_name}
-            </p>
-          </div>
-          <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-700">
-            {isExpanded ? 'Hide' : 'View'} <span>{isExpanded ? '▴' : '▾'}</span>
-          </span>
-        </div>
+        </CategoricalBackground>
       </button>
       {isExpanded && (
         <div className="space-y-3">
@@ -314,9 +304,25 @@ export function EventsTab() {
       startTime: event.start_time,
     }));
 
-    return [...groups, ...singles].sort(
-      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-    );
+    const all = [...groups, ...singles];
+
+    const getCreatedTime = (item: DisplayItem) => {
+      if (item.type === 'series') {
+        // Series order is based on the *oldest* created date among its occurrences.
+        // If created_at is missing, fall back to start_time for that occurrence.
+        return Math.min(
+          ...item.events.map((ev) =>
+            new Date(ev.created_at || ev.start_time).getTime(),
+          ),
+        );
+      }
+
+      const ev = item.event;
+      return new Date(ev.created_at || '1/1/9999').getTime();
+    };
+
+    // Newest created first
+    return all.sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
   }, [events]);
 
   const toggleSeries = (seriesId: number) => {

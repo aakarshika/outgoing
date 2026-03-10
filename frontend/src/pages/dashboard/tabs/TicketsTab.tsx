@@ -1,10 +1,11 @@
 import { Calendar, MapPin, Ticket } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { Media } from '@/components/ui/media';
 import { useMyTickets } from '@/features/events/hooks';
+import { ScrapbookEventCard } from '@/features/events/ScrapbookEventCard';
 
 // Internal shared components from DashboardPage
 function LoadingSkeleton({ count }: { count: number }) {
@@ -22,7 +23,7 @@ function LoadingSkeleton({ count }: { count: number }) {
 
 function EmptyState({ icon, title, subtitle, actionLabel, actionTo }: any) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-gray-300 bg-white/30 text-center">
+    <div className="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-gray-300  text-center">
       <div className="mb-4 opacity-50">{icon}</div>
       <h3
         className="text-xl font-bold text-gray-900 mb-1"
@@ -49,9 +50,21 @@ export function TicketsTab() {
   const tickets = ticketsResponse?.data || [];
   const [managingTicket, setManagingTicket] = useState<any | null>(null);
 
+  const sortedTickets = useMemo(() => {
+    return [...tickets].sort((a: any, b: any) => {
+      const aTime = new Date(
+        a.purchased_at || a.created_at || a.updated_at || 0,
+      ).getTime();
+      const bTime = new Date(
+        b.purchased_at || b.created_at || b.updated_at || 0,
+      ).getTime();
+      return bTime - aTime; // newest ticket created/purchased first
+    });
+  }, [tickets]);
+
   if (isLoading) return <LoadingSkeleton count={3} />;
 
-  if (tickets.length === 0) {
+  if (sortedTickets.length === 0) {
     return (
       <EmptyState
         icon={<Ticket className="h-12 w-12 text-gray-400" />}
@@ -66,36 +79,38 @@ export function TicketsTab() {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {tickets.map((ticket: any, idx: number) => (
+        {sortedTickets.map((ticket: any, idx: number) => (
           <div key={ticket.id} className="relative group text-left block">
             {/* Event card (background) */}
             <div
-              className="border-2 border-gray-800 bg-white p-3 shadow-[3px_4px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] flex flex-col h-full"
-              style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` }}
+              className=" p-3  transition-all hover:translate-x-[1px] hover:translate-y-[1px] flex flex-col h-full"
+              style={{ transform: `rotate(${idx % 2 === 0 ? -1 : 1}deg)` ,
+              }}
             >
               <div
-                className="aspect-[16/10] bg-gray-100 overflow-hidden border border-gray-200 mb-3 relative cursor-pointer"
+                className="aspect-[12/10] overflow-hidden  mb-3 relative cursor-pointer"
                 onClick={() => setManagingTicket(ticket)}
               >
-                {ticket.event_summary.cover_image ? (
-                  <Media
-                    src={ticket.event_summary.cover_image}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Calendar className="h-8 w-8 text-gray-300" />
+
+
+{ticket.status && (
+                  <div className="absolute inset-0  flex flex-col items-center justify-start p-2 pt-24 pr-16 z-10">
+                    <span
+                      className="text-green-600 font-bold border-4 border-green-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest"
+                      style={{ fontFamily: '"Permanent Marker", cursive' }}
+                    >
+                      BOUGHT
+                    </span>
                   </div>
                 )}
+
                 {ticket.status === 'cancelled' && (
-                  <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center p-2 z-10">
+                  <div className="absolute inset-0  flex flex-col items-center justify-center p-2 z-10">
                     <span
-                      className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest"
-                      style={{ fontFamily: '"Permanent Marker", cursive' }}
+                      className="text-red-600 font-bold border-4 border-red-600 px-3 py-1 transform rotate-[30deg] mb-2 text-xl tracking-widest"
+                      style={{ fontFamily: '"Permanent Marker", cursive' ,
+
+                      }}
                     >
                       CANCELLED
                     </span>
@@ -120,38 +135,32 @@ export function TicketsTab() {
                   </div>
                 )}
                 {ticket.status === 'used' && (
-                  <div className="absolute inset-0 bg-white/30 flex flex-col items-center justify-center p-2 z-10 pointer-events-none">
+                  <div className="absolute inset-0  flex flex-col items-center justify-center p-2 z-10 pointer-events-none">
                     <span
-                      className="text-emerald-600 font-bold border-4 border-emerald-600 px-3 py-1 transform -rotate-12 mb-2 text-xl tracking-widest bg-white/80"
+                      className="text-emerald-600 font-bold border-4 border-emerald-600 px-3 py-1 transform  rotate-[10deg] mb-2 text-xl tracking-widest "
                       style={{ fontFamily: '"Permanent Marker", cursive' }}
                     >
                       ADMITTED
                     </span>
                   </div>
                 )}
-              </div>
 
-              <div
-                className="flex-1 cursor-pointer"
-                onClick={() => setManagingTicket(ticket)}
-              >
-                <h3
-                  className="font-bold text-gray-900 truncate"
-                  style={{
-                    fontFamily: '"Caveat", cursive',
-                    fontSize: '1.15rem',
-                  }}
+                <div
+                  className="absolute inset-0  flex flex-col items-center justify-center cursor-pointer "
+                  onClick={() => setManagingTicket(ticket)}
                 >
-                  {ticket.event_summary.title}
-                </h3>
-                <p
-                  className="text-gray-500 text-sm flex items-center gap-1"
-                  style={{ fontFamily: '"Caveat", cursive' }}
-                >
-                  <MapPin className="h-3 w-3" /> {ticket.event_summary.location_name}
-                </p>
-              </div>
+                  <div
+                    className=""
+                    onClick={() => setManagingTicket(ticket)}
+                  >
+                    <ScrapbookEventCard event={ticket.event_summary} />
+                  </div>
+                </div>
 
+                <div
+                  className="absolute inset-0  flex flex-col items-center justify-end cursor-pointer "
+                  onClick={() => setManagingTicket(ticket)}
+                >
               <div className="flex gap-2 mt-4 justify-between">
                 <Link
                   to={`/events/${ticket.event_summary.id}`}
@@ -174,6 +183,9 @@ export function TicketsTab() {
                   MANAGE TICKET
                 </button>
               </div>
+              </div>
+              </div>
+
             </div>
 
             {/* Ticket stub overlay */}
@@ -213,18 +225,18 @@ export function TicketsTab() {
         onClose={() => setManagingTicket(null)}
         tickets={
           managingTicket
-            ? tickets.filter(
-                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-              )
+            ? sortedTickets.filter(
+              (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+            )
             : []
         }
         initialIndex={
           managingTicket
-            ? tickets
-                .filter(
-                  (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-                )
-                .findIndex((t: any) => t.id === managingTicket.id)
+            ? sortedTickets
+              .filter(
+                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+              )
+              .findIndex((t: any) => t.id === managingTicket.id)
             : 0
         }
       />

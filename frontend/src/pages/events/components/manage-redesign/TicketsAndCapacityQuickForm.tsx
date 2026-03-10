@@ -50,7 +50,7 @@ export const TicketsAndCapacityQuickForm: React.FC<TicketsAndCapacityQuickFormPr
                         name="capacity"
                         type="number"
                         label="Capacity"
-                        example="500"
+                        example="∞"
                         value={capacity}
                         onChange={(e) => setCapacity(e.target.value)}
                         disabled={readonly}
@@ -112,7 +112,7 @@ export const TicketsAndCapacityQuickForm: React.FC<TicketsAndCapacityQuickFormPr
 
                 {/* Right side */}
                 <div className="flex-1 px-4 py-3">
-                    <div className="text-[9px] uppercase tracking-wider mb-1 opacity-60" style={{ }}>
+                    <div className="text-[9px] uppercase tracking-wider mb-1 opacity-60" style={{}}>
                         Ticket
                     </div>
                     <div
@@ -121,7 +121,7 @@ export const TicketsAndCapacityQuickForm: React.FC<TicketsAndCapacityQuickFormPr
                     >
                         Free Ticket
                     </div>
-                    <div className="text-[10px] mt-2 uppercase tracking-wider opacity-70" style={{ }}>
+                    <div className="text-[10px] mt-2 uppercase tracking-wider opacity-70" style={{}}>
                         General Admission
                     </div>
                 </div>

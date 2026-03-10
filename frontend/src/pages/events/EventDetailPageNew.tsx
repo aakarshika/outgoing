@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { useBackground } from '@/theme/BackgroundProvider';
-
 import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
@@ -13,7 +11,10 @@ import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { useAuth } from '@/features/auth/hooks';
-import { CategoricalBackground } from '@/features/events/CategoricalBackground';
+import {
+  CategoricalBackground,
+  getCategoryTheme,
+} from '@/features/events/CategoricalBackground';
 import {
   useDeleteEventReview,
   useEvent,
@@ -26,6 +27,7 @@ import {
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
+import { useBackground } from '@/theme/BackgroundProvider';
 
 import { AttendingList } from './components/AttendingList';
 import { DetailsSection } from './components/DetailsSection';
@@ -105,18 +107,18 @@ export default function EventDetailPageNew() {
   useEffect(() => {
     if (event) {
       if (event.lifecycle_state === 'live') {
-        setBackgroundComponent(
-          <div
-            className="fixed inset-0"
-            style={{
+      setBackgroundComponent(
+        <div
+          className="fixed inset-0"
+          style={{
               backgroundColor: '#fef3c7',
               backgroundImage: 'radial-gradient(#fde68a 0.5px, #ffdebdff 0.5px)',
               backgroundSize: '15px 15px',
-              zIndex: -1,
-              pointerEvents: 'none',
-            }}
-          />
-        );
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+        />,
+      );
       } else {
         setBackgroundComponent(
           <div
@@ -312,7 +314,7 @@ export default function EventDetailPageNew() {
           }}
         >
           <CategoricalBackground
-            slug={event.category?.slug}
+            category={event?.category}
             sx={{
               width: '100%',
               height: '100%',
@@ -324,7 +326,6 @@ export default function EventDetailPageNew() {
               overflow: 'visible',
             }}
           >
-
             {/* Section 1: Status Banner & Top Bar */}
             <StatusBannerSection
               event={event}
@@ -352,7 +353,9 @@ export default function EventDetailPageNew() {
               {/* Left Column: Details */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Box id="details">
-                  <DetailsSection event={event} isHost={isHost}
+                  <DetailsSection
+                    event={event}
+                    isHost={isHost}
                     displayNeeds={displayNeeds}
                   />
                 </Box>

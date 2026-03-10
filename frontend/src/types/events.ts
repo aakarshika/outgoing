@@ -65,6 +65,11 @@ export interface EventListItem {
   reviews?: any[];
   average_rating?: number | null;
   ticket_tiers?: EventTicketTier[];
+  /**
+   * When available, represents when the event was created.
+   * Some list endpoints may omit this; callers should fall back to `start_time` if needed.
+   */
+  created_at?: string;
 }
 
 export interface EventSeriesNeedTemplate {
@@ -156,12 +161,7 @@ export interface TicketInfo {
   id: number;
   name: string;
   description: string;
-  event_summary: {
-    id: number;
-    title: string;
-    start_time: string;
-    location_name: string;
-  };
+  event_summary: EventDetail;
   ticket_type: string;
   guest_name?: string;
   barcode?: string;

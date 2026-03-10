@@ -51,62 +51,70 @@ export const VendorAgreement: React.FC<VendorAgreementProps> = ({
     };
 
     return (
-        <div className="bg-white border rounded shadow-sm overflow-hidden mb-8">
-            <div className="bg-gray-100 px-6 py-4 border-b flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-gray-900">
-                        {isHostView ? `${vendorName}'s Agreement` : "Application & Agreement"}
-                    </h3>
-                </div>
-                <div className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full border shadow-sm">
-                    {getStatusMessage()}
-                </div>
-            </div>
+        <div className="bg-white  rounded shadow-sm overflow-hidden mb-8">
 
             <div className="p-6">
 
-                {/* Host Confirmation Section */}
-                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 border rounded bg-gray-50 mb-4 ${!isHostView ? 'opacity-80' : ''}`}>
-                    <div>
-                        <div className="font-bold text-gray-800">Host Confirmation</div>
-                        <div className="text-sm text-gray-500">Host approves the application</div>
-                    </div>
-                    <button
-                        disabled={!canHostConfirm}
-                        onClick={onHostConfirm}
-                        className={`px-6 py-2 rounded font-semibold text-sm transition-all
+                <div className="grid grid-cols-3 ">
+                    {/* Host Confirmation Section */}
+                    <div className={`flex flex-col justify-between items-start rounded  mb-4 ${!isHostView ? 'opacity-80' : ''}`}>
+
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                            Host Confirmation
+                        </span>
+                        <button
+                            disabled={!canHostConfirm}
+                            onClick={onHostConfirm}
+                            className={`px-6 rounded font-semibold text-sm transition-all
                             ${isHostConfirmed ? 'bg-blue-100 text-blue-800 border border-blue-200 cursor-default' :
-                                (canHostConfirm ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}`}
-                    >
-                        {hostStatusText}
-                    </button>
-                </div>
-
-                {/* Vendor Confirmation Section */}
-                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 border rounded bg-gray-50 mb-6 ${isHostView ? 'opacity-80' : ''}`}>
-                    <div>
-                        <div className="font-bold text-gray-800">Vendor Confirmation</div>
-                        <div className="text-sm text-gray-500">Agreed Price: ${price.toFixed(2)}</div>
+                                    (canHostConfirm ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}`}
+                        >
+                            {hostStatusText}
+                        </button>
                     </div>
-                    <button
-                        disabled={!canVendorConfirm}
-                        onClick={() => {
-                            if (canVendorConfirm) {
-                                setShowVendorConfirmModal(true);
-                            }
-                        }}
-                        className={`px-6 py-2 rounded font-semibold text-sm transition-all
-                            ${isVendorConfirmed ? 'bg-green-100 text-green-800 border border-green-200 cursor-default' :
-                                (canVendorConfirm ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}`}
-                    >
-                        {vendorStatusText}
-                    </button>
-                </div>
 
+                    {/* Vendor Confirmation Section */}
+                    <div className={`flex flex-col justify-between items-start rounded  mb-4 ${!isHostView ? 'opacity-80' : ''}`}>
+                        <div>
+
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ">
+                                Vendor Confirmation
+                            </span>
+                        </div>
+                        <button
+                            disabled={!canVendorConfirm}
+                            onClick={() => {
+                                if (canVendorConfirm) {
+                                    setShowVendorConfirmModal(true);
+                                }
+                            }}
+                            className={`px-6 rounded font-semibold text-sm transition-all
+                            ${isVendorConfirmed ? 'bg-green-100 text-green-800 border border-green-200 cursor-default' :
+                                    (canVendorConfirm ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}`}
+                        >
+                            {vendorStatusText}
+                        </button>
+
+                    </div>
+                    {/* Price Confirmation Section */}
+                    <div className={`flex flex-col justify-between items-start rounded  mb-4 ${!isHostView ? 'opacity-80' : ''}`}>
+                        <div>
+
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ">
+                                Agreed Price:
+                            </span>
+                        </div>
+                        <div className="text-sm text-gray-500">${price.toFixed(2)}</div>
+
+
+                    </div>
+                </div>
                 {/* Barcode Section (Only when BOTH are confirmed) */}
                 {isVendorConfirmed && isHostConfirmed && !isHostView && (
-                    <div className="mt-8 pt-8 border-t flex flex-col items-center">
-                        <h4 className="text-lg font-bold text-gray-800 mb-2">Vendor Pass</h4>
+                    <div className="border-t flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block ">
+                            Vendor Pass
+                        </span>
                         <p className="text-sm text-gray-500 mb-6 text-center max-w-sm">
                             Show this QR code to the host when you arrive at the event for quick check-in.
                         </p>

@@ -1,16 +1,17 @@
 import { Box, Chip, Collapse, Grid, Paper, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 
-import { CATEGORY_THEMES } from '@/features/events/CategoricalBackground';
+import {
+  getCategoryTheme,
+  resolveCategorySlug,
+} from '@/features/events/CategoricalBackground';
+import { EventLifecycleState } from '@/types/events';
 
-import { WashiTape } from './scrapbookHelpers';
 import { HeroNegativeStripGallery } from './HeroNegativeStripGallery';
+import { PosterForTheEventImageCollage } from './PosterForTheEventImageCollage';
+import { WashiTape } from './scrapbookHelpers';
 import { TinyHostCard } from './TinyHostCard';
 import { WhenWhereCard } from './WhenWhereCard';
-import { EventLifecycleState } from '@/types/events';
-import { PosterForTheEventImageCollage } from './PosterForTheEventImageCollage';
-
-
 
 const LIFECYCLE_LABELS: Record<EventLifecycleState, string> = {
   draft: 'Draft',
@@ -41,6 +42,9 @@ export const HeroSection = ({
   displayNeedsCount?: number;
   displayNeeds?: any[];
 }) => {
+  const categorySlug = resolveCategorySlug(event.category);
+  const categoryTheme = getCategoryTheme(event.category);
+
   // Unique list of all images for the gallery
   const galleryImages = useMemo(() => {
     const imageSet = new Set<string>();
@@ -80,13 +84,9 @@ export const HeroSection = ({
               }}
             >
               <WashiTape
-                color={
-                  CATEGORY_THEMES[event.category?.slug || '']?.tape ||
-                  'rgba(37, 99, 235, 0.4)'
-                }
-                rotate={event.category?.slug === 'comedy' ? '10deg' : '3deg'}
+                color={categoryTheme.tape}
+                rotate={categorySlug === 'comedy' ? '10deg' : '3deg'}
               />
-
 
               {/* Event Name */}
               <Box
@@ -106,9 +106,7 @@ export const HeroSection = ({
                     zIndex: 1,
                     color: 'inherit',
                     textShadow:
-                      event.category?.slug === 'comedy'
-                        ? '2px 2px 0px #fbbf24'
-                        : 'none',
+                      categorySlug === 'comedy' ? '2px 2px 0px #fbbf24' : 'none',
                     wordBreak: 'break-word',
                   }}
                 >
@@ -125,7 +123,6 @@ export const HeroSection = ({
                 display: { xs: 'none', sm: 'block' },
               }}
             >
-              
               <TinyHostCard
                 host={event.host}
                 categoryName={event.category.name}
@@ -140,9 +137,7 @@ export const HeroSection = ({
                 allChips={event.features}
               />
             </Box>
-
           </Box>
-
         </Grid>
 
         {/* Right Half - Event Image Section */}
@@ -183,16 +178,17 @@ export const HeroSection = ({
               }}
             />
           </Box>
-          <Box sx={{
-            width: '100%',
-            position: 'absolute',
-
-          }}>
-
-            {event.lifecycle_state === 'draft' || event.lifecycle_state === 'published' ? (
+          <Box
+            sx={{
+              width: '100%',
+              position: 'absolute',
+            }}
+          >
+            {event.lifecycle_state === 'draft' ||
+            event.lifecycle_state === 'published' ? (
               <Box
                 sx={{
-                  width: '100%'
+                  width: '100%',
                 }}
               >
                 <PosterForTheEventImageCollage

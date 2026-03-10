@@ -35,25 +35,6 @@ export default function DashboardPage() {
     >
       <div className="mx-auto max-w-4xl">
         {/* Title */}
-        <div className="relative mb-8">
-          <div
-            className="absolute -top-1 left-0 w-24 h-5 pointer-events-none"
-            style={{
-              background: 'rgba(251, 191, 36, 0.5)',
-              transform: 'rotate(-3deg)',
-              border: '1px solid rgba(0,0,0,0.05)',
-            }}
-          />
-          <h1
-            className="text-3xl text-gray-900"
-            style={{
-              fontFamily: '"Permanent Marker", cursive',
-              transform: 'rotate(-1deg)',
-            }}
-          >
-            Dashboard
-          </h1>
-        </div>
 
         {/* Folder Tabs */}
         <div className="flex gap-1 mb-8 overflow-x-auto pb-1">

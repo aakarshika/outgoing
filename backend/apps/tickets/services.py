@@ -211,12 +211,7 @@ def admit_ticket(ticket_id: int, event_id: int, admitted_by_user, is_vendor: boo
             "used_at": app.admitted_at.isoformat(),
             "ticket_type": app.need.title,
             "guest_name": app.vendor.get_full_name() or app.vendor.username,
-            "event_summary": {
-                "id": app.need.event.id,
-                "title": app.need.event.title,
-                "start_time": app.need.event.start_time,
-                "location_name": app.need.event.location_name,
-            }
+            "event_summary": app.need.event.to_dict(),
         }
 
     try:
@@ -261,10 +256,5 @@ def admit_ticket(ticket_id: int, event_id: int, admitted_by_user, is_vendor: boo
         "used_at": ticket.used_at.isoformat() if ticket.used_at else None,
         "ticket_type": ticket.ticket_type,
         "guest_name": ticket.guest_name,
-        "event_summary": {
-            "id": ticket.event.id,
-            "title": ticket.event.title,
-            "start_time": ticket.event.start_time,
-            "location_name": ticket.event.location_name,
-        }
+        "event_summary": ticket.event.to_dict(),
     }

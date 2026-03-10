@@ -11,6 +11,14 @@ export const CATEGORY_THEMES: Record<
     icon: string;
   }
 > = {
+  'default': {
+    bg: '#f8fafc',
+    pattern:
+      'linear-gradient(rgba(130, 153, 186, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(122, 166, 229, 0.1) 1px, transparent 1px)',
+    accent: '16a34a',
+    tape: 'rgba(138, 177, 231, 0.4)',
+    icon: 'cpu',
+  },
   'arts-culture': {
     bg: '#fff5f5',
     pattern: 'radial-gradient(#feb2b2 1px, transparent 0)',
@@ -82,8 +90,35 @@ export const CATEGORY_THEMES: Record<
   },
 };
 
+const DEFAULT_CATEGORY_THEME = CATEGORY_THEMES['default'];
+
+export const resolveCategorySlug = (category?: {
+  slug?: string | null;
+  name?: string | null;
+}) => {
+  if (category?.slug) return category.slug;
+
+  return (
+    category?.name
+      ?.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || ''
+  );
+};
+
+export const getCategoryTheme = (category?: {
+  slug?: string | null;
+  name?: string | null;
+}) => CATEGORY_THEMES[resolveCategorySlug(category)] || DEFAULT_CATEGORY_THEME;
+
+export type EventCategory = {
+  slug?: string | null;
+  name?: string | null;
+};
+
 interface CategoricalBackgroundProps {
-  slug?: string;
+  category?: EventCategory | null;
   children?: React.ReactNode;
   sx?: any;
   showDecoration?: boolean;
@@ -91,19 +126,13 @@ interface CategoricalBackgroundProps {
 }
 
 export const CategoricalBackground = ({
-  slug,
+  category,
   children,
   sx,
   showDecoration = true,
   className,
 }: CategoricalBackgroundProps) => {
-  const theme = CATEGORY_THEMES[slug || ''] || {
-    bg: '#ffffff',
-    pattern: 'none',
-    accent: '#666',
-    tape: 'rgba(0,0,0,0.1)',
-    icon: 'pin',
-  };
+  const theme = getCategoryTheme(category ?? undefined);
 
   return (
     <Box

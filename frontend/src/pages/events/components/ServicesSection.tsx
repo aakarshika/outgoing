@@ -51,7 +51,8 @@ export const ServicesSection = ({
   const myServices = myServicesResponse?.data || [];
   const isCenter = highlights.length === 0;
 
-  return displayNeeds.filter(n => n.status !== 'override_filled' && n.status !== 'filled').length > 0 && (
+  // return displayNeeds.filter(n => n.status !== 'override_filled' && n.status !== 'filled').length > 0 && (
+    return (
     <Box sx={{ mt: 6 }}>
       {/* Services Header Toggle */}
       <Box

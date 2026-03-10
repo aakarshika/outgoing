@@ -12,6 +12,7 @@ import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 import { StarCutoutCard } from './cards/StarCutoutCard';
 import { UserActionCard } from './cards/UserActionCard';
 import { useCarouselEvents, useTrendingHighlights } from './hooks';
+import { ScrapbookEventCardLandscape } from './ScrapbookEventCard';
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 

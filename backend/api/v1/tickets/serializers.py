@@ -48,12 +48,22 @@ class TicketSerializer(serializers.ModelSerializer):
         ]
 
     def get_event_summary(self, obj):
-        """Return lightweight event summary."""
+        """Return detailed event summary for the ticket's event.
+
+        We align this with the event payload used elsewhere (e.g. `Event.to_dict()`)
+        so that frontend consumers like `ScrapbookEventCard` receive all the
+        expected event fields (cover image, timings, host, etc.).
+        """
+        event = obj.event
+        if hasattr(event, "to_dict"):
+            return event.to_dict()
+
+        # Fallback to a minimal summary if `to_dict` is not available
         return {
-            "id": obj.event.id,
-            "title": obj.event.title,
-            "start_time": obj.event.start_time,
-            "location_name": obj.event.location_name,
+            "id": event.id,
+            "title": event.title,
+            "start_time": event.start_time,
+            "location_name": event.location_name,
         }
 
     def get_needs_aadhar_verification(self, obj):

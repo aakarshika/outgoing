@@ -6,8 +6,9 @@ import { detectPlatform, formatDuration } from '@/pages/events/manage/ManageDeta
 import { EnclosingBox } from './ui/EnclosingBox';
 import { ScrapbookHeading } from './ui/ScrapbookHeading';
 import { ScrapbookInput } from './ui/ScrapbookInput';
+import { RecurringForm, RecurringFormProps } from './RecurringForm';
 
-interface WhenAndWhereFormProps {
+interface WhenAndWhereFormProps extends RecurringFormProps {
     event: any;
     latitude: string;
     longitude: string;
@@ -47,6 +48,7 @@ export const WhenAndWhereForm: React.FC<WhenAndWhereFormProps> = ({
     setGenerateUntil,
     previewDates,
     readonly = false,
+    ...recurringProps
 }) => {
     return (
         <EnclosingBox background="bg-[#ebf5ff] border border-blue-100" rotation={0.5} className="mt-2">
@@ -331,6 +333,10 @@ export const WhenAndWhereForm: React.FC<WhenAndWhereFormProps> = ({
                             </>
                         )}
                     </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-dashed border-blue-200">
+                    <RecurringForm {...recurringProps} readonly={readonly} />
                 </div>
             </div>
         </EnclosingBox >
