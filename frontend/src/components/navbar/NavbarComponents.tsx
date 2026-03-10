@@ -9,6 +9,7 @@ import {
     MapPin,
     Menu,
     MessageSquare,
+    Pencil,
     Plus,
     Search,
     Settings,
@@ -20,12 +21,38 @@ import {
 
 import { ComicButton } from '@/components/ui/ComicButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
+import type { EventListItem, EventSearchSuggestion } from '@/types/events';
 import { useNavbarContext } from './NavbarContext';
 
+export const dashboardLinks:
+    { [key: string]: { key: string, label: string, icon?: any, type?: string, indent: number, to?: string } }
+    = {
+    'going': { key: 'going', label: 'Going', icon: CalendarDays, type: 'heading', indent: 1 },
+    'saved': { key: 'saved', to: '/dashboard/saved', label: 'Saved Dates', icon: Ticket, indent: 2 },
+    'tickets': { key: 'tickets', to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket, indent: 2 },
 
-export const SidebarLinkItem = ({ linkDetails }: { linkDetails: any }) => {
+    'activities': { key: 'activities', label: 'Activities', icon: CalendarDays, type: 'heading', indent: 1 },
+    'calendar': { key: 'calendar', to: '/calendar', label: 'Calendar', icon: CalendarDays, indent: 2 },
+    'my-activities': { key: 'my-activities', to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare, indent: 1 },
+
+    'organizing': { key: 'organizing', label: 'Organizing', icon: Menu, type: 'heading', indent: 1 },
+    'my-events': { key: 'my-events', to: '/dashboard/events', label: 'My Events', icon: CalendarDays, indent: 2 },
+
+    'services': { key: 'services', label: 'Services', icon: Briefcase, type: 'heading', indent: 1 },
+    'my-services': { key: 'my-services', to: '/dashboard/services/my-services', label: 'My Services', indent: 2 },
+    'my-opportunities': { key: 'my-opportunities', to: '/dashboard/services/opportunities', label: 'Service Opportunities', indent: 2 },
+
+    'profile': { key: 'profile', label: 'Profile + Settings', type: 'heading', indent: 1 },
+    'user-info': { key: 'user-info', to: '/profile/user-info', label: 'User Info', icon: User, indent: 2 },
+    'account-settings': { key: 'account-settings', to: '/profile/settings', label: 'Account Settings', icon: Settings, indent: 2 },
+    'privacy': { key: 'privacy', to: '/profile/privacy', label: 'Privacy', icon: Shield, indent: 2 },
+};
+
+export const SidebarLinkItem = ({ itemKey }: { itemKey: string }) => {
     const { location } = useNavbarContext();
-    const item = linkDetails;
+    const item: { key: string, label: string, icon?: any, type?: string, indent: number, to?: string }
+        = dashboardLinks[itemKey];
 
     return (
         <>
@@ -45,7 +72,7 @@ export const SidebarLinkItem = ({ linkDetails }: { linkDetails: any }) => {
                     <Link
                         key={item.label}
                         to={item.to || ''}
-                        className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
+                        className={`flex items-center gap-2.5 px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
                         style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
                     >
                         {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
@@ -56,7 +83,7 @@ export const SidebarLinkItem = ({ linkDetails }: { linkDetails: any }) => {
                 <Link
                     key={item.label}
                     to={item.to || ''}
-                    className={`flex items-center gap-2.5 rounded-sm px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-base transition-all hover:bg-yellow-200/60 hover:translate-x-1 ${location.pathname === item.to ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500 font-bold' : 'text-gray-700'}`}
                     style={{ fontFamily: '"Caveat", cursive', fontSize: '1.15rem' }}
                 >
                     {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
@@ -67,15 +94,51 @@ export const SidebarLinkItem = ({ linkDetails }: { linkDetails: any }) => {
     );
 };
 
+export const ManageEventButton = ({ type }: {
+    type: 'manage-service-ghost' | 'manage-event-ghost'
+}) => {
+    const { navigate, setIsQuickCreateOpen, eventId } = useNavbarContext();
+    const isActive = (location.pathname.includes('host-event-management') && type === 'manage-event-ghost'
+    ) || (location.pathname.includes('service-event-management') && type === 'manage-service-ghost');
+
+    if (!isActive) return null;
+    return (
+        <div className={`w-full  ${isActive ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500' : ''}`}
+        >
+            <ComicButton
+                type="button"
+                variant={'solid'}
+                size="default"
+                shape="square"
+                Icon={Pencil}
+                iconProps={{ strokeWidth: 3 }}
+                color={'#1e3a5f'}
+                accentColor={type === 'manage-service-ghost' ? '#00CCCC'
+                    : type === 'manage-event-ghost' ? '#AF90F9'
+                        : '#AF90F9'}
+                className="h-12 w-full"
+            >
+                {type === 'manage-service-ghost' ? 'Manage Service'
+                    : type === 'manage-event-ghost' ? 'Manage Event'
+                        : '99999'}
+            </ComicButton>
+        </div>
+    );
+};
+
 export const CreateEventButton = ({ type }: {
     type: 'event' | 'service' | 'manage-event' | 'manage-service' | 'signin' | 'signup'
 }) => {
-    const { navigate, setIsQuickCreateOpen, eventId } = useNavbarContext();
 
+    const { navigate, setIsQuickCreateOpen, eventId } = useNavbarContext();
+    const isActive = (location.pathname.includes('host-event-management')
+    ) || (location.pathname.includes('service-event-management'));
+
+    if (isActive) return null;
     return (
         <ComicButton
             type="button"
-            variant="solid"
+            variant={'solid'}
             size="default"
             shape="square"
             Icon={type === 'signin' ? User : type === 'signup' ? UserPlus : Plus}
@@ -91,8 +154,8 @@ export const CreateEventButton = ({ type }: {
             onClick={() => {
                 if (type === 'event') setIsQuickCreateOpen(true);
                 else if (type === 'service') navigate('/vendors/create');
-                else if (type === 'manage-event') navigate(`/events/${eventId}/manage`);
-                else if (type === 'manage-service') navigate(`/events/${eventId}/service-event-management/application`);
+                else if (type === 'manage-event') navigate(`/events/${eventId}/host-event-management`);
+                else if (type === 'manage-service') navigate(`/events/${eventId}/service-event-management`);
                 else if (type === 'signin') navigate('/signin');
                 else if (type === 'signup') navigate('/signup');
             }}
@@ -308,14 +371,12 @@ export const SearchBar = () => {
         locationSuggestions,
         handleLocationSuggestionClick,
         setRadiusMiles,
-        navigate,
         suggestions,
-        handleSuggestionClick
     } = useNavbarContext();
 
     return (
-        <div>
-            <div className="hidden relative flex-1 min-w-0 max-w-[900px] mx-4 mt-4 lg:mx-8">
+        <div className="flex-1 min-w-0">
+            <div className="relative hidden md:flex w-full p-4">
                 <form
                     onSubmit={handleSearchSubmit}
                     className="flex items-center w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] pl-5 pr-2 py-2.5 shadow-[3px_4px_0px_#333] focus-within:shadow-[2px_3px_0px_#333] focus-within:translate-x-[1px] focus-within:translate-y-[1px] transition-all"
@@ -496,26 +557,98 @@ export const SearchBar = () => {
                     />
                 </form>
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-[4rem] left-0 z-50 w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-2 shadow-[4px_5px_0px_#333] overflow-hidden">
-                        {suggestions.map((suggestion) => (
-                            <button
-                                key={suggestion.id}
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => handleSuggestionClick(suggestion.title)}
-                                className="w-full flex flex-col items-start rounded-none px-4 py-3 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
-                                style={{ fontFamily: '"Permanent Marker"' }}
-                            >
-                                <p className="text-[15px] font-medium line-clamp-1">
-                                    {suggestion.title}
-                                </p>
-                                <p className="text-sm text-gray-500 line-clamp-1 mt-1">
-                                    {[suggestion.category_name, suggestion.location_name]
-                                        .filter(Boolean)
-                                        .join(' · ')}
-                                </p>
-                            </button>
-                        ))}
+                    <div className="absolute top-[4rem] left-0 z-50 w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-3 shadow-[4px_5px_0px_#333] overflow-y-auto max-h-[70vh] max-w-[70vh]">
+                        {suggestions.map((suggestion: EventSearchSuggestion, index: number) => {
+                            const rotation = ((index % 5) - 2) * 0.6; // -1.2deg .. +1.2deg
+
+                            const eventLike: EventListItem = {
+                                // Core identity
+                                id: suggestion.id,
+                                title: suggestion.title,
+                                slug: suggestion.slug ?? '',
+                                // Host (fallback when missing)
+                                host: suggestion.host ?? {
+                                    username: '',
+                                    first_name: '',
+                                    avatar: null,
+                                },
+                                // Category: prefer full object, else construct from name/slug
+                                category:
+                                    suggestion.category ??
+                                    (suggestion.category_name || suggestion.category_slug
+                                        ? {
+                                            id: 0,
+                                            name: suggestion.category_name ?? suggestion.category_slug ?? '',
+                                            slug:
+                                                suggestion.category_slug ??
+                                                (suggestion.category_name
+                                                    ? suggestion.category_name.toLowerCase().replace(/\s+/g, '-')
+                                                    : ''),
+                                            icon: '',
+                                        }
+                                        : null),
+                                // Location
+                                location_name: suggestion.location_name,
+                                location_address: suggestion.location_address,
+                                latitude: suggestion.latitude ?? null,
+                                longitude: suggestion.longitude ?? null,
+                                // Timing: use autocomplete-provided start_time when available
+                                start_time:
+                                    suggestion.start_time ??
+                                    suggestion.created_at ??
+                                    new Date().toISOString(),
+                                end_time:
+                                    suggestion.end_time ??
+                                    suggestion.start_time ??
+                                    suggestion.created_at ??
+                                    new Date().toISOString(),
+                                // Pricing
+                                ticket_price_standard: suggestion.ticket_price_standard ?? null,
+                                ticket_price_flexible: suggestion.ticket_price_flexible ?? null,
+                                // Media
+                                cover_image: suggestion.cover_image ?? null,
+                                media: suggestion.media,
+                                // Status / lifecycle
+                                status: suggestion.status ?? 'published',
+                                lifecycle_state: suggestion.lifecycle_state ?? 'published',
+                                // Counts
+                                capacity: suggestion.capacity ?? null,
+                                interest_count: suggestion.interest_count ?? 0,
+                                ticket_count: suggestion.ticket_count ?? 0,
+                                // User flags
+                                user_is_interested: suggestion.user_is_interested ?? false,
+                                user_has_ticket: suggestion.user_has_ticket ?? false,
+                                user_is_vendor: suggestion.user_is_vendor ?? false,
+                                // Optional extras
+                                series: suggestion.series,
+                                occurrence_index: suggestion.occurrence_index,
+                                description: suggestion.description,
+                                reviews: suggestion.reviews,
+                                average_rating: suggestion.average_rating,
+                                ticket_tiers: suggestion.ticket_tiers,
+                                created_at: suggestion.created_at,
+                            };
+
+                            return (
+                                <div
+                                    key={suggestion.id}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => setShowSuggestions(false)}
+                                    className="w-full cursor-pointer"
+                                    style={{
+                                        transform: `rotate(${rotation}deg)`,
+                                        transformOrigin: 'center',
+                                        transition: 'transform 0.2s ease',
+                                    }}
+                                >
+                                    <ScrapbookEventCardLandscape
+                                        event={eventLike}
+                                        isBasicEventCard={true}
+                                        size="compact"
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

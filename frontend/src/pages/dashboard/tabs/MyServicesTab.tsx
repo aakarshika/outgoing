@@ -91,7 +91,7 @@ export function MyServicesTab() {
           </ComicButton>
         </div>
 
-        <div className="space-y-12">
+        <div className="">
           {services.map((service: any, idx: number) => {
             const serviceApps = applications.filter(
               (app: any) => app.service === service.id,
@@ -104,37 +104,35 @@ export function MyServicesTab() {
               >
                 {/* Service Card */}
                 <div className="col-span-1">
-                  <Box
-                    sx={{
-                      mb: 2,
-                      transform: `rotate(${idx % 2 === 0 ? -0.5 : 0.5}deg)`,
-                    }}
-                  >
-                    <VendorBusinessCard
-                      vendor={{
-                        title: service.title,
-                        vendor_name: service.vendor_name,
-                        category: service.category,
-                        portfolio_image: service.portfolio_image,
-                        avg_rating: service.avg_rating,
-                        event_count: serviceApps.filter(
-                          (a: any) => a.status === 'accepted',
-                        ).length,
-                        created_at: service.created_at,
-                      }}
-                      rotation={idx % 2 === 0 ? -0.5 : 0.5}
-                      onClick={() => navigate(`/services/${service.id}`)}
-                    />
+                  <Box>
+                    <div className="relative flex-1">
+                      <VendorBusinessCard
+                        vendor={{
+                          title: service.title,
+                          vendor_name: service.vendor_name,
+                          category: service.category,
+                          portfolio_image: service.portfolio_image,
+                          avg_rating: service.avg_rating,
+                          event_count: serviceApps.filter(
+                            (a: any) => a.status === 'accepted',
+                          ).length,
+                          created_at: service.created_at,
+                        }}
+                        rotation={idx % 2 === 0 ? -0.5 : 0.5}
+                        onClick={() => navigate(`/services/${service.id}`)}
+                      />
 
-                    {/* Edit Service Button */}
-                    <Link
-                      to={`/services/${service.id}/edit`}
-                      className="absolute -top-3 -right-3 bg-yellow-300 border-2 border-gray-800 p-2 shadow-[3px_3px_0px_#333] transition-transform hover:scale-110"
-                      style={{ transform: 'rotate(5deg)' }}
-                      title="Edit Service"
-                    >
-                      <Edit2 className="h-5 w-5 text-gray-800" />
-                    </Link>
+                    <ComicButton 
+                        type="button"
+                        onClick={() => navigate(`/services/${service.id}/edit`)}
+                        color="#1e3a5f"
+                        accentColor="rgb(255, 215, 0)"
+                        label="Edit Service"
+                        className="absolute -top-3 -right-3 transform rotate-5"
+                        Icon={Edit2}
+                      >
+                      </ComicButton>
+                    </div>
                   </Box>
                 </div>
                 <div className="col-span-2">

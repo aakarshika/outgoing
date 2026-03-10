@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { dashboardRouteElements } from '@/pages/dashboard/DashboardRoutes';
 import { profileRouteElements } from '@/pages/profile/ProfileRoutes';
@@ -7,6 +7,7 @@ import { ThemeWrapper } from '@/theme/ThemeWrapper';
 
 import { RoleGuard } from './RoleGuard';
 import { RouteDefinition, routesConfig } from './routes.config';
+import { isNativeSidebarPath } from '@/components/navbar/NavbarContext';
 
 const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
@@ -26,6 +27,7 @@ const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage')
 const EditServicePage = lazy(() => import('@/pages/vendors/EditServicePage'));
 const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
+const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
 const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
 
@@ -48,6 +50,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   EditService: EditServicePage,
   Requests: RequestsPage,
   Alerts: AlertsPage,
+  EventsSpecial: EventsSpecialPage,
   Gallery: GalleryPage,
   BrowseFeed: BrowseFeedPage,
 };
@@ -56,6 +59,8 @@ import { useAuth } from '@/features/auth/AuthContext';
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const isSidebarActive = isNativeSidebarPath(location.pathname);
 
   const renderRoute = (route: RouteDefinition) => {
     const Component = PageComponentRegistry[route.componentName];
@@ -79,7 +84,10 @@ export const AppRoutes = () => {
               </div>
             }
           >
-            <Component />
+            {/* shift towards left because sidebar is fixed on the right side. for the paths in : isNativeSidebarPath */}
+            <div className={isSidebarActive ? "md:pr-[22rem]" : ""}>
+              <Component />
+            </div>
           </Suspense>
         </ThemeWrapper>
       </RoleGuard>

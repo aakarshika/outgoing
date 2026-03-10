@@ -6,7 +6,7 @@ import { EventNeedsSummary } from '@/components/events/EventNeedsSummary';
 import { Media } from '@/components/ui/media';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import { useMyEvents } from '@/features/events/hooks';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import type { EventListItem } from '@/types/events';
 
 const LIFECYCLE_BADGE_STYLES: Record<
@@ -109,51 +109,60 @@ function EventCardRow({
     border: '#d1d5db',
   };
 
+  const OverlaySection = () => {
+    return (
+      <div className="flex flex-col items-start justify-start gap-2 flex-shrink-0">
+        <span
+          className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
+          style={{
+            fontFamily: '"Permanent Marker", cursive',
+            fontSize: '1.2rem',
+            background: badge.bg,
+            color: badge.text,
+            borderColor: badge.border,
+            transform: 'rotate(2deg)',
+            boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
+          }}
+        >
+          {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
+        </span>
+        {actionsEnabled ? (
+          <Link
+            to={`/events/${event.id}/host-event-management`}
+            className="text-[1rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
+            style={{
+              fontFamily: '"Permanent Marker", cursive',
+              transform: 'rotate(-1deg)',
+              boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+            }}
+          >
+            MANAGE EVENT
+          </Link>
+        ) : (
+          <span
+            className="text-[1rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
+            style={{
+              fontFamily: '"Permanent Marker", cursive',
+              transform: 'rotate(-1deg)',
+              boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
+            }}
+          >
+            MANAGE EVENT
+          </span>
+        )}
+      </div>
+    );
+  };
   return (
     <div className="space-y-1">
       <div className="flex items-stretch gap-2">
-        <div className="flex-1 min-w-0">
-          <ScrapbookEventCardLandscape event={event} />
-        </div>
-        <div className="flex flex-col items-center justify-center gap-2 flex-shrink-0">
-          <span
-            className="text-xs font-bold px-3 py-1 border-2 whitespace-nowrap"
-            style={{
-              fontFamily: '"Permanent Marker", cursive',
-              fontSize: '0.65rem',
-              background: badge.bg,
-              color: badge.text,
-              borderColor: badge.border,
-              transform: 'rotate(2deg)',
-              boxShadow: '1px 1px 0px rgba(0,0,0,0.2)',
-            }}
-          >
-            {LIFECYCLE_LABELS[event.lifecycle_state] || event.lifecycle_state}
-          </span>
-          {actionsEnabled ? (
-            <Link
-              to={`/events/${event.id}/host-event-management`}
-              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
-              style={{
-                fontFamily: '"Permanent Marker", cursive',
-                transform: 'rotate(-1deg)',
-                boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-              }}
-            >
-              MANAGE EVENT
-            </Link>
-          ) : (
-            <span
-              className="text-[0.65rem] font-bold px-3 py-1 border-2 border-gray-400 bg-gray-200 text-gray-500 whitespace-nowrap opacity-60"
-              style={{
-                fontFamily: '"Permanent Marker", cursive',
-                transform: 'rotate(-1deg)',
-                boxShadow: '1px 1px 0px rgba(0,0,0,0.3)',
-              }}
-            >
-              MANAGE EVENT
-            </span>
-          )}
+        <div className="flex-1 relative">
+          <ScrapbookEventCardLandscape event={event} isBasicEventCard={false} />
+          <div className="absolute inset-0 z-10 flex items-end justify-end">
+            <div className="p-3">
+              <OverlaySection />
+            </div>
+          </div>
         </div>
       </div>
       <EventNeedsSummary eventId={event.id} />

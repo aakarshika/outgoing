@@ -10,7 +10,6 @@ const comicButtonVariants = cva(
     variants: {
       variant: {
         solid: '',
-        ghost: 'bg-transparent border-none',
       },
       size: {
         default: 'h-10 min-h-10 px-4 py-2 text-sm',
@@ -39,8 +38,8 @@ const iconSizeClass = {
 
 export interface ComicButtonProps
   extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof comicButtonVariants> {
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof comicButtonVariants> {
   asChild?: boolean;
   Icon?: React.ElementType;
   iconProps?: React.SVGProps<SVGSVGElement> & { className?: string };
@@ -76,7 +75,6 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
     const Comp = asChild ? Slot : 'button';
     const textContent = label ?? children;
 
-    const isGhost = variant === 'ghost';
     const isTransparent = accentColor === 'transparent';
 
     const depthX = 2;
@@ -126,50 +124,10 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
       );
     };
 
-    const renderFrontGhostIcon = () => (
-      <span className="relative flex shrink-0 items-center justify-center">
-        <span className="absolute inset-0 flex items-center justify-center">
-          {renderIcon({
-            strokeWidth: 5,
-            style: {
-              color: 'var(--accent-color)',
-              fill: isTransparent ? 'none' : 'var(--accent-color)',
-            },
-          })}
-        </span>
-        <span className="relative flex items-center justify-center">
-          {renderIcon({
-            style: {
-              color: 'var(--comic-color)',
-              fill: isTransparent ? 'none' : 'var(--accent-color)',
-            },
-          })}
-        </span>
-      </span>
-    );
-
-    const renderShadowGhostIcon = () => (
-      <span className="relative flex shrink-0 items-center justify-center">
-        {renderIcon({
-          strokeWidth: 4,
-          style: {
-            color: 'var(--comic-color)',
-            fill: 'var(--comic-color)',
-          },
-        })}
-      </span>
-    );
-
-    const iconContent = Icon ? (isGhost ? renderFrontGhostIcon() : renderIcon()) : null;
+    const iconContent = Icon ? renderIcon() : null;
 
     const overlayContent =
       asChild && React.isValidElement(children) ? children.props.children : null;
-
-    const paddingClass = cn(
-      'px-4 py-2',
-      size === 'sm' && 'px-3 py-1.5',
-      size === 'lg' && 'px-5 py-3',
-    );
 
     const layeredContent = (
       <>
@@ -191,20 +149,9 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
               shape === 'square' && 'rounded-none',
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
-              !isGhost &&
-                'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
+              'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
             )}
           >
-            {isGhost && Icon ? (
-              <span
-                className={cn(
-                  'flex h-full w-full items-center justify-center gap-2',
-                  // paddingClass,
-                )}
-              >
-                {renderShadowGhostIcon()}
-              </span>
-            ) : null}
           </span>
 
           <span
@@ -215,14 +162,10 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
               shape === 'square' && 'rounded-none',
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
-              !isGhost &&
-                'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
-              !isGhost &&
-                (isTransparent
-                  ? 'bg-white/20 backdrop-blur-md'
-                  : 'bg-[var(--accent-color)]'),
-              isGhost && 'text-[var(--comic-color)]',
-              // paddingClass,
+              'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
+              (isTransparent
+                ? 'bg-white/20 backdrop-blur-md'
+                : 'bg-[var(--accent-color)]'),
             )}
           >
             {iconContent}

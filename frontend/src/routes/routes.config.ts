@@ -22,6 +22,11 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
+    path: '/special',
+    componentName: 'EventsSpecial',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
     path: '/events/create',
     componentName: 'CreateEvent',
     roles: [UserRole.USER, UserRole.ADMIN],

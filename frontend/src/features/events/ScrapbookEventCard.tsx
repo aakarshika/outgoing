@@ -117,6 +117,7 @@ export const ScrapbookEventCard = ({
   rotation,
   rotationhover,
   disableHover,
+  isBasicEventCard = false,
 }: {
   event: EventListItem;
   isFocused?: boolean;
@@ -124,6 +125,7 @@ export const ScrapbookEventCard = ({
   rotation?: number;
   rotationhover?: number;
   disableHover?: boolean;
+  isBasicEventCard?: boolean;
 }) => {
   const { user, isAuthenticated } = useAuth();
   const { isHost, isVendor } = getEventCardRoles(event, {
@@ -265,7 +267,7 @@ export const ScrapbookEventCard = ({
                     {isFocused
                       ? event.description || ''
                       : (event.description?.slice(0, 500) || '') +
-                        ((event.description?.length || 0) > 500 ? '...' : '')}
+                      ((event.description?.length || 0) > 500 ? '...' : '')}
                   </Typography>
                 </Box>
                 <Box
@@ -345,7 +347,7 @@ export const ScrapbookEventCard = ({
                 >
                   <PosterForEventCard
                     imageUrl={event?.cover_image || ''}
-                    title={event.title}
+                    title={'df'}
                   />
                 </Box>
               </Box>
@@ -355,6 +357,7 @@ export const ScrapbookEventCard = ({
                   sx={{
                     fontFamily: '"Permanent Marker"',
                     fontSize: '1.1rem',
+                    textAlign: 'center',
                     color: '#1a1a1a',
                     lineHeight: 1.2,
                     mb: 1,
@@ -368,12 +371,15 @@ export const ScrapbookEventCard = ({
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                   <Typography
-                    sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'serif' }}
+                    sx={{ fontSize: '0.75rem',
+                       color: '#666', 
+                    textAlign: 'center',
+                    fontFamily: 'serif' }}
                   >
                     {isFocused
                       ? event.description || ''
                       : (event.description?.slice(0, 160) || '') +
-                        ((event.description?.length || 0) > 160 ? '...' : '')}
+                      ((event.description?.length || 0) > 160 ? '...' : '')}
                   </Typography>
                 </Box>
                 <Box
@@ -430,44 +436,45 @@ export const ScrapbookEventCard = ({
             </>
           )}
 
-          {/* Interest Heart */}
-          <LikeButton
-            eventId={event.id}
-            initialIsInterested={event.user_is_interested}
-            initialInterestCount={event.interest_count}
-          />
-
-          {/* Ticket Infographic */}
-          <TicketStatusBadge
-            ticketCount={event.ticket_count}
-            capacity={event.capacity}
-            highlighted={event.user_has_ticket}
-            sx={{ position: 'absolute', top: 10, left: 55, zIndex: 2 }}
-          />
-
-          {event.category && (
-            <CategorySticker categoryName={event.category.name!} theme={theme} />
-          )}
-
-          {event.lifecycle_state === 'live' && <LiveBadge />}
-
-          {(isHost || isVendor) && (
-            <HostVendorBadge
-              isHost={isHost}
-              variant="full"
-              bottomOffset={event.lifecycle_state === 'live' ? 36 : 10}
+          {(!isBasicEventCard) && (<>
+            {/* Interest Heart */}
+            <LikeButton
+              eventId={event.id}
+              initialIsInterested={event.user_is_interested}
+              initialInterestCount={event.interest_count}
             />
-          )}
 
-          {event.lifecycle_state === 'event_ready' && <FullHouseBadge />}
+            {/* Ticket Infographic */}
+            <TicketStatusBadge
+              ticketCount={event.ticket_count}
+              capacity={event.capacity}
+              highlighted={event.user_has_ticket}
+              sx={{ position: 'absolute', top: 10, left: 55, zIndex: 2 }}
+            />
 
-          {(event.lifecycle_state === 'published' ||
-            event.lifecycle_state === 'live') && (
-            <PriceBadge price={price} variant="portrait" />
-          )}
+            {event.category && (
+              <CategorySticker categoryName={event.category.name!} theme={theme} />
+            )}
 
-          {event.lifecycle_state === 'completed' && <CompletedRatedBadge />}
+            {event.lifecycle_state === 'live' && <LiveBadge />}
 
+            {(isHost || isVendor) && (
+              <HostVendorBadge
+                isHost={isHost}
+                variant="full"
+                bottomOffset={event.lifecycle_state === 'live' ? 36 : 10}
+              />
+            )}
+
+            {event.lifecycle_state === 'event_ready' && <FullHouseBadge />}
+
+            {(event.lifecycle_state === 'published' ||
+              event.lifecycle_state === 'live') && (
+                <PriceBadge price={price} variant="portrait" />
+              )}
+
+            {event.lifecycle_state === 'completed' && <CompletedRatedBadge />}
+          </>)}
           {/* Pencil mark/sketch detail */}
           {
             <Box
@@ -489,192 +496,3 @@ export const ScrapbookEventCard = ({
   );
 };
 
-/** Landscape list card: full-width row, image left, content right. Use in lists. */
-export const ScrapbookEventCardLandscape = ({
-  event,
-  isFocused,
-}: {
-  event: EventListItem;
-  isFocused?: boolean;
-}) => {
-  const { user, isAuthenticated } = useAuth();
-  const { isHost, isVendor } = getEventCardRoles(event, {
-    user: user ?? null,
-    isAuthenticated,
-  });
-
-  const theme = getCategoryTheme(event.category ?? undefined);
-  const relativeTime = formatEventRelativeTime(event.start_time);
-  const price = formatEventPrice(event.ticket_price_standard);
-  const isNoImageCard = !event.cover_image;
-
-  return (
-    <Box
-      component={Link}
-      to={`/events/${event.id}`}
-      sx={{
-        display: 'flex',
-        width: '100%',
-        minHeight: { xs: 120, sm: 140 },
-        maxHeight: { xs: 160, sm: 200 },
-        textDecoration: 'none',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 1,
-        border: '1px solid #e5e7eb',
-        boxShadow: isFocused
-          ? '0 12px 28px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.08)'
-          : '0 6px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)',
-        transition: 'box-shadow 0.3s ease, transform 0.2s ease',
-        '&:hover': {
-          boxShadow: '0 12px 28px rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.06)',
-        },
-      }}
-    >
-      {/* Image strip (left) */}
-      <Box
-        sx={{
-          width: { xs: 140, sm: 200 },
-          minWidth: { xs: 140, sm: 200 },
-          flexShrink: 0,
-          position: 'relative',
-          overflow: 'hidden',
-          bgcolor: theme.bg,
-          alignSelf: 'stretch',
-        }}
-      >
-        {isNoImageCard ? (
-          <NoImagePlaceholder theme={theme} size="sm" />
-        ) : (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              inset: 0,
-              '& img': { objectFit: 'cover', width: '100%', height: '100%' },
-            }}
-          >
-            <Media src={event.cover_image || ''} alt={event.title} />
-          </Box>
-        )}
-      </Box>
-
-      {/* Content (right) */}
-      <CategoricalBackground
-        category={event.category}
-        showDecoration={false}
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          p: 1.5,
-          pr: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          position: 'relative',
-        }}
-      >
-        {event.category && (
-          <CategoryStickerCompact categoryName={event.category.name!} theme={theme} />
-        )}
-
-        <Typography
-          sx={{
-            fontFamily: '"Permanent Marker"',
-            fontSize: { xs: '1rem', sm: '1.15rem' },
-            color: '#1a1a1a',
-            lineHeight: 1.2,
-            mb: 0.5,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            pr: 4,
-          }}
-        >
-          {event.title}
-        </Typography>
-
-        <Typography
-          sx={{
-            fontSize: '0.75rem',
-            color: '#555',
-            fontFamily: 'serif',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            mb: 0.75,
-          }}
-        >
-          {event.description?.slice(0, 120) || ''}
-          {(event.description?.length || 0) > 120 ? '...' : ''}
-        </Typography>
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Calendar size={12} color="#666" />
-            <Typography
-              sx={{
-                fontSize: '0.7rem',
-                fontWeight: 'bolder',
-                color: '#666',
-                fontFamily: 'serif',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {relativeTime}
-            </Typography>
-          </Box>
-          <LocationTag
-            locationName={event.location_name}
-            locationAddress={event.location_address}
-            latitude={event.latitude}
-            longitude={event.longitude}
-            size={12}
-            color="#666"
-          />
-        </Box>
-
-        <LikeButton
-          eventId={event.id}
-          initialIsInterested={event.user_is_interested}
-          initialInterestCount={event.interest_count}
-        />
-
-        <TicketStatusBadge
-          ticketCount={event.ticket_count}
-          capacity={event.capacity}
-          highlighted={event.user_has_ticket}
-          sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}
-        />
-
-        {event.lifecycle_state === 'live' && (
-          <LiveBadge compact sx={{ bottom: 8, left: 8 }} />
-        )}
-
-        {(isHost || isVendor) && (
-          <HostVendorBadge
-            isHost={isHost}
-            variant="short"
-            bottomOffset={8}
-            sx={{ left: event.lifecycle_state === 'live' ? 52 : 8 }}
-          />
-        )}
-
-        {(event.lifecycle_state === 'published' ||
-          event.lifecycle_state === 'live') && (
-          <PriceBadge price={price} variant="landscape" />
-        )}
-      </CategoricalBackground>
-    </Box>
-  );
-};

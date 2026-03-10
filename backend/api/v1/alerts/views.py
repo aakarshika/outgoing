@@ -1,5 +1,6 @@
 """Views for DB-driven actionable alerts (not notifications)."""
 
+from django.db import connection
 from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,7 @@ from rest_framework.views import APIView
 from apps.events.models import Event
 from apps.needs.models import NeedApplication, NeedInvite
 from apps.tickets.models import Ticket
+from api.v1.events.serializers import EventDetailSerializer
 from core.responses import success_response
 
 
@@ -169,3 +171,51 @@ class AlertsView(APIView):
             )
 
         return success_response(data=alerts)
+
+
+class EventOverviewView(APIView):
+    """Return rows from the event_overview DB view joined with EventDetail."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT *
+                FROM event_overview
+                WHERE event_lifecycle_state NOT IN ('completed', 'cancelled')
+                  AND (
+                    host_user_id = %s OR
+                    need_applied_to_user_id = %s OR
+                    need_application_requested_by_host_vendor_user_id = %s OR
+                    need_assigned_user_id = %s OR
+                    attendee_user_id = %s
+                  )
+                """,
+                [user.id, user.id, user.id, user.id, user.id],
+            )
+            columns = [col[0] for col in cursor.description]
+            rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        if not rows:
+            return success_response(data=[])
+
+        event_ids = {row["event_id"] for row in rows}
+        events = (
+            Event.objects.filter(id__in=event_ids)
+            .select_related("host", "host__profile", "category")
+            .prefetch_related("highlights", "reviews")
+        )
+
+        detail_serializer = EventDetailSerializer(
+            events, many=True, context={"request": request}
+        )
+        details_by_id = {item["id"]: item for item in detail_serializer.data}
+
+        for row in rows:
+            row["event_details"] = details_by_id.get(row["event_id"])
+
+        return success_response(data=rows)

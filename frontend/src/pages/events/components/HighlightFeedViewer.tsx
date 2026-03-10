@@ -9,15 +9,17 @@ import {
 } from '@mui/material';
 import { ChevronLeft, ChevronRight, Heart, MessageCircle, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
+import { ComicButton } from '@/components/ui/ComicButton';
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import { useToggleHighlightLike } from '@/features/events/hooks';
 
 import { HighlightCommentDrawer } from './HighlightCommentDrawer';
 import { HighlightComments } from './HighlightComments';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 
 // --- Comic Theme Constants ---
 const COMIC_BORDER = '3px solid #1a1a1a';
@@ -151,6 +153,7 @@ export const HighlightFeedViewer = ({
   initialHighlightId,
 }: HighlightFeedViewerProps) => {
   const { id: eventId } = useParams();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -379,7 +382,7 @@ export const HighlightFeedViewer = ({
       sx={{ zIndex: 9999 }}
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(0,0,0,0.8)',
+          bgcolor: 'rgba(255, 255, 255, 0)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -404,115 +407,149 @@ export const HighlightFeedViewer = ({
           width: '100%',
           maxWidth: '1200px',
           height: '80vh',
-          bgcolor: 'white',
-          border: COMIC_BORDER,
-          boxShadow: '12px 12px 0px #1a1a1a',
+          bgcolor: '#fdfbf7',
+          borderRadius: 2,
+          border: '3px solid #1a1a1a',
+          boxShadow: '4px 4px 0px #1a1a1a',
+          p: 3,
+          boxSizing: 'border-box',
           overflow: 'hidden',
           position: 'relative',
           flexDirection: { md: 'row' },
         }}
       >
-        {/* Left Column: Media */}
         <Box
           sx={{
-            flex: { md: 1.5 },
-            bgcolor: '#f3f4f6',
-            position: 'relative',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRight: COMIC_BORDER,
-            overflow: 'hidden',
-          }}
-        >
-          <img
-            src={activeHighlight?.media_file}
-            alt={activeHighlight?.text}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-            }}
-          />
-
-          {/* Navigation Buttons Web */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 24,
-              right: { md: '10%' }, // Positioned near the split
-              display: 'flex',
-              gap: 2,
-              zIndex: 20,
-            }}
-          >
-            <ComicIconButton
-              onClick={handlePrev}
-              Icon={ChevronLeft}
-              sx={{
-                visibility: activeIndex > 0 ? 'visible' : 'hidden',
-              }}
-            />
-            <ComicIconButton
-              onClick={handleNext}
-              Icon={ChevronRight}
-              sx={{
-                visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
-              }}
-            />
-          </Box>
-          {/* Caption Overlay Web */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: 3,
-              background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-              color: 'white',
-            }}
-          >
-            <Hostname
-              username={activeHighlight?.author_username}
-              avatarSrc={activeHighlight?.author_avatar}
-              mode="normal"
-              className="!text-white mb-1"
-            />
-            <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.5rem' }}>
-              {activeHighlight?.text}
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Right Column: Comments */}
-        <Box
-          sx={{
-            flex: { md: 1 },
-            display: 'flex',
-            flexDirection: 'column',
+            width: '100%',
+            height: '100%',
             bgcolor: '#fdfbf7',
-            backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-            backgroundSize: '15px 15px',
+            border: '3px solid #1a1a1a',
+            borderRadius: 2,
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            position: 'relative',
+            flexDirection: { md: 'row' },
           }}
         >
-          <Box sx={{ p: 2, borderBottom: '2px solid #1a1a1a', bgcolor: 'white' }}>
-            <Typography
+          {/* Left Column: Media */}
+          <Box
+            sx={{
+              flex: { md: 1.5 },
+              bgcolor: '#f3f4f6',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRight: COMIC_BORDER,
+              overflow: 'hidden',
+            }}
+          >
+            <Box className="flex flex-col w-full h-full">
+              <Box className="flex flex-1 items-center justify-center overflow-hidden">
+                <img
+                  src={activeHighlight?.media_file}
+                  alt={activeHighlight?.text}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                  }}
+                />
+              </Box>
+              {/* Caption Overlay Web */}
+              <Box
+                sx={{
+                  width: '100%',
+                  background: 'rgba(0,0,0,0.7)',
+                  color: 'white',
+                }}
+              >
+                <ScrapbookEventCardLandscape event={activeHighlight?.event} />
+              </Box>
+            </Box>
+            {/* Navigation Buttons Web */}
+            <Box
               sx={{
-                fontWeight: 900,
-                fontSize: '1.2rem',
-                fontFamily: '"Permanent Marker", cursive',
-                textAlign: 'center',
+                position: 'absolute',
+                bottom: 24,
+                right: { md: '10%' }, // Positioned near the split
+                display: 'flex',
+                gap: 2,
+                zIndex: 20,
               }}
             >
-              {activeHighlight?.comments_count} thoughts ✏️
-            </Typography>
+              <ComicIconButton
+                onClick={handlePrev}
+                Icon={ChevronLeft}
+                sx={{
+                  visibility: activeIndex > 0 ? 'visible' : 'hidden',
+                }}
+              />
+              <ComicIconButton
+                onClick={handleNext}
+                Icon={ChevronRight}
+                sx={{
+                  visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
+                }}
+              />
+            </Box>
           </Box>
-          <Box sx={{ flex: 1, overflow: 'hidden' }}>
-            <HighlightComments
-              highlightId={activeHighlightId}
-              commentsCount={activeHighlight?.comments_count || 0}
-            />
+
+          {/* Right Column: Comments */}
+          <Box
+            sx={{
+              flex: { md: 1 },
+              display: 'flex',
+              flexDirection: 'column',
+              bgcolor: '#fdfbf7',
+              backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+              backgroundSize: '15px 15px',
+            }}
+          >
+            <Box sx={{ p: 2, borderBottom: '2px solid #1a1a1a', bgcolor: 'white' }}>
+              <Typography
+                sx={{
+                  fontWeight: 900,
+                  fontSize: '1.2rem',
+                  fontFamily: '"Permanent Marker", cursive',
+                  textAlign: 'center',
+                }}
+              >
+                {activeHighlight?.comments_count} thoughts ✏️
+              </Typography>
+            </Box>
+            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+              <HighlightComments
+                highlightId={activeHighlightId}
+                commentsCount={activeHighlight?.comments_count || 0}
+              />
+            </Box>
+            <Box
+              sx={{
+                p: 2,
+                borderTop: '2px solid #1a1a1a',
+                bgcolor: 'white',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mt: 'auto',
+              }}
+            >
+              <ComicButton
+                size="lg"
+                shape="rounded"
+                color="#000000"
+                accentColor="#fffbeb"
+                onClick={() => {
+                  if (eventId) {
+                    navigate(`/events/${eventId}`);
+                  }
+                }}
+              >
+                Go to event
+              </ComicButton>
+            </Box>
           </Box>
         </Box>
       </Box>

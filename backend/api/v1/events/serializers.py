@@ -645,6 +645,8 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
     event_id = serializers.IntegerField(source="event.id", read_only=True)
+    # Basic event card details for scrapbook components on the frontend
+    event = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for EventHighlightSerializer."""
@@ -663,6 +665,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "comments_count",
             "user_has_liked",
             "event_id",
+            "event",
         ]
         read_only_fields = [
             "id",
@@ -675,6 +678,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "comments_count",
             "user_has_liked",
             "event_id",
+            "event",
         ]
 
     def get_likes_count(self, obj):
@@ -698,6 +702,17 @@ class EventHighlightSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
+
+    def get_event(self, obj):
+        """
+        Return basic event details for this highlight.
+
+        Uses the existing EventListSerializer so the shape matches the
+        EventListItem / scrapbook card expectations on the frontend.
+        """
+        from .serializers import EventListSerializer  # local import to avoid cycles
+
+        return EventListSerializer(obj.event, context=self.context).data
 
 
 class EventHighlightCommentSerializer(serializers.ModelSerializer):

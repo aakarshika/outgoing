@@ -145,7 +145,7 @@ export function TicketsTab() {
                   onClick={() => setManagingTicket(ticket)}
                 >
                   <div className="" onClick={() => setManagingTicket(ticket)}>
-                    <ScrapbookEventCard event={ticket.event_summary} />
+                    <ScrapbookEventCard event={ticket.event_summary} isBasicEventCard={true} />
                   </div>
                 </div>
 

@@ -233,6 +233,7 @@ export const HostVendorGroupChat: React.FC<HostVendorGroupChatProps> = ({
               fontFamily: '"Caveat", cursive',
               fontSize: '1.2rem',
             }}
+            autoFocus={false}
             placeholder="Write a message..."
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}

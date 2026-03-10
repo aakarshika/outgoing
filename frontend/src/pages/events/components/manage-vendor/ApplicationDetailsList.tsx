@@ -1,4 +1,4 @@
-import { Edit2 } from 'lucide-react';
+import { Edit2, Pencil } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { EditApplicationModal } from '@/components/events/EditApplicationModal';
 
 import { EnclosingBox } from '../manage-redesign/ui/EnclosingBox';
 import { VendorAgreement } from './VendorAgreement';
+import { ComicButton } from '@/components/ui/ComicButton';
 
 interface ApplicationDetailsListProps {
   applications: any[];
@@ -61,19 +62,28 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                         </div>
                       )}
                     </div>
+
+<div className="flex items-center gap-2">
+                    <ComicButton 
+                        type="button"
+                        onClick={() => navigate(`/events/${application.event_id}/service-event-management`)}
+                        color="#1e3a5f"
+                        accentColor="#00CCCC"
+                        Icon={application.event_status == 'Completed' ? undefined : Pencil}
+                        label={` ${application.event_status == 'Completed' ? "Go to Gig" : "Manage Gig"}`}
+                      >
+                      </ComicButton>
                     {application.status === 'pending' && (
-                      <button
+                      <ComicButton 
                         type="button"
                         onClick={() => setEditingApplication(application)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-gray-800 bg-blue-300 hover:bg-blue-400 text-gray-900 shadow-[2px_2px_0px_#333] transition-all active:translate-x-[1px] active:translate-y-[1px]"
-                        style={{
-                          fontFamily: '"Permanent Marker"',
-                          fontSize: '0.75rem',
-                        }}
+                        
+                        Icon={Edit2}
+                        label="Edit"
                       >
-                        <Edit2 className="h-3.5 w-3.5" /> Edit
-                      </button>
+                      </ComicButton>
                     )}
+                    </div>
                   </div>
 
                   <>

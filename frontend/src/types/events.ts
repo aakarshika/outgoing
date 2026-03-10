@@ -197,11 +197,19 @@ export interface AttendeeInfo {
   is_verified: boolean;
 }
 
-export interface EventSearchSuggestion {
+export interface EventSearchSuggestion extends Partial<EventListItem> {
   id: number;
   title: string;
   location_name: string;
   category_name: string | null;
+  category_slug?: string | null;
+  /**
+   * Optional richer fields for search UI cards.
+   * When available, these let us render full scrapbook cards directly
+   * from autocomplete results.
+   */
+  start_time?: string;
+  category?: EventCategory | null;
 }
 
 export interface ApiResponse<T> {

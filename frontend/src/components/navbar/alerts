@@ -1,0 +1,54 @@
+
+
+------------
+
+
+
+new plan -- 
+
+fetch all my events and applications and tickets under these circumstances:
+if i am hosting, servicing or attending any event where : 
+event is not complete or cancelled.
+
+in addition to the normal EventDetail, fetch the following:
+
+create a view with the following details. 
+event id,
+event created date ,
+event lifecycle_state,
+event capacity
+
+host_user_id
+
+number of total needs  
+number of needs filled 
+number of needs override_filled 
+
+need_id
+need_application_requested_by_host_vendor_user_id
+
+need_applied_to_user_id 
+need_assigned_user_id 
+need_application_id 
+need_application_status
+need_application_created_date
+need_status
+
+
+number of tickets purchased and not cancelled
+number of tickets used
+
+attendee_user_id
+ticket_created_date
+ticket_status
+
+
+
+
+
+i will use it to fetch events filtered with: 
+is_host 
+is_vendor (if any application sent or request recieved)
+is_attendee (if ticket purchased)
+
+

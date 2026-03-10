@@ -1,15 +1,14 @@
 import {
-  Avatar,
   Box,
   Button as MuiButton,
   Paper,
   Popover,
   Typography,
 } from '@mui/material';
-import { type MouseEvent, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { HostCard } from '@/components/ui/HostCard';
+import { TinyBusinessCard } from '@/components/ui/TinyBusinessCard';
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { useAuth } from '@/features/auth/hooks';
 export const ClassifiedAd = ({
@@ -282,56 +281,6 @@ export const ClassifiedAd = ({
           </Popover>
         </>
       )}
-    </Box>
-  );
-};
-
-const TinyBusinessCard = ({
-  name,
-  avatar,
-  onClick,
-}: {
-  name: string;
-  avatar: string;
-  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
-}) => {
-  return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onClick}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        px: 1.5,
-        py: 1,
-        backgroundColor: '#rgb(232, 255, 255)',
-        border: '2px solid #00CCCC',
-        borderRadius: '8px',
-        boxShadow: '4px 5px #00CCCC',
-        cursor: 'pointer',
-        fontFamily: '"Caveat", cursive',
-        textAlign: 'left',
-        minWidth: 140,
-        '&:hover': {
-          transform: 'translate(-1px, -1px)',
-          boxShadow: '6px 7px #00CCCC',
-        },
-      }}
-    >
-      <Avatar src={avatar} sx={{ width: 26, height: 26, border: '2px solid #fff' }} />
-      <Box>
-        <Typography
-          variant="body2"
-          sx={{ fontSize: '0.65rem', color: '#6b5b4a', lineHeight: 1 }}
-        >
-          Filled by
-        </Typography>
-        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#2b2b2b' }}>
-          {name}
-        </Typography>
-      </Box>
     </Box>
   );
 };

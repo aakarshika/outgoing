@@ -144,10 +144,10 @@ TRUNCATE auth_user,
     for i in range(1, 27):
         city = random.choice(CITIES)
         profile_inserts.append(
-            f"({i}, '555-{i:04d}', 'Hi, I love events', 'Enthusiastic User', '', 'https://placehold.co/150x150/png', 'https://placehold.co/800x400/png', '{city}', NOW(), NOW())"
+            f"({i}, '555-{i:04d}', 'Hi, I love events', 'Enthusiastic User', '', 'https://placehold.co/150x150/png', 'https://placehold.co/800x400/png', '', '', true, false, true, true, true, true, true, '{city}', NOW(), NOW())"
         )
     sql.append(
-        "INSERT INTO profiles_userprofile (user_id, phone_number, bio, headline, showcase_bio, avatar, cover_photo, location_city, created_at, updated_at) VALUES\n"
+        "INSERT INTO profiles_userprofile (user_id, phone_number, bio, headline, showcase_bio, avatar, cover_photo, aadhar_number, aadhar_image, privacy_name, privacy_email, privacy_hosted_events, privacy_serviced_events, privacy_events_attending, privacy_events_attended, allow_private_messages, location_city, created_at, updated_at) VALUES\n"
         + ",\n".join(profile_inserts)
         + ";\n"
     )
@@ -217,11 +217,11 @@ TRUNCATE auth_user,
         end_time = f"(NOW() + INTERVAL '{days_offset} days' + INTERVAL '3 hours')"
 
         event_inserts.append(
-            f"({i}, {host_id}, 'Event Title {i}', 'event-title-{i}', 'Description for event {i}', {cat_id}, NULL, NULL, 'Venue {i}', '123 {city} St', '', '', NULL, NULL, {start_time}, {end_time}, 100, {price}.00, NULL, 24, '{random.choice(IMAGES)}', '{status}', '{life}', '[]', {random.randint(0,20)}, {random.randint(0,50)}, NOW(), NOW())"
+            f"({i}, {host_id}, 'Event Title {i}', 'event-title-{i}', 'Description for event {i}', {cat_id}, NULL, NULL, 'Venue {i}', '123 {city} St', '', '', NULL, NULL, {start_time}, {end_time}, 100, {price}.00, NULL, 24, '{random.choice(IMAGES)}', '{status}', '{life}', '[]', '[]', {random.randint(0,20)}, {random.randint(0,50)}, NOW(), NOW())"
         )
 
     sql.append(
-        "INSERT INTO events_event (id, host_id, title, slug, description, category_id, series_id, occurrence_index, location_name, location_address, check_in_instructions, event_ready_message, latitude, longitude, start_time, end_time, capacity, ticket_price_standard, ticket_price_flexible, refund_window_hours, cover_image, status, lifecycle_state, tags, interest_count, ticket_count, created_at, updated_at) VALUES\n"
+        "INSERT INTO events_event (id, host_id, title, slug, description, category_id, series_id, occurrence_index, location_name, location_address, check_in_instructions, event_ready_message, latitude, longitude, start_time, end_time, capacity, ticket_price_standard, ticket_price_flexible, refund_window_hours, cover_image, status, lifecycle_state, tags, features, interest_count, ticket_count, created_at, updated_at) VALUES\n"
         + ",\n".join(event_inserts)
         + ";\n"
     )
@@ -235,11 +235,11 @@ TRUNCATE auth_user,
         for goer_id in goer_ids:
             price = random.randint(10, 50)
             ticket_inserts.append(
-                f"({e}, {goer_id}, 'standard', false, NULL, {price}.00, 'active', NOW())"
+                f"({e}, {goer_id}, NULL, 'standard', 'gray', '', false, NULL, NULL, false, 100, NULL, {price}.00, 'active', NULL, NULL, NOW(), NOW())"
             )
     if ticket_inserts:
         sql.append(
-            "INSERT INTO tickets_ticket (event_id, goer_id, ticket_type, is_refundable, refund_deadline, price_paid, status, purchased_at) VALUES\n"
+            "INSERT INTO tickets_ticket (event_id, goer_id, tier_id, ticket_type, color, guest_name, is_18_plus, barcode, qr_secret, is_refundable, refund_percentage, refund_deadline, price_paid, status, used_at, admitted_by_id, purchased_at, updated_at) VALUES\n"
             + ",\n".join(ticket_inserts)
             + ";\n"
         )
@@ -262,7 +262,7 @@ TRUNCATE auth_user,
                 if vendor_id != "NULL":
                     service_id = vendor_id - 5
                     need_app_inserts.append(
-                        f"({need_id}, {vendor_id}, {service_id}, 'I can do this!', 500.00, 'accepted', NOW())"
+                        f"({need_id}, {vendor_id}, {service_id}, 'I can do this!', 500.00, 'accepted', NULL, NULL, NULL, NULL, NOW())"
                     )
                 need_id += 1
 
@@ -274,7 +274,7 @@ TRUNCATE auth_user,
         )
     if need_app_inserts:
         sql.append(
-            "INSERT INTO needs_needapplication (need_id, vendor_id, service_id, message, proposed_price, status, created_at) VALUES\n"
+            "INSERT INTO needs_needapplication (need_id, vendor_id, service_id, message, proposed_price, status, barcode, qr_secret, admitted_at, admitted_by_id, created_at) VALUES\n"
             + ",\n".join(need_app_inserts)
             + ";\n"
         )

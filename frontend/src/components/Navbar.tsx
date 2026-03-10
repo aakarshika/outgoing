@@ -1,4 +1,4 @@
-import { CalendTicket, arDays, Menu, X, Ticket, CalendarDays, MessageSquare, Briefcase, Settings, User, Shield } from 'lucide-react';
+import { Menu, X, Ticket, CalendarDays, MessageSquare, Briefcase, Settings, User, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
@@ -11,35 +11,73 @@ import {
   UserInfoSection,
   EventManagementHeader,
   SearchBar,
+  ManageEventButton,
 } from './navbar/NavbarComponents';
 import { NavbarProvider, useNavbarContext } from './navbar/NavbarContext';
 
-export const dashboardLinks = {
-  'going': { key: 'going', label: 'Going', icon: CalendarDays, type: 'heading', indent: 1 },
-  'saved': { key: 'saved', to: '/dashboard/saved', label: 'Saved Dates', icon: Ticket, indent: 2 },
-  'tickets': { key: 'tickets', to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket, indent: 2 },
 
-  'activities': { key: 'activities', label: 'Activities', icon: CalendarDays, type: 'heading', indent: 1 },
-  'calendar': { key: 'calendar', to: '/calendar', label: 'Calendar', icon: CalendarDays, indent: 2 },
-  'my-activities': { key: 'my-activities', to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare, indent: 1 },
+function SidebarContent() {
+  const {
+    isAuthenticated,
+  } = useNavbarContext();
 
-  'organizing': { key: 'organizing', label: 'Organizing', icon: Menu, type: 'heading', indent: 1 },
-  'my-events': { key: 'my-events', to: '/dashboard/events', label: 'My Events', icon: CalendarDays, indent: 2 },
+  return (
+    <>
+      {isAuthenticated && (
+        <div className="mb-6 border-b-2 border-dashed border-gray-300 pb-6">
+          <CreateEventButton type="event" />
+          <CreateEventButton type="service" />
+        </div>
+      )}
 
-  'services': { key: 'services', label: 'Services', icon: Briefcase, type: 'heading', indent: 1 },
-  'my-services': { key: 'my-services', to: '/dashboard/services', label: 'My Services', indent: 2 },
-  'my-opportunities': { key: 'my-opportunities', to: '/dashboard/services/opportunities', label: 'Service Opportunities', indent: 2 },
+      {isAuthenticated ? (
+        <div>
+          <UserInfoSection />
+          <div className="grid gap-1 ml-2">
+            <SidebarLinkItem itemKey={'going'} />
+            <SidebarLinkItem itemKey={'saved'} />
+            <SidebarLinkItem itemKey={'tickets'} />
+            <SidebarLinkItem itemKey={'organizing'} />
+            <SidebarLinkItem itemKey={'my-events'} />
+            <ManageEventButton type="manage-event-ghost" />
+            <SidebarLinkItem itemKey={'services'} />
+            <SidebarLinkItem itemKey={'my-services'} />
+            <ManageEventButton type="manage-service-ghost" />
+            <SidebarLinkItem itemKey={'my-opportunities'} />
+            <SidebarLinkItem itemKey={'activities'} />
+            <SidebarLinkItem itemKey={'my-activities'} />
+            <SidebarLinkItem itemKey={'profile'} />
+            <SidebarLinkItem itemKey={'user-info'} />
+            <SidebarLinkItem itemKey={'account-settings'} />
+            <SidebarLinkItem itemKey={'privacy'} />
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
+          <p
+            className="mb-3 text-sm uppercase tracking-wider text-gray-600"
+            style={{
+              fontFamily: '"Permanent Marker"',
+              transform: 'rotate(-1deg)',
+            }}
+          >
+            Account
+          </p>
+          <div className="grid gap-2">
+            <CreateEventButton type="signin" />
+            <CreateEventButton type="signup" />
+          </div>
+        </div>
+      )}
 
-  'profile': { key: 'profile', label: 'Profile + Settings', type: 'heading', indent: 1 },
-  'user-info': { key: 'user-info', to: '/profile/user-info', label: 'User Info', icon: User, indent: 2 },
-  'account-settings': { key: 'account-settings', to: '/profile/settings', label: 'Account Settings', icon: Settings, indent: 2 },
-  'privacy': { key: 'privacy', to: '/profile/privacy', label: 'Privacy', icon: Shield, indent: 2 },
-};
+    </>
+  );
+}
+
 // Inner component that consumes context 
 function NavbarLayout() {
   const {
     isAuthenticated,
-    logout,
     isMenuOpen,
     setIsMenuOpen,
     isQuickCreateOpen,
@@ -49,6 +87,9 @@ function NavbarLayout() {
     isVendor,
     isNotOnManagePage,
     isEventHost,
+    sidebarExpanded,
+    // setSidebarExpanded,
+    isNativeSidebarRoute,
   } = useNavbarContext();
 
   return (
@@ -57,7 +98,7 @@ function NavbarLayout() {
         <div className="mx-auto max-w-[1600px] bg-transparent px-4 sm:px-6 lg:px-8">
           <div className="flex w-full flex-col gap-2">
             <div className="flex h-16 items-center justify-between gap-2">
-              <div className="flex items-center">
+              <div className="flex items-center flex-1 min-w-0">
                 <div className="absolute -inset-1 bg-[#f8c163ff] opacity-60 rounded-sm transform -rotate-2 group-hover:rotate-1 transition-transform z-0"></div>
                 <LogoSection />
                 {shouldShowSearch && <SearchBar />}
@@ -104,63 +145,55 @@ function NavbarLayout() {
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-0 top-16 z-40 bg-black/40"
+          className={`fixed inset-0 top-16 z-40 bg-black/40 ${isNativeSidebarRoute ? 'md:hidden' : ''}`}
           onClick={() => setIsMenuOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto ${isNativeSidebarRoute ? 'md:hidden' : ''} ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         style={{
           background: '#f4f1ea',
           backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
           backgroundSize: '12px 12px',
         }}
       >
-        {isAuthenticated && (
-          <div className="mb-6 border-b-2 border-dashed border-gray-300 pb-6">
-            <CreateEventButton type="event" />
-            <CreateEventButton type="service" />
-          </div>
-        )}
-
-        {isAuthenticated ? (
-          <div>
-            <UserInfoSection />
-            <div className="grid gap-1 ml-2">
-              {Object.values(dashboardLinks).map((item: any) => (
-                <SidebarLinkItem key={item.key} linkDetails={item} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="mb-5 border-b-2 border-dashed border-gray-300 pb-5">
-            <p
-              className="mb-3 text-sm uppercase tracking-wider text-gray-600"
-              style={{
-                fontFamily: '"Permanent Marker"',
-                transform: 'rotate(-1deg)',
-              }}
-            >
-              Account
-            </p>
-            <div className="grid gap-2">
-              <CreateEventButton type="signin" />
-              <CreateEventButton type="signup" />
-            </div>
-          </div>
-        )}
-
-        {isAuthenticated && (
-          <button
-            onClick={logout}
-            className="w-full rounded-none border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_3px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-red-100 mt-4"
-            style={{ fontFamily: '"Permanent Marker"', fontSize: '0.9rem' }}
-          >
-            Logout
-          </button>
-        )}
+        <SidebarContent />
       </aside>
+
+      {/* Desktop persistent sidebar and toggle – only on native sidebar routes */}
+      {isNativeSidebarRoute && (
+        <>
+          {/* <button
+            type="button"
+            aria-label={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            className="hidden md:flex items-center justify-center fixed top-1/2 z-40 h-10 w-10 -translate-y-1/2 border-2 border-gray-800 bg-white shadow-[2px_3px_0px_#333] transition-all"
+            style={{
+              right: sidebarExpanded ? '22rem' : '0.75rem',
+            }}
+          // onClick={() =>
+          //   // setSidebarExpanded((prev: boolean) => !prev)
+          // }
+          >
+            {sidebarExpanded ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+          </button> */}
+
+          <aside
+            className={`hidden md:block fixed right-0 top-16 z-30 h-[calc(100vh-4rem)] w-[22rem] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto `}
+            style={{
+              background: '#f4f1ea',
+              backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
+              backgroundSize: '12px 12px',
+            }}
+          >
+            <SidebarContent />
+          </aside>
+        </>
+      )}
 
       <QuickCreateEventModal
         isOpen={isQuickCreateOpen}

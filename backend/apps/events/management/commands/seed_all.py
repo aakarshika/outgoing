@@ -189,6 +189,13 @@ class Command(BaseCommand):
             profile.headline = row.get("headline", "")
             profile.showcase_bio = row.get("showcase_bio", "")
             profile.aadhar_number = row.get("aadhar_number", "")
+            profile.privacy_name = bool(row.get("privacy_name", True))
+            profile.privacy_email = bool(row.get("privacy_email", False))
+            profile.privacy_hosted_events = bool(row.get("privacy_hosted_events", True))
+            profile.privacy_serviced_events = bool(row.get("privacy_serviced_events", True))
+            profile.privacy_events_attending = bool(row.get("privacy_events_attending", True))
+            profile.privacy_events_attended = bool(row.get("privacy_events_attended", True))
+            profile.allow_private_messages = bool(row.get("allow_private_messages", True))
             profile.location_city = row.get("location_city", "")
             profile.save()
             self._set_file_field(UserProfile, profile.pk, "avatar", row.get("avatar"))
@@ -441,6 +448,8 @@ class Command(BaseCommand):
                         row.get("proposed_price"), f"{path}.proposed_price"
                     ),
                     "status": status,
+                    "admitted_at": self._parse_dt(row["admitted_at"], f"{path}.admitted_at") if row.get("admitted_at") else None,
+                    "admitted_by": self._resolve(ctx.users, row["admitted_by"], f"{path}.admitted_by") if row.get("admitted_by") else None,
                 },
             )
             ctx.applications[row["key"]] = application
@@ -505,6 +514,8 @@ class Command(BaseCommand):
                     "price_paid": self._parse_decimal(row.get("price_paid"), f"{path}.price_paid")
                     or (tier.price if tier else Decimal("0")),
                     "status": status,
+                    "used_at": self._parse_dt(row["used_at"], f"{path}.used_at") if row.get("used_at") else None,
+                    "admitted_by": self._resolve(ctx.users, row["admitted_by"], f"{path}.admitted_by") if row.get("admitted_by") else None,
                 },
             )
             if row.get("refund_deadline"):

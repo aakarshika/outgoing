@@ -7,7 +7,7 @@ import {
   useMyInterestedEvents,
   useMyTickets,
 } from '@/features/events/hooks';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useMyApplications, useMyNeedInvites } from '@/features/needs/hooks';
 import type { EventDetail, EventListItem, TicketInfo } from '@/types/events';
@@ -358,8 +358,8 @@ export default function CalendarPage() {
   });
   const dayFiltered = selectedDateKey
     ? typeFiltered.filter(
-        (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
-      )
+      (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
+    )
     : typeFiltered;
   const monthDays = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
   const eventsByDay = useMemo(() => {
@@ -498,20 +498,18 @@ export default function CalendarPage() {
                   onClick={() =>
                     setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
                   }
-                  className={`relative min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${
-                    day.inMonth
+                  className={`relative min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${day.inMonth
                       ? 'bg-[#fdfdfd] border-gray-800 hover:-translate-y-1 hover:shadow-[2px_2px_0px_#333]'
                       : 'bg-gray-100 border-gray-400 text-gray-400'
-                  } ${isSelected ? 'ring-4 ring-yellow-400 bg-yellow-50 shadow-[2px_2px_0px_#333]' : ''}`}
+                    } ${isSelected ? 'ring-4 ring-yellow-400 bg-yellow-50 shadow-[2px_2px_0px_#333]' : ''}`}
                 >
                   <div
-                    className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${
-                      day.isToday
+                    className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${day.isToday
                         ? 'text-red-500 underline decoration-2 underline-offset-2'
                         : day.inMonth
                           ? 'text-gray-900'
                           : 'text-gray-400'
-                    }`}
+                      }`}
                     style={{
                       fontFamily: '"Permanent Marker"',
                       color: '#000000',
@@ -657,10 +655,10 @@ export default function CalendarPage() {
                           });
                         if (reasons?.vendor_application)
                           console.log(item, "reasons?.vendor_application", reasons?.vendor_application);
-                          chips.push({
-                            key: 'vendor_application',
-                            label: 'You applied to service it',
-                          });
+                        chips.push({
+                          key: 'vendor_application',
+                          label: 'You applied to service it',
+                        });
                         if (chips.length === 0)
                           chips.push({
                             key: item.kind,

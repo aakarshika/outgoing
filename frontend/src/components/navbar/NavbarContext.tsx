@@ -10,6 +10,20 @@ import type { LocationSuggestion } from '@/utils/geolocation';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
 import { useNearYou } from '@/utils/useNearYou';
 
+export function isNativeSidebarPath(path: string): boolean {
+    const isDashboard =
+        path === '/dashboard' || path.startsWith('/dashboard/');
+    const isCreateService = path === '/vendors/create';
+    const isManageEvent = path.includes('/host-event-management');
+    const isManageService = path.includes('/service-event-management');
+    return (
+        isDashboard ||
+        isCreateService ||
+        isManageEvent ||
+        isManageService
+    );
+}
+
 // Hook containing all state and calculations extracted from Navbar
 export function useNavbarData() {
     const { isAuthenticated, logout, user } = useAuth();
@@ -17,6 +31,14 @@ export function useNavbarData() {
     const location = useLocation();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(() => {
+        // if (typeof window === 'undefined') return false;
+        // const stored = window.localStorage.getItem('navbarSidebarState');
+        // if (stored === 'expanded') return true;
+        // if (stored === 'collapsed') return false;
+        // "Native" state is null -> native pages start open, others collapsed
+        return isNativeSidebarPath(window.location.pathname);
+    });
     const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
     const {
@@ -118,10 +140,22 @@ export function useNavbarData() {
         !!(event.user_applications && event.user_applications.length > 0);
     const isNotOnManagePage = !location.pathname.includes('manage');
     const shouldShowSearch = location.pathname === '/';
+    const isNativeSidebarRoute = isNativeSidebarPath(location.pathname);
 
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname]);
+
+    // Keep persistent sidebar state in sync with menu button toggles
+    useEffect(() => {
+        setSidebarExpanded(() => {
+            const next = isMenuOpen;
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('navbarSidebarState', next ? 'expanded' : 'collapsed');
+            }
+            return next;
+        });
+    }, [isMenuOpen]);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -149,12 +183,6 @@ export function useNavbarData() {
         } else {
             navigate('/');
         }
-    };
-
-    const handleSuggestionClick = (title: string) => {
-        setSearch(title);
-        setShowSuggestions(false);
-        navigate(`/?search=${encodeURIComponent(title)}`);
     };
 
     const handleLocationSuggestionClick = (suggestion: LocationSuggestion) => {
@@ -189,6 +217,10 @@ export function useNavbarData() {
             isQuickCreateOpen,
             setIsQuickCreateOpen,
 
+            // Sidebar persistence
+            sidebarExpanded,
+            // setSidebarExpanded,
+
             // Geolocation
             nearYouEnabled,
             nearYouName,
@@ -222,18 +254,18 @@ export function useNavbarData() {
             isVendor,
             isNotOnManagePage,
             shouldShowSearch,
+            isNativeSidebarRoute,
 
             // Handlers
             handleSearchSubmit,
-            handleSuggestionClick,
             handleLocationSuggestionClick,
         }),
         [
             isAuthenticated, logout, user, theme, toggleTheme, location, navigate,
-            isMenuOpen, isQuickCreateOpen, nearYouEnabled, nearYouName, radiusMiles, toggleNearYou,
+            isMenuOpen, isQuickCreateOpen, sidebarExpanded, nearYouEnabled, nearYouName, radiusMiles, toggleNearYou,
             search, locationSearch, showSuggestions, showLocationSuggestions, locationSuggestions,
             locationDropdownOpen, suggestions, alertsCount, isEventManagementRoute, eventId, event,
-            isEventHost, isVendor, isNotOnManagePage, shouldShowSearch
+            isEventHost, isVendor, isNotOnManagePage, shouldShowSearch, isNativeSidebarRoute
         ]
     );
 }

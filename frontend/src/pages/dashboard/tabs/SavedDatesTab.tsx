@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Media } from '@/components/ui/media';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import { useMyInterestedEvents } from '@/features/events/hooks';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCard';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import type { EventListItem } from '@/types/events';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
@@ -85,12 +85,12 @@ function EventCardRow({ event }: { event: EventListItem }) {
     <div className="space-y-1">
       <div className="flex flex-col lg:flex-row items-stretch gap-4">
         {/* Card on Left */}
-        <div className="flex-1 min-w-0" style={{ maxWidth: '400px' }}>
-          <ScrapbookEventCardLandscape event={event} />
+        <div className="flex-1 min-w-0">
+          <ScrapbookEventCardLandscape event={event} isBasicEventCard={false} />
         </div>
 
         {/* Info on Right */}
-        <div className="flex-1 flex flex-col justify-center gap-3 p-2 bg-transparent">
+        <div className="flex flex-col justify-center gap-3 p-2 bg-transparent" style={{ maxWidth: '400px' }}>
           <div>
             <div
               className="text-gray-900 text-lg mb-0.5"
@@ -141,6 +141,7 @@ function EventCardRow({ event }: { event: EventListItem }) {
           </div>
         </div>
       </div>
+
     </div>
   );
 }
