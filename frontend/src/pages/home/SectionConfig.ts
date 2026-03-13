@@ -7,6 +7,7 @@ export type SectionId =
   | 'trending_highlights'
   | 'this_week'
   | 'online'
+  | 'highlights_strip'
   | 'iconic_hosts'
   | 'make_your_event_happen'
   | 'recommended'
@@ -22,6 +23,7 @@ export const SIGNED_IN_SECTIONS: SectionId[] = [
   'nearby',
   'trending_highlights',
   'online',
+  'highlights_strip',
   'this_week',
   'iconic_hosts',
   'make_your_event_happen',
@@ -37,6 +39,7 @@ export const SIGNED_OUT_SECTIONS: SectionId[] = [
   'nearby',
   'trending_highlights',
   'online',
+  'highlights_strip',
   'this_week',
   'iconic_hosts',
   'make_your_event_happen',

@@ -133,20 +133,18 @@ export const WhenAndWhereQuickForm: React.FC<WhenAndWhereQuickFormProps> = ({
           type="button"
           onClick={toggleOnline}
           disabled={readonly}
-          className={`relative h-5 w-10 border transition-all ${
-            locationMode === 'online'
+          className={`relative h-5 w-10 border transition-all ${locationMode === 'online'
               ? 'bg-blue-600 border-blue-600'
               : 'bg-transparent border-gray-300'
-          } ${readonly ? 'opacity-60 cursor-not-allowed' : ''}`}
+            } ${readonly ? 'opacity-60 cursor-not-allowed' : ''}`}
           aria-pressed={locationMode === 'online'}
           aria-label="Toggle online event"
         >
           <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${
-              locationMode === 'online'
+            className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${locationMode === 'online'
                 ? 'left-[18px] bg-white'
                 : 'left-0.5 bg-gray-400'
-            }`}
+              }`}
           />
         </button>
       </div>
@@ -221,10 +219,6 @@ export const WhenAndWhereQuickForm: React.FC<WhenAndWhereQuickFormProps> = ({
           <input type="hidden" name="location_address" value="Online Event" />
         </>
       )}
-
-      <div className="pt-2 border-t border-dashed border-blue-200">
-        <RecurringForm {...recurringProps} readonly={readonly} />
-      </div>
     </div>
   );
 };

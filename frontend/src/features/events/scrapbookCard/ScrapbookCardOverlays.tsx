@@ -111,7 +111,7 @@ export function LiveBadge({ sx = {}, compact }: LiveBadgeProps) {
         color: '#fff',
         p: compact ? '2px 6px' : '2px 8px',
         borderRadius: compact ? 4 : '4px',
-        fontFamily: '"Permanent Marker"',
+        fontFamily: '"serif"',
         fontSize: compact ? '0.7rem' : '0.8rem',
         ...(compact
           ? {}
@@ -159,7 +159,7 @@ export function HostVendorBadge({
         color: '#fff',
         p: variant === 'short' ? '2px 6px' : '2px 8px',
         borderRadius: variant === 'short' ? 2 : '2px',
-        fontFamily: '"Permanent Marker"',
+        fontFamily: '"serif"',
         fontSize: variant === 'short' ? '0.65rem' : '0.7rem',
         ...(variant === 'full' && {
           transform: 'rotate(-3deg)',

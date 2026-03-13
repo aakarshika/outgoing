@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 type ThemeSlice = { bg: string; accent: string; pattern: string };
 
-interface NoImagePlaceholderProps {
+interface ImageWatermarkPlaceholderProps {
   theme?: ThemeSlice;
   /** Size of the GO symbol. 'sm' for landscape strip, 'md' for portrait card. */
   size?: 'sm' | 'md';
@@ -20,12 +20,12 @@ interface NoImagePlaceholderProps {
 
 const GO_SYMBOL_URL = '/assets/go-symbol.png';
 
-export function NoImagePlaceholder({
+export function ImageWatermarkPlaceholder({
   theme = { bg: 'rgb(242, 242, 242)', accent: 'rgb(159, 100, 28)', pattern: 'none' },
   size = 'md',
   iconOnly = false,
   sx = {},
-}: NoImagePlaceholderProps) {
+}: ImageWatermarkPlaceholderProps) {
   const iconSize = size === 'sm' ? 56 : 120;
   const opacity = size === 'sm' ? 0.2 : 0.14;
 

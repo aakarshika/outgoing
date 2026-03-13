@@ -284,7 +284,7 @@ export function ManageNeedsTab({
                   </h3>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span
-                      className={`px-2 py-0.5 border-2 border-gray-800 text-xs font-bold ${need.status === 'open' ? 'bg-green-200 text-green-900' : 'bg-gray-200 text-gray-900'}`}
+                      className={`px-2 py-0.5 border-2 border-gray-800 text-xs font-bold ${(need.status === 'open' || !need.status || need.status === "pending") ? 'bg-green-200 text-green-900' : 'bg-gray-200 text-gray-900'}`}
                       style={{ fontFamily: '"Permanent Marker", cursive' }}
                     >
                       {need.status.toUpperCase()}
@@ -336,7 +336,7 @@ export function ManageNeedsTab({
                       Applicants
                     </span>
                   </div>
-                  {need.status === 'open' && (
+                  {(need.status === 'open' || !need.status || need.status === "pending") && (
                     <Link
                       to={`/vendors?eventId=${eventId}&needId=${need.id}&category=${encodeURIComponent(
                         need.category,
@@ -419,7 +419,7 @@ export function ManageNeedsTab({
                           )}
                         </div>
 
-                        {app.status === 'pending' && need.status === 'open' && (
+                        {app.status === 'pending' && (need.status === 'open' || !need.status || need.status === "pending") && (
                           <div className="flex flex-col gap-2 shrink-0">
                             <Button
                               size="sm"

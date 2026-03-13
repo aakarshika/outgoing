@@ -155,6 +155,9 @@ class Command(BaseCommand):
                         title=e["title"],
                         defaults={
                             "category": category_obj,
+                            "description": e.get("description", ""),
+                            "location_name": e.get("location_name", "Default Venue"),
+                            "location_address": e.get("location_address", ""),
                             "start_time": e["start_time"],
                             "end_time": e["end_time"],
                             "status": e["status"],

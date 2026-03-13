@@ -7,7 +7,7 @@ The core concept is to make the page feel like a physical notebook or scrapbook.
 
 - **Background**: A "Graph Paper" texture (light grey/blue grid on off-white paper).
 - **Typography**: 
-    - **Headers**: "Permanent Marker" (Bold, marker-style).
+    - **Headers**: "serif" (Bold, marker-style).
     - **Notes/Comments**: "Caveat" (Casual handwriting).
     - **Reading**: "Inter" (Clean sans-serif).
 - **Styling Hooks**: 

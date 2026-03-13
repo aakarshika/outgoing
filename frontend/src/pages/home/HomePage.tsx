@@ -11,6 +11,7 @@ import {
   CreateEventCTASection,
   FeaturedCarouselSection,
   HeroSection,
+  HomePageNegativeStripGallery,
   IconicHostsSection,
   LastWeekMemoriesSection,
   MakeYourEventHappenSection,
@@ -66,6 +67,8 @@ export default function HomePage() {
         return <TrendingHighlightsSection key={id} />;
       case 'online':
         return <OnlineSection key={id} />;
+      case 'highlights_strip':
+        return <HomePageNegativeStripGallery key={id} />;
       case 'iconic_hosts':
         return <IconicHostsSection key={id} />;
       case 'make_your_event_happen':
@@ -87,11 +90,9 @@ export default function HomePage() {
     <ThemeProvider theme={scrapbookTheme}>
       <Box
         sx={{
-          minHeight: '100vh',
           overflowX: 'hidden',
           backgroundSize: '20px 20px',
           backgroundPosition: '0 0, 10px 10px',
-          pb: 12,
           color: '#f8c163ff',
         }}
       >

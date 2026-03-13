@@ -6,7 +6,6 @@ export const PlatformDescriptionCard = () => {
     <Box
       sx={{
         width: '100%',
-        height: '100%',
         minHeight: 280,
         p: 3,
         bgcolor: '#f8fafc', // Very subtle slate/white paper
@@ -38,7 +37,7 @@ export const PlatformDescriptionCard = () => {
       <Typography
         variant="h5"
         sx={{
-          fontFamily: '"Permanent Marker"',
+          fontFamily: '"serif"',
           color: '#0f172a',
           mb: 2,
           transform: 'rotate(-2deg)',

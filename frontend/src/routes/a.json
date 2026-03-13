@@ -1,0 +1,37 @@
+context steps:  
+  select event category 
+  select user type - host/vendor/goer
+    createHost():
+      create 1-5 events hosted - select from list of event categories
+        event will have capacity 2-10
+        create 0-7 highlights for each event hosted
+        pick 0-1 no needs or needs 
+          if no - change the lifecycle state of the first event to 'published'
+          if yes, create 1-6 needs.
+            for each need service- 
+              create 1-2 vendors 
+                follow createVendor() process. 
+              add vendor applications for the event 
+                application status is 0-1 for accepted or pending.
+                if status is accepted:
+                  lifecycle state of second event to 'published'
+                  pick number between 1-capacity 
+                    sell that many tickets :
+                      pick from existing goers of same category, or create goers. 
+                      follow createGoer() for current category.
+                    if the sold number is greater than 20% of capacity:
+                      update the event state to 'event ready'
+                      pick between 1-number sold.
+                        change status of tickets to "used"
+                      pick 0-1 for live
+                        change the event state to 'live'
+                        pick nHigh = 1-capacity/2 for highlights  
+                          add highlights by the first nHigh goers. 
+                        pick nRev = 1-capacity/2 for reviewers 
+                          add reviews by the first nRev goers. 
+
+
+
+
+
+

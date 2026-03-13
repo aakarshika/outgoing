@@ -6,7 +6,6 @@ export const StarCutoutCard = () => {
     <Box
       sx={{
         width: '100%',
-        height: '100%',
         minHeight: 280,
         p: 3,
         bgcolor: '#fde047', // Bright yellow
@@ -25,7 +24,7 @@ export const StarCutoutCard = () => {
 
       <Typography
         sx={{
-          fontFamily: '"Permanent Marker"',
+          fontFamily: '"serif"',
           color: '#713f12',
           fontSize: '1.2rem',
           lineHeight: 1.1,

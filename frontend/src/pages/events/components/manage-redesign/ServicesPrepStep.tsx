@@ -376,7 +376,7 @@ export function ServicesPrepStep({ event, readonly }: ServicesPrepStepProps) {
                                 <span className="font-bold">Filled by host</span>
                               </>
                             )}
-                            {need.status === 'open' && (
+                            {(need.status === 'open' || !need.status || need.status === "pending") && (
                               <>
                                 <Link
                                   to={`/vendors?eventId=${event.id}&needId=${need.id}&category=${encodeURIComponent(
@@ -645,7 +645,7 @@ export function TooltipForHostOverride({
   if (need.status === 'filled') {
     return (
       <div className="relative">
-        <div className="absolute top-0 left-0 z-10 max-w-[260px]">
+        <div className="absolute top-0 left-0 z-10 max-w-[560px]">
           <div className="relative border-2 border-gray-900 bg-white shadow-[4px_4px_0px_#333] px-3 py-2 text-gray-900">
             <div className="absolute -left-2 top-3 h-3 w-3 rotate-45 border-2 border-gray-900 bg-white" />
             <p className="text-[10px] uppercase tracking-[2px] text-gray-500 font-black">
@@ -661,17 +661,18 @@ export function TooltipForHostOverride({
   }
   return (
     <div className="relative">
-      <div className="absolute top-0 left-0 z-10 max-w-[260px]">
+      <div className="absolute top-0 left-0 z-10 max-w-[560px]">
         <div className="relative border-2 border-gray-900 bg-white shadow-[4px_4px_0px_#333] px-3 py-2 text-gray-900">
           <div className="absolute -left-2 top-3 h-3 w-3 rotate-45 border-2 border-gray-900 bg-white" />
           <p className="text-[10px] uppercase tracking-[2px] text-gray-500 font-black">
             Host Override
           </p>
           <p className="text-xs text-gray-700 mt-1">
-            Mark this need as filled by the host. You can undo later.
+            [<em>If your needs are not met by any vendor in time, you can provide it as the host.</em>]
+            You can undo this later.
           </p>
           <div className="mt-2 flex items-center gap-2">
-            {need.status === 'open' && !readonly && (
+            {(need.status === 'open' || !need.status || need.status === "pending") && !readonly && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

@@ -8,7 +8,7 @@ export {
   formatEventPrice,
   getEventCardRoles,
 } from './eventCardUtils';
-export { NoImagePlaceholder } from './NoImagePlaceholder';
+export { ImageWatermarkPlaceholder } from './ImageWatermarkPlaceholder';
 export {
   CategorySticker,
   CategoryStickerCompact,

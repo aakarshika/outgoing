@@ -46,6 +46,7 @@ export interface ComicSinkButtonProps
   iconClassName?: string;
   color?: string;
   accentColor?: string;
+  glowColor?: string;
   /** Button label (text). When asChild, use this; otherwise children is the label. */
   label?: React.ReactNode;
 }
@@ -65,6 +66,7 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
       label,
       color = '#000000',
       accentColor = '#ffffff',
+      glowColor = 'rgba(0, 225, 255, 0.3)',
       style,
       ...props
     },
@@ -77,7 +79,7 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
 
     const depthX = 2;
     const depthY = 3;
-    
+
     // ComicSinkButton logic:
     // Rest: Front at (0, 0), Shadow at (0, 0)
     // Hover: Front at (depthX, depthY), Shadow at (0, 0)
@@ -85,7 +87,7 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
     const frontRestY = 0;
     const frontHoverX = depthX;
     const frontHoverY = depthY;
-    
+
     // Scale effect: slightly smaller on hover to simulate pushing down
     const shadowHoverScale = 1;
     const shadowRestScale = 0.95;
@@ -101,6 +103,7 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
       '--front-hover-y': `${frontHoverY}px`,
       '--shadow-rest-scale': shadowRestScale,
       '--shadow-hover-scale': shadowHoverScale,
+      '--glow-color': glowColor,
       fontFamily: '"Permanent Marker"',
       ...style,
     } as React.CSSProperties;
@@ -143,7 +146,12 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
           {iconContent}
           {textContent != null && <span className="leading-none">{textContent}</span>}
         </span>
-        <span className="absolute inset-0">
+        <span className={cn(
+          "absolute inset-0 transition-shadow duration-150 ease-out",
+          shape === 'square' && 'rounded-none',
+          shape === 'round' && 'rounded-full',
+          shape === 'rounded' && 'rounded-md',
+        )}>
           {/* Shadow layer: stays at (0,0) */}
           <span
             aria-hidden
@@ -154,7 +162,8 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
               shape === 'square' && 'rounded-none',
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
-              'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
+              // 'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
+              'border-2 border-[var(--glow-color)] bg-[var(--glow-color)]',
             )}
           >
           </span>
@@ -165,11 +174,14 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
               'absolute inset-0 z-[1] flex items-center justify-center gap-2 transition-all duration-150 ease-out',
               'translate-x-[var(--front-rest-x)] translate-y-[var(--front-rest-y)]',
               'group-hover:translate-x-[var(--front-hover-x)] group-hover:translate-y-[var(--front-hover-y)]',
-              'active:translate-x-[calc(var(--front-hover-x)*1.5)] active:translate-y-[calc(var(--front-hover-y)*1.5)]',
+              // 'active:translate-x-[calc(var(--front-hover-x)*1.5)] active:translate-y-[calc(var(--front-hover-y)*1.5)]',
               shape === 'square' && 'rounded-none',
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
-              'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
+              // "group-hover:shadow-[inset_4px_4px_16px_2px_var(--glow-color)]",
+              // 'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
+              // 'group-hover:border-[1px] group-hover:border-[var(--glow-color)]',
+              "group-hover:shadow-[inset_4px_4px_16px_2px_var(--glow-color)]",
               (isTransparent
                 ? 'bg-white/20 backdrop-blur-md'
                 : 'bg-[var(--accent-color)]'),

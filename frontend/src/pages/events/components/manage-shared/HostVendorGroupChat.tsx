@@ -99,10 +99,12 @@ export const HostVendorGroupChat: React.FC<HostVendorGroupChatProps> = ({
   const { data: messagesResponse } = useHostVendorMessages(eventId);
   const addMessage = useAddHostVendorMessage();
   const [messageText, setMessageText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -177,6 +179,7 @@ export const HostVendorGroupChat: React.FC<HostVendorGroupChatProps> = ({
 
       {/* Messages List */}
       <Box
+        ref={scrollRef}
         sx={{
           borderTop: '2px dashed #ccc',
           flex: 1,
@@ -204,7 +207,6 @@ export const HostVendorGroupChat: React.FC<HostVendorGroupChatProps> = ({
             <MessageItem key={message.id} message={message} />
           ))
         )}
-        <div ref={messagesEndRef} />
       </Box>
 
       {/* Input Area */}

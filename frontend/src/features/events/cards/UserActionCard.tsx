@@ -7,7 +7,6 @@ export const UserActionCard = () => {
     <Box
       sx={{
         width: '100%',
-        height: '100%',
         minHeight: 280,
         p: 3,
         bgcolor: '#ebf8ff', // Soft blue
@@ -35,7 +34,7 @@ export const UserActionCard = () => {
 
       <Typography
         variant="h5"
-        sx={{ fontFamily: '"Permanent Marker"', color: '#1e3a8a', mb: 3 }}
+        sx={{ fontFamily: '"serif"', color: '#1e3a8a', mb: 3 }}
       >
         Get Involved!
       </Typography>

@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useMatch, useNavigate, useParams } from 'react-router-dom';
+import { useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/features/auth/hooks';
@@ -24,7 +24,6 @@ import { compressImage } from '@/utils/image';
 
 import { BasicDetailsForm } from './components/manage-redesign/BasicDetailsForm';
 import { BasicQuick } from './components/manage-redesign/BasicQuick';
-import { CheckInInstructions } from './components/manage-redesign/CheckInInstructions';
 import { EventFeaturesTags } from './components/manage-redesign/EventFeaturesTags';
 import { EventReadinessStep } from './components/manage-redesign/EventReadinessStep';
 import { LiveAttendanceStep } from './components/manage-redesign/LiveAttendanceStep';
@@ -112,6 +111,7 @@ export default function ManageForHostPage() {
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const hostStepMatch = useMatch('/events/:id/host-event-management/:step');
   const activeSlug = hostStepMatch?.params.step;
@@ -325,6 +325,18 @@ export default function ManageForHostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputMode, setInputMode] = useState<'quick' | 'advanced'>('quick');
   const [isDirty, setIsDirty] = useState(false);
+
+  // If we arrive from navbar quick-create, force the desired input mode.
+  // We remove the param after applying so refresh/back doesn't keep re-triggering it.
+  useEffect(() => {
+    const requestedMode = searchParams.get('mode');
+    if (requestedMode === 'quick' || requestedMode === 'advanced') {
+      setInputMode(requestedMode);
+      const next = new URLSearchParams(searchParams);
+      next.delete('mode');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // ── Seed state from event ─────────────────────────────────────────────────
   useEffect(() => {

@@ -223,12 +223,13 @@ export function QuickCreateEventModal({
 
       handleClose();
 
-      if (advancedOptions) {
-        navigate(`/events/${result.data.id}/host-event-management/basic-details`);
-      } else if (status === 'published') {
+      if (status === 'published') {
         navigate(`/events/${result.data.id}`);
       } else {
-        navigate('/dashboard/events');
+        // Drafts should go straight into host management on the quick form.
+        // (Advanced button still routes to the same page but starts in advanced mode.)
+        const mode = advancedOptions ? 'advanced' : 'quick';
+        navigate(`/events/${result.data.id}/host-event-management/basic-details?mode=${mode}`);
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to create event');

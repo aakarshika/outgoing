@@ -9,6 +9,7 @@ import {
 } from '@/features/events/hooks';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
+import { HeroNegativeStripGallery } from '@/pages/events/components/HeroNegativeStripGallery';
 import { useNearYou } from '@/utils/useNearYou';
 
 // --- Reusable Feed Section ---
@@ -42,6 +43,8 @@ export const GenericFeedSection = ({
       onSeeAll={viewAllPath ? () => navigate(viewAllPath) : undefined}
     />
   );
+  // return null;
+  return section;
 
   if (decorative) {
     return (
@@ -63,7 +66,6 @@ export const GenericFeedSection = ({
     );
   }
 
-  return section;
 };
 
 // --- Trending ---
@@ -94,18 +96,16 @@ export const NearbySection = () => {
     return (
       <Box
         sx={{
-          py: 6,
           px: { xs: 2, sm: 4, lg: 8 },
           bgcolor: '#f0fdf4',
           borderTop: '2px dashed #9ca3af',
           borderBottom: '2px dashed #9ca3af',
           textAlign: 'center',
-          my: 4,
         }}
       >
         <Typography
           variant="h5"
-          sx={{ fontFamily: '"Permanent Marker"', color: '#1a1a1a', mb: 1 }}
+          sx={{ fontFamily: '"serif"', color: '#1a1a1a', mb: 1 }}
         >
           📍 Find Events Near You
         </Typography>
@@ -124,7 +124,7 @@ export const NearbySection = () => {
             px: 4,
             py: 1.5,
             borderRadius: '4px',
-            fontFamily: '"Permanent Marker"',
+            fontFamily: '"serif"',
             textTransform: 'none',
             fontSize: '1.1rem',
             '&:hover': { bgcolor: '#2563eb' },
@@ -164,7 +164,7 @@ export const NearbySection = () => {
           <Typography
             variant="h5"
             sx={{
-              fontFamily: '"Permanent Marker"',
+              fontFamily: '"serif"',
               color: '#374151',
               mb: 1.5,
             }}
@@ -189,7 +189,7 @@ export const NearbySection = () => {
             sx={{
               bgcolor: '#f8c163',
               color: '#1a1a1a',
-              fontFamily: '"Permanent Marker"',
+              fontFamily: '"serif"',
               px: 4,
               py: 1.5,
               fontSize: '1.2rem',
@@ -267,5 +267,45 @@ export const TrendingHighlightsSection = () => {
         />
       )}
     />
+  );
+};
+
+// --- Home Page Negative Strip Gallery ---
+export const HomePageNegativeStripGallery = () => {
+  const { data, isLoading } = useTrendingHighlights(20);
+  const highlights = data?.data || [];
+
+  // Extract images and titles from highlights
+  const images = highlights.map((h: any) => h.media_file);
+  const title = '✨ Highlights';
+
+  // Create a mock host object for the gallery
+  const host = {
+    username: highlights[0]?.author_username || 'host',
+  };
+
+  if (isLoading || !highlights.length) return null;
+
+  return (
+    <Box
+      sx={{
+        mx: -4,
+        perspective: '1000px',
+        overflow: 'visible',
+      }}
+    >
+      <Box
+        sx={{
+          transform: 'rotateY(-15deg) rotateX(5deg)',
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <HeroNegativeStripGallery
+          images={images}
+          title={title}
+          host={host}
+        />
+      </Box>
+    </Box>
   );
 };

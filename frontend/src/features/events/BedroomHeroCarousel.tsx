@@ -170,9 +170,9 @@ const CustomCardCarouselWrapper = ({
           width: '100%',
           height: '100%',
           transformOrigin: 'top center',
-          transform: `rotate(${rotation}deg)`,
+          transform: isFocused ? 'scale(1.1) rotate(0deg)' : `rotate(${rotation}deg)`,
           transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          '& > *': { width: '100%', height: isFocused ? 'auto' : '100%', m: 0 },
+          '& > *': { width: '100%',  m: 0 },
           '&:hover': {
             transform: `rotate(${rotationhover}deg)`,
           },
@@ -181,7 +181,7 @@ const CustomCardCarouselWrapper = ({
         {event ? (
           <ScrapbookEventCard
             event={eventdata}
-            isFocused={isFocused}
+            // isFocused={isFocused}
             showClip
             rotation={rotation}
             rotationhover={rotationhover}
@@ -215,7 +215,7 @@ const CustomCardCarouselWrapper = ({
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: '100%',
+                  transform: 'translateY(20px)',
                   bgcolor: 'transparent',
                 }}
               >
@@ -250,23 +250,51 @@ export function BedroomHeroCarousel() {
 
   const mixedEvents = useMemo(() => {
     const result: MixedCarouselItem[] = [];
-    if (events.length === 0) return result;
 
-    let highlightIdx = 0;
-    for (let i = 0; i < events.length; i++) {
-      result.push({ type: 'event', data: events[i] });
+    // 1. Prepare static custom cards
+    const customCards: MixedCarouselItem[] = [
+      { type: 'custom', index: 0 },
+      { type: 'custom', index: 1 },
+      { type: 'custom', index: 2 },
+      { type: 'custom', index: 3 },
+      { type: 'custom', index: 4 },
+    ];
 
-      // Every 2nd card, mix a highlight if available
-      if ((i + 1) % 2 === 0 && highlightIdx < highlights.length) {
-        result.push({ type: 'highlight', data: highlights[highlightIdx] });
-        highlightIdx++;
+    // 2. Prepare dynamic items (events and highlights interleaved)
+    const dynamicItems: MixedCarouselItem[] = [];
+    const maxDynamic = Math.max(events.length, highlights.length);
+    for (let i = 0; i < maxDynamic; i++) {
+      if (i < events.length) {
+        dynamicItems.push({ type: 'event', data: events[i] });
       }
-
-      // Every 3rd card, mix a custom card
-      if ((i + 1) % 3 === 0 && i !== events.length - 1) {
-        result.push({ type: 'custom', index: Math.floor(Math.random() * 5) });
+      if (i < highlights.length) {
+        dynamicItems.push({ type: 'highlight', data: highlights[i] });
       }
     }
+
+    // 3. Interleave dynamic items with custom cards
+    // If no dynamic items, just show custom cards
+    if (dynamicItems.length === 0) {
+      return customCards;
+    }
+
+    let dynamicPtr = 0;
+    let customPtr = 0;
+
+    // interleave: 2 dynamic items, then 1 custom card
+    while (dynamicPtr < dynamicItems.length || customPtr < customCards.length) {
+      // Add up to 2 dynamic items
+      for (let j = 0; j < 2 && dynamicPtr < dynamicItems.length; j++) {
+        result.push(dynamicItems[dynamicPtr++]);
+      }
+      // Then add 1 custom card
+      if (customPtr < customCards.length) {
+        result.push(customCards[customPtr++]);
+      }
+
+      if (dynamicPtr >= dynamicItems.length && customPtr >= customCards.length) break;
+    }
+
     return result;
   }, [events, highlights]);
 
@@ -336,14 +364,14 @@ export function BedroomHeroCarousel() {
     return <Box sx={{ height: 620, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 2 }} />;
   }
 
-  if (events.length === 0) {
+  if (mixedEvents.length === 0) {
     return (
       <Box sx={{ py: 10, width: '100%', textAlign: 'center' }}>
         <Typography
           variant="body1"
           sx={{ fontFamily: 'serif', fontStyle: 'italic', color: '#666' }}
         >
-          No featured events to show right now.
+          No featured content to show right now.
         </Typography>
       </Box>
     );

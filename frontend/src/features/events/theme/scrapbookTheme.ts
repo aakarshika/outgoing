@@ -4,14 +4,14 @@ export const scrapbookTheme = createTheme({
   typography: {
     fontFamily: '"Inter", sans-serif',
     h1: {
-      fontFamily: '"Permanent Marker", cursive',
+      fontFamily: '"serif", cursive',
       transform: 'rotate(-1deg)',
     },
     h2: {
-      fontFamily: '"Permanent Marker", cursive',
+      fontFamily: '"serif", cursive',
     },
     h3: {
-      fontFamily: '"Permanent Marker", cursive',
+      fontFamily: '"serif", cursive',
     },
   },
   components: {

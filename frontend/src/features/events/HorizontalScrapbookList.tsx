@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 
 import { ScrapbookEventCard } from './ScrapbookEventCard';
+import { SideEnvelope } from './SideEnvelope';
 
 interface HorizontalScrapbookListProps {
   title?: string;
@@ -42,96 +43,102 @@ export function HorizontalScrapbookList({
     const scrollAmount = direction === 'left' ? -400 : 400;
     scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
-
-  // Always show the section even if it has no items.
-  return (
-    <Box sx={{ py: 0, position: 'relative', overflow: 'hidden' }}>
-      {title && (
-        <Box
-          sx={{
-            px: { xs: 2, sm: 4, lg: 8 },
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            position: 'relative',
-          }}
-        >
-          <Box sx={{ position: 'relative' }}>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: -10,
-                left: -10,
-                width: 40,
-                height: 20,
-                bgcolor: 'rgba(251, 191, 36, 0.4)',
-                transform: 'rotate(-5deg)',
-                zIndex: 0,
-              }}
-            />
-            <Typography
-              variant="h4"
-              sx={{
-                fontFamily: '"Permanent Marker"',
-                color: '#1a1a1a',
-                fontSize: { xs: '1rem', sm: '1rem' },
-                position: 'relative',
-                zIndex: 1,
-              }}
-            >
-              {title}
-            </Typography>
-          </Box>
-          {onSeeAll && (
-            <Button
-              onClick={onSeeAll}
-              sx={{
-                fontFamily: 'serif',
-                textTransform: 'none',
-                color: '#666',
-                '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
-              }}
-            >
-              See more →
-            </Button>
-          )}
-        </Box>
-      )}
-      {/* Left Chevron */}
-      {showLeftChevron && (
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            zIndex: 10,
-            width: 80,
-            display: { xs: 'none', md: 'flex' },
-            alignItems: 'center',
-            background: 'linear-gradient(to right, #f8f9fa 20%, transparent)',
-            pointerEvents: 'none',
-          }}
-        >
-          <Button
-            onClick={() => scroll('left')}
+  const Title = () => {
+    return (
+      <Box
+        sx={{
+          px: { xs: 2, sm: 4, lg: 8 },
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <Box
             sx={{
-              minWidth: 40,
+              position: 'absolute',
+              top: -10,
+              left: -10,
               width: 40,
-              height: 40,
-              borderRadius: '50%',
-              bgcolor: '#fff',
-              boxShadow: 2,
-              ml: 2,
-              pointerEvents: 'auto',
-              color: '#000',
-              '&:hover': { bgcolor: '#f0f0f0' },
+              height: 20,
+              bgcolor: 'rgba(251, 191, 36, 0.4)',
+              transform: 'rotate(-5deg)',
+              zIndex: 0,
+            }}
+          />
+          <Typography
+            variant="h4"
+            sx={{
+              fontFamily: '"serif"',
+              color: '#1a1a1a',
+              fontSize: { xs: '1rem', sm: '1rem' },
+              position: 'relative',
+              zIndex: 1,
             }}
           >
-            <ChevronLeft size={24} />
-          </Button>
+            {title}
+          </Typography>
         </Box>
-      )}
+        {onSeeAll && (
+          <Button
+            onClick={onSeeAll}
+            sx={{
+              fontFamily: 'serif',
+              textTransform: 'none',
+              color: '#666',
+              '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
+            }}
+          >
+            See more →
+          </Button>
+        )}
+      </Box>
+    );
+  };
+
+  const LeftChevronButton = () => {
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 10,
+          width: 80,
+          display: { xs: 'none', md: 'flex' },
+          alignItems: 'center',
+          background: 'linear-gradient(to right, #f8f9fa 20%, transparent)',
+          pointerEvents: 'none',
+        }}
+      >
+        <Button
+          onClick={() => scroll('left')}
+          sx={{
+            minWidth: 40,
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            bgcolor: '#fff',
+            boxShadow: 2,
+            ml: 2,
+            pointerEvents: 'auto',
+            color: '#000',
+            '&:hover': { bgcolor: '#f0f0f0' },
+          }}
+        >
+          <ChevronLeft size={24} />
+        </Button>
+      </Box>
+    );
+  };
+  const ListItems = () => {
+    return (
 
       <Box
         ref={scrollContainerRef}
@@ -141,9 +148,11 @@ export function HorizontalScrapbookList({
           gap: { xs: 1, sm: 2, md: 3 },
           overflowX: 'auto',
           overflowY: 'hidden',
+          scrollbarWidth: 'none',
           px: { xs: 2, sm: 4, lg: 8 },
           pb: 4,
           pt: 2,
+          pr: { xs: 4, sm: 6, lg: 20 },
           // scrollSnapType: 'x mandatory',
           // scrollbarWidth: 'none',
           // '&::-webkit-scrollbar': { display: 'none' },
@@ -223,41 +232,66 @@ export function HorizontalScrapbookList({
         )}
       </Box>
 
-      {/* Right Chevron */}
-      {showRightChevron && (
-        <Box
+    );
+  };
+  const RightChevronButton = () => {
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 10,
+          width: 80,
+          display: { xs: 'none', md: 'flex' },
+          alignItems: 'center',
+          // background: 'linear-gradient(to left, #f8f1df 20%, transparent)',
+          pointerEvents: 'none',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Button
+          onClick={() => scroll('right')}
           sx={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            zIndex: 10,
-            width: 80,
-            display: { xs: 'none', md: 'flex' },
-            alignItems: 'center',
-            background: 'linear-gradient(to l, #f8f9fa 20%, transparent)',
-            pointerEvents: 'none',
-            justifyContent: 'flex-end',
+            minWidth: 40,
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            bgcolor: '#fff',
+            boxShadow: 2,
+            mr: 2,
+            pointerEvents: 'auto',
+            color: '#000',
+            '&:hover': { bgcolor: '#f0f0f0' },
           }}
         >
-          <Button
-            onClick={() => scroll('right')}
-            sx={{
-              minWidth: 40,
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              bgcolor: '#fff',
-              boxShadow: 2,
-              mr: 2,
-              pointerEvents: 'auto',
-              color: '#000',
-              '&:hover': { bgcolor: '#f0f0f0' },
-            }}
-          >
-            <ChevronRight size={24} />
-          </Button>
-        </Box>
+          <ChevronRight size={24} />
+        </Button>
+      </Box>
+    );
+  };
+
+
+
+
+
+  // Always show the section even if it has no items.
+  return (
+    <Box sx={{ py: 0, position: 'relative', overflow: 'hidden' }}>
+      {title && (
+        <Title />
+      )}
+      {/* Left Chevron */}
+      {showLeftChevron && (
+        <LeftChevronButton />
+      )}
+      <SideEnvelope>
+        <ListItems />
+      </SideEnvelope>
+      {/* Right Chevron */}
+      {showRightChevron && (
+        <RightChevronButton />
       )}
     </Box>
   );

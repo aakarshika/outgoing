@@ -28,12 +28,23 @@ export const BasicQuick: React.FC<BasicQuickProps> = ({
       background="bg-[#fcf8f2] border-2 border-dashed border-gray-300"
       rotation={-0.2}
     >
-      <div className="grid grid-cols-2 gap-4">
+      {/* Desktop View */}
+      <div className="hidden md:grid grid-cols-2 gap-4">
         <div className="col-span-1 space-y-4">
           <BasicDetailsQuickForm {...props} />
           <EventFeaturesQuickForm {...eprops} />
         </div>
         <div className="col-span-1 space-y-4">
+          <WhenAndWhereQuickForm {...wprops} />
+          <TicketsAndCapacityQuickForm {...tprops} />
+        </div>
+      </div>
+
+      {/* Mobile View */}
+      <div className="grid grid-cols-1 md:hidden gap-4">
+        <div className="space-y-4">
+          <BasicDetailsQuickForm {...props} />
+          <EventFeaturesQuickForm {...eprops} />
           <WhenAndWhereQuickForm {...wprops} />
           <TicketsAndCapacityQuickForm {...tprops} />
         </div>

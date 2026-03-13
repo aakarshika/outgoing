@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { Calendar } from 'lucide-react';
 
-import { NoImagePlaceholder } from '@/features/events/scrapbookCard/NoImagePlaceholder';
+import { ImageWatermarkPlaceholder } from '@/features/events/scrapbookCard/ImageWatermarkPlaceholder';
 
 import { Hostname } from './Hostname';
 

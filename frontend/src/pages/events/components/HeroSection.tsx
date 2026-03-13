@@ -103,6 +103,7 @@ export const HeroSection = ({
                   sx={{
                     fontSize: { xs: '2.0rem', md: '3rem' },
                     position: 'relative',
+                    fontFamily: '"Permanent Marker"',
                     zIndex: 1,
                     color: 'inherit',
                     textShadow:
@@ -185,7 +186,7 @@ export const HeroSection = ({
             }}
           >
             {event.lifecycle_state === 'draft' ||
-            event.lifecycle_state === 'published' ? (
+              event.lifecycle_state === 'published' ? (
               <Box
                 sx={{
                   width: '100%',

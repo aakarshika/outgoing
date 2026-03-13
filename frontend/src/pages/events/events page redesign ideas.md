@@ -29,9 +29,9 @@ import { createTheme } from '@mui/material/styles';
 
 export const scrapbookTheme = createTheme({
   typography: {
-    fontFamily: '"Inter", "Permanent Marker", cursive',
-    h1: { fontFamily: '"Permanent Marker", cursive', transform: 'rotate(-1deg)' },
-    h2: { fontFamily: '"Permanent Marker", cursive' },
+    fontFamily: '"Inter", "serif", cursive',
+    h1: { fontFamily: '"serif", cursive', transform: 'rotate(-1deg)' },
+    h2: { fontFamily: '"serif", cursive' },
   },
   components: {
     MuiPaper: {
@@ -147,7 +147,7 @@ const TicketStub = ({ type, price }) => (
       flexDirection: 'column', justifyContent: 'center', alignItems: 'center' 
     }}>
       <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>ADMIT ONE</Typography>
-      <Typography variant="h5" sx={{ fontFamily: '"Permanent Marker"', color: 'primary.main' }}>${price}</Typography>
+      <Typography variant="h5" sx={{ fontFamily: '"serif"', color: 'primary.main' }}>${price}</Typography>
     </Box>
 
     {/* Details Section */}
@@ -192,7 +192,7 @@ const PolaroidHighlight = ({ image, caption, user }) => {
       />
       <Typography 
         sx={{ 
-          fontFamily: '"Permanent Marker", cursive', 
+          fontFamily: '"serif", cursive', 
           fontSize: '1.1rem', 
           color: '#333',
           textAlign: 'center'
@@ -284,7 +284,7 @@ The "Lift": A heavy shadow on the bottom-right corner to make it look like the p
 
 Colors: Soft pastels like #fff740 (Classic Yellow), #ff7eb9 (Pink), and #7afcff (Blue).
 
-Handwriting: The comment text uses your handwritten font ("Permanent Marker" or "Caveat").
+Handwriting: The comment text uses your handwritten font ("serif" or "Caveat").
 
 TypeScript
 const ReviewPostIt = ({ username, rating, comment, color = '#fff740' }) => {

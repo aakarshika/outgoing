@@ -148,7 +148,7 @@ export const ClassifiedAd = ({
             mt: 0,
           }}
         >
-          {(need.status === 'open' || !need.status || need.status === "pending") &&
+          {((need.status === 'open' || !need.status || need.status === "pending") || !need.status || need.status === "pending") &&
             !isHost &&
             (userApplication ? (
               <MuiButton
@@ -206,7 +206,7 @@ export const ClassifiedAd = ({
         </Box>
       </Paper>
 
-      {(need.status === 'open' || !need.status || need.status === "pending") && isOpportunity && (
+      {((need.status === 'open' || !need.status || need.status === "pending") || !need.status || need.status === "pending") && isOpportunity && (
         <Box
           sx={{
             position: 'absolute',

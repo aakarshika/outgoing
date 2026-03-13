@@ -20,7 +20,7 @@ import {
     getEventCardRoles,
     HostVendorBadge,
     LiveBadge,
-    NoImagePlaceholder,
+    ImageWatermarkPlaceholder,
     PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
@@ -88,7 +88,7 @@ export const ScrapbookEventCardLandscape = ({
             >
                 {
                     isNoImageCard ? (
-                        <NoImagePlaceholder theme={theme} size="sm" />
+                        <ImageWatermarkPlaceholder theme={theme} size="sm" />
                     ) : (
                         <Box
                             sx={{
@@ -123,7 +123,7 @@ export const ScrapbookEventCardLandscape = ({
                 <Typography
                     sx={
                         {
-                            fontFamily: '"Permanent Marker"',
+                            fontFamily: '"serif"',
                             fontSize: isCompact
                                 ? { xs: '0.9rem', sm: '1rem' }
                                 : { xs: '1rem', sm: '1.15rem' },

@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
+
 import { CategoricalBackground, getCategoryTheme } from './CategoricalBackground';
 import { LikeButton } from './LikeButton';
 import { LocationTag } from './LocationTag';
@@ -20,95 +21,11 @@ import {
   getEventCardRoles,
   HostVendorBadge,
   LiveBadge,
-  NoImagePlaceholder,
+  ImageWatermarkPlaceholder,
   PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
-
-interface EventListItem {
-  id: number;
-  title: string;
-  description?: string;
-  cover_image: string | null;
-  start_time: string;
-  location_name: string;
-  location_address?: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  category?: { name: string; icon: string; slug?: string } | null;
-  ticket_price_standard: string | null;
-  ticket_price_flexible: string | null;
-  lifecycle_state: string;
-  user_is_interested?: boolean;
-  interest_count?: number;
-  capacity?: number | null;
-  ticket_count?: number;
-  media?: Array<{
-    id: number;
-    media_type: 'image' | 'video';
-    category: 'gallery' | 'highlight';
-    file: string;
-  }>;
-  user_has_ticket?: boolean;
-  user_is_vendor?: boolean;
-  host?: { username: string };
-  user_applications?: any[];
-}
-
-const WashiTape = ({ color = 'rgba(59, 130, 246, 0.5)', rotate = '0deg' }) => (
-  <Box
-    sx={{
-      position: 'absolute',
-      top: -10,
-      left: '50%',
-      transform: `translateX(-50%) rotate(${rotate})`,
-      width: 60,
-      height: 18,
-      bgcolor: color,
-      opacity: 0.8,
-      zIndex: 2,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-      '&::before, &::after': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        width: 4,
-        backgroundImage: `linear-gradient(to right, ${color} 50%, transparent 50%)`,
-        backgroundSize: '2px 4px',
-      },
-      '&::before': { left: -2 },
-      '&::after': { right: -2 },
-    }}
-  />
-);
-
-const PhotoClip = () => (
-  <Box
-    sx={{
-      position: 'absolute',
-      top: -15,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      width: 14,
-      height: 35,
-      bgcolor: '#E8D5B5', // Wood/Bamboo peg color
-      border: '1px solid rgba(0,0,0,0.1)',
-      borderRadius: '2px',
-      zIndex: 40, // Above everything
-      boxShadow: '1px 2px 4px rgba(0,0,0,0.1)',
-      '&::after': {
-        content: '""',
-        position: 'absolute',
-        top: 8,
-        left: 0,
-        right: 0,
-        height: '2px',
-        bgcolor: 'rgba(0,0,0,0.15)',
-      },
-    }}
-  />
-);
+import { EventUIProvider, MainInfoCard, MainInfoCardImage, ScrapbookEventData, useEventUIData } from './EventItemUIComponents';
 
 export const ScrapbookEventCard = ({
   event,
@@ -119,7 +36,7 @@ export const ScrapbookEventCard = ({
   disableHover,
   isBasicEventCard = false,
 }: {
-  event: EventListItem;
+  event: ScrapbookEventData;
   isFocused?: boolean;
   showClip?: boolean;
   rotation?: number;
@@ -127,43 +44,49 @@ export const ScrapbookEventCard = ({
   disableHover?: boolean;
   isBasicEventCard?: boolean;
 }) => {
-  const { user, isAuthenticated } = useAuth();
-  const { isHost, isVendor } = getEventCardRoles(event, {
-    user: user ?? null,
-    isAuthenticated,
-  });
+  
 
-  const theme = getCategoryTheme(event.category ?? undefined);
-  const relativeTime = formatEventRelativeTime(event.start_time);
-  const price = formatEventPrice(event.ticket_price_standard);
-  const isNoImageCard = !event.cover_image;
-
-  // const rotation = useMemo(
-  //   () => (1 + Math.random() * 2),
-  //   [],
-  // );
-  const baseRotation = useMemo(
-    () => (rotation !== undefined ? rotation : Math.random() * 8 - 4),
-    [rotation],
-  );
-
-  const hoverRotation = useMemo(
-    () =>
-      rotationhover !== undefined
-        ? rotationhover
-        : baseRotation + (1 + Math.random() * 2),
-    [rotationhover, baseRotation],
-  );
+  const { baseRotation, 
+    hoverRotation, 
+    isNoImageCard, 
+    titleFontSize, 
+    descriptionFontSize, 
+    titleFontSizeWithImage, 
+    descriptionFontSizeWithImage, 
+    relativeTime, 
+    theme, 
+    isHost,
+     isVendor,
+     price } = 
+  useEventUIData({ event, 
+    isFocused, 
+    showClip, 
+    rotation, 
+    rotationhover, 
+    disableHover, 
+    isBasicEventCard });
 
   return (
+    <EventUIProvider 
+      event={event}
+      isFocused={isFocused}
+      showClip={showClip}
+      rotation={rotation}
+      rotationhover={rotationhover}
+      disableHover={disableHover}
+      isBasicEventCard={isBasicEventCard}
+    >
     <Box>
       <Box
         component={Link}
         to={`/events/${event.id}`}
         sx={{
           aspectRatio: '1 / 1',
+
           transformOrigin: 'top center',
+
           transform: `rotate(${baseRotation}deg)`,
+
           display: 'block',
           textDecoration: 'none',
           position: 'relative',
@@ -193,247 +116,11 @@ export const ScrapbookEventCard = ({
           }}
         >
           {isNoImageCard && (
-            <Box
-              sx={{
-                minHeight: { xs: 260, sm: 280 },
-                border: '1px dashed rgba(0,0,0,0.14)',
-                bgcolor: 'rgba(255,255,255,0.78)',
-                p: 2.2,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                position: 'relative',
-              }}
-            >
-              <Box
-                aria-hidden
-                sx={{
-                  pointerEvents: 'none',
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: 0,
-                }}
-              >
-                <NoImagePlaceholder theme={theme} size="md" iconOnly />
-              </Box>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 10,
-                  right: 10,
-                  width: 9,
-                  height: 9,
-                  bgcolor: '#f59e0b',
-                  borderRadius: '50%',
-                  boxShadow:
-                    '0 0 0 2px rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.2)',
-                }}
-              />
-              <Typography
-                sx={{
-                  fontFamily: '"Permanent Marker"',
-                  fontSize: '1.25rem',
-                  color: '#1a1a1a',
-                  lineHeight: 1.2,
-                  mt: 1.5,
-                  mb: 2,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textAlign: 'center',
-                }}
-              >
-                {event.title}
-              </Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: '0.82rem',
-                      color: '#555',
-                      fontFamily: 'serif',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {isFocused
-                      ? event.description || ''
-                      : (event.description?.slice(0, 500) || '') +
-                      ((event.description?.length || 0) > 500 ? '...' : '')}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%',
-                    gap: 1,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Calendar size={13} color="#555" />
-                    <Typography
-                      sx={{
-                        fontSize: '0.82rem',
-                        fontWeight: 'bolder',
-                        color: '#555',
-                        fontFamily: 'serif',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {relativeTime}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      minWidth: 0,
-                      flex: 1,
-                      display: 'flex',
-                      justifyContent: 'flex-start',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <LocationTag
-                      locationName={event.location_name}
-                      locationAddress={event.location_address}
-                      latitude={event.latitude}
-                      longitude={event.longitude}
-                      size={13}
-                      color="#555"
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
+            <MainInfoCard />
           )}
 
           {!isNoImageCard && (
-            <>
-              <Box
-                sx={{
-                  aspectRatio: '1.85 / 1',
-                  minHeight: 'auto',
-                  overflow: 'hidden',
-                  mb: 2,
-                  position: 'relative',
-                }}
-              >
-                <Box
-                  className="polaroid-img"
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    maxHeight: isFocused ? '400px' : 'auto',
-                    objectFit: isFocused ? 'contain' : 'cover',
-                    transition: 'all 0.5s ease',
-                    transformOrigin: 'top center',
-                  }}
-                >
-                  <PosterForEventCard
-                    imageUrl={event?.cover_image || ''}
-                    title={'df'}
-                  />
-                </Box>
-              </Box>
-
-              <Box sx={{ px: 0.5, pl: '12px' }}>
-                <Typography
-                  sx={{
-                    fontFamily: '"Permanent Marker"',
-                    fontSize: '1.1rem',
-                    textAlign: 'center',
-                    color: '#1a1a1a',
-                    lineHeight: 1.2,
-                    mb: 1,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {event.title}
-                </Typography>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Typography
-                    sx={{ fontSize: '0.75rem',
-                       color: '#666', 
-                    textAlign: 'center',
-                    fontFamily: 'serif' }}
-                  >
-                    {isFocused
-                      ? event.description || ''
-                      : (event.description?.slice(0, 160) || '') +
-                      ((event.description?.length || 0) > 160 ? '...' : '')}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%',
-                    gap: 1,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Calendar size={12} color="#666" />
-                    <Typography
-                      sx={{
-                        fontSize: '0.75rem',
-                        fontWeight: 'bolder',
-                        color: '#666',
-                        fontFamily: 'serif',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {relativeTime}
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      minWidth: 0,
-                      flex: 1,
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <LocationTag
-                      locationName={event.location_name}
-                      locationAddress={event.location_address}
-                      latitude={event.latitude}
-                      longitude={event.longitude}
-                      size={12}
-                      color="#666"
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            </>
+            <MainInfoCardImage />
           )}
 
           {(!isBasicEventCard) && (<>
@@ -493,6 +180,7 @@ export const ScrapbookEventCard = ({
         </CategoricalBackground>
       </Box>
     </Box>
+    </EventUIProvider>
   );
 };
 
