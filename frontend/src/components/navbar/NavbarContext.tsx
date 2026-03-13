@@ -9,6 +9,9 @@ import { canUseBrowserGeolocation, searchLocation } from '@/utils/geolocation';
 import type { LocationSuggestion } from '@/utils/geolocation';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
 import { useNearYou } from '@/utils/useNearYou';
+import client from '@/api/client';
+import type { ApiResponse } from '@/types/events';
+import type { EventOverviewRow } from '@/pages/alerts/utils';
 
 export function isNativeSidebarPath(path: string): boolean {
     const isDashboard =
@@ -40,6 +43,8 @@ export function useNavbarData() {
         return isNativeSidebarPath(window.location.pathname);
     });
     const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+    const [eventOverviewRows, setEventOverviewRows] = useState<EventOverviewRow[]>([]);
+    const [eventOverviewLoading, setEventOverviewLoading] = useState(false);
 
     const {
         enabled: nearYouEnabled,
@@ -111,6 +116,37 @@ export function useNavbarData() {
 
     const { data: response } = useAlerts({ enabled: isAuthenticated });
     const alertsCount = response?.data?.length || 0;
+
+    useEffect(() => {
+        if (!isAuthenticated || !user) {
+            setEventOverviewRows([]);
+            return;
+        }
+
+        let active = true;
+
+        (async () => {
+            try {
+                setEventOverviewLoading(true);
+                const { data } = await client.get<ApiResponse<EventOverviewRow[]>>(
+                    '/alerts/event-overview/',
+                );
+                if (!active) return;
+                setEventOverviewRows(data.data || []);
+            } catch (err) {
+                if (!active) return;
+                setEventOverviewRows([]);
+            } finally {
+                if (active) {
+                    setEventOverviewLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, [isAuthenticated, user]);
 
     const eventManagementMatch =
         matchPath(
@@ -196,6 +232,65 @@ export function useNavbarData() {
         navigate(`/?${params.toString()}`);
     };
 
+    const {
+        hostingEvents,
+        vendorEvents,
+        attendeeEvents,
+    } = useMemo(() => {
+        if (!user) {
+            return {
+                hostingEvents: [] as EventOverviewRow[],
+                vendorEvents: [] as EventOverviewRow[],
+                attendeeEvents: [] as EventOverviewRow[],
+            };
+        }
+
+        const userId = user.id;
+
+        const allowedLifecycle = new Set(['published', 'ready', 'live']);
+
+        const hosting = new Map<number, EventOverviewRow>();
+        const vendor = new Map<number, EventOverviewRow>();
+        const attendee = new Map<number, EventOverviewRow>();
+
+        for (const row of eventOverviewRows) {
+            if (!allowedLifecycle.has(row.event_lifecycle_state)) continue;
+            const detail = row.event_details;
+            if (!detail) continue;
+
+            if (row.host_user_id === userId) {
+                hosting.set(row.event_id, row);
+            }
+
+            if (
+                row.need_applied_to_user_id === userId ||
+                row.need_application_requested_by_host_vendor_user_id === userId ||
+                row.need_assigned_user_id === userId
+            ) {
+                vendor.set(row.event_id, row);
+            }
+
+            if (row.attendee_user_id === userId && row.ticket_status !== 'cancelled') {
+                attendee.set(row.event_id, row);
+            }
+        }
+
+        const sortByCreatedDesc = (a?: string | null, b?: string | null) =>
+            new Date(b || 0).getTime() - new Date(a || 0).getTime();
+
+        return {
+            hostingEvents: Array.from(hosting.values()).sort((a, b) =>
+                sortByCreatedDesc(a.event_created_date, b.event_created_date),
+            ),
+            vendorEvents: Array.from(vendor.values()).sort((a, b) =>
+                sortByCreatedDesc(a.need_application_created_date, b.need_application_created_date),
+            ),
+            attendeeEvents: Array.from(attendee.values()).sort((a, b) =>
+                sortByCreatedDesc(a.ticket_created_date, b.ticket_created_date),
+            ),
+        };
+    }, [eventOverviewRows, user]);
+
     return useMemo(
         () => ({
             // Auth & user
@@ -245,6 +340,12 @@ export function useNavbarData() {
 
             // Alerts
             alertsCount,
+
+            // Sidebar event overview
+            eventOverviewLoading,
+            hostingEvents,
+            vendorEvents,
+            attendeeEvents,
 
             // Event computed state
             isEventManagementRoute,

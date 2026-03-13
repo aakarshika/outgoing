@@ -86,6 +86,7 @@ class EventListSerializer(serializers.ModelSerializer):
     ticket_tiers = EventTicketTierSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
 
     class Meta:
         """Meta configuration for EventListSerializer."""
@@ -127,6 +128,18 @@ class EventListSerializer(serializers.ModelSerializer):
         if obj.series:
             return {"id": obj.series.id, "name": obj.series.name}
         return None
+
+    def get_cover_image(self, obj):
+        """Return the frontend asset path or absolute backend media URL."""
+        if not obj.cover_image:
+            return None
+        url = obj.cover_image.name
+        if url.startswith('/assets/'):
+            return url
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.cover_image.url)
+        return obj.cover_image.url
 
     def get_user_is_interested(self, obj):
         """Check if the current user is interested in this event."""

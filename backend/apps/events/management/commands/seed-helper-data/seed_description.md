@@ -1,0 +1,37 @@
+
+| Table | Column Description | Table Description |
+| :--- | :--- | :---|
+ | USERs |  | user_seed.json
+ | username | get from seed. always in first_last format
+ | email | user_name@outgoing.com
+ | password | password123
+ | first_name | split from username 
+ | last_name | split from username
+services |  | service_categories.json - pick any service, create a user. use this user as vendor 
+ | vendor | current vendor user id
+ | title | random pick from seed list - title + desc combo.
+ | description | 
+ | category | random pick from seed list. service id from service categories json file
+ | location_city | faker
+events |  | create Host users from users_seed.json. pick category one by one and: use category to pick events one by one from event_title_seed.json. use title + description + category +host user id to create events
+ | host | current host user id
+ | category | current category 
+ | title | current title. from event title seed. 
+ | start_time  | 1-3 months ago 
+ | end_time | always 12 - 72 hours after start time.
+ | lifecycle_state | logic defined custom
+ | capacity | 4-40
+event_ticket_tiers |  | for each event - create 1-3 tiers. 
+ | event | current event
+ | name | (Premium, VIP, General, BYOB, Child)
+ | price | always 0
+ | capacity | capacity / how many ticket tiers being created for the current event.
+event_needs |  | for every event created - create 2-5 needs. 
+ | event | pick from any event created
+ | category | service category - pick from any category id from  service_categories.json
+ | title | null
+ | status | pending
+ | assigned_vendor | null
+tickets |  | create 60 random goer_index users. no seed needed.. from existing events - pick a random event, and from its tiers - pick a random ticket tier.
+ | goer | goer user id
+ | tier | tier selected

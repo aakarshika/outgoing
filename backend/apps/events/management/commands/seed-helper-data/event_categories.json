@@ -1,0 +1,74 @@
+[
+    {
+        "id": 91,
+        "name": "Arts & Culture",
+        "slug": "arts-culture",
+        "icon": "palette"
+    },
+    {
+        "id": 95,
+        "name": "Comedy",
+        "slug": "comedy",
+        "icon": "laugh"
+    },
+    {
+        "id": 98,
+        "name": "Community",
+        "slug": "community",
+        "icon": "heart-handshake"
+    },
+    {
+        "id": 97,
+        "name": "Festivals",
+        "slug": "festivals",
+        "icon": "party-popper"
+    },
+    {
+        "id": 88,
+        "name": "Food & Drink",
+        "slug": "food-drink",
+        "icon": "utensils"
+    },
+    {
+        "id": 87,
+        "name": "Music",
+        "slug": "music",
+        "icon": "music"
+    },
+    {
+        "id": 96,
+        "name": "Networking & Social",
+        "slug": "networking-social",
+        "icon": "users"
+    },
+    {
+        "id": 89,
+        "name": "Nightlife",
+        "slug": "nightlife",
+        "icon": "moon"
+    },
+    {
+        "id": 94,
+        "name": "Outdoors & Adventure",
+        "slug": "outdoors-adventure",
+        "icon": "mountain"
+    },
+    {
+        "id": 90,
+        "name": "Sports & Fitness",
+        "slug": "sports-fitness",
+        "icon": "dumbbell"
+    },
+    {
+        "id": 92,
+        "name": "Tech & Innovation",
+        "slug": "tech-innovation",
+        "icon": "cpu"
+    },
+    {
+        "id": 93,
+        "name": "Workshops & Classes",
+        "slug": "workshops-classes",
+        "icon": "book-open"
+    }
+]

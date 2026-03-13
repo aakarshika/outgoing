@@ -25,10 +25,10 @@ export default function SignUpPage() {
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: 'testuser',
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
+      username: 'shika_a',
+      email: 'shika_a@outgoing.com',
+      firstName: 'Shika',
+      lastName: 'Artist',
       phoneNumber: '555-0199',
       password: 'password123',
     },

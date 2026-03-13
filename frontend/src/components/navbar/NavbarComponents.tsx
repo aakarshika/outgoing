@@ -19,7 +19,7 @@ import {
     UserPlus
 } from 'lucide-react';
 
-import { ComicButton } from '@/components/ui/ComicButton';
+import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
 import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import type { EventListItem, EventSearchSuggestion } from '@/types/events';
@@ -105,7 +105,7 @@ export const ManageEventButton = ({ type }: {
     return (
         <div className={`w-full  ${isActive ? 'bg-yellow-300/50 -rotate-1 border-l-4 border-yellow-500' : ''}`}
         >
-            <ComicButton
+            <ComicSinkButton
                 type="button"
                 variant={'solid'}
                 size="default"
@@ -121,7 +121,7 @@ export const ManageEventButton = ({ type }: {
                 {type === 'manage-service-ghost' ? 'Manage Service'
                     : type === 'manage-event-ghost' ? 'Manage Event'
                         : '99999'}
-            </ComicButton>
+            </ComicSinkButton>
         </div>
     );
 };
@@ -136,7 +136,7 @@ export const CreateEventButton = ({ type }: {
 
     if (isActive) return null;
     return (
-        <ComicButton
+        <ComicSinkButton
             type="button"
             variant={'solid'}
             size="default"
@@ -168,7 +168,7 @@ export const CreateEventButton = ({ type }: {
                             : type === 'signin' ? 'Sign In'
                                 : type === 'signup' ? 'Sign Up'
                                     : 'Create Event'}
-        </ComicButton>
+        </ComicSinkButton>
     );
 };
 
@@ -379,7 +379,7 @@ export const SearchBar = () => {
             <div className="relative hidden md:flex w-full p-4">
                 <form
                     onSubmit={handleSearchSubmit}
-                    className="flex items-center w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] pl-5 pr-2 py-2.5 shadow-[3px_4px_0px_#333] focus-within:shadow-[2px_3px_0px_#333] focus-within:translate-x-[1px] focus-within:translate-y-[1px] transition-all"
+                    className="flex items-center w-full gap-3"
                     style={{ fontFamily: '"Permanent Marker"' }}
                 >
                     <input
@@ -388,7 +388,7 @@ export const SearchBar = () => {
                         onFocus={() => setShowSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                         placeholder="Search events..."
-                        className="flex-1 min-w-[140px] bg-transparent text-base outline-none text-gray-800 placeholder:text-gray-500"
+                        className="flex-1 min-w-[140px] rounded-none border-2 border-gray-800 bg-white px-3 py-2.5 text-base outline-none text-gray-800 placeholder:text-gray-500 shadow-[2px_2px_0px_#333]"
                         style={{ fontFamily: '"Permanent Marker"' }}
                     />
                     <div className="h-7 w-[2px] bg-gray-400 mx-3 flex-shrink-0" />
@@ -557,7 +557,7 @@ export const SearchBar = () => {
                     />
                 </form>
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-[4rem] left-0 z-50 w-full rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-3 shadow-[4px_5px_0px_#333] overflow-y-auto max-h-[70vh] max-w-[70vh]">
+                    <div className="absolute top-[4rem] left-0 z-50 w-full overflow-y-auto max-h-[70vh] max-w-[70vh]">
                         {suggestions.map((suggestion: EventSearchSuggestion, index: number) => {
                             const rotation = ((index % 5) - 2) * 0.6; // -1.2deg .. +1.2deg
 

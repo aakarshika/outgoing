@@ -1,0 +1,82 @@
+{
+  "users": [
+    {
+      "username": "shiv_c_m",
+      "category_list": [
+        "music",
+        "comedy"
+      ],
+      "type": "Host"
+    },
+    {
+      "username": "shika_a",
+      "category_list": [
+        "arts-culture"
+      ],
+      "type": "Host"
+    },
+    {
+      "username": "coco_a",
+      "category_list": [
+        "arts-culture"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "coco_c",
+      "category_list": [
+        "comedy"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "coco_m",
+      "category_list": [
+        "music"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "jello_a",
+      "category_list": [
+        "arts-culture"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "jello_c",
+      "category_list": [
+        "comedy"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "jello_m",
+      "category_list": [
+        "music"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "maggi_a",
+      "category_list": [
+        "arts-culture"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "maggi_c",
+      "category_list": [
+        "comedy"
+      ],
+      "type": "Vendor"
+    },
+    {
+      "username": "maggi_m",
+      "category_list": [
+        "music"
+      ],
+      "type": "Vendor"
+    }
+  ]
+}

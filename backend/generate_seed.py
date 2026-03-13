@@ -21,9 +21,7 @@ CATEGORIES = [
 CITIES = ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "London", "Toronto"]
 
 IMAGES = [
-    "https://placehold.co/600x400/png",
-    "https://placehold.co/800x600/png",
-    "https://placehold.co/800x400/png",
+    "/assets/default-event-img.png",
 ]
 
 
@@ -169,30 +167,9 @@ TRUNCATE auth_user,
         + ";\n"
     )
 
-    # 6. Event Series
-    sql.append("-- 6. Insert Event Series")
-    series_inserts = []
-    for i in range(1, 6):
-        host_id = random.randint(2, 5)  # Users 2-5 are hosts for series
-        series_inserts.append(
-            f"({i}, {host_id}, 'Series {i}', 'Weekly meetup', 'FREQ=WEEKLY;BYDAY=WE', 'UTC', 'Venue {i}', '', 50, 10.00, NULL, NOW())"
-        )
-    sql.append(
-        "INSERT INTO events_eventseries (id, host_id, name, description, recurrence_rule, timezone, default_location_name, default_location_address, default_capacity, default_ticket_price_standard, default_ticket_price_flexible, created_at) VALUES\n"
-        + ",\n".join(series_inserts)
-        + ";\n"
-    )
-
-    series_need_inserts = []
-    for i in range(1, 6):
-        series_need_inserts.append(
-            f"({i}, 'Guest Speaker {i}', '', 'Speaker', 'essential', NULL, NULL, NOW())"
-        )
-    sql.append(
-        "INSERT INTO events_eventseriesneedtemplate (series_id, title, description, category, criticality, budget_min, budget_max, created_at) VALUES\n"
-        + ",\n".join(series_need_inserts)
-        + ";\n"
-    )
+    # 6. Event Series (Disabled per request)
+    sql.append("-- 6. Insert Event Series (Disabled)")
+    # event series disabled
 
     # 7. Events
     sql.append("-- 7. Insert Events")
@@ -203,7 +180,8 @@ TRUNCATE auth_user,
     for i in range(1, 101):  # 100 events
         host_id = random.randint(2, 20)
         cat_id = random.randint(1, 12)
-        days_offset = random.randint(-60, 60)
+        days_offset = random.randint(-30, 30)  # Start and end between -1M and +1M
+        created_days_offset = random.randint(-90, -30)  # Created between -3M and -1M
         city = random.choice(CITIES)
         status = random.choice(statuses)
         life = (
@@ -215,9 +193,10 @@ TRUNCATE auth_user,
 
         start_time = f"NOW() + INTERVAL '{days_offset} days'"
         end_time = f"(NOW() + INTERVAL '{days_offset} days' + INTERVAL '3 hours')"
+        created_at = f"NOW() + INTERVAL '{created_days_offset} days'"
 
         event_inserts.append(
-            f"({i}, {host_id}, 'Event Title {i}', 'event-title-{i}', 'Description for event {i}', {cat_id}, NULL, NULL, 'Venue {i}', '123 {city} St', '', '', NULL, NULL, {start_time}, {end_time}, 100, {price}.00, NULL, 24, '{random.choice(IMAGES)}', '{status}', '{life}', '[]', '[]', {random.randint(0,20)}, {random.randint(0,50)}, NOW(), NOW())"
+            f"({i}, {host_id}, 'Event Title {i}', 'event-title-{i}', 'Description for event {i}', {cat_id}, NULL, NULL, 'Venue {i}', '123 {city} St', '', '', NULL, NULL, {start_time}, {end_time}, 100, {price}.00, NULL, 24, '{random.choice(IMAGES)}', '{status}', '{life}', '[]', '[]', {random.randint(0,20)}, {random.randint(0,50)}, {created_at}, {created_at})"
         )
 
     sql.append(

@@ -39,7 +39,7 @@ from apps.vendors.models import VendorReview, VendorService
 
 User = get_user_model()
 
-DEFAULT_JSON_FILE = Path(__file__).with_name("seed_minimal.json")
+DEFAULT_JSON_FILE = Path(__file__).with_name("seed_minimal_generated.json")
 
 
 def _choice_values(choices: list[tuple[str, str]]) -> set[str]:

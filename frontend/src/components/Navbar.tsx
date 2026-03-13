@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Menu, X, Ticket, CalendarDays, MessageSquare, Briefcase, Settings, User, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal';
@@ -19,6 +20,10 @@ import { NavbarProvider, useNavbarContext } from './navbar/NavbarContext';
 function SidebarContent() {
   const {
     isAuthenticated,
+    hostingEvents,
+    vendorEvents,
+    attendeeEvents,
+    logout,
   } = useNavbarContext();
 
   return (
@@ -37,11 +42,41 @@ function SidebarContent() {
             <SidebarLinkItem itemKey={'going'} />
             <SidebarLinkItem itemKey={'saved'} />
             <SidebarLinkItem itemKey={'tickets'} />
+            {attendeeEvents.slice(0, 3).map((row) => (
+              <Link
+                key={`attendee-${row.event_id}`}
+                to={`/events/${row.event_id}`}
+                className="ml-4 mt-1 block text-xs text-gray-700 hover:text-gray-900 hover:underline"
+                style={{ fontFamily: '"Caveat", cursive' }}
+              >
+                • {row.event_details.title}
+              </Link>
+            ))}
             <SidebarLinkItem itemKey={'organizing'} />
             <SidebarLinkItem itemKey={'my-events'} />
+            {hostingEvents.slice(0, 3).map((row) => (
+              <Link
+                key={`hosting-${row.event_id}`}
+                to={`/events/${row.event_id}`}
+                className="ml-4 mt-1 block text-xs text-gray-700 hover:text-gray-900 hover:underline"
+                style={{ fontFamily: '"Caveat", cursive' }}
+              >
+                • {row.event_details.title}
+              </Link>
+            ))}
             <ManageEventButton type="manage-event-ghost" />
             <SidebarLinkItem itemKey={'services'} />
             <SidebarLinkItem itemKey={'my-services'} />
+            {vendorEvents.slice(0, 3).map((row) => (
+              <Link
+                key={`vendor-${row.event_id}`}
+                to={`/events/${row.event_id}`}
+                className="ml-4 mt-1 block text-xs text-gray-700 hover:text-gray-900 hover:underline"
+                style={{ fontFamily: '"Caveat", cursive' }}
+              >
+                • {row.event_details.title}
+              </Link>
+            ))}
             <ManageEventButton type="manage-service-ghost" />
             <SidebarLinkItem itemKey={'my-opportunities'} />
             <SidebarLinkItem itemKey={'activities'} />
@@ -50,6 +85,16 @@ function SidebarContent() {
             <SidebarLinkItem itemKey={'user-info'} />
             <SidebarLinkItem itemKey={'account-settings'} />
             <SidebarLinkItem itemKey={'privacy'} />
+          </div>
+          <div className="mt-6 border-t-2 border-dashed border-gray-300 pt-4 ml-2">
+            <button
+              type="button"
+              onClick={logout}
+              className="inline-flex items-center gap-2 border-2 border-gray-800 bg-white px-4 py-2 text-gray-800 shadow-[2px_2px_0px_#333] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] hover:bg-gray-100"
+              style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.8rem' }}
+            >
+              Log out
+            </button>
           </div>
         </div>
       ) : (
@@ -151,14 +196,16 @@ function NavbarLayout() {
       )}
 
       <aside
-        className={`fixed right-0 top-16 z-50 h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto ${isNativeSidebarRoute ? 'md:hidden' : ''} ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed right-0 top-16 z-50 flex h-[calc(100vh-4rem)] w-[22rem] max-w-[85vw] min-h-0 flex-col border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 ${isNativeSidebarRoute ? 'md:hidden' : ''} ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         style={{
           background: '#f4f1ea',
           backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
           backgroundSize: '12px 12px',
         }}
       >
-        <SidebarContent />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <SidebarContent />
+        </div>
       </aside>
 
       {/* Desktop persistent sidebar and toggle – only on native sidebar routes */}
@@ -183,14 +230,16 @@ function NavbarLayout() {
           </button> */}
 
           <aside
-            className={`hidden md:block fixed right-0 top-16 z-30 h-[calc(100vh-4rem)] w-[22rem] border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200 overflow-y-auto `}
+            className={`hidden md:flex md:flex-col fixed right-0 top-16 z-30 h-[calc(100vh-4rem)] w-[22rem] min-h-0 border-l-2 border-dashed border-gray-300 p-5 transition-transform duration-200`}
             style={{
               background: '#f4f1ea',
               backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
               backgroundSize: '12px 12px',
             }}
           >
-            <SidebarContent />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <SidebarContent />
+            </div>
           </aside>
         </>
       )}
