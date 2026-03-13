@@ -656,3 +656,68 @@ class EventHostVendorMessage(models.Model):
 
     def __str__(self):
         return f"Message by {self.sender.username} in {self.event.title}"
+
+
+class EventPrivateConversation(models.Model):
+    """Direct chat between two users, regardless of event."""
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="private_conversations",
+        null=True,
+        blank=True,
+    )
+    participant1 = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="private_conversations_as_p1",
+    )
+    participant2 = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="private_conversations_as_p2",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["participant1", "participant2"],
+                name="unique_direct_conversation_pair",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.participant1_id and self.participant2_id and self.participant1_id > self.participant2_id:
+            self.participant1_id, self.participant2_id = self.participant2_id, self.participant1_id
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.participant1.username} <-> {self.participant2.username}"
+
+
+class EventPrivateMessage(models.Model):
+    """Direct messages within a private conversation."""
+
+    conversation = models.ForeignKey(
+        EventPrivateConversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_private_messages",
+    )
+    text = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Direct message by {self.sender.username}"

@@ -40,6 +40,7 @@ import { ServicesSection } from './components/ServicesSection';
 import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
 import { WhenWhereCard } from './components/WhenWhereCard';
+import { GenericFeedSection } from '../home/sections/FeedSections';
 
 
 // --- Main Page Component ---
@@ -223,13 +224,8 @@ export default function EventDetailPageNew() {
   const isHost = user?.username === event.host.username;
   const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
 
-  const participantsUsernames: string[] = [
-    event.host?.username,
-    ...(event.participating_vendors || []).map(
-      (v: any) => v.vendor_username || v.username,
-    ),
-    ...(event.attendees || []).map((a: any) => a.username),
-  ].filter(Boolean);
+  const canAccessEventChat =
+    isHost || Boolean(event.user_is_vendor) || Boolean(event.user_has_ticket);
 
   const handleBuyTicket = (tierId: number, _quantity: number) => {
     if (!isAuthenticated) return navigate('/signin');
@@ -397,7 +393,7 @@ export default function EventDetailPageNew() {
                 eventId={event.id}
                 eventHostUsername={event.host.username}
                 participatingVendors={event.participating_vendors}
-                participants={participantsUsernames}
+                canAccessChat={canAccessEventChat}
               />
 
               {/* Section 5: Memory Box */}
@@ -435,6 +431,21 @@ export default function EventDetailPageNew() {
                 </Box>
               </Box>
             </CategoricalBackground>
+          </Box>
+
+          <Box
+            sx={{
+              maxWidth: '1000px',
+              mx: 'auto',
+              mt: { xs: 4, sm: 5, md: 6 },
+            }}
+          >
+            <GenericFeedSection
+              title="Check out these Events too! "
+              params={{ sort: 'trending' }}
+              viewAllPath="/browse?sort=trending&title=Trending Events"
+              forceShowHeader={true}
+            />
           </Box>
 
           {/* Modals from original logic */}

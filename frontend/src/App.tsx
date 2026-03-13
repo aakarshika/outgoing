@@ -34,6 +34,7 @@ function GlobalChatDrawer() {
       mode={params?.mode || 'group'}
       eventId={params?.eventId}
       conversationId={params?.conversationId}
+      targetUsername={params?.targetUsername}
     />
   );
 }

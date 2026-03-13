@@ -24,6 +24,7 @@ from apps.events.models import (
     EventReviewLike,
     EventReviewComment,
     EventHostVendorMessage,
+    EventPrivateMessage,
 )
 from apps.tickets.models import Ticket
 
@@ -152,7 +153,10 @@ class EventListSerializer(serializers.ModelSerializer):
         """Check if the current user has a ticket for this event."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return obj.tickets.filter(goer=request.user, status="active").exists()
+            return obj.tickets.filter(
+                goer=request.user,
+                status__in=["active", "used"],
+            ).exists()
         return False
 
     def get_user_is_vendor(self, obj):
@@ -323,7 +327,10 @@ class EventDetailSerializer(EventListSerializer):
             return False
         if obj.host_id == request.user.id:
             return True
-        return obj.tickets.filter(goer=request.user, status="active").exists()
+        return obj.tickets.filter(
+            goer=request.user,
+            status__in=["active", "used"],
+        ).exists()
 
     def get_location_address(self, obj):
         """Return protected address only for authorized viewers in ready/live states."""
@@ -914,3 +921,30 @@ class EventHostVendorMessageSerializer(serializers.ModelSerializer):
         if obj.event.host_id == obj.sender_id:
             return "host"
         return "vendor"
+
+
+class EventPrivateMessageSerializer(serializers.ModelSerializer):
+    """Serializer for direct user-user chat messages."""
+
+    sender_username = serializers.CharField(source="sender.username", read_only=True)
+    sender_avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventPrivateMessage
+        fields = [
+            "id",
+            "sender_username",
+            "sender_avatar",
+            "text",
+            "created_at",
+        ]
+        read_only_fields = ["id", "sender_username", "sender_avatar", "created_at"]
+
+    def get_sender_avatar(self, obj):
+        profile = getattr(obj.sender, "profile", None)
+        if profile and profile.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+            return profile.avatar.url
+        return None

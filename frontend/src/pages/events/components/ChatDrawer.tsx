@@ -15,7 +15,9 @@ import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import {
   useAddHostVendorMessage,
+  useAddDirectMessage,
   useAddPrivateMessage,
+  useDirectMessages,
   useHostVendorMessages,
   usePrivateMessages,
 } from '@/features/events/hooks';
@@ -91,9 +93,10 @@ interface ChatDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  mode?: 'group' | 'private';
+  mode?: 'group' | 'direct' | 'private';
   eventId?: number;
   conversationId?: number;
+  targetUsername?: string;
 }
 
 export const ChatDrawer: React.FC<ChatDrawerProps> = ({
@@ -103,6 +106,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   mode = 'group',
   eventId,
   conversationId,
+  targetUsername,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -119,9 +123,23 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     mode === 'private' && conversationId ? conversationId : undefined
   );
   const addPrivateMessage = useAddPrivateMessage();
+  const { data: directMessagesResponse } = useDirectMessages(
+    mode === 'direct' && targetUsername ? targetUsername : undefined
+  );
+  const addDirectMessage = useAddDirectMessage();
 
-  const messages = mode === 'group' ? groupMessagesResponse?.data : privateMessagesResponse?.data;
-  const isPending = mode === 'group' ? addGroupMessage.isPending : addPrivateMessage.isPending;
+  const messages =
+    mode === 'group'
+      ? groupMessagesResponse?.data
+      : mode === 'direct'
+        ? directMessagesResponse?.data
+        : privateMessagesResponse?.data;
+  const isPending =
+    mode === 'group'
+      ? addGroupMessage.isPending
+      : mode === 'direct'
+        ? addDirectMessage.isPending
+        : addPrivateMessage.isPending;
 
   const [messageText, setMessageText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -131,6 +149,19 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   };
+
+  useEffect(() => {
+    console.debug('[ChatDrawer] props updated', {
+      isOpen,
+      isMinimized,
+      isMobile,
+      mode,
+      eventId,
+      conversationId,
+      targetUsername,
+      messageCount: messages?.length ?? 0,
+    });
+  }, [conversationId, eventId, isMinimized, isMobile, isOpen, messages?.length, mode, targetUsername]);
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -144,6 +175,11 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     if (mode === 'group' && eventId) {
       addGroupMessage.mutate(
         { eventId, payload: { text: messageText } },
+        { onSuccess: () => setMessageText('') }
+      );
+    } else if (mode === 'direct' && targetUsername) {
+      addDirectMessage.mutate(
+        { targetUsername, payload: { text: messageText } },
         { onSuccess: () => setMessageText('') }
       );
     } else if (mode === 'private' && conversationId) {
@@ -182,7 +218,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             maxWidth: '180px',
           }}
         >
-          {title}
+          {title}  
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {!isMobile && (
@@ -195,7 +231,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           </IconButton>
         </Box>
       </Box>
+      <Box sx={{ p: 1, fontSize: '0.75rem', color: '#666', textAlign: 'center' }}>
 
+      {isMobile ? '(Mobile)' : '(Web)'}
+          {isMinimized? ' (Minimized)' : '(Maximized)'}
+{isOpen ? '(Open)' : '(Closed)'}
+
+      </Box>
       {!isMinimized && (
         <>
           {/* Messages List */}
@@ -214,7 +256,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             {messages?.length === 0 ? (
               <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
                 <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem', textAlign: 'center' }}>
-                  No messages yet...
+                  {mode === 'direct' ? 'Say hii' : 'No messages yet...'}
                 </Typography>
               </Box>
             ) : (

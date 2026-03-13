@@ -2,6 +2,7 @@
 
 import json
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import F, Q
 from drf_spectacular.utils import extend_schema
@@ -23,6 +24,7 @@ from apps.events.models import (
     EventReviewLike,
     EventReviewComment,
     EventHostVendorMessage,
+    EventPrivateConversation,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -42,6 +44,7 @@ from .serializers import (
     EventHighlightCommentSerializer,
     EventReviewCommentSerializer,
     EventHostVendorMessageSerializer,
+    EventPrivateMessageSerializer,
 )
 
 
@@ -867,14 +870,18 @@ class EventHostVendorMessageListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def _is_authorized(self, event, user):
-        """Check if user is host, confirmed vendor, or attendee with a used ticket."""
+        """Check if user is host, confirmed vendor, or attendee with an active ticket."""
         if event.host == user:
             return True
         from apps.needs.models import NeedApplication
         if NeedApplication.objects.filter(vendor=user, need__event=event).exists():
             return True
         from apps.tickets.models import Ticket
-        return Ticket.objects.filter(goer=user, event=event, status="used").exists()
+        return Ticket.objects.filter(
+            goer=user,
+            event=event,
+            status__in=["active", "used"],
+        ).exists()
 
     def get(self, request, event_id):
         """Get all messages for this event's host-vendor chat."""
@@ -912,3 +919,68 @@ class EventHostVendorMessageListCreateView(APIView):
                 status=201,
             )
         return error_response(message="Validation Error", errors=serializer.errors)
+
+
+class UserDirectMessageListCreateView(APIView):
+    """List or create direct messages between the authenticated user and a target user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_target_user(self, target_username):
+        User = get_user_model()
+        try:
+            return User.objects.get(username=target_username)
+        except User.DoesNotExist:
+            return None
+
+    def _get_conversation(self, user_a, user_b):
+        participant1, participant2 = sorted([user_a, user_b], key=lambda user: user.id)
+        return EventPrivateConversation.objects.filter(
+            participant1=participant1,
+            participant2=participant2,
+        ).first()
+
+    def get(self, request, target_username):
+        target_user = self._get_target_user(target_username)
+        if target_user is None:
+            return error_response(message="User not found", status=404)
+        if target_user == request.user:
+            return error_response(message="Cannot open direct chat with yourself", status=400)
+
+        conversation = self._get_conversation(request.user, target_user)
+        if conversation is None:
+            return success_response(data=[])
+
+        messages = conversation.messages.select_related("sender", "sender__profile")
+        serializer = EventPrivateMessageSerializer(
+            messages, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+    def post(self, request, target_username):
+        target_user = self._get_target_user(target_username)
+        if target_user is None:
+            return error_response(message="User not found", status=404)
+        if target_user == request.user:
+            return error_response(message="Cannot send direct messages to yourself", status=400)
+
+        serializer = EventPrivateMessageSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        participant1, participant2 = sorted(
+            [request.user, target_user], key=lambda user: user.id
+        )
+        conversation, _ = EventPrivateConversation.objects.get_or_create(
+            participant1=participant1,
+            participant2=participant2,
+            defaults={"event": None},
+        )
+        message = serializer.save(conversation=conversation, sender=request.user)
+        conversation.save(update_fields=["updated_at"])
+        return success_response(
+            data=EventPrivateMessageSerializer(
+                message, context={"request": request}
+            ).data,
+            status=201,
+        )

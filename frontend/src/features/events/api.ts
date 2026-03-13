@@ -153,6 +153,7 @@ export async function addEventHighlight(eventId: number, formData: FormData) {
   return data;
 }
 
+
 export async function toggleHighlightLike(highlightId: number) {
   const { data } = await client.post<
     ApiResponse<{ liked: boolean; likes_count: number }>
@@ -440,6 +441,24 @@ export async function addPrivateMessage(
 ) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/conversations/${conversationId}/messages/`,
+    payload,
+  );
+  return data;
+}
+
+export async function fetchDirectMessages(targetUsername: string) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/direct-messages/${targetUsername}/`,
+  );
+  return data;
+}
+
+export async function addDirectMessage(
+  targetUsername: string,
+  payload: { text: string },
+) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/direct-messages/${targetUsername}/`,
     payload,
   );
   return data;

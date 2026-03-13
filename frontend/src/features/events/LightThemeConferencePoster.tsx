@@ -7,7 +7,7 @@ import {
   Circle,
   Square
 } from 'lucide-react';
-import { MainInfoTimeLocationBox } from './EventItemUIComponents';
+import { MainInfoTimeLocationBox, OnlineTimeLocationBox } from './EventItemUIComponents';
 
 /**
  * LightThemeConferencePoster
@@ -91,9 +91,9 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
       <Box
         sx={{
           aspectRatio: '1 / 1',
-          mt: 4,
           position: 'relative',
-          maxHeight: '75%',
+          height: '100%',
+          mt: 4,
           bgcolor: 'rgba(231, 208, 255, 0.2)', // purple-300 with transparency
           backdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.5)',
@@ -128,8 +128,8 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
         </Box>
 
 
-        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.08)', pt: 3 }}>
-          <MainInfoTimeLocationBox />
+        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.08)', pt: 2 }}>
+          <OnlineTimeLocationBox />
         </Box>
       </Box>
 

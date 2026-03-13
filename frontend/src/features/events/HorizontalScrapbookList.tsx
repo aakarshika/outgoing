@@ -1,11 +1,11 @@
 import { Box, Button, Typography } from '@mui/material';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode } from 'react';
 
 import { HostCard } from '@/components/ui/HostCard';
 
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 import { SideEnvelope } from './SideEnvelope';
+import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 
 interface HorizontalScrapbookListProps {
   title?: string;
@@ -29,23 +29,7 @@ export function HorizontalScrapbookList({
   onSeeAll,
 }: HorizontalScrapbookListProps) {
   const displayItems = items || events || [];
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftChevron, setShowLeftChevron] = useState(false);
-  const [showRightChevron, setShowRightChevron] = useState(true);
   const showEnvelope = displayItems.length > 5;
-
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setShowLeftChevron(scrollLeft > 0);
-    setShowRightChevron(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (!scrollContainerRef.current) return;
-    const scrollAmount = direction === 'left' ? -400 : 400;
-    scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  };
   const Title = () => {
     return (
       <Box
@@ -59,6 +43,7 @@ export function HorizontalScrapbookList({
           left: 0,
           right: 0,
           zIndex: 10,
+          pointerEvents: 'none',
         }}
       >
         <Box sx={{ position: 'relative' }}>
@@ -94,6 +79,7 @@ export function HorizontalScrapbookList({
               fontFamily: 'serif',
               textTransform: 'none',
               color: '#666',
+              pointerEvents: 'auto',
               '&:hover': { textDecoration: 'underline', bgcolor: 'transparent' },
             }}
           >
@@ -104,48 +90,10 @@ export function HorizontalScrapbookList({
     );
   };
 
-  const LeftChevronButton = () => {
-    return (
-      <Box
-        sx={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          zIndex: 10,
-          width: 80,
-          display: { xs: 'none', md: 'flex' },
-          alignItems: 'center',
-          background: 'linear-gradient(to right, #f8f9fa 20%, transparent)',
-          pointerEvents: 'none',
-        }}
-      >
-        <Button
-          onClick={() => scroll('left')}
-          sx={{
-            minWidth: 40,
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            bgcolor: '#fff',
-            boxShadow: 2,
-            ml: 2,
-            pointerEvents: 'auto',
-            color: '#000',
-            '&:hover': { bgcolor: '#f0f0f0' },
-          }}
-        >
-          <ChevronLeft size={24} />
-        </Button>
-      </Box>
-    );
-  };
   const ListItems = () => {
     return (
 
       <Box
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
         sx={{
           display: 'flex',
           justifyContent:
@@ -155,6 +103,7 @@ export function HorizontalScrapbookList({
           gap: { xs: 1, sm: 2, md: 3 },
           overflowX: 'auto',
           overflowY: 'hidden',
+          overscrollBehaviorX: 'contain',
           scrollbarWidth: 'none',
           px: { xs: 2, sm: 4, lg: 8 },
           pb: 4,
@@ -208,7 +157,6 @@ export function HorizontalScrapbookList({
                   sx={{
                     width: { xs: 240, sm: 280, md: 320 },
                     flexShrink: 0,
-                    scrollSnapAlign: 'start',
                   }}
                 >
                   {renderItem ? renderItem(item) : <ScrapbookEventCard event={item} />}
@@ -230,7 +178,6 @@ export function HorizontalScrapbookList({
                       sx={{
                         width: { xs: 240, sm: 280, md: 320 },
                         flexShrink: 0,
-                        scrollSnapAlign: 'start',
                       }}
                     >
                       <Box
@@ -242,12 +189,7 @@ export function HorizontalScrapbookList({
                           bgcolor: 'transparent',
                         }}
                       >
-                        <HostCard
-                          host={{ username: 'legendary.host', avatar: null }}
-                          rating={4.9}
-                          tag="Top 1% Host"
-                          rotation={0}
-                        />
+                        <PlatformDescriptionCard /> 
                       </Box>
                     </Box>
                   </Box>,
@@ -279,43 +221,6 @@ export function HorizontalScrapbookList({
 
     );
   };
-  const RightChevronButton = () => {
-    return (
-      <Box
-        sx={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          bottom: 0,
-          zIndex: 10,
-          width: 80,
-          display: { xs: 'none', md: 'flex' },
-          alignItems: 'center',
-          // background: 'linear-gradient(to left, #f8f1df 20%, transparent)',
-          pointerEvents: 'none',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Button
-          onClick={() => scroll('right')}
-          sx={{
-            minWidth: 40,
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            bgcolor: '#fff',
-            boxShadow: 2,
-            mr: 2,
-            pointerEvents: 'auto',
-            color: '#000',
-            '&:hover': { bgcolor: '#f0f0f0' },
-          }}
-        >
-          <ChevronRight size={24} />
-        </Button>
-      </Box>
-    );
-  };
 
 
 
@@ -327,20 +232,12 @@ export function HorizontalScrapbookList({
       {title && (
         <Title />
       )}
-      {/* Left Chevron */}
-      {showEnvelope && showLeftChevron && (
-        <LeftChevronButton />
-      )}
       {showEnvelope ? (
         <SideEnvelope>
           <ListItems />
         </SideEnvelope>
       ) : (
         <ListItems />
-      )}
-      {/* Right Chevron */}
-      {showEnvelope && showRightChevron && (
-        <RightChevronButton />
       )}
     </Box>
   );

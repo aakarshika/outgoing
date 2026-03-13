@@ -53,6 +53,8 @@ import {
   fetchPrivateMessages,
   addPrivateMessage,
   getOrCreatePrivateConversation,
+  fetchDirectMessages,
+  addDirectMessage,
 } from './api';
 
 export function useFeed(params: {
@@ -286,6 +288,7 @@ export function usePurchaseTicket() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['event'] });
+      queryClient.invalidateQueries({ queryKey: ['hostVendorMessages'] });
       queryClient.invalidateQueries({ queryKey: ['myTickets'] });
     },
   });
@@ -413,11 +416,11 @@ export function useAddHighlightComment() {
   });
 }
 
-export function useHostVendorMessages(eventId: number) {
+export function useHostVendorMessages(eventId: number, enabled = true) {
   return useQuery({
     queryKey: ['hostVendorMessages', eventId],
     queryFn: () => fetchHostVendorMessages(eventId),
-    enabled: !!eventId,
+    enabled: !!eventId && enabled,
     refetchInterval: 5000,
   });
 }
@@ -609,5 +612,32 @@ export function useGetOrCreatePrivateConversation() {
       eventId: number;
       targetUsername: string;
     }) => getOrCreatePrivateConversation(eventId, targetUsername),
+  });
+}
+
+export function useDirectMessages(targetUsername?: string) {
+  return useQuery({
+    queryKey: ['direct-messages', targetUsername],
+    queryFn: () => (targetUsername ? fetchDirectMessages(targetUsername) : null),
+    enabled: !!targetUsername,
+    refetchInterval: 5000,
+  });
+}
+
+export function useAddDirectMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      targetUsername,
+      payload,
+    }: {
+      targetUsername: string;
+      payload: { text: string };
+    }) => addDirectMessage(targetUsername, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['direct-messages', variables.targetUsername],
+      });
+    },
   });
 }

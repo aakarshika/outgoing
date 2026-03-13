@@ -24,6 +24,7 @@ from .views import (
     MyEventsView,
     MyInterestedEventsView,
     EventHostVendorMessageListCreateView,
+    UserDirectMessageListCreateView,
 )
 
 urlpatterns = [
@@ -84,5 +85,10 @@ urlpatterns = [
         "<int:event_id>/host-vendor-messages/",
         EventHostVendorMessageListCreateView.as_view(),
         name="event_host_vendor_messages",
+    ),
+    path(
+        "direct-messages/<str:target_username>/",
+        UserDirectMessageListCreateView.as_view(),
+        name="user_direct_messages",
     ),
 ]

@@ -6,7 +6,6 @@ import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import {
   useAddHostVendorMessage,
-  useGetOrCreatePrivateConversation,
   useHostVendorMessages,
 } from '@/features/events/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
@@ -15,20 +14,18 @@ interface InkNotebookChatProps {
   eventId: number;
   eventHostUsername: string;
   participatingVendors?: any[];
-  participants?: string[];
+  canAccessChat?: boolean;
 }
 
 export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
   eventId,
   eventHostUsername,
   participatingVendors = [],
-  participants = [],
+  canAccessChat = false,
 }) => {
   const { user } = useAuth();
-  const { data: messagesResponse } = useHostVendorMessages(eventId);
+  const { data: messagesResponse } = useHostVendorMessages(eventId, canAccessChat);
   const addMessage = useAddHostVendorMessage();
-  const getOrCreatePrivateConv = useGetOrCreatePrivateConversation();
-  
   const [messageText, setMessageText] = useState('');
   const { openChat } = useChatDrawer();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,11 +40,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
     scrollToBottom();
   }, [messagesResponse?.data]);
 
-  const isParticipant = user?.username
-    ? participants.includes(user.username)
-    : false;
-
-  if (!isParticipant) {
+  if (!user || !canAccessChat) {
     return null;
   }
 
@@ -68,20 +61,18 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
 
   const handlePrivateChatClick = (targetUsername: string) => {
     if (!user || user.username === targetUsername) return;
-    
-    getOrCreatePrivateConv.mutate(
-      { eventId, targetUsername },
-      {
-        onSuccess: (response) => {
-          openChat({
-            title: `Chat with ${targetUsername}`,
-            mode: 'private',
-            conversationId: response.data.id,
-            eventId: eventId
-          });
-        },
-      }
-    );
+
+    console.debug('[InkNotebookChat] chat icon clicked', {
+      eventId,
+      currentUsername: user.username,
+      targetUsername,
+    });
+
+    openChat({
+      title: `Chat with ${targetUsername}`,
+      mode: 'direct',
+      targetUsername,
+    });
   };
 
   const getRoleInfo = (username: string) => {

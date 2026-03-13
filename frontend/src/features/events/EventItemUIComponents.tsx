@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { formatEventPrice, getEventCardRoles } from "./scrapbookCard";
 import { Box, Typography, TypographyProps } from '@mui/material';
-import { Calendar } from 'lucide-react';
+import { Calendar, Globe } from 'lucide-react';
 
 import { useAuth } from '@/features/auth/hooks';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
@@ -282,6 +282,36 @@ export const MainInfoCard = () => {
   )
 };
 
+export const OnlineTimeLocationBox = () => {
+  const { event, relativeTime } = useEventUIContext() ?? {};
+
+
+  return (
+
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+        }}>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Globe size={12} color="#2121b6ff" />
+          <Typography
+            sx={{
+              fontSize: '0.82rem',
+              fontWeight: 'bolder',
+              color: event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555',
+              fontFamily: 'serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {relativeTime}
+          </Typography>
+        </Box>
+
+      </Box>
+  );
+};
 export const MainInfoTimeLocationBox = () => {
   const { event, relativeTime } = useEventUIContext() ?? {};
 

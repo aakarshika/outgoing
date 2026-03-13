@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
     ArrowLeft,
     Bell,
+    Box,
     Briefcase,
     Calendar,
     CalendarDays,
@@ -277,7 +278,7 @@ export const UserInfoSection = () => {
                     className="relative flex cursor-pointer items-center gap-4 p-2 bg-white/40 border border-gray-200"
                     onClick={() => navigate(`/user/${user?.username}`)}
                 >
-                    <div className="w-16 h-16 rounded-none border-2 border-gray-800 bg-white overflow-hidden shadow-[2px_2px_0] p-1 rotate-3">
+                    <div className="w-16 h-16 rounded-none bg-white overflow-hidden shadow-[2px_2px_0] p-1 rotate-3">
                         {user?.avatar ? (
                             <img
                                 src={user.avatar}
@@ -329,7 +330,7 @@ export const EventManagementHeader = () => {
                     <button
                         type="button"
                         onClick={() => navigate('/events/' + event?.id + '')}
-                        className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
+                        className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={3} />
                     </button>
@@ -377,26 +378,59 @@ export const SearchBar = () => {
     return (
         <div className="flex-1 min-w-0">
             <div className="relative hidden md:flex w-full p-4">
+
+                {/* <div
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                px: 0.5,
+                bgcolor: 'transparent',
+                // Subtle invitation “sheet” without feeling like a heavy card
+                backdropFilter: 'blur(10px)',
+                background:
+                  'linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.0) 100%)',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  inset: 0,
+                  background: `
+            radial-gradient(600px 240px at 15% 10%, ${theme.bg} 0%, rgba(255,255,255,0) 60%),
+            radial-gradient(500px 220px at 90% 25%, rgba(34,197,94,0.2) 0%, rgba(255,255,255,0) 60%),
+            linear-gradient(90deg, rgba(148,163,184,0.2) 1px, transparent 1px),
+            linear-gradient(rgba(148,163,184,0.2) 1px, transparent 1px)
+          `,
+                  backgroundSize: 'auto, auto, 18px 18px, 18px 18px',
+                  opacity: 0.55,
+                  pointerEvents: 'none',
+                },
+              }}
+            > */}
                 <form
                     onSubmit={handleSearchSubmit}
-                    className="flex items-center w-full gap-3"
+                    className="flex items-center w-full gap-3
+                    hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all
+                    "
+
                     style={{ fontFamily: '"Permanent Marker"' }}
                 >
+
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onFocus={() => setShowSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                         placeholder="Search events..."
-                        className="flex-1 min-w-[140px] rounded-none border-2 border-gray-800 bg-white px-3 py-2.5 text-base outline-none text-gray-800 placeholder:text-gray-500 shadow-[2px_2px_0px_#333]"
+                        className="flex-1 min-w-[140px] backdrop-blur-md supports-[backdrop-filter]:bg-white/15 rounded-none bg-white/30 px-3 py-2.5 text-base outline-none text-gray-800 placeholder:text-gray-500 "
                         style={{ fontFamily: '"Permanent Marker"' }}
                     />
-                    <div className="h-7 w-[2px] bg-gray-400 mx-3 flex-shrink-0" />
                     <div className="relative flex-shrink-0" ref={locationDropdownRef}>
                         <button
                             type="button"
                             onClick={() => setLocationDropdownOpen((o) => !o)}
-                            className="flex items-center gap-2 rounded-none border-2 border-gray-800 bg-white px-4 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all min-w-[160px] justify-between"
+                            className="flex items-center gap-2 rounded-none backdrop-blur-md supports-[backdrop-filter]:bg-white/15  px-4 py-2  hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all min-w-[160px] justify-between"
                             style={{ fontFamily: '"Permanent Marker"' }}
                         >
                             <span className="flex items-center gap-2 truncate">
@@ -413,7 +447,7 @@ export const SearchBar = () => {
                         </button>
                         {locationDropdownOpen && (
                             <div
-                                className="absolute top-full left-0 mt-2 z-50 w-[380px] rounded-none border-2 border-gray-800 bg-[#f4f1ea] p-3 shadow-[4px_5px_0px_#333]"
+                                className="absolute top-full left-0 mt-2 z-50 w-[380px] rounded-none bg-[#f4f1ea] p-3 "
                                 style={{
                                     backgroundImage:
                                         'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
@@ -433,7 +467,7 @@ export const SearchBar = () => {
                                         toggleNearYou();
                                         setLocationDropdownOpen(false);
                                     }}
-                                    className="w-full flex items-center gap-3 rounded-none border-2 border-gray-800 px-4 py-3 text-left bg-blue-200/80 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold text-gray-900 mb-3"
+                                    className="w-full flex items-center gap-3 rounded-none px-4 py-3 text-left bg-blue-200/80 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold text-gray-900 mb-3"
                                     style={{ fontFamily: '"Permanent Marker"' }}
                                 >
                                     <LocateFixed
@@ -466,12 +500,12 @@ export const SearchBar = () => {
                                             )
                                         }
                                         placeholder="City or address..."
-                                        className="w-full rounded-none border-2 border-gray-800 bg-white px-3 py-2.5 text-gray-800 placeholder:text-gray-500 outline-none shadow-[2px_2px_0px_#333]"
+                                        className="w-full rounded-none bg-white px-3 py-2.5 text-gray-800 placeholder:text-gray-500 outline-none shadow-[2px_2px_0px_#333]"
                                         style={{ fontFamily: '"Permanent Marker"' }}
                                     />
                                     {showLocationSuggestions &&
                                         locationSuggestions.length > 0 && (
-                                            <div className="absolute top-full left-0 right-0 mt-1 rounded-none border-2 border-gray-800 bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
+                                            <div className="absolute top-full left-0 right-0 mt-1 rounded-none bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
                                                 {locationSuggestions.map((suggestion) => (
                                                     <button
                                                         key={suggestion.place_id}
@@ -513,7 +547,7 @@ export const SearchBar = () => {
                                             const v = parseInt(e.target.value, 10);
                                             if (!Number.isNaN(v)) setRadiusMiles(v);
                                         }}
-                                        className="w-20 rounded-none border-2 border-gray-800 bg-white px-3 py-2 text-gray-800 outline-none shadow-[2px_2px_0px_#333]"
+                                        className="w-20 rounded-none bg-white px-3 py-2 text-gray-800 outline-none shadow-[2px_2px_0px_#333]"
                                         style={{ fontFamily: '"Permanent Marker"' }}
                                     />
                                     <span
@@ -538,7 +572,7 @@ export const SearchBar = () => {
                                             navigate(`/?${params.toString()}`);
                                             setLocationDropdownOpen(false);
                                         }}
-                                        className="mt-3 w-full rounded-none border-2 border-gray-800 bg-red-100 px-3 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-gray-800 font-bold"
+                                        className="mt-3 w-full rounded-none bg-red-100 px-3 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-gray-800 font-bold"
                                         style={{ fontFamily: '"Permanent Marker"' }}
                                     >
                                         Clear location
@@ -548,14 +582,14 @@ export const SearchBar = () => {
                         )}
                     </div>
                     <ComicIconButton
-                        // variant="outline"
-                        variant="solid"
+                        variant="ghost"
+                        size={'sm'}
+                        // variant="solid"
                         accentColor="#f8c163"
                         Icon={Search}
-                        className="ml-2"
-                        iconProps={{ size: 20, strokeWidth: 3 }}
                     />
                 </form>
+                {/* </div> */}
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute top-[4rem] left-0 z-50 w-full overflow-y-auto max-h-[70vh] max-w-[70vh]">
                         {suggestions.map((suggestion: EventSearchSuggestion, index: number) => {

@@ -7,13 +7,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { HostCard } from '@/components/ui/HostCard';
 import { PostItNote } from '@/components/ui/PostItNote';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
-import type { EventDetail, EventListItem } from '@/types/events';
+import type { EventListItem } from '@/types/events';
 
 import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 import { StarCutoutCard } from './cards/StarCutoutCard';
 import { UserActionCard } from './cards/UserActionCard';
 import { useCarouselEvents, useTrendingHighlights } from './hooks';
-import { ScrapbookEventCardLandscape } from './ScrapbookEventCard';
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 
 export type MixedCarouselItem =
@@ -246,6 +245,9 @@ export function BedroomHeroCarousel() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasInitialPositionedRef = useRef(false);
+  const userInteractedRef = useRef(false);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeConsumedRef = useRef(false);
   const [centeredIndex, setCenteredIndex] = useState(0);
 
   const mixedEvents = useMemo(() => {
@@ -325,6 +327,27 @@ export function BedroomHeroCarousel() {
     container.scrollTo({ left: nodeCenter - containerCenter, behavior });
   };
 
+  const markUserInteracted = () => {
+    userInteractedRef.current = true;
+  };
+
+  const handleSwipeDelta = (deltaX: number, deltaY: number) => {
+    if (swipeConsumedRef.current) return;
+    const horizontalThreshold = 40;
+    const isHorizontalSwipe =
+      Math.abs(deltaX) >= horizontalThreshold && Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (!isHorizontalSwipe) return;
+
+    swipeConsumedRef.current = true;
+    moveByOneCard(deltaX < 0 ? 'next' : 'prev');
+  };
+
+  const moveByOneCard = (direction: 'next' | 'prev') => {
+    markUserInteracted();
+    setCenteredIndex((prev) => (direction === 'next' ? prev + 1 : prev - 1));
+  };
+
   // Apply scroll when centeredIndex changes.
   useEffect(() => {
     if (mixedEvents.length === 0) return;
@@ -355,6 +378,7 @@ export function BedroomHeroCarousel() {
   useEffect(() => {
     if (mixedEvents.length === 0) return;
     const interval = setInterval(() => {
+      if (userInteractedRef.current) return;
       setCenteredIndex((prev) => prev + 1);
     }, 5000);
     return () => clearInterval(interval);
@@ -382,12 +406,15 @@ export function BedroomHeroCarousel() {
       sx={{
         position: 'relative',
         width: '100%',
-        overflow: 'visible',
+        overflowX: 'hidden',
+        overflowY: 'visible',
       }}
     >
       {/* Navigation Buttons */}
       <IconButton
-        onClick={() => setCenteredIndex((prev) => prev - 1)}
+        onClick={() => {
+          moveByOneCard('prev');
+        }}
         sx={{
           position: 'absolute',
           left: 0,
@@ -401,7 +428,9 @@ export function BedroomHeroCarousel() {
         <ChevronLeft />
       </IconButton>
       <IconButton
-        onClick={() => setCenteredIndex((prev) => prev + 1)}
+        onClick={() => {
+          moveByOneCard('next');
+        }}
         sx={{
           position: 'absolute',
           right: 0,
@@ -418,17 +447,64 @@ export function BedroomHeroCarousel() {
       {/* Scrollable Container */}
       <Box
         ref={scrollRef}
+        onPointerDown={(e) => {
+          markUserInteracted();
+          swipeStartRef.current = { x: e.clientX, y: e.clientY };
+          swipeConsumedRef.current = false;
+        }}
+        onPointerMove={(e) => {
+          const start = swipeStartRef.current;
+          if (!start || swipeConsumedRef.current) return;
+          handleSwipeDelta(e.clientX - start.x, e.clientY - start.y);
+        }}
+        onPointerUp={() => {
+          swipeStartRef.current = null;
+          swipeConsumedRef.current = false;
+        }}
+        onPointerCancel={() => {
+          swipeStartRef.current = null;
+          swipeConsumedRef.current = false;
+        }}
+        onTouchStart={(e) => {
+          markUserInteracted();
+          const touch = e.touches[0];
+          if (!touch) return;
+          swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+          swipeConsumedRef.current = false;
+        }}
+        onTouchMove={(e) => {
+          const start = swipeStartRef.current;
+          const touch = e.touches[0];
+          if (!start || !touch || swipeConsumedRef.current) return;
+          handleSwipeDelta(touch.clientX - start.x, touch.clientY - start.y);
+          if (swipeConsumedRef.current) {
+            e.preventDefault();
+          }
+        }}
+        onTouchEnd={() => {
+          swipeStartRef.current = null;
+          swipeConsumedRef.current = false;
+        }}
+        onTouchCancel={() => {
+          swipeStartRef.current = null;
+          swipeConsumedRef.current = false;
+        }}
+        onWheel={(e) => {
+          e.preventDefault();
+        }}
         sx={{
           display: 'flex',
           overflowX: 'hidden',
           overflowY: 'hidden',
           py: 8,
-          scrollSnapType: 'none',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
           position: 'relative',
           zIndex: 10,
           alignItems: 'start',
+          touchAction: 'pan-y',
         }}
       >
         {/* Render Wavy String Segments */}
@@ -448,13 +524,13 @@ export function BedroomHeroCarousel() {
 
         {displayEvents.map((item, idx) => {
           const isFocused = idx === centeredIndex;
-          console.log('itemitemitemitem', item);
           return (
             <Box
               key={`card-${idx}`}
               data-card="true"
               sx={{
                 flex: '0 0 auto',
+                scrollSnapAlign: 'center',
               }}
             >
               {item.type === 'event' ? (

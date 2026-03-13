@@ -46,13 +46,6 @@ export const LocationTag = ({
     );
   }, [latitude, longitude, isOnline]);
 
-  if (isOnline) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-        <Globe size={size} color="#2121b6ff" />
-      </Box>
-    );
-  }
 
   let displayText = locationName;
   if (distanceMiles !== null && distanceMiles < 50) {
