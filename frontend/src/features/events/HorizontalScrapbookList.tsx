@@ -2,6 +2,8 @@ import { Box, Button, Typography } from '@mui/material';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 
+import { HostCard } from '@/components/ui/HostCard';
+
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 import { SideEnvelope } from './SideEnvelope';
 
@@ -30,6 +32,7 @@ export function HorizontalScrapbookList({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftChevron, setShowLeftChevron] = useState(false);
   const [showRightChevron, setShowRightChevron] = useState(true);
+  const showEnvelope = displayItems.length > 5;
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -145,6 +148,10 @@ export function HorizontalScrapbookList({
         onScroll={handleScroll}
         sx={{
           display: 'flex',
+          justifyContent:
+            !isLoading && displayItems.length > 0 && displayItems.length <= 5
+              ? 'center'
+              : 'flex-start',
           gap: { xs: 1, sm: 2, md: 3 },
           overflowX: 'auto',
           overflowY: 'hidden',
@@ -208,7 +215,45 @@ export function HorizontalScrapbookList({
                 </Box>
               </Box>
             );
-          })
+          }).concat(
+            displayItems.length <= 5
+              ? [
+                  <Box
+                    key="custom-card"
+                    sx={{
+                      display: 'flex',
+                      gap: { xs: 3, sm: 4, md: 6 },
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: { xs: 240, sm: 280, md: 320 },
+                        flexShrink: 0,
+                        scrollSnapAlign: 'start',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          transform: 'translateY(10px)',
+                          bgcolor: 'transparent',
+                        }}
+                      >
+                        <HostCard
+                          host={{ username: 'legendary.host', avatar: null }}
+                          rating={4.9}
+                          tag="Top 1% Host"
+                          rotation={0}
+                        />
+                      </Box>
+                    </Box>
+                  </Box>,
+                ]
+              : [],
+          )
         ) : (
           <Box sx={{ py: 4, width: '100%', textAlign: 'center' }}>
             {typeof emptyMessage === 'string' ? (
@@ -283,14 +328,18 @@ export function HorizontalScrapbookList({
         <Title />
       )}
       {/* Left Chevron */}
-      {showLeftChevron && (
+      {showEnvelope && showLeftChevron && (
         <LeftChevronButton />
       )}
-      <SideEnvelope>
+      {showEnvelope ? (
+        <SideEnvelope>
+          <ListItems />
+        </SideEnvelope>
+      ) : (
         <ListItems />
-      </SideEnvelope>
+      )}
       {/* Right Chevron */}
-      {showRightChevron && (
+      {showEnvelope && showRightChevron && (
         <RightChevronButton />
       )}
     </Box>

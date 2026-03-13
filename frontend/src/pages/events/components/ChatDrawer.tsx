@@ -260,7 +260,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   if (isMobile) {
     return (
-
       <Box
         sx={{
           position: 'fixed',
@@ -274,6 +273,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           flexDirection: 'column',
           zIndex: 100000,
           transition: 'height 0.3s ease',
+        }}
+        PaperProps={{
+          sx: {
+            height: '80vh',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 100000,
+          },
         }}
       >
         {content}

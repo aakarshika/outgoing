@@ -20,10 +20,11 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
   setEventFeatures,
   readonly = false,
 }) => {
-  const items = FEATURE_ITEMS.slice(0, 8);
+  const [expanded, setExpanded] = React.useState(false);
+  const items = expanded ? FEATURE_ITEMS : FEATURE_ITEMS.slice(0, 11);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2.5">
       {items.map((item) => {
         const selected = eventFeatures.find((f) => f.name === item.name);
         const cfg = selected ? TAG_COLORS[selected.tag] : null;
@@ -44,11 +45,11 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
                 ]);
               }
             }}
-            className={`h-10 w-10 rounded-full border transition-all flex items-center justify-center text-lg
+            className={`h-11 w-11 rounded-full border transition-all flex items-center justify-center text-xl
               ${
                 selected
-                  ? 'shadow-[2px_2px_0px_rgba(0,0,0,0.2)]'
-                  : 'bg-transparent border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:-translate-y-[1px] shadow-[1px_1px_0px_#e5e7eb]'
+                  ? 'shadow-[2px_2px_0px_rgba(0,0,0,0.2)] scale-110'
+                  : 'bg-transparent border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:-translate-y-[0.5px] shadow-[1px_1px_0px_#e5e7eb]'
               } ${readonly ? 'cursor-not-allowed' : ''}`}
             style={
               selected
@@ -67,7 +68,16 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
           </button>
         );
       })}
-      ...
+
+      {FEATURE_ITEMS.length > 11 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="h-11 px-4 rounded-full border border-dashed border-gray-300 text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-all flex items-center justify-center bg-white/50"
+        >
+          {expanded ? 'Less' : `+${FEATURE_ITEMS.length - 11} more`}
+        </button>
+      )}
     </div>
   );
 };

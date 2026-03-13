@@ -1,13 +1,15 @@
 import { Box, IconButton, InputBase, Paper, Typography } from '@mui/material';
-import { Send } from 'lucide-react';
+import { MessageSquare, Send } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import {
   useAddHostVendorMessage,
+  useGetOrCreatePrivateConversation,
   useHostVendorMessages,
 } from '@/features/events/hooks';
+import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 
 interface InkNotebookChatProps {
   eventId: number;
@@ -25,7 +27,10 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
   const { user } = useAuth();
   const { data: messagesResponse } = useHostVendorMessages(eventId);
   const addMessage = useAddHostVendorMessage();
+  const getOrCreatePrivateConv = useGetOrCreatePrivateConversation();
+  
   const [messageText, setMessageText] = useState('');
+  const { openChat } = useChatDrawer();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -58,6 +63,24 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
           setMessageText('');
         },
       },
+    );
+  };
+
+  const handlePrivateChatClick = (targetUsername: string) => {
+    if (!user || user.username === targetUsername) return;
+    
+    getOrCreatePrivateConv.mutate(
+      { eventId, targetUsername },
+      {
+        onSuccess: (response) => {
+          openChat({
+            title: `Chat with ${targetUsername}`,
+            mode: 'private',
+            conversationId: response.data.id,
+            eventId: eventId
+          });
+        },
+      }
     );
   };
 
@@ -194,6 +217,20 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
                       avatarSrc={msg.sender_avatar}
                       mode="normal"
                     />
+                    {!isMine && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handlePrivateChatClick(msg.sender_username)}
+                        sx={{
+                          p: 0.5,
+                          color: role.color,
+                          bgcolor: `${role.color}10`,
+                          '&:hover': { bgcolor: `${role.color}25` },
+                        }}
+                      >
+                        <MessageSquare size={14} />
+                      </IconButton>
+                    )}
                     <Typography
                       sx={{
                         fontFamily: '"Permanent Marker", cursive',

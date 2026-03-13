@@ -50,6 +50,9 @@ import {
   updateEventSeries,
   updateEventTicketTiers,
   updateTicket,
+  fetchPrivateMessages,
+  addPrivateMessage,
+  getOrCreatePrivateConversation,
 } from './api';
 
 export function useFeed(params: {
@@ -565,5 +568,46 @@ export function useAddReviewComment() {
       queryClient.invalidateQueries({ queryKey: ['event'] });
       queryClient.invalidateQueries({ queryKey: ['eventStory'] });
     },
+  });
+}
+
+// --- Private Chat ---
+
+export function usePrivateMessages(conversationId?: number) {
+  return useQuery({
+    queryKey: ['private-messages', conversationId],
+    queryFn: () => (conversationId ? fetchPrivateMessages(conversationId) : null),
+    enabled: !!conversationId,
+    refetchInterval: 5000,
+  });
+}
+
+export function useAddPrivateMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      payload,
+    }: {
+      conversationId: number;
+      payload: { text: string };
+    }) => addPrivateMessage(conversationId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['private-messages', variables.conversationId],
+      });
+    },
+  });
+}
+
+export function useGetOrCreatePrivateConversation() {
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      targetUsername,
+    }: {
+      eventId: number;
+      targetUsername: string;
+    }) => getOrCreatePrivateConversation(eventId, targetUsername),
   });
 }

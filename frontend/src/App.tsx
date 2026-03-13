@@ -21,6 +21,22 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 }
 
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
+import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
+import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
+
+function GlobalChatDrawer() {
+  const { isOpen, closeChat, params } = useChatDrawer();
+  return (
+    <ChatDrawer
+      isOpen={isOpen}
+      onClose={closeChat}
+      title={params?.title || 'Chat'}
+      mode={params?.mode || 'group'}
+      eventId={params?.eventId}
+      conversationId={params?.conversationId}
+    />
+  );
+}
 
 function AppContent() {
   const location = useLocation();
@@ -35,6 +51,7 @@ function AppContent() {
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
+      <GlobalChatDrawer />
       {!isGallery && (
         <div className="mt-50">
           <Footer />
@@ -51,8 +68,10 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <BackgroundProvider>
-              <ScrollToTop />
-              <AppContent />
+              <ChatDrawerProvider>
+                <ScrollToTop />
+                <AppContent />
+              </ChatDrawerProvider>
             </BackgroundProvider>
           </BrowserRouter>
           {process.env.NODE_ENV === 'development' && (

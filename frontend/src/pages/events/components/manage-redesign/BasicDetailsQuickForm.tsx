@@ -15,6 +15,7 @@ export interface BasicDetailsQuickFormProps {
   description: string;
   setDescription: (val: string) => void;
   readonly?: boolean;
+  stepMode?: 'names' | 'photo-desc' | 'full';
 }
 
 export const BasicDetailsQuickForm: React.FC<BasicDetailsQuickFormProps> = ({
@@ -25,9 +26,16 @@ export const BasicDetailsQuickForm: React.FC<BasicDetailsQuickFormProps> = ({
   setTitle,
   category,
   setCategory,
+  description,
+  setDescription,
   readonly = false,
+  stepMode = 'full',
 }) => {
-  return (
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
+
+  const showNames = stepMode === 'names' || stepMode === 'full';
+  const showPhotoDesc = stepMode === 'photo-desc' || stepMode === 'full';
+  const namesSection = (
     <div className="space-y-5">
       <ScrapbookInput
         label="Event Title"
@@ -55,10 +63,36 @@ export const BasicDetailsQuickForm: React.FC<BasicDetailsQuickFormProps> = ({
         }))}
         style={{ backgroundColor: 'transparent' }}
       />
+    </div>
+  );
 
+  const photoDescSection = (
+    <div className="space-y-4">
+      {showAdvanced && (
+        <ScrapbookInput
+          label="Description"
+          name="description"
+          multiline
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          disabled={readonly}
+          style={{ backgroundColor: 'transparent' }}
+        />
+      )}
+      
       <div>
-        <div className="text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">
-          Picture
+        <div className="flex justify-between items-center mb-1">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+            Picture
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:underline"
+          >
+            {showAdvanced ? 'Hide Advanced' : 'Show Advanced (Description)'}
+          </button>
         </div>
         <div
           className={`group relative h-44 w-full overflow-hidden border border-gray-300 bg-transparent shadow-[2px_2px_0px_#333] transition-all flex flex-col items-center justify-center
@@ -109,6 +143,13 @@ export const BasicDetailsQuickForm: React.FC<BasicDetailsQuickFormProps> = ({
           )}
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {showNames && namesSection}
+      {showPhotoDesc && photoDescSection}
     </div>
   );
 };

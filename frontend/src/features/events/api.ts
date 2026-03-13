@@ -427,3 +427,31 @@ export async function addReviewComment(
   );
   return data;
 }
+export async function fetchPrivateMessages(conversationId: number) {
+  const { data } = await client.get<ApiResponse<any[]>>(
+    `/events/conversations/${conversationId}/messages/`,
+  );
+  return data;
+}
+
+export async function addPrivateMessage(
+  conversationId: number,
+  payload: { text: string },
+) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/conversations/${conversationId}/messages/`,
+    payload,
+  );
+  return data;
+}
+
+export async function getOrCreatePrivateConversation(
+  eventId: number,
+  targetUsername: string,
+) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/${eventId}/get-or-create-conversation/`,
+    { target_username: targetUsername },
+  );
+  return data;
+}

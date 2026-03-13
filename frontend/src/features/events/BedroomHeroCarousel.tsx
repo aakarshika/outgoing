@@ -209,7 +209,7 @@ const CustomCardCarouselWrapper = ({
               />
             )}
             {cycleIndex === 3 && <StarCutoutCard />}
-            {cycleIndex === 4 && (
+            {false && cycleIndex === 4 && (
               <Box
                 sx={{
                   display: 'flex',

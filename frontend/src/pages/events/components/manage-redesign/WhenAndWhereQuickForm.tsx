@@ -1,5 +1,7 @@
-import { LocateFixed } from 'lucide-react';
+import { LocateFixed, ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+
+import { WhenAndWhereForm } from './WhenAndWhereForm';
 
 import { RecurringForm, RecurringFormProps } from './RecurringForm';
 import { ScrapbookInput } from './ui/ScrapbookInput';
@@ -23,6 +25,7 @@ export interface WhenAndWhereQuickFormProps extends RecurringFormProps {
   setGenerateUntil: (val: string) => void;
   previewDates: any[];
   readonly?: boolean;
+  stepMode?: 'online-toggle' | 'full';
 }
 
 const FULL_DAY_MS = 43200000;
@@ -48,8 +51,10 @@ export const WhenAndWhereQuickForm: React.FC<WhenAndWhereQuickFormProps> = ({
   setGenerateUntil,
   previewDates,
   readonly = false,
+  stepMode = 'full',
   ...recurringProps
 }) => {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [startTimeValue, setStartTimeValue] = useState('');
   const [endTimeValue, setEndTimeValue] = useState('');
@@ -123,102 +128,153 @@ export const WhenAndWhereQuickForm: React.FC<WhenAndWhereQuickFormProps> = ({
     locationAddressRef,
   ]);
 
-  return (
+  const onlineToggleSection = (
+    <div className="flex items-center justify-between">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-600 right-0">
+        Online
+      </div>
+      <button
+        type="button"
+        onClick={toggleOnline}
+        disabled={readonly}
+        className={`relative h-5 w-10 border transition-all ${locationMode === 'online'
+            ? 'bg-blue-600 border-blue-600'
+            : 'bg-transparent border-gray-300'
+          } ${readonly ? 'opacity-60 cursor-not-allowed' : ''}`}
+        aria-pressed={locationMode === 'online'}
+        aria-label="Toggle online event"
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${locationMode === 'online'
+              ? 'left-[18px] bg-white'
+              : 'left-0.5 bg-gray-400'
+            }`}
+        />
+      </button>
+    </div>
+  );
+
+  const fullSection = (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-600 right-0">
-          Online
+      <div className="flex justify-between items-center">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+          Basic Timing & Location
         </div>
         <button
           type="button"
-          onClick={toggleOnline}
-          disabled={readonly}
-          className={`relative h-5 w-10 border transition-all ${locationMode === 'online'
-              ? 'bg-blue-600 border-blue-600'
-              : 'bg-transparent border-gray-300'
-            } ${readonly ? 'opacity-60 cursor-not-allowed' : ''}`}
-          aria-pressed={locationMode === 'online'}
-          aria-label="Toggle online event"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-[10px] font-bold text-blue-600 uppercase tracking-wider flex items-center hover:underline"
         >
-          <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${locationMode === 'online'
-                ? 'left-[18px] bg-white'
-                : 'left-0.5 bg-gray-400'
-              }`}
-          />
+          {showAdvanced ? 'Hide Advanced' : 'Show Advanced (Precise Time/Recurrence)'}
         </button>
       </div>
 
-      <ScrapbookInput
-        type="date"
-        label="Start Date"
-        id="start_date"
-        name="start_date"
-        value={startDate}
-        required
-        disabled={readonly}
-        onChange={handleStartDateChange}
-        style={{ backgroundColor: 'transparent' }}
-      />
-
-      <div className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">
-        Time: 12:00 AM - 12:00 PM
-      </div>
-      <div className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">
-        Duration: Full Day
-      </div>
-
-      <input type="hidden" name="start_time" value={startTimeValue} />
-      <input type="hidden" name="end_time" value={endTimeValue} />
-
-      {showOfflineFields ? (
-        <>
-          <div className="relative">
-            {!readonly && (
-              <button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={isDetectingLocation}
-                className="absolute right-0 top-[-26px] z-10 text-[9px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider flex items-center"
-              >
-                <LocateFixed className="h-3 w-3 mr-1" />
-                {isDetectingLocation ? 'Detecting...' : 'Find Me'}
-              </button>
-            )}
-            <ScrapbookInput
-              id="location_address"
-              name="location_address"
-              ref={locationAddressRef as any}
-              label="Location Address"
-              example="123 Park Ave, NY"
-              defaultValue={locationAddressDefault}
-              required
-              disabled={readonly}
-              style={{ backgroundColor: 'transparent' }}
-            />
-          </div>
-
-          <input
-            type="hidden"
-            id="location_name"
-            name="location_name"
-            ref={locationNameRef as any}
-            defaultValue={locationNameDefault}
-          />
-
-          <input type="hidden" name="latitude" value={latitude} />
-          <input type="hidden" name="longitude" value={longitude} />
-        </>
+      {showAdvanced ? (
+        <WhenAndWhereForm
+          {...{
+            event,
+            latitude,
+            longitude,
+            isDetectingLocation,
+            locationNameRef,
+            locationAddressRef,
+            onlineUrl,
+            setOnlineUrl,
+            locationMode,
+            setLocationMode,
+            handleUseCurrentLocation,
+            dateToLocalValue,
+            eventDuration,
+            setEventDuration,
+            generateUntil,
+            setGenerateUntil,
+            previewDates,
+            readonly,
+            ...recurringProps,
+          }}
+        />
       ) : (
         <>
-          <input
-            type="hidden"
-            name="location_name"
-            value={onlineUrl || 'Online Event'}
+          {onlineToggleSection}
+
+          <ScrapbookInput
+            type="date"
+            label="Start Date"
+            id="start_date"
+            name="start_date"
+            value={startDate}
+            required
+            disabled={readonly}
+            onChange={handleStartDateChange}
+            style={{ backgroundColor: 'transparent' }}
           />
-          <input type="hidden" name="location_address" value="Online Event" />
+
+          <div className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">
+            Time: 12:00 AM - 12:00 PM
+          </div>
+          <div className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">
+            Duration: Full Day
+          </div>
+
+          <input type="hidden" name="start_time" value={startTimeValue} />
+          <input type="hidden" name="end_time" value={endTimeValue} />
+
+          {showOfflineFields ? (
+            <>
+              <div className="relative">
+                {!readonly && (
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isDetectingLocation}
+                    className="absolute right-0 top-[-26px] z-10 text-[9px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider flex items-center"
+                  >
+                    <LocateFixed className="h-3 w-3 mr-1" />
+                    {isDetectingLocation ? 'Detecting...' : 'Find Me'}
+                  </button>
+                )}
+                <ScrapbookInput
+                  id="location_address"
+                  name="location_address"
+                  ref={locationAddressRef as any}
+                  label="Location Address"
+                  example="123 Park Ave, NY"
+                  defaultValue={locationAddressDefault}
+                  required
+                  disabled={readonly}
+                  style={{ backgroundColor: 'transparent' }}
+                />
+              </div>
+
+              <input
+                type="hidden"
+                id="location_name"
+                name="location_name"
+                ref={locationNameRef as any}
+                defaultValue={locationNameDefault}
+              />
+
+              <input type="hidden" name="latitude" value={latitude} />
+              <input type="hidden" name="longitude" value={longitude} />
+            </>
+          ) : (
+            <>
+              <input
+                type="hidden"
+                name="location_name"
+                value={onlineUrl || 'Online Event'}
+              />
+              <input type="hidden" name="location_address" value="Online Event" />
+            </>
+          )}
         </>
       )}
+    </div>
+  );
+
+  return (
+    <div>
+      {stepMode === 'online-toggle' ? onlineToggleSection : fullSection}
     </div>
   );
 };
