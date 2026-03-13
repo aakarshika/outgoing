@@ -9,12 +9,14 @@ interface LikeButtonProps {
   eventId: number;
   initialIsInterested?: boolean;
   initialInterestCount?: number;
+  className?: string;
 }
 
 export const LikeButton = ({
   eventId,
   initialIsInterested = false,
   initialInterestCount = 0,
+  className,
 }: LikeButtonProps) => {
   const { isAuthenticated } = useAuth();
   const toggleInterest = useToggleInterest();
@@ -47,7 +49,10 @@ export const LikeButton = ({
   return (
     <button
       onClick={handleInterestClick}
-      className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-white/80 backdrop-blur-sm p-1.5 transition-all hover:bg-white hover:scale-110 shadow-sm z-10"
+      className={
+        className ??
+        "absolute top-2 left-2 flex items-center gap-1 rounded-full bg-white/80 backdrop-blur-sm p-1.5 transition-all hover:bg-white hover:scale-110 shadow-sm z-10"
+      }
       aria-label={isInterested ? 'Remove interest' : 'Mark interested'}
     >
       <Heart

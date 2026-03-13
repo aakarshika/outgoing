@@ -90,7 +90,7 @@ export const DynamicDescriptionTypography = ({
     >
       {children}
     </Typography>
-  );  
+  );
 };
 
 // Flexible event type for UI components that may not have all EventListItem fields
@@ -129,103 +129,103 @@ export interface ScrapbookEventData {
 export const MainInfoCardImage = () => {
   const { theme, isFocused, event, relativeTime } = useEventUIContext() ?? {};
 
-if (!event || !theme || !relativeTime) {
-  return null; // or return a loading state
-}
+  if (!event || !theme || !relativeTime) {
+    return null; // or return a loading state
+  }
 
-return (
-  <>
-            <Box
+  return (
+    <>
+      <Box
+        sx={{
+          aspectRatio: '1.85 / 1',
+          minHeight: 'auto',
+          overflow: 'hidden',
+          mb: 2,
+          position: 'relative',
+        }}
+      >
+        <Box
+          className="polaroid-img"
+          sx={{
+            width: '100%',
+            height: '100%',
+            maxHeight: isFocused ? '400px' : 'auto',
+            objectFit: isFocused ? 'contain' : 'cover',
+            transition: 'all 0.5s ease',
+            transformOrigin: 'top center',
+          }}
+        >
+          <PosterForEventCard
+            imageUrl={event?.cover_image || ''}
+            title={'df'}
+          />
+        </Box>
+      </Box>
+
+      <Box sx={{ px: 0.5, pl: '12px' }}>
+        <DynamicTitleTypography multiplier={0.4}>
+          {event.title}
+        </DynamicTitleTypography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <DynamicDescriptionTypography multiplier={0.5}>
+            {event.description}
+          </DynamicDescriptionTypography>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            gap: 1,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexShrink: 0,
+            }}
+          >
+            <Calendar size={12} color="#666" />
+            <Typography
               sx={{
-                aspectRatio: '1.85 / 1',
-                minHeight: 'auto',
-                overflow: 'hidden',
-                mb: 2,
-                position: 'relative',
+                fontSize: '0.75rem',
+                fontWeight: 'bolder',
+                color: '#666',
+                fontFamily: 'serif',
+                whiteSpace: 'nowrap',
               }}
             >
-              <Box
-                className="polaroid-img"
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  maxHeight: isFocused ? '400px' : 'auto',
-                  objectFit: isFocused ? 'contain' : 'cover',
-                  transition: 'all 0.5s ease',
-                  transformOrigin: 'top center',
-                }}
-              >
-                <PosterForEventCard
-                  imageUrl={event?.cover_image || ''}
-                  title={'df'}
-                />
-              </Box>
-            </Box>
+              {relativeTime}
+            </Typography>
+          </Box>
 
-            <Box sx={{ px: 0.5, pl: '12px' }}>
-              <DynamicTitleTypography multiplier={0.4}>
-                {event.title}
-              </DynamicTitleTypography>
+          <Box
+            sx={{
+              minWidth: 0,
+              flex: 1,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              overflow: 'hidden',
+            }}
+          >
+            <LocationTag
+              locationName={event.location_name}
+              locationAddress={event.location_address}
+              latitude={event.latitude}
+              longitude={event.longitude}
+              size={12}
+              color="#666"
+            />
+          </Box>
+        </Box>
+      </Box>
+    </>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <DynamicDescriptionTypography multiplier={0.5}>
-                {event.description}
-                </DynamicDescriptionTypography>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  width: '100%',
-                  gap: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Calendar size={12} color="#666" />
-                  <Typography
-                    sx={{
-                      fontSize: '0.75rem',
-                      fontWeight: 'bolder',
-                      color: '#666',
-                      fontFamily: 'serif',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {relativeTime}
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    minWidth: 0,
-                    flex: 1,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <LocationTag
-                    locationName={event.location_name}
-                    locationAddress={event.location_address}
-                    latitude={event.latitude}
-                    longitude={event.longitude}
-                    size={12}
-                    color="#666"
-                  />
-                </Box>
-              </Box>
-            </Box>
-          </>
-
-)
+  )
 };
 
 
@@ -296,56 +296,55 @@ export const MainInfoTimeLocationBox = () => {
         gap: 1,
       }}
     >
-      
+
       <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          gap: 1,
+        }}
+      ><Box
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'flex-start',
+          overflow: 'hidden',
+        }}
+      >
+          <LocationTag
+            locationName={event?.location_name || ''}
+            locationAddress={event?.location_address || ''}
+            latitude={event?.latitude}
+            longitude={event?.longitude}
+            size={13}
+            color={event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555'}
+          />
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            flexShrink: 0,
+          }}
+        >
+          <Typography
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              gap: 1,
+              fontSize: '0.82rem',
+              fontWeight: 'bolder',
+              color: event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555',
+              fontFamily: 'serif',
+              whiteSpace: 'nowrap',
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                flexShrink: 0,
-              }}
-            >
-              <Calendar size={13} color="#555" />
-              <Typography
-                sx={{
-                  fontSize: '0.82rem',
-                  fontWeight: 'bolder',
-                  color: '#555',
-                  fontFamily: 'serif',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {relativeTime}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                minWidth: 0,
-                flex: 1,
-                display: 'flex',
-                justifyContent: 'flex-start',
-                overflow: 'hidden',
-              }}
-            >
-              <LocationTag
-                locationName={event?.location_name || ''}
-                locationAddress={event?.location_address || ''}
-                latitude={event?.latitude}
-                longitude={event?.longitude}
-                size={13}
-                color="#555"
-              />
-            </Box>
-          </Box>
+            {relativeTime}
+          </Typography>
+        </Box>
+
+      </Box>
     </Box>
   );
 };
@@ -367,7 +366,7 @@ export const MainInfoBaseBox = ({ children }: { children: React.ReactNode }) => 
         p: 2.2,
       }}
     >
-          <ImageWatermarkPlaceholder theme={theme} size="md" iconOnly />
+      <ImageWatermarkPlaceholder theme={theme} size="md" iconOnly />
 
       {children}
     </Box>

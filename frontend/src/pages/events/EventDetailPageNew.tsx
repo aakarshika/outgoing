@@ -30,6 +30,7 @@ import { useMyServices } from '@/features/vendors/hooks';
 import { useBackground } from '@/theme/BackgroundProvider';
 
 import { AttendingList } from './components/AttendingList';
+import { InkNotebookChat } from './components/InkNotebookChat';
 import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
@@ -221,6 +222,14 @@ export default function EventDetailPageNew() {
   const isHost = user?.username === event.host.username;
   const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
 
+  const participantsUsernames: string[] = [
+    event.host?.username,
+    ...(event.participating_vendors || []).map(
+      (v: any) => v.vendor_username || v.username,
+    ),
+    ...(event.attendees || []).map((a: any) => a.username),
+  ].filter(Boolean);
+
   const handleBuyTicket = (tierId: number, _quantity: number) => {
     if (!isAuthenticated) return navigate('/signin');
     setSelectedTierId(tierId);
@@ -350,17 +359,6 @@ export default function EventDetailPageNew() {
 
             {/* Section 3: Content — Details + Tickets/Attendance */}
             <Grid container spacing={6}>
-              {/* Left Column: Details */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Box id="details">
-                  <DetailsSection
-                    event={event}
-                    isHost={isHost}
-                    displayNeeds={displayNeeds}
-                  />
-                </Box>
-              </Grid>
-
               {/* Right Column: Tickets, Attendance, Services */}
               <Grid
                 size={{ xs: 12, md: 6 }}
@@ -392,6 +390,13 @@ export default function EventDetailPageNew() {
             <Box id="attending">
               <AttendingList attendees={event?.attendees || []} />
             </Box>
+
+            <InkNotebookChat
+              eventId={event.id}
+              eventHostUsername={event.host.username}
+              participatingVendors={event.participating_vendors}
+              participants={participantsUsernames}
+            />
 
             {/* Section 5: Memory Box */}
             <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>

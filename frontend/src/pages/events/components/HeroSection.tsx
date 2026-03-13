@@ -12,6 +12,7 @@ import { PosterForTheEventImageCollage } from './PosterForTheEventImageCollage';
 import { WashiTape } from './scrapbookHelpers';
 import { TinyHostCard } from './TinyHostCard';
 import { WhenWhereCard } from './WhenWhereCard';
+import { CheckInMemo } from '@/components/ui/CheckInMemo';
 
 const LIFECYCLE_LABELS: Record<EventLifecycleState, string> = {
   draft: 'Draft',
@@ -116,6 +117,20 @@ export const HeroSection = ({
               </Box>
             </Box>
 
+            <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+            {/* <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
+          The Details
+        </Typography> */}
+            <Typography sx={{ lineHeight: 1.8, whiteSpace: 'pre-wrap', mb: 4 }}>
+              {event.description}
+            </Typography>
+
+            {/* Check-in Memo - Sibling to description */}
+            {event.check_in_instructions && (event.user_has_ticket || isHost) && (
+              <Box sx={{ mt: 4, mb: 4 }}>
+                <CheckInMemo instructions={event.check_in_instructions} />
+              </Box>
+            )}
             {/* Host Card - bottom right overlapped area */}
             <Box
               sx={{
@@ -138,6 +153,7 @@ export const HeroSection = ({
                 allChips={event.features}
               />
             </Box>
+
           </Box>
         </Grid>
 
@@ -211,20 +227,6 @@ export const HeroSection = ({
         </Grid>
       </Grid>
 
-      {/* Mobile Host details */}
-      <Box sx={{ display: { xs: 'block', sm: 'none' }, mb: 4, textAlign: 'center' }}>
-        <TinyHostCard
-          host={event.host}
-          categoryName={event.category.name}
-          rating={event.average_rating ?? undefined}
-          tag={
-            event.category?.name === 'Photography' ? 'Photographer' : 'Vibe Architect'
-          }
-          displayNeedsCount={displayNeedsCount}
-          displayNeeds={displayNeeds}
-          allChips={event.features}
-        />
-      </Box>
     </>
   );
 };

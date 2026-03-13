@@ -34,8 +34,8 @@ export const LocationTag = ({
         const a =
           Math.sin(dLat / 2) ** 2 +
           Math.cos((pos.coords.latitude * Math.PI) / 180) *
-            Math.cos((latitude * Math.PI) / 180) *
-            Math.sin(dLon / 2) ** 2;
+          Math.cos((latitude * Math.PI) / 180) *
+          Math.sin(dLon / 2) ** 2;
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         setDistanceMiles(Math.round(R * c));
       },
@@ -48,26 +48,8 @@ export const LocationTag = ({
 
   if (isOnline) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Globe size={size} color="#3b82f6" />
-        <Typography
-          sx={{
-            fontSize: `${size / 16 + 0.05}rem`,
-            color: '#3b82f6',
-            fontFamily: 'serif',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            px: 0.5,
-            py: 0.2,
-            bgcolor: 'rgba(59, 130, 246, 0.1)',
-            borderRadius: '4px',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-          }}
-        >
-          Online
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+        <Globe size={size} color="#2121b6ff" />
       </Box>
     );
   }

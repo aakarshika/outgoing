@@ -25,11 +25,11 @@ export const AttendingList = ({ attendees }: AttendingListProps) => {
   const displayAttendees = [...attendees, ...attendees, ...attendees, ...attendees];
 
   return (
-    <div className="relative mt-12 mb-8">
+    <div className="relative mt-12">
       {/* Comic book themed header */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center">
         <h3
-          className="text-2xl text-gray-900 bg-yellow-300 px-4 py-1 border-2 border-gray-800 shadow-[3px_3px_0px_#333] transform -rotate-1"
+          className="text-2xl text-gray-900  px-4 py-1  transform -rotate-1"
           style={{ fontFamily: '"Permanent Marker", cursive' }}
         >
           CHECK OUT WHO'S GOING
@@ -38,12 +38,12 @@ export const AttendingList = ({ attendees }: AttendingListProps) => {
       </div>
 
       <div
-        className="relative overflow-hidden border-t-2 border-b-2 border-gray-800 py-6 bg-white/50 backdrop-blur-sm"
+        className="relative overflow-hidden border-b-2 border-gray-800 backdrop-blur-sm"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         <div
-          className={`flex gap-8 items-center whitespace-nowrap ${isPaused ? 'pause-scrolling' : 'animate-scroll'}`}
+          className={`flex items-center whitespace-nowrap ${isPaused ? 'pause-scrolling' : 'animate-scroll'}`}
           style={{
             animation:
               attendees.length > 0
@@ -55,7 +55,7 @@ export const AttendingList = ({ attendees }: AttendingListProps) => {
           {displayAttendees.map((attendee, index) => (
             <div
               key={`${attendee.username}-${index}`}
-              className="group flex items-center gap-3 border-2 border-gray-800 bg-white p-2 shadow-[2px_2px_0px_#333] transition-transform hover:-translate-y-1 hover:rotate-1"
+              className="group flex items-center  p-2  transition-transform hover:-translate-y-1 hover:rotate-1"
             >
               <div className="relative">
                 <UserAvatar

@@ -101,34 +101,5 @@ export const DetailsSection = ({
     }));
   });
 
-  return (
-    <Box sx={{}}>
-      {/* Description */}
-      <Paper
-        sx={{
-          p: 4,
-          position: 'relative',
-          bgcolor: ['utensils', 'book-open'].includes(event.category?.icon || '')
-            ? '#fdf8f4'
-            : '#fff',
-          color: 'inherit',
-        }}
-      >
-        <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
-        {/* <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
-          The Details
-        </Typography> */}
-        <Typography sx={{ lineHeight: 1.8, whiteSpace: 'pre-wrap', mb: 4 }}>
-          {event.description}
-        </Typography>
-
-        {/* Check-in Memo - Sibling to description */}
-        {event.check_in_instructions && (event.user_has_ticket || isHost) && (
-          <Box sx={{ mt: 4, mb: 4 }}>
-            <CheckInMemo instructions={event.check_in_instructions} />
-          </Box>
-        )}
-      </Paper>
-    </Box>
-  );
+  return null;
 };

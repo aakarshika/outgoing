@@ -28,6 +28,7 @@ import {
   SIGNED_IN_SECTIONS,
   SIGNED_OUT_SECTIONS,
 } from './SectionConfig';
+import { LightThemeConferencePoster } from '@/features/events/LightThemeConferencePoster';
 
 export default function HomePage() {
   const [searchParams] = useSearchParams();

@@ -867,11 +867,14 @@ class EventHostVendorMessageListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def _is_authorized(self, event, user):
-        """Check if user is host or confirmed vendor."""
+        """Check if user is host, confirmed vendor, or attendee with a used ticket."""
         if event.host == user:
             return True
         from apps.needs.models import NeedApplication
-        return NeedApplication.objects.filter(vendor=user, need__event=event).exists()
+        if NeedApplication.objects.filter(vendor=user, need__event=event).exists():
+            return True
+        from apps.tickets.models import Ticket
+        return Ticket.objects.filter(goer=user, event=event, status="used").exists()
 
     def get(self, request, event_id):
         """Get all messages for this event's host-vendor chat."""
