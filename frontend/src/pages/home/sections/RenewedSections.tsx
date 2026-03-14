@@ -1,11 +1,15 @@
+import { LocateFixed, MapPin, Search } from 'lucide-react';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import { useFeed, useTopVendorsFeed, useTrendingHighlights } from '@/features/events/hooks';
 import { HeroNegativeStripGallery } from '@/pages/events/components/HeroNegativeStripGallery';
+import { searchLocation } from '@/utils/geolocation';
+import type { LocationSuggestion } from '@/utils/geolocation';
+import { useDebouncedValue } from '@/utils/useDebouncedValue';
 import { useNearYou } from '@/utils/useNearYou';
 
 export type FeedTab = 'relevant' | 'trending' | 'nearby';
@@ -391,10 +395,75 @@ export function HostingAndGigsCardsSection() {
 }
 
 export function MapPlaceholderSection() {
-  const { enabled, coords, toggleLocation, isDetecting, locationName } = useNearYou();
+  const { enabled, coords, toggleLocation, isDetecting, locationName, radiusMiles, setRadiusMiles } =
+    useNearYou();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isMapInteractive, setIsMapInteractive] = useState(false);
+  const [locationSearch, setLocationSearch] = useState(searchParams.get('location') || '');
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 300);
 
-  if (!enabled || !coords) {
+  const latParam = searchParams.get('lat');
+  const lngParam = searchParams.get('lng');
+  const parsedLat = latParam ? Number.parseFloat(latParam) : Number.NaN;
+  const parsedLng = lngParam ? Number.parseFloat(lngParam) : Number.NaN;
+  const mapLat = Number.isFinite(parsedLat) ? parsedLat : coords?.lat;
+  const mapLng = Number.isFinite(parsedLng) ? parsedLng : coords?.lng;
+
+  useEffect(() => {
+    const locationFromParams = searchParams.get('location') || '';
+    if (locationFromParams) {
+      setLocationSearch(locationFromParams);
+      return;
+    }
+    if (!locationSearch && enabled && locationName) {
+      setLocationSearch(locationName);
+    }
+  }, [searchParams, enabled, locationName, locationSearch]);
+
+  useEffect(() => {
+    let active = true;
+    if (debouncedLocationSearch.trim().length < 3 || enabled) {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+      return;
+    }
+    searchLocation(debouncedLocationSearch).then((results) => {
+      if (!active) return;
+      setLocationSuggestions(results);
+      setShowLocationSuggestions(results.length > 0);
+    });
+    return () => {
+      active = false;
+    };
+  }, [debouncedLocationSearch, enabled]);
+
+  const applyLocationParams = (nextLocation: string, nextLat?: string, nextLng?: string) => {
+    const params = new URLSearchParams(window.location.search);
+    const trimmedLocation = nextLocation.trim();
+    if (trimmedLocation) {
+      params.set('location', trimmedLocation);
+      params.set('radius_miles', String(radiusMiles));
+    } else {
+      params.delete('location');
+      params.delete('radius_miles');
+    }
+    if (nextLat && nextLng) {
+      params.set('lat', nextLat);
+      params.set('lng', nextLng);
+    } else if (enabled && coords) {
+      params.set('lat', String(coords.lat));
+      params.set('lng', String(coords.lng));
+    } else {
+      params.delete('lat');
+      params.delete('lng');
+    }
+    navigate(`/?${params.toString()}`);
+  };
+
+  if (!Number.isFinite(mapLat) || !Number.isFinite(mapLng)) {
     return (
       <Box
         sx={{
@@ -421,7 +490,12 @@ export function MapPlaceholderSection() {
             Enable location to view your current area on the map.
           </Typography>
           <Button
-            onClick={toggleLocation}
+            onClick={() => {
+              toggleLocation();
+              if (locationSearch.trim()) {
+                applyLocationParams(locationSearch);
+              }
+            }}
             variant="contained"
             sx={{
               textTransform: 'none',
@@ -440,7 +514,9 @@ export function MapPlaceholderSection() {
     );
   }
 
-  const embedUrl = buildNoPinOsmEmbedUrl(coords.lat, coords.lng);
+  const resolvedMapLat = mapLat as number;
+  const resolvedMapLng = mapLng as number;
+  const embedUrl = buildNoPinOsmEmbedUrl(resolvedMapLat, resolvedMapLng);
 
   return (
     <Box
@@ -460,107 +536,332 @@ export function MapPlaceholderSection() {
           boxShadow: { xs: 'none', sm: '6px 6px 0 #1a1a1a' },
           overflow: 'hidden',
           position: 'relative',
+          minHeight: { xs: 'auto', md: isMapInteractive ? 410 : 360 },
+          display: { xs: 'block', md: isMapInteractive ? 'block' : 'flex' },
         }}
       >
         <Box
-          component="iframe"
-          title="Current location map"
-          src={embedUrl}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
           sx={{
-            width: '100%',
-            height: { xs: 260, md: 320 },
-            border: 0,
-            display: 'block',
-            pointerEvents: isMapInteractive ? 'auto' : 'none',
-          }}
-        />
-        {!isMapInteractive ? (
-          <Box
-            onClick={() => setIsMapInteractive(true)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                setIsMapInteractive(true);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Enable map interaction"
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              touchAction: 'pan-y',
-              bgcolor: 'rgba(0, 0, 0, 0.08)',
-            }}
-          >
-            <Typography
-              sx={{
-                px: 2.5,
-                py: 1,
-                borderRadius: 2,
-                fontFamily: '"Permanent Marker"',
-                fontSize: '0.9rem',
-                bgcolor: 'rgba(255,255,255,0.95)',
-                border: '1px solid rgba(0,0,0,0.2)',
-                color: '#1f2937',
-              }}
-            >
-              Browse Nearby
-            </Typography>
-          </Box>
-        ) : null}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            px: 1.5,
-            py: 0.75,
-            bgcolor: 'rgba(255,255,255,0.92)',
-            border: '1px solid rgba(0,0,0,0.2)',
-            borderRadius: 1,
-            zIndex: 3,
+            position: isMapInteractive ? 'absolute' : 'relative',
+            inset: isMapInteractive ? 0 : 'auto',
+            width: isMapInteractive ? '100%' : { xs: '100%', md: '50%' },
+            height: isMapInteractive ? '100%' : 'auto',
+            zIndex: 1,
           }}
         >
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.85rem' }}>
-            Current Location
-          </Typography>
-          <Typography sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: '0.75rem' }}>
-            {locationName || 'Near you'}
-          </Typography>
-        </Box>
-        {isMapInteractive ? (
-          <Button
-            onClick={() => setIsMapInteractive(false)}
+          <Box
+            component="iframe"
+            title="Current location map"
+            src={embedUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            sx={{
+              width: '100%',
+              height: { xs: isMapInteractive ? 300 : 260, md: isMapInteractive ? 410 : 360 },
+              border: 0,
+              display: 'block',
+              pointerEvents: isMapInteractive ? 'auto' : 'none',
+            }}
+          />
+          {!isMapInteractive ? (
+            <Box
+              onClick={() => setIsMapInteractive(true)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setIsMapInteractive(true);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Enable map interaction"
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                touchAction: 'pan-y',
+                bgcolor: 'rgba(0, 0, 0, 0.08)',
+              }}
+            >
+              <Typography
+                sx={{
+                  px: 2.5,
+                  py: 1,
+                  borderRadius: 2,
+                  fontFamily: '"Permanent Marker"',
+                  fontSize: '0.9rem',
+                  bgcolor: 'rgba(255,255,255,0.95)',
+                  border: '1px solid rgba(0,0,0,0.2)',
+                  color: '#1f2937',
+                }}
+              >
+                Tap to enable map zoom
+              </Typography>
+            </Box>
+          ) : null}
+          <Box
             sx={{
               position: 'absolute',
-              right: 10,
               top: 10,
-              zIndex: 3,
-              textTransform: 'none',
-              fontFamily: '"Permanent Marker"',
-              fontSize: '0.75rem',
-              minWidth: 'auto',
-              px: 1.25,
-              py: 0.5,
-              color: '#1f2937',
+              left: 10,
+              px: 1.5,
+              py: 0.75,
               bgcolor: 'rgba(255,255,255,0.92)',
               border: '1px solid rgba(0,0,0,0.2)',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,1)',
-              },
+              borderRadius: 1,
+              zIndex: 3,
             }}
           >
-            Done
+            <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.85rem' }}>
+              Current Location
+            </Typography>
+            <Typography sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: '0.75rem' }}>
+              {locationSearch || locationName || 'Near you'}
+            </Typography>
+          </Box>
+          {isMapInteractive ? (
+            <Button
+              onClick={() => setIsMapInteractive(false)}
+              sx={{
+                position: 'absolute',
+                right: 10,
+                bottom: 10,
+                zIndex: 3,
+                textTransform: 'none',
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.75rem',
+                minWidth: 'auto',
+                px: 1.25,
+                py: 0.5,
+                color: '#1f2937',
+                bgcolor: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(0,0,0,0.2)',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,1)',
+                },
+              }}
+            >
+              Lock Scroll
+            </Button>
+          ) : null}
+        </Box>
+
+        <Box
+          sx={{
+            width: { xs: '100%', md: isMapInteractive ? 'min(360px, 42%)' : '50%' },
+            ml: { xs: 0, md: isMapInteractive ? 'auto' : 0 },
+            p: { xs: 2, md: isMapInteractive ? 1.5 : 2.5 },
+            position: { xs: 'relative', md: isMapInteractive ? 'absolute' : 'relative' },
+            top: { xs: 'auto', md: isMapInteractive ? 12 : 'auto' },
+            right: { xs: 'auto', md: isMapInteractive ? 12 : 'auto' },
+            zIndex: 4,
+            bgcolor: isMapInteractive ? 'rgba(255, 247, 237, 0.72)' : '#fff7ed',
+            backdropFilter: isMapInteractive ? 'blur(8px)' : 'none',
+            borderLeft: { xs: 'none', md: isMapInteractive ? 'none' : '1px dashed rgba(26,26,26,0.2)' },
+            border: isMapInteractive ? '1px solid rgba(26,26,26,0.25)' : 'none',
+            borderRadius: isMapInteractive ? 1.5 : 0,
+            boxShadow: isMapInteractive ? '4px 4px 0 rgba(26,26,26,0.35)' : 'none',
+            maxHeight: { xs: 'none', md: isMapInteractive ? 300 : 'none' },
+            overflowY: { xs: 'visible', md: isMapInteractive ? 'auto' : 'visible' },
+          }}
+        >
+          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: isMapInteractive ? '0.9rem' : '1rem', mb: 0.5 }}>
+            Location Filters
+          </Typography>
+          <Typography sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: isMapInteractive ? '0.8rem' : '0.9rem', mb: isMapInteractive ? 1.2 : 2 }}>
+            Use the same search controls from the navbar right here.
+          </Typography>
+
+          <Button
+            onClick={() => {
+              toggleLocation();
+              setShowLocationSuggestions(false);
+              if (enabled) {
+                applyLocationParams(locationSearch);
+              } else if (coords) {
+                applyLocationParams(locationName || locationSearch, String(coords.lat), String(coords.lng));
+              }
+            }}
+            sx={{
+              width: '100%',
+              justifyContent: 'flex-start',
+              gap: 1.25,
+              textTransform: 'none',
+              fontFamily: '"Permanent Marker"',
+              color: '#1f2937',
+              border: '2px solid #1a1a1a',
+              boxShadow: '3px 3px 0 #1a1a1a',
+              bgcolor: '#dbeafe',
+              mb: 2,
+              '&:hover': { bgcolor: '#bfdbfe' },
+            }}
+          >
+            <LocateFixed size={18} />
+            {enabled ? 'Disable current location' : 'Use current location'}
           </Button>
-        ) : null}
+
+          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.8rem', color: '#6b7280', mb: 0.75 }}>
+            Or type an address
+          </Typography>
+          <Box sx={{ position: 'relative', mb: 2 }}>
+            <Box
+              component="input"
+              value={locationSearch}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setLocationSearch(event.target.value);
+                if (enabled && event.target.value.trim()) {
+                  toggleLocation();
+                }
+              }}
+              onFocus={() => {
+                if (locationSuggestions.length > 0) setShowLocationSuggestions(true);
+              }}
+              onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 180)}
+              placeholder="City or address..."
+              sx={{
+                width: '100%',
+                border: '2px solid #1a1a1a',
+                boxShadow: '2px 2px 0 #1a1a1a',
+                px: 1.5,
+                py: 1.1,
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.95rem',
+                outline: 'none',
+                bgcolor: '#fff',
+              }}
+            />
+            {showLocationSuggestions && locationSuggestions.length > 0 ? (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 'calc(100% + 6px)',
+                  border: '2px solid #1a1a1a',
+                  boxShadow: '3px 3px 0 #1a1a1a',
+                  bgcolor: '#fff',
+                  zIndex: 7,
+                  maxHeight: 180,
+                  overflowY: 'auto',
+                }}
+              >
+                {locationSuggestions.map((suggestion) => (
+                  <Box
+                    key={suggestion.place_id}
+                    component="button"
+                    type="button"
+                    onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
+                    onClick={() => {
+                      setLocationSearch(suggestion.display_name);
+                      setShowLocationSuggestions(false);
+                      applyLocationParams(suggestion.display_name, suggestion.lat, suggestion.lon);
+                    }}
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      textAlign: 'left',
+                      px: 1.5,
+                      py: 1,
+                      border: 'none',
+                      borderBottom: '1px dashed rgba(107,114,128,0.4)',
+                      bgcolor: '#fff',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: '#fef3c7' },
+                      '&:last-of-type': { borderBottom: 'none' },
+                    }}
+                  >
+                    <Search size={14} style={{ marginTop: 2 }} />
+                    <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.82rem', lineHeight: 1.3 }}>
+                      {suggestion.display_name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ) : null}
+          </Box>
+
+          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.8rem', color: '#6b7280', mb: 0.75 }}>
+            Miles radius
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box
+              component="input"
+              type="number"
+              min={1}
+              max={500}
+              value={radiusMiles}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const value = Number.parseInt(event.target.value, 10);
+                if (!Number.isNaN(value)) {
+                  setRadiusMiles(value);
+                }
+              }}
+              sx={{
+                width: 84,
+                border: '2px solid #1a1a1a',
+                boxShadow: '2px 2px 0 #1a1a1a',
+                px: 1,
+                py: 1,
+                fontFamily: '"Permanent Marker"',
+                fontSize: '0.9rem',
+                outline: 'none',
+                bgcolor: '#fff',
+              }}
+            />
+            <Typography sx={{ fontFamily: '"Permanent Marker"', color: '#4b5563', fontSize: '0.85rem' }}>
+              miles
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              onClick={() => applyLocationParams(locationSearch)}
+              sx={{
+                flex: 1,
+                textTransform: 'none',
+                fontFamily: '"Permanent Marker"',
+                color: '#111827',
+                border: '2px solid #1a1a1a',
+                boxShadow: '2px 2px 0 #1a1a1a',
+                bgcolor: '#fde68a',
+                '&:hover': { bgcolor: '#fcd34d' },
+              }}
+            >
+              <MapPin size={16} style={{ marginRight: 6 }} />
+              Apply
+            </Button>
+            <Button
+              onClick={() => {
+                setLocationSearch('');
+                setShowLocationSuggestions(false);
+                const params = new URLSearchParams(window.location.search);
+                params.delete('location');
+                params.delete('lat');
+                params.delete('lng');
+                params.delete('radius_miles');
+                navigate(params.toString() ? `/?${params.toString()}` : '/');
+              }}
+              sx={{
+                flex: 1,
+                textTransform: 'none',
+                fontFamily: '"Permanent Marker"',
+                color: '#111827',
+                border: '2px solid #1a1a1a',
+                boxShadow: '2px 2px 0 #1a1a1a',
+                bgcolor: '#fecaca',
+                '&:hover': { bgcolor: '#fca5a5' },
+              }}
+            >
+              Clear
+            </Button>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
