@@ -4,7 +4,8 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import F, Max, Q
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -25,6 +26,8 @@ from apps.events.models import (
     EventReviewComment,
     EventHostVendorMessage,
     EventPrivateConversation,
+    EventPrivateMessage,
+    Friendship,
 )
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
@@ -44,7 +47,12 @@ from .serializers import (
     EventHighlightCommentSerializer,
     EventReviewCommentSerializer,
     EventHostVendorMessageSerializer,
+    EventGroupChatListSerializer,
+    EventPrivateConversationListSerializer,
     EventPrivateMessageSerializer,
+    FriendshipActionSerializer,
+    FriendshipRequestCreateSerializer,
+    FriendshipSerializer,
 )
 
 
@@ -983,4 +991,311 @@ class UserDirectMessageListCreateView(APIView):
                 message, context={"request": request}
             ).data,
             status=201,
+        )
+
+
+class EventPrivateConversationListView(APIView):
+    """List all private conversations for the authenticated user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        conversations = (
+            EventPrivateConversation.objects.filter(
+                Q(participant1=request.user) | Q(participant2=request.user)
+            )
+            .select_related(
+                "event",
+                "participant1",
+                "participant1__profile",
+                "participant2",
+                "participant2__profile",
+            )
+            .order_by("-updated_at")
+        )
+
+        management = conversations.filter(event__isnull=False)
+        network = conversations.filter(event__isnull=True)
+
+        group_chats = (
+            Event.objects.filter(host_vendor_messages__isnull=False)
+            .filter(
+                Q(host=request.user)
+                | Q(needs__applications__vendor=request.user)
+                | Q(tickets__goer=request.user, tickets__status__in=["active", "used"])
+            )
+            .annotate(latest_message_at=Max("host_vendor_messages__created_at"))
+            .distinct()
+            .order_by("-latest_message_at")
+        )
+
+        serializer_context = {"request": request}
+        return success_response(
+            data={
+                "management_group": EventGroupChatListSerializer(
+                    group_chats,
+                    many=True,
+                    context=serializer_context,
+                ).data,
+                "management": EventPrivateConversationListSerializer(
+                    management,
+                    many=True,
+                    context=serializer_context,
+                ).data,
+                "network": EventPrivateConversationListSerializer(
+                    network,
+                    many=True,
+                    context=serializer_context,
+                ).data,
+            }
+        )
+
+
+class EventPrivateConversationMessageListCreateView(APIView):
+    """List or create messages within a private conversation."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_conversation(self, request, conversation_id):
+        return (
+            EventPrivateConversation.objects.filter(
+                id=conversation_id,
+            )
+            .filter(Q(participant1=request.user) | Q(participant2=request.user))
+            .first()
+        )
+
+    def get(self, request, conversation_id):
+        conversation = self._get_conversation(request, conversation_id)
+        if conversation is None:
+            return error_response(message="Conversation not found", status=404)
+
+        messages = conversation.messages.select_related("sender", "sender__profile")
+        serializer = EventPrivateMessageSerializer(
+            messages, many=True, context={"request": request}
+        )
+        return success_response(data=serializer.data)
+
+    def post(self, request, conversation_id):
+        conversation = self._get_conversation(request, conversation_id)
+        if conversation is None:
+            return error_response(message="Conversation not found", status=404)
+
+        serializer = EventPrivateMessageSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        message = serializer.save(conversation=conversation, sender=request.user)
+        conversation.save(update_fields=["updated_at"])
+        return success_response(
+            data=EventPrivateMessageSerializer(
+                message, context={"request": request}
+            ).data,
+            status=201,
+        )
+
+
+class EventPrivateConversationGetOrCreateView(APIView):
+    """Get or create an event-tied private conversation."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        target_username = request.data.get("target_username")
+        if not target_username:
+            return error_response(message="target_username is required", status=400)
+
+        User = get_user_model()
+        try:
+            target_user = User.objects.get(username=target_username)
+        except User.DoesNotExist:
+            return error_response(message="User not found", status=404)
+
+        if target_user == request.user:
+            return error_response(message="Cannot create a conversation with yourself", status=400)
+
+        participant1, participant2 = sorted(
+            [request.user, target_user], key=lambda user: user.id
+        )
+        conversation, created = EventPrivateConversation.objects.get_or_create(
+            participant1=participant1,
+            participant2=participant2,
+            defaults={"event": event},
+        )
+        if conversation.event_id is None:
+            conversation.event = event
+            conversation.save(update_fields=["event", "updated_at"])
+
+        return success_response(
+            data={
+                "conversation_id": conversation.id,
+                "event_id": conversation.event_id,
+                "created": created,
+            }
+        )
+
+
+class EventFriendshipRequestCreateView(APIView):
+    """Create or re-send a friendship request tied to an event."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id, target_username):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        User = get_user_model()
+        try:
+            target_user = User.objects.get(username=target_username)
+        except User.DoesNotExist:
+            return error_response(message="User not found", status=404)
+
+        if target_user == request.user:
+            return error_response(
+                message="Cannot check buddy status for yourself",
+                status=400,
+            )
+
+        user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
+        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+
+        if friendship is None:
+            return success_response(data=None)
+
+        if friendship.met_at_event_id is None:
+            friendship.met_at_event = event
+            friendship.save(update_fields=["met_at_event", "updated_at"])
+
+        return success_response(
+            data=FriendshipSerializer(friendship).data,
+            message="Buddy status fetched",
+        )
+
+    def post(self, request, event_id, target_username):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        User = get_user_model()
+        try:
+            target_user = User.objects.get(username=target_username)
+        except User.DoesNotExist:
+            return error_response(message="User not found", status=404)
+
+        if target_user == request.user:
+            return error_response(
+                message="Cannot send a buddy request to yourself",
+                status=400,
+            )
+
+        serializer = FriendshipRequestCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
+        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+
+        if friendship and friendship.status == Friendship.STATUS_ACCEPTED:
+            return error_response(message="You are already buddies", status=409)
+
+        if friendship and friendship.status == Friendship.STATUS_PENDING:
+            return error_response(message="A buddy request is already pending", status=409)
+
+        request_message = serializer.validated_data.get("request_message", "")
+        if friendship:
+            friendship.request_sender = request.user
+            friendship.request_message = request_message
+            friendship.status = Friendship.STATUS_PENDING
+            friendship.accepted_at = None
+            friendship.met_at_event = event
+            friendship.save(
+                update_fields=[
+                    "request_sender",
+                    "request_message",
+                    "status",
+                    "accepted_at",
+                    "met_at_event",
+                    "updated_at",
+                ]
+            )
+        else:
+            friendship = Friendship.objects.create(
+                user1=user1,
+                user2=user2,
+                request_sender=request.user,
+                request_message=request_message,
+                status=Friendship.STATUS_PENDING,
+                met_at_event=event,
+            )
+
+        return success_response(
+            data=FriendshipSerializer(friendship).data,
+            message="Buddy request sent",
+            status=201,
+        )
+
+    def patch(self, request, event_id, target_username):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        User = get_user_model()
+        try:
+            target_user = User.objects.get(username=target_username)
+        except User.DoesNotExist:
+            return error_response(message="User not found", status=404)
+
+        if target_user == request.user:
+            return error_response(
+                message="Cannot update buddy status for yourself",
+                status=400,
+            )
+
+        serializer = FriendshipActionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(message="Validation Error", errors=serializer.errors)
+
+        user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
+        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+        if friendship is None:
+            return error_response(message="Buddy request not found", status=404)
+
+        action = serializer.validated_data["action"]
+
+        if action == "withdraw":
+            if friendship.status != Friendship.STATUS_PENDING:
+                return error_response(message="Only pending buddy requests can be withdrawn", status=400)
+            if friendship.request_sender_id != request.user.id:
+                return error_response(message="Only the sender can withdraw this buddy request", status=403)
+
+            friendship.status = Friendship.STATUS_CANCELLED
+            friendship.accepted_at = None
+            friendship.met_at_event = friendship.met_at_event or event
+            friendship.save(update_fields=["status", "accepted_at", "met_at_event", "updated_at"])
+            return success_response(
+                data=FriendshipSerializer(friendship).data,
+                message="Buddy request withdrawn",
+            )
+
+        if friendship.status != Friendship.STATUS_PENDING:
+            return error_response(message="Only pending buddy requests can be accepted", status=400)
+        if friendship.request_sender_id == request.user.id:
+            return error_response(message="You cannot accept your own buddy request", status=403)
+
+        friendship.status = Friendship.STATUS_ACCEPTED
+        friendship.accepted_at = timezone.now()
+        friendship.met_at_event = friendship.met_at_event or event
+        friendship.save(update_fields=["status", "accepted_at", "met_at_event", "updated_at"])
+        return success_response(
+            data=FriendshipSerializer(friendship).data,
+            message="Buddy request accepted",
         )

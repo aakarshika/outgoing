@@ -166,33 +166,34 @@ export function HorizontalScrapbookList({
           }).concat(
             displayItems.length <= 5
               ? [
-                  <Box
-                    key="custom-card"
-                    sx={{
-                      display: 'flex',
-                      gap: { xs: 3, sm: 4, md: 6 },
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: { xs: 240, sm: 280, md: 320 },
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          transform: 'translateY(10px)',
-                          bgcolor: 'transparent',
-                        }}
-                      >
-                        <PlatformDescriptionCard /> 
-                      </Box>
-                    </Box>
-                  </Box>,
+                <Box/>,
+                  // <Box
+                  //   key="custom-card"
+                  //   sx={{
+                  //     display: 'flex',
+                  //     gap: { xs: 3, sm: 4, md: 6 },
+                  //     alignItems: 'center',
+                  //   }}
+                  // >
+                  //   <Box
+                  //     sx={{
+                  //       width: { xs: 240, sm: 280, md: 320 },
+                  //       flexShrink: 0,
+                  //     }}
+                  //   >
+                  //     <Box
+                  //       sx={{
+                  //         display: 'flex',
+                  //         justifyContent: 'center',
+                  //         alignItems: 'center',
+                  //         transform: 'translateY(10px)',
+                  //         bgcolor: 'transparent',
+                  //       }}
+                  //     >
+                  //       <PlatformDescriptionCard /> 
+                  //     </Box>
+                  //   </Box>
+                  // </Box>,
                 ]
               : [],
           )

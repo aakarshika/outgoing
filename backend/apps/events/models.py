@@ -699,6 +699,74 @@ class EventPrivateConversation(models.Model):
         return f"{self.participant1.username} <-> {self.participant2.username}"
 
 
+class Friendship(models.Model):
+    """Friendship or friendship request between two users."""
+
+    STATUS_PENDING = "pending"
+    STATUS_ACCEPTED = "accepted"
+    STATUS_DECLINED = "declined"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_ACCEPTED, "Accepted"),
+        (STATUS_DECLINED, "Declined"),
+        (STATUS_CANCELLED, "Cancelled"),
+    ]
+
+    user1 = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="friendships_as_user1",
+    )
+    user2 = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="friendships_as_user2",
+    )
+    request_sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_friendship_requests",
+    )
+    request_message = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    met_at_event = models.ForeignKey(
+        Event,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="friendships_met_here",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user1", "user2"],
+                name="unique_friendship_pair",
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user1=models.F("user2")),
+                name="friendship_users_must_differ",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.user1_id and self.user2_id and self.user1_id > self.user2_id:
+            self.user1_id, self.user2_id = self.user2_id, self.user1_id
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user1.username} <-> {self.user2.username} ({self.status})"
+
+
 class EventPrivateMessage(models.Model):
     """Direct messages within a private conversation."""
 

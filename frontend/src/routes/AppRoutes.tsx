@@ -13,7 +13,7 @@ const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
-const HomePage = lazy(() => import('@/pages/home/HomePage'));
+const HomePage = lazy(() => import('@/pages/home/HomePageRenewed'));
 const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
 const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
 const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'));

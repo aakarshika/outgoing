@@ -6,6 +6,7 @@ import { Media } from '@/components/ui/media';
 
 interface HostCardProps {
   host: {
+    published_event_count: ReactNode;
     username: string;
     avatar: string | null;
   };
@@ -115,7 +116,7 @@ export const HostCard = ({
               transform: 'rotate(-2deg)',
             }}
           >
-            GRADE: {grade}
+            {host.published_event_count}
           </Box>
           <Box
             sx={{
@@ -130,8 +131,8 @@ export const HostCard = ({
               transform: 'rotate(1deg)',
             }}
           >
-            {tag}
-          </Box>
+            published
+            </Box>
         </Box>
       </Box>
     </Box>

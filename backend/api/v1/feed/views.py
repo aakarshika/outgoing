@@ -3,14 +3,15 @@
 from datetime import datetime, time, timedelta
 from math import cos, radians
 
+from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Case, Count, IntegerField, Q, Value, When
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from api.v1.events.serializers import EventHighlightSerializer, EventListSerializer
-from api.v1.profiles.serializers import IconicHostSerializer
 from api.v1.vendors.serializers import VendorServiceSerializer
 from apps.events.models import Event, EventHighlight, EventView
 from apps.profiles.models import UserProfile
@@ -267,15 +268,16 @@ class IconicHostsFeedView(APIView):
 
     def get(self, request):
         """Get the iconic hosts this week."""
-        page_size = int(request.query_params.get("page_size", 10))
+        page_size = int(request.query_params.get("page_size", 150))
+        User = get_user_model()
 
-        # Annotate UserProfiles with event stats
+        # Build from users directly so hosts without UserProfile still appear.
         hosts = (
-            UserProfile.objects.annotate(
+            User.objects.annotate(
                 published_event_count=Count(
-                    "user__hosted_events",
+                    "hosted_events",
                     filter=Q(
-                        user__hosted_events__lifecycle_state__in=[
+                        hosted_events__lifecycle_state__in=[
                             "published",
                             "event_ready",
                             "completed",
@@ -283,19 +285,57 @@ class IconicHostsFeedView(APIView):
                     ),
                     distinct=True,
                 ),
-                review_count=Count("user__hosted_events__reviews", distinct=True),
-                avg_rating=Avg("user__hosted_events__reviews__rating"),
+                non_draft_event_count=Count(
+                    "hosted_events",
+                    filter=~Q(hosted_events__lifecycle_state="draft"),
+                    distinct=True,
+                ),
+                review_count=Count("hosted_events__reviews", distinct=True),
+                avg_rating=Avg("hosted_events__reviews__rating"),
+                avatar=models.F("profile__avatar"),
+                headline=models.F("profile__headline"),
+                location_city=models.F("profile__location_city"),
+                iconic_tier=Case(
+                    When(
+                        published_event_count__gt=0,
+                        review_count__gt=0,
+                        then=Value(3),
+                    ),
+                    When(non_draft_event_count__gt=0, published_event_count__gt=0, then=Value(2)),
+                    When(non_draft_event_count__gt=0, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
             )
-            .filter(published_event_count__gt=0)
-            .order_by("-avg_rating", "-published_event_count", "-review_count", "-id")[
+            # Include any host with at least one non-draft event, then rank by iconicity.
+            .filter(non_draft_event_count__gt=0)
+            .order_by(
+                "-iconic_tier",
+                Coalesce("avg_rating", Value(0.0)).desc(),
+                "-published_event_count",
+                "-non_draft_event_count",
+                "-review_count",
+                "-id",
+            )[
                 :page_size
             ]
         )
 
-        serializer = IconicHostSerializer(
-            hosts, many=True, context={"request": request}
-        )
-        return success_response(data=serializer.data)
+        data = [
+            {
+                "id": host.id,
+                "username": host.username,
+                "avatar": host.avatar.url if host.avatar else None,
+                "headline": host.headline,
+                "location_city": host.location_city,
+                "published_event_count": host.published_event_count,
+                "review_count": host.review_count,
+                "avg_rating": host.avg_rating,
+            }
+            for host in hosts
+        ]
+
+        return success_response(data=data)
 
 
 class TopVendorsFeedView(APIView):
@@ -305,7 +345,7 @@ class TopVendorsFeedView(APIView):
 
     def get(self, request):
         """Get the top rated vendors."""
-        page_size = int(request.query_params.get("page_size", 10))
+        page_size = int(request.query_params.get("page_size", 50))
 
         vendors = (
             VendorService.objects.filter(is_active=True, visibility="customer_facing")
@@ -315,11 +355,21 @@ class TopVendorsFeedView(APIView):
                 event_count=Count(
                     "reviews__event", distinct=True
                 ),  # Count distinct events they were reviewed on
+                iconic_tier=Case(
+                    When(review_count__gt=0, event_count__gt=0, then=Value(2)),
+                    When(review_count__gt=0, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
             )
-            .filter(
-                review_count__gt=0
-            )  # Only include vendors with reviews for top rated
-            .order_by("-avg_rating", "-event_count", "-review_count", "-id")[:page_size]
+            # Keep iconic vendors first while allowing newer vendors to appear later.
+            .order_by(
+                "-iconic_tier",
+                Coalesce("avg_rating", Value(0.0)).desc(),
+                "-event_count",
+                "-review_count",
+                "-id",
+            )[:page_size]
         )
 
         serializer = VendorServiceSerializer(

@@ -1,14 +1,21 @@
-import { Box, IconButton, InputBase, Paper, Typography } from '@mui/material';
-import { MessageSquare, Send } from 'lucide-react';
+import {
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  InputBase,
+  Paper,
+  Typography,
+} from '@mui/material';
+import { MessageSquare, Send, UserPlus } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
-import {
-  useAddHostVendorMessage,
-  useHostVendorMessages,
-} from '@/features/events/hooks';
+import { useAddHostVendorMessage, useHostVendorMessages } from '@/features/events/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
+import { BuddyRequestPanel } from './BuddyRequestPanel';
 
 interface InkNotebookChatProps {
   eventId: number;
@@ -27,6 +34,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
   const { data: messagesResponse } = useHostVendorMessages(eventId, canAccessChat);
   const addMessage = useAddHostVendorMessage();
   const [messageText, setMessageText] = useState('');
+  const [friendTargetUsername, setFriendTargetUsername] = useState<string | null>(null);
   const { openChat } = useChatDrawer();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -71,8 +79,18 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
     openChat({
       title: `Chat with ${targetUsername}`,
       mode: 'direct',
+      eventId,
       targetUsername,
     });
+  };
+
+  const handleOpenFriendDialog = (targetUsername: string) => {
+    if (!user || user.username === targetUsername) return;
+    setFriendTargetUsername(targetUsername);
+  };
+
+  const handleCloseFriendDialog = () => {
+    setFriendTargetUsername(null);
   };
 
   const getRoleInfo = (username: string) => {
@@ -209,18 +227,32 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
                       mode="normal"
                     />
                     {!isMine && (
-                      <IconButton
-                        size="small"
-                        onClick={() => handlePrivateChatClick(msg.sender_username)}
-                        sx={{
-                          p: 0.5,
-                          color: role.color,
-                          bgcolor: `${role.color}10`,
-                          '&:hover': { bgcolor: `${role.color}25` },
-                        }}
-                      >
-                        <MessageSquare size={14} />
-                      </IconButton>
+                      <>
+                        <IconButton
+                          size="small"
+                          onClick={() => handlePrivateChatClick(msg.sender_username)}
+                          sx={{
+                            p: 0.5,
+                            color: role.color,
+                            bgcolor: `${role.color}10`,
+                            '&:hover': { bgcolor: `${role.color}25` },
+                          }}
+                        >
+                          <MessageSquare size={14} />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenFriendDialog(msg.sender_username)}
+                          sx={{
+                            p: 0.5,
+                            color: '#b45309',
+                            bgcolor: '#fef3c7',
+                            '&:hover': { bgcolor: '#fde68a' },
+                          }}
+                        >
+                          <UserPlus size={14} />
+                        </IconButton>
+                      </>
                     )}
                     <Typography
                       sx={{
@@ -328,6 +360,30 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
           }}
         />
       </Paper>
+      <Dialog
+        open={!!friendTargetUsername}
+        onClose={handleCloseFriendDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle
+          sx={{
+            fontFamily: '"Permanent Marker", cursive',
+            color: '#334155',
+          }}
+        >
+          Ask to be your buddy
+        </DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          {friendTargetUsername ? (
+            <BuddyRequestPanel
+              eventId={eventId}
+              targetUsername={friendTargetUsername}
+              onClose={handleCloseFriendDialog}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

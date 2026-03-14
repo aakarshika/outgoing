@@ -43,6 +43,7 @@ export function useNavbarData() {
         return isNativeSidebarPath(window.location.pathname);
     });
     const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+    const [isAllChatsSidebarOpen, setIsAllChatsSidebarOpen] = useState(false);
     const [eventOverviewRows, setEventOverviewRows] = useState<EventOverviewRow[]>([]);
     const [eventOverviewLoading, setEventOverviewLoading] = useState(false);
 
@@ -311,6 +312,8 @@ export function useNavbarData() {
             setIsMenuOpen,
             isQuickCreateOpen,
             setIsQuickCreateOpen,
+            isAllChatsSidebarOpen,
+            setIsAllChatsSidebarOpen,
 
             // Sidebar persistence
             sidebarExpanded,
@@ -363,7 +366,7 @@ export function useNavbarData() {
         }),
         [
             isAuthenticated, logout, user, theme, toggleTheme, location, navigate,
-            isMenuOpen, isQuickCreateOpen, sidebarExpanded, nearYouEnabled, nearYouName, radiusMiles, toggleNearYou,
+            isMenuOpen, isQuickCreateOpen, isAllChatsSidebarOpen, sidebarExpanded, nearYouEnabled, nearYouName, radiusMiles, toggleNearYou,
             search, locationSearch, showSuggestions, showLocationSuggestions, locationSuggestions,
             locationDropdownOpen, suggestions, alertsCount, isEventManagementRoute, eventId, event,
             isEventHost, isVendor, isNotOnManagePage, shouldShowSearch, isNativeSidebarRoute

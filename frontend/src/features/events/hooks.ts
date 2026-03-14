@@ -26,6 +26,7 @@ import {
   fetchEventSeriesOccurrences,
   fetchEventStory,
   fetchFeaturedEvent,
+  fetchAllChatsList,
   fetchFeed,
   fetchHighlightComments,
   fetchHighlightsFeed,
@@ -55,6 +56,9 @@ import {
   getOrCreatePrivateConversation,
   fetchDirectMessages,
   addDirectMessage,
+  fetchFriendRequestStatus,
+  sendFriendRequest,
+  updateFriendRequest,
 } from './api';
 
 export function useFeed(params: {
@@ -126,7 +130,7 @@ export function useUpcomingFeed() {
 export function useIconicHostsFeed() {
   return useQuery({
     queryKey: ['feed', 'iconic-hosts'],
-    queryFn: () => fetchIconicHostsFeed(10),
+    queryFn: () => fetchIconicHostsFeed(50),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -134,7 +138,7 @@ export function useIconicHostsFeed() {
 export function useTopVendorsFeed() {
   return useQuery({
     queryKey: ['feed', 'top-vendors'],
-    queryFn: () => fetchTopVendorsFeed(10),
+    queryFn: () => fetchTopVendorsFeed(50),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -624,6 +628,15 @@ export function useDirectMessages(targetUsername?: string) {
   });
 }
 
+export function useAllChatsList(enabled = true) {
+  return useQuery({
+    queryKey: ['all-chats-list'],
+    queryFn: fetchAllChatsList,
+    enabled,
+    refetchInterval: 10000,
+  });
+}
+
 export function useAddDirectMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -637,6 +650,57 @@ export function useAddDirectMessage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['direct-messages', variables.targetUsername],
+      });
+    },
+  });
+}
+
+export function useSendFriendRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      targetUsername,
+      payload,
+    }: {
+      eventId: number;
+      targetUsername: string;
+      payload: { request_message?: string };
+    }) => sendFriendRequest(eventId, targetUsername, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
+      });
+    },
+  });
+}
+
+export function useFriendRequestStatus(eventId?: number, targetUsername?: string | null) {
+  return useQuery({
+    queryKey: ['friend-request-status', eventId, targetUsername],
+    queryFn: () =>
+      eventId && targetUsername
+        ? fetchFriendRequestStatus(eventId, targetUsername)
+        : null,
+    enabled: !!eventId && !!targetUsername,
+  });
+}
+
+export function useUpdateFriendRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      targetUsername,
+      payload,
+    }: {
+      eventId: number;
+      targetUsername: string;
+      payload: { action: 'accept' | 'withdraw' };
+    }) => updateFriendRequest(eventId, targetUsername, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
       });
     },
   });

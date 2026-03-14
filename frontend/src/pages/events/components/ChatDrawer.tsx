@@ -21,6 +21,7 @@ import {
   useHostVendorMessages,
   usePrivateMessages,
 } from '@/features/events/hooks';
+import { BuddyRequestPanel } from './BuddyRequestPanel';
 
 // --- Compact Message Item Component ---
 const MessageItem = ({ message }: { message: any }) => {
@@ -240,6 +241,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       </Box>
       {!isMinimized && (
         <>
+          {mode === 'direct' && eventId && targetUsername ? (
+            <Box sx={{ p: 1.5, borderBottom: '1px solid #eee', bgcolor: '#fffdf6' }}>
+              <BuddyRequestPanel
+                eventId={eventId}
+                targetUsername={targetUsername}
+                compact
+              />
+            </Box>
+          ) : null}
+
           {/* Messages List */}
           <Box
             ref={scrollRef}

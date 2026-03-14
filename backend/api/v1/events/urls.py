@@ -7,6 +7,7 @@ from .views import (
     EventAutocompleteView,
     EventCategoryListView,
     EventDetailView,
+    EventFriendshipRequestCreateView,
     EventHighlightListCreateView,
     EventHighlightLikeToggleView,
     EventHighlightCommentCreateListView,
@@ -24,6 +25,9 @@ from .views import (
     MyEventsView,
     MyInterestedEventsView,
     EventHostVendorMessageListCreateView,
+    EventPrivateConversationGetOrCreateView,
+    EventPrivateConversationListView,
+    EventPrivateConversationMessageListCreateView,
     UserDirectMessageListCreateView,
 )
 
@@ -87,8 +91,28 @@ urlpatterns = [
         name="event_host_vendor_messages",
     ),
     path(
+        "<int:event_id>/friendships/<str:target_username>/",
+        EventFriendshipRequestCreateView.as_view(),
+        name="event_friendship_request",
+    ),
+    path(
         "direct-messages/<str:target_username>/",
         UserDirectMessageListCreateView.as_view(),
         name="user_direct_messages",
+    ),
+    path(
+        "conversations/",
+        EventPrivateConversationListView.as_view(),
+        name="private_conversation_list",
+    ),
+    path(
+        "conversations/<int:conversation_id>/messages/",
+        EventPrivateConversationMessageListCreateView.as_view(),
+        name="private_conversation_messages",
+    ),
+    path(
+        "<int:event_id>/get-or-create-conversation/",
+        EventPrivateConversationGetOrCreateView.as_view(),
+        name="private_conversation_get_or_create",
     ),
 ]

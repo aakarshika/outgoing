@@ -14,6 +14,26 @@ import type {
   EventSeriesDetail,
 } from '@/types/events';
 
+export interface AllChatsListItem {
+  conversation_id: number;
+  event_id: number | null;
+  event_title: string | null;
+  other_user_id: number | null;
+  other_username: string | null;
+  other_avatar: string | null;
+  updated_at: string;
+}
+
+export interface AllChatsListResponse {
+  management_group: {
+    event_id: number;
+    event_title: string;
+    latest_message_at: string;
+  }[];
+  management: AllChatsListItem[];
+  network: AllChatsListItem[];
+}
+
 // --- Feed ---
 
 export async function fetchFeed(params: {
@@ -77,14 +97,14 @@ export async function fetchUpcomingFeed(page_size = 20) {
   return data;
 }
 
-export async function fetchIconicHostsFeed(page_size = 10) {
+export async function fetchIconicHostsFeed(page_size = 50) {
   const { data } = await client.get<ApiResponse<any[]>>('/feed/iconic-hosts/', {
     params: { page_size },
   });
   return data;
 }
 
-export async function fetchTopVendorsFeed(page_size = 10) {
+export async function fetchTopVendorsFeed(page_size = 50) {
   const { data } = await client.get<ApiResponse<any[]>>('/feed/top-vendors/', {
     params: { page_size },
   });
@@ -453,12 +473,53 @@ export async function fetchDirectMessages(targetUsername: string) {
   return data;
 }
 
+export async function fetchAllChatsList() {
+  const { data } = await client.get<ApiResponse<AllChatsListResponse>>(
+    '/events/conversations/',
+  );
+  return data;
+}
+
 export async function addDirectMessage(
   targetUsername: string,
   payload: { text: string },
 ) {
   const { data } = await client.post<ApiResponse<any>>(
     `/events/direct-messages/${targetUsername}/`,
+    payload,
+  );
+  return data;
+}
+
+export async function sendFriendRequest(
+  eventId: number,
+  targetUsername: string,
+  payload: { request_message?: string },
+) {
+  const { data } = await client.post<ApiResponse<any>>(
+    `/events/${eventId}/friendships/${targetUsername}/`,
+    payload,
+  );
+  return data;
+}
+
+export async function fetchFriendRequestStatus(
+  eventId: number,
+  targetUsername: string,
+) {
+  const { data } = await client.get<ApiResponse<any | null>>(
+    `/events/${eventId}/friendships/${targetUsername}/`,
+  );
+  return data;
+}
+
+export async function updateFriendRequest(
+  eventId: number,
+  targetUsername: string,
+  payload: { action: 'accept' | 'withdraw' },
+) {
+  const { data } = await client.patch<ApiResponse<any>>(
+    `/events/${eventId}/friendships/${targetUsername}/`,
     payload,
   );
   return data;

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
     ArrowLeft,
-    Bell,
-    Box,
+    MessageSquareIcon,
     Briefcase,
     Calendar,
     CalendarDays,
@@ -24,6 +23,7 @@ import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
 import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 import type { EventListItem, EventSearchSuggestion } from '@/types/events';
+import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 
 export const dashboardLinks:
@@ -98,7 +98,7 @@ export const SidebarLinkItem = ({ itemKey }: { itemKey: string }) => {
 export const ManageEventButton = ({ type }: {
     type: 'manage-service-ghost' | 'manage-event-ghost'
 }) => {
-    const { navigate, setIsQuickCreateOpen, eventId } = useNavbarContext();
+    const { location } = useNavbarContext();
     const isActive = (location.pathname.includes('host-event-management') && type === 'manage-event-ghost'
     ) || (location.pathname.includes('service-event-management') && type === 'manage-service-ghost');
 
@@ -229,13 +229,16 @@ export const LogoSection = () => {
 };
 
 export const IconButtonsSection = () => {
-    const { alertsCount, isVendor, isEventHost, setIsQuickCreateOpen } = useNavbarContext();
+    const { alertsCount, isVendor, isEventHost, setIsQuickCreateOpen, setIsAllChatsSidebarOpen } = useNavbarContext();
 
     return (
         <div>
+            <AllChatsList />
             <div className="hidden sm:flex xs:flex items-center gap-2">
-                <ComicIconButton variant="ghost" size="icon" asChild Icon={Bell}>
-                    <Link to="/alerts" aria-label="Alerts">
+                <ComicIconButton 
+                onClick={() => setIsAllChatsSidebarOpen(true)}
+                variant="ghost" size="icon" asChild Icon={MessageSquareIcon}>
+                    <Link to="#" aria-label="AllchatsList" onClick={(e) => e.preventDefault()}>
                         <div className="absolute top-0 right-0 h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white z-10">
                             {alertsCount > 0 && <span>{alertsCount}</span>}
                         </div>
@@ -373,6 +376,7 @@ export const SearchBar = () => {
         handleLocationSuggestionClick,
         setRadiusMiles,
         suggestions,
+        navigate,
     } = useNavbarContext();
 
     return (

@@ -15,6 +15,7 @@ from .models import (
     EventSeriesNeedTemplate,
     EventVendorReview,
     EventView,
+    Friendship,
 )
 
 
@@ -130,4 +131,26 @@ class EventLifecycleTransitionAdmin(admin.ModelAdmin):
         "reason",
         "metadata",
         "created_at",
+    ]
+
+
+@admin.register(Friendship)
+class FriendshipAdmin(admin.ModelAdmin):
+    """Admin for friendship requests and accepted friendships."""
+
+    list_display = [
+        "user1",
+        "user2",
+        "request_sender",
+        "status",
+        "met_at_event",
+        "accepted_at",
+        "updated_at",
+    ]
+    list_filter = ["status", "accepted_at", "updated_at"]
+    search_fields = [
+        "user1__username",
+        "user2__username",
+        "request_sender__username",
+        "met_at_event__title",
     ]

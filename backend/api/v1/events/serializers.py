@@ -24,7 +24,9 @@ from apps.events.models import (
     EventReviewLike,
     EventReviewComment,
     EventHostVendorMessage,
+    EventPrivateConversation,
     EventPrivateMessage,
+    Friendship,
 )
 from apps.tickets.models import Ticket
 
@@ -948,3 +950,129 @@ class EventPrivateMessageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile.avatar.url)
             return profile.avatar.url
         return None
+
+
+class EventPrivateConversationListSerializer(serializers.ModelSerializer):
+    """Serializer for the authenticated user's private conversation list."""
+
+    conversation_id = serializers.IntegerField(source="id", read_only=True)
+    event_id = serializers.IntegerField(source="event.id", read_only=True)
+    event_title = serializers.CharField(source="event.title", read_only=True)
+    other_user_id = serializers.SerializerMethodField()
+    other_username = serializers.SerializerMethodField()
+    other_avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventPrivateConversation
+        fields = [
+            "conversation_id",
+            "event_id",
+            "event_title",
+            "other_user_id",
+            "other_username",
+            "other_avatar",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+    def _get_other_user(self, obj):
+        request = self.context.get("request")
+        current_user = getattr(request, "user", None)
+        if current_user is None:
+            return None
+        if obj.participant1_id == current_user.id:
+            return obj.participant2
+        return obj.participant1
+
+    def get_other_user_id(self, obj):
+        other_user = self._get_other_user(obj)
+        return getattr(other_user, "id", None)
+
+    def get_other_username(self, obj):
+        other_user = self._get_other_user(obj)
+        return getattr(other_user, "username", None)
+
+    def get_other_avatar(self, obj):
+        other_user = self._get_other_user(obj)
+        profile = getattr(other_user, "profile", None)
+        if profile and profile.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+            return profile.avatar.url
+        return None
+
+
+class EventGroupChatListSerializer(serializers.ModelSerializer):
+    """Serializer for event-level host-vendor group chats."""
+
+    event_id = serializers.IntegerField(source="id", read_only=True)
+    event_title = serializers.CharField(source="title", read_only=True)
+    latest_message_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ["event_id", "event_title", "latest_message_at"]
+        read_only_fields = fields
+
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    """Serializer for friendship requests and accepted friendships."""
+
+    user1_username = serializers.CharField(source="user1.username", read_only=True)
+    user2_username = serializers.CharField(source="user2.username", read_only=True)
+    request_sender_username = serializers.CharField(
+        source="request_sender.username",
+        read_only=True,
+    )
+    met_at_event_title = serializers.CharField(source="met_at_event.title", read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = [
+            "id",
+            "user1",
+            "user2",
+            "user1_username",
+            "user2_username",
+            "request_sender",
+            "request_sender_username",
+            "request_message",
+            "status",
+            "accepted_at",
+            "met_at_event",
+            "met_at_event_title",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "user1",
+            "user2",
+            "user1_username",
+            "user2_username",
+            "request_sender",
+            "request_sender_username",
+            "status",
+            "accepted_at",
+            "met_at_event",
+            "met_at_event_title",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class FriendshipRequestCreateSerializer(serializers.Serializer):
+    """Validate a friendship request payload."""
+
+    request_message = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500,
+    )
+
+
+class FriendshipActionSerializer(serializers.Serializer):
+    """Validate supported friendship state transitions."""
+
+    action = serializers.ChoiceField(choices=["accept", "withdraw"])
