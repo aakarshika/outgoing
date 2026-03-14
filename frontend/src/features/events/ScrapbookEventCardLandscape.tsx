@@ -24,20 +24,30 @@ import {
     PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
-import { EventListItem } from '@/types/events';
+import { EventListItem, TicketInfo } from '@/types/events';
 
 /** Landscape list card: full-width row, image left, content right. Use in lists. */
-export const ScrapbookEventCardLandscape = ({
-    event,
-    isFocused,
-    isBasicEventCard = true,
-    size = 'default',
-}: {
-    event: EventListItem;
+interface ScrapbookEventCardLandscapeProps {
+    event: EventListItem & {
+        user_tickets?: TicketInfo[];
+    };
     isFocused?: boolean;
     isBasicEventCard?: boolean;
     size?: 'default' | 'compact';
-}) => {
+    ticketStatusVariant?: 'default' | 'large';
+    ticketStatusRightAligned?: boolean;
+    userTicketCount?: number;
+}
+
+export const ScrapbookEventCardLandscape = ({
+    event,
+    isFocused,
+    isBasicEventCard = false,
+    size = 'default',
+    ticketStatusVariant = 'large',
+    ticketStatusRightAligned = true,
+    userTicketCount,
+}: ScrapbookEventCardLandscapeProps) => {
     const { user, isAuthenticated } = useAuth();
     const { isHost, isVendor } = getEventCardRoles(event, {
         user: user ?? null,
@@ -49,6 +59,7 @@ export const ScrapbookEventCardLandscape = ({
     const price = formatEventPrice(event.ticket_price_standard);
     const isNoImageCard = !event.cover_image;
     const isCompact = size === 'compact';
+    const resolvedUserTicketCount = userTicketCount ?? event.user_tickets?.length;
 
     return (
         <Box
@@ -195,7 +206,17 @@ export const ScrapbookEventCardLandscape = ({
                     !isBasicEventCard && (<>
                         {
                             event.category && (
-                                <CategoryStickerCompact categoryName={event.category.name!} theme={theme} />
+                                <CategoryStickerCompact
+                                    categoryName={event.category.name!}
+                                    theme={theme}
+                                    sx={{
+                                        right: ticketStatusRightAligned
+                                            ? ticketStatusVariant === 'large'
+                                                ? 156
+                                                : 84
+                                            : 8,
+                                    }}
+                                />
                             )
                         }
                         <LikeButton
@@ -208,7 +229,16 @@ export const ScrapbookEventCardLandscape = ({
                             ticketCount={event.ticket_count}
                             capacity={event.capacity}
                             highlighted={event.user_has_ticket}
-                            sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}
+                            variant={ticketStatusVariant}
+                            rightAligned={ticketStatusRightAligned}
+                            userTicketCount={resolvedUserTicketCount}
+                            sx={{
+                                position: 'absolute',
+                                top: 8,
+                                left: ticketStatusRightAligned ? 'auto' : 8,
+                                right: ticketStatusRightAligned ? 8 : 'auto',
+                                zIndex: 2,
+                            }}
                         />
 
                         {
@@ -221,10 +251,17 @@ export const ScrapbookEventCardLandscape = ({
                             (isHost || isVendor) && (
                                 <HostVendorBadge
                                     isHost={isHost}
-                                    variant="short"
-                                    bottomOffset={8}
-                                    sx={{ left: event.lifecycle_state === 'live' ? 52 : 8 }
+                                    variant="full"
+                                    bottomOffset={
+                                        event.lifecycle_state === 'published' ||
+                                            event.lifecycle_state === 'live'
+                                            ? 34
+                                            : 8
                                     }
+                                    sx={{
+                                        left: 'auto',
+                                        right: 8,
+                                    }}
                                 />
                             )}
 

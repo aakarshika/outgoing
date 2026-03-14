@@ -172,6 +172,9 @@ export const StatusBannerSection = ({
                   event.user_has_ticket ||
                   (event.user_tickets && event.user_tickets.length > 0)
                 }
+                variant="large"
+                rightAligned
+                userTicketCount={event.user_tickets?.length}
               />
             </Box>
           )}

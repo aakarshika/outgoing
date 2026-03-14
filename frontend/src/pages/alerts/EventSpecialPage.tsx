@@ -189,7 +189,7 @@ export default function EventsSpecialPage() {
   );
 }
 
-function StepTabsFlowchart({
+export function StepTabsFlowchart({
   currentStep,
   totalSteps,
 }: {

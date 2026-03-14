@@ -1,17 +1,14 @@
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
-import {
-  useMyEvents,
-  useMyInterestedEvents,
-  useMyTickets,
-} from '@/features/events/hooks';
+import client from '@/api/client';
+import { useAuth } from '@/features/auth/hooks';
+import { useMyInterestedEvents } from '@/features/events/hooks';
 import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
-import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
-import { useMyApplications, useMyNeedInvites } from '@/features/needs/hooks';
-import type { EventDetail, EventListItem, TicketInfo } from '@/types/events';
-import type { NeedApplication, NeedInvite } from '@/types/needs';
+import { getEventStep, type EventOverviewRow } from '@/pages/alerts/utils';
+import type { ApiResponse, EventDetail, EventListItem } from '@/types/events';
 
 type CalendarFilter = 'all' | 'hosting' | 'attending' | 'saved' | 'vendor';
 
@@ -38,51 +35,6 @@ interface CalendarItem {
   isPast: boolean;
 }
 
-// color lighteing funciton
-function adjustColor(color: string, scale: number, opacity?: number): string {
-  const match = color
-    .replace(/\s+/g, '')
-    .match(/^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3})(?:,([0-9]*\.?[0-9]+))?\)$/i);
-
-  if (!match) {
-    throw new Error(`Invalid color format: ${color}`);
-  }
-
-  let r = Number(match[1]);
-  let g = Number(match[2]);
-  let b = Number(match[3]);
-  let a = match[4] !== undefined ? Number(match[4]) : 1;
-
-  // Clamp base values
-  r = Math.max(0, Math.min(255, r));
-  g = Math.max(0, Math.min(255, g));
-  b = Math.max(0, Math.min(255, b));
-  a = isNaN(a) ? 1 : Math.max(0, Math.min(1, a));
-
-  // Normalize scale to [-1, 1]
-  const s = Math.max(-1, Math.min(1, scale));
-
-  if (s !== 0) {
-    if (s > 0) {
-      // Darken: move toward 0
-      r = Math.round(r * (1 - s));
-      g = Math.round(g * (1 - s));
-      b = Math.round(b * (1 - s));
-    } else {
-      // Lighten: move toward 255
-      const t = -s;
-      r = Math.round(r + (255 - r) * t);
-      g = Math.round(g + (255 - g) * t);
-      b = Math.round(b + (255 - b) * t);
-    }
-  }
-
-  if (opacity !== undefined) {
-    a = Math.max(0, Math.min(1, opacity));
-  }
-
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
 const ROLE_COLORS = {
   hosting: { key: 'hosting', label: 'Hosting', color: 'rgb(61, 71, 255)' },
   attending: { key: 'attending', label: 'Attending', color: 'rgb(255, 228, 25)' },
@@ -141,27 +93,80 @@ function buildMonthGrid(visibleMonth: Date) {
   });
 }
 
+function buildTrackTemplate(length: number, expandedIndex: number | null) {
+  if (expandedIndex === null) {
+    return `repeat(${length}, minmax(0, 1fr))`;
+  }
+
+  return Array.from({ length }).map((_, index) =>
+    index === expandedIndex ? 'minmax(0, 1.9fr)' : 'minmax(0, 0.85fr)',
+  ).join(' ');
+}
+
+function StepTabsFlowchart({
+  currentStep,
+  totalSteps,
+}: {
+  currentStep: number;
+  totalSteps: number;
+}) {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+
+  return (
+    <div className="flex items-center justify-center w-full px-2 py-2">
+      {steps.map((step, idx) => {
+        const isActive = step === currentStep;
+        const isPast = step < currentStep;
+
+        return (
+          <div key={step} className="flex items-center flex-1 last:flex-initial">
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all ${
+                isActive
+                  ? 'bg-yellow-200 text-gray-900 border-gray-800'
+                  : isPast
+                    ? 'bg-gray-200 text-gray-700 border-gray-500'
+                    : 'bg-white text-gray-400 border-gray-300'
+              }`}
+            >
+              {isPast ? '✓' : step}
+            </div>
+            {idx < steps.length - 1 && (
+              <div
+                className={`h-0.5 flex-1 mx-1 ${
+                  isPast ? 'bg-gray-500' : 'bg-gray-200'
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+async function fetchEventOverview() {
+  return client.get<ApiResponse<EventOverviewRow[]>>('/alerts/event-overview/');
+}
+
 export default function CalendarPage() {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<CalendarFilter>('all');
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const current = new Date();
     return new Date(current.getFullYear(), current.getMonth(), 1);
   });
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
-  const { data: eventsResponse, isLoading: loadingEvents } = useMyEvents();
-  const { data: ticketsResponse, isLoading: loadingTickets } = useMyTickets();
+  const { data: overviewResponse, isLoading: loadingOverview } = useQuery({
+    queryKey: ['eventOverview'],
+    queryFn: fetchEventOverview,
+  });
   const { data: savedResponse, isLoading: loadingSaved } = useMyInterestedEvents();
-  const { data: appsResponse, isLoading: loadingApps } = useMyApplications();
-  const { data: invitesResponse, isLoading: loadingInvites } = useMyNeedInvites();
 
-  const myEvents = (eventsResponse?.data || []) as EventListItem[];
-  const myTickets = (ticketsResponse?.data || []) as TicketInfo[];
+  const overviewRows = (overviewResponse?.data?.data || []) as EventOverviewRow[];
   const mySaved = (savedResponse?.data || []) as EventListItem[];
-  const myApplications = (appsResponse?.data || []) as NeedApplication[];
-  const myInvites = (invitesResponse?.data || []) as NeedInvite[];
 
-  const isLoading =
-    loadingEvents || loadingTickets || loadingSaved || loadingApps || loadingInvites;
+  const isLoading = loadingOverview || loadingSaved;
   const now = Date.now();
 
   const savedEventIds = useMemo(
@@ -186,127 +191,100 @@ export default function CalendarPage() {
       return map.get(eventId)!;
     };
 
-    myEvents.forEach((e) => {
-      ensure(String(e.id)).hosting = true;
-    });
-    myTickets.forEach((t) => {
-      ensure(String(t.event_summary.id)).attending = true;
+    overviewRows.forEach((row) => {
+      const eventId = String(row.event_id);
+      const reasons = ensure(eventId);
+      if (user?.id && row.host_user_id === user.id) reasons.hosting = true;
+      if (user?.id && row.attendee_user_id === user.id && row.ticket_status !== 'cancelled') {
+        reasons.attending = true;
+      }
+      if (user?.id && row.need_application_requested_by_host_vendor_user_id === user.id) {
+        reasons.vendor_request = true;
+      }
+      if (
+        user?.id &&
+        (row.need_applied_to_user_id === user.id || row.need_assigned_user_id === user.id)
+      ) {
+        reasons.vendor_application = true;
+      }
     });
     mySaved.forEach((e) => {
       ensure(String(e.id)).saved = true;
     });
-    myApplications.forEach((app) => {
-      if (app.event_id) ensure(String(app.event_id)).vendor_application = true;
-    });
-    myInvites.forEach((invite) => {
-      if (invite.event_id) ensure(String(invite.event_id)).vendor_request = true;
-    });
 
     return map;
-  }, [myEvents, myTickets, mySaved, myApplications, myInvites]);
+  }, [overviewRows, mySaved, user?.id]);
 
   const timeline = useMemo<CalendarItem[]>(() => {
-    const hosted: CalendarItem[] = myEvents.map((event) => {
-      const isPast = new Date(event.start_time).getTime() < now;
-      return {
-        id: `host-${event.id}`,
-        event,
-        kind: 'hosting',
-        title: event.title,
-        subtitle: isPast ? 'Hosted event' : 'Upcoming hosted event',
-        location: event.location_name || 'Location TBD',
-        eventTime: event.start_time,
-        route: `/events/${event.id}`,
-        cta: 'Go To Event',
-        tag: isPast ? 'Hosted' : 'Hosting',
-        isPast,
-      };
+    const detailByEventId = new Map<string, EventDetail>();
+    overviewRows.forEach((row) => {
+      if (row.event_details) {
+        detailByEventId.set(String(row.event_id), row.event_details);
+      }
     });
 
-    const attending: CalendarItem[] = myTickets.map((ticket) => {
-      const detail = ticket.event_summary;
-      const isPast = new Date(detail.start_time).getTime() < now;
-      return {
-        id: `ticket-${ticket.id}`,
-        event: detail,
-        kind: 'attending',
-        title: detail.title,
-        subtitle: isPast ? 'Attended event' : 'Upcoming event',
-        location: detail.location_name || 'Location TBD',
-        eventTime: detail.start_time,
-        route: `/events/${detail.id}`,
-        cta: 'View Event',
-        tag: isPast ? 'Attended' : 'Attending',
-        isPast,
-      };
-    });
+    const overviewTimeline: CalendarItem[] = Array.from(detailByEventId.entries()).flatMap(
+      ([eventId, detail]) => {
+        const reasons = eventReasons.get(eventId);
+        if (!reasons) return [];
 
-    const saved: CalendarItem[] = mySaved.map((event) => {
-      const isPast = new Date(event.start_time).getTime() < now;
-      return {
-        id: `saved-${event.id}`,
-        event,
-        kind: 'saved',
-        title: event.title,
-        subtitle: isPast ? 'Saved event (past)' : 'Saved event',
-        location: event.location_name || 'Location TBD',
-        eventTime: event.start_time,
-        route: `/events/${event.id}`,
-        cta: 'View Event',
-        tag: isPast ? 'Saved (past)' : 'Saved',
-        isPast,
-      };
-    });
+        const kind: CalendarKind = reasons.hosting
+          ? 'hosting'
+          : reasons.attending
+            ? 'attending'
+            : reasons.vendor_application
+              ? 'vendor_application'
+              : reasons.vendor_request
+                ? 'vendor_request'
+                : 'saved';
 
-    const vendorRequests: CalendarItem[] = myInvites.map((invite) => {
-      const eventTime = myApplications.find(
-        (app) =>
-          app.need_title === invite.need_title && app.event_id === invite.event_id,
-      )?.created_at;
-      return {
-        id: `invite-${invite.id}`,
-        kind: 'vendor_request',
-        title: invite.need_title,
-        subtitle: `Service requested for ${invite.event_title}`,
-        location: 'Open event details for venue',
-        eventTime: eventTime || invite.created_at,
-        route: '/vendor-opportunities',
-        cta: 'Review Opportunity',
-        tag: invite.status === 'pending' ? 'Requested' : 'Handled',
-        isPast: invite.status !== 'pending',
-      };
-    });
+        const isPast = new Date(detail.start_time).getTime() < now;
+        const subtitleByKind: Record<CalendarKind, string> = {
+          hosting: isPast ? 'Hosted event' : 'Upcoming hosted event',
+          attending: isPast ? 'Attended event' : 'Upcoming event',
+          saved: isPast ? 'Saved event (past)' : 'Saved event',
+          vendor_request: 'Service request for this event',
+          vendor_application: 'You applied to service this event',
+        };
 
-    const vendorApplications: CalendarItem[] = myApplications.map((app) => {
-      const isPast = app.status === 'rejected' || app.status === 'withdrawn';
-      return {
-        id: `application-${app.id}`,
-        kind: 'vendor_application',
-        title: app.need_title || 'Need Application',
-        subtitle: `${app.status.toUpperCase()} · ${app.event_title || 'Event'}`,
-        location: 'Open event for latest details',
-        eventTime: app.created_at,
-        route: app.event_id ? `/events/${app.event_id}` : '/dashboard',
-        cta: 'Open Event',
-        tag: app.status,
-        isPast,
-      };
-    });
+        return [{
+          id: `${kind}-${eventId}`,
+          event: detail,
+          kind,
+          title: detail.title,
+          subtitle: subtitleByKind[kind],
+          location: detail.location_name || 'Location TBD',
+          eventTime: detail.start_time,
+          route: `/events/${eventId}`,
+          cta: 'View Event',
+          tag: kind.replace('_', ' '),
+          isPast,
+        }];
+      },
+    );
 
-    return [...hosted, ...attending, ...saved, ...vendorRequests, ...vendorApplications]
+    const savedOnlyTimeline: CalendarItem[] = mySaved
+      .filter((event) => !detailByEventId.has(String(event.id)))
+      .map((event) => {
+        const isPast = new Date(event.start_time).getTime() < now;
+        return {
+          id: `saved-${event.id}`,
+          event,
+          kind: 'saved',
+          title: event.title,
+          subtitle: isPast ? 'Saved event (past)' : 'Saved event',
+          location: event.location_name || 'Location TBD',
+          eventTime: event.start_time,
+          route: `/events/${event.id}`,
+          cta: 'View Event',
+          tag: isPast ? 'Saved (past)' : 'Saved',
+          isPast,
+        };
+      });
+
+    return [...overviewTimeline, ...savedOnlyTimeline]
       .sort((a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime())
       .reduce<CalendarItem[]>((acc, item) => {
-        // De-dupe the same underlying event across sources (hosting/attending/saved).
-        // Example: an event can show up in both "my events" and "saved".
-        if (
-          item.kind !== 'hosting' &&
-          item.kind !== 'attending' &&
-          item.kind !== 'saved'
-        ) {
-          acc.push(item);
-          return acc;
-        }
-
         const eventId = eventIdFromRoute(item.route);
         if (!eventId) {
           acc.push(item);
@@ -343,7 +321,17 @@ export default function CalendarPage() {
         }
         return acc;
       }, []);
-  }, [myEvents, myTickets, mySaved, myInvites, myApplications, now]);
+  }, [eventReasons, mySaved, now, overviewRows]);
+
+  const overviewRowsByEventId = useMemo(() => {
+    const map = new Map<string, EventOverviewRow[]>();
+    overviewRows.forEach((row) => {
+      const key = String(row.event_id);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(row);
+    });
+    return map;
+  }, [overviewRows]);
 
   const typeFiltered = timeline.filter((item) => {
     if (filter === 'all') return true;
@@ -362,6 +350,19 @@ export default function CalendarPage() {
     )
     : typeFiltered;
   const monthDays = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
+  const selectedDayIndex = useMemo(
+    () => monthDays.findIndex((day) => day.key === selectedDateKey),
+    [monthDays, selectedDateKey],
+  );
+  const selectedColumnIndex = selectedDayIndex >= 0 ? selectedDayIndex % 7 : null;
+  const selectedRowIndex = selectedDayIndex >= 0 ? Math.floor(selectedDayIndex / 7) : null;
+  const dayGridStyle = useMemo(
+    () => ({
+      gridTemplateColumns: buildTrackTemplate(7, selectedColumnIndex),
+      gridTemplateRows: buildTrackTemplate(6, selectedRowIndex),
+    }),
+    [selectedColumnIndex, selectedRowIndex],
+  );
   const eventsByDay = useMemo(() => {
     const bucket: Record<string, CalendarItem[]> = {};
     typeFiltered.forEach((item) => {
@@ -373,13 +374,7 @@ export default function CalendarPage() {
   }, [typeFiltered]);
 
   return (
-    <div
-      className="min-h-screen py-8"
-      style={{
-        backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-        backgroundSize: '20px 20px',
-      }}
-    >
+    <div className="min-h-screen py-8 bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 mt-5 sm:px-6">
         <section className="mb-6 flex flex-wrap gap-3">
           {[
@@ -389,21 +384,14 @@ export default function CalendarPage() {
             { key: 'vendor', label: 'Servicing', color: 'rgb(67, 237, 209)' },
             { key: 'saved', label: 'Saved', color: 'rgb(236, 80, 80)' },
           ].map((tab) => (
-            <div>
-              <span
+              <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key as CalendarFilter)}
-                className="px-4 py-2 font-bold cursor-pointer inline-flex items-center gap-2"
-                style={{
-                  ...(scrapbookTheme as any).stickyNote,
-                  backgroundColor: adjustColor(
-                    tab.color,
-                    filter === tab.key ? 0.05 : -0.6,
-                  ),
-                  // border: `2px solid ${tab.color}`,
-                  color: filter !== tab.key ? '#000000' : '#ffffff',
-                  transform: 'rotate(-2deg)',
-                }}
+                className={`px-4 py-2 rounded-md border text-sm font-semibold inline-flex items-center gap-2 transition-colors ${
+                  filter === tab.key
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                }`}
               >
                 {tab.key === 'hosting' && (
                   <span
@@ -436,28 +424,15 @@ export default function CalendarPage() {
                   </span>
                 )}
                 {tab.label}
-              </span>
-            </div>
+              </button>
           ))}
         </section>
-        <section
-          className="mb-8 p-4 sm:p-6"
-          style={{
-            ...(scrapbookTheme as any).paperCard,
-            transform: 'rotate(0.5deg)',
-            backgroundColor: '#fcfcfc',
-          }}
-        >
+        <section className="mb-8 p-4 sm:p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
           <div className="mb-6 flex items-center justify-between pb-4">
-            <h2
-              className="text-3xl font-black"
-              style={{ fontFamily: '"Permanent Marker"' }}
-            >
-              {monthLabel(visibleMonth)}
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{monthLabel(visibleMonth)}</h2>
             <div className="flex items-center gap-2">
               <button
-                className="p-2 border-2 border-gray-800 rounded bg-[#fdfdfd] shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                className="p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() =>
                   setVisibleMonth(
                     (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
@@ -467,7 +442,7 @@ export default function CalendarPage() {
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
-                className="p-2 border-2 border-gray-800 rounded bg-[#fdfdfd] shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                className="p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() =>
                   setVisibleMonth(
                     (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
@@ -478,17 +453,17 @@ export default function CalendarPage() {
               </button>
             </div>
           </div>
-          <div
-            className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold pb-2"
-            style={{ fontFamily: '"Permanent Marker"' }}
-          >
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold text-gray-600 pb-2">
             {WEEKDAYS.map((day) => (
               <div key={day} className="py-1">
                 {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7  pt-2">
+          <div
+            className="grid pt-2 transition-[grid-template-columns,grid-template-rows] duration-300 ease-out"
+            style={dayGridStyle}
+          >
             {monthDays.map((day) => {
               const dayItems = eventsByDay[day.key] || [];
               const isSelected = selectedDateKey === day.key;
@@ -498,10 +473,10 @@ export default function CalendarPage() {
                   onClick={() =>
                     setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
                   }
-                  className={`relative min-h-[70px] border-2 text-left transition-all sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${day.inMonth
-                      ? 'bg-[#fdfdfd] border-gray-800 hover:-translate-y-1 hover:shadow-[2px_2px_0px_#333]'
+                  className={`relative min-h-[70px] h-full border rounded-md text-left transition-[background-color,box-shadow,transform] duration-300 sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${day.inMonth
+                      ? 'bg-white border-gray-200 hover:bg-gray-50'
                       : 'bg-gray-100 border-gray-400 text-gray-400'
-                    } ${isSelected ? 'ring-4 ring-yellow-400 bg-yellow-50 shadow-[2px_2px_0px_#333]' : ''}`}
+                    } ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
                 >
                   <div
                     className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${day.isToday
@@ -510,30 +485,12 @@ export default function CalendarPage() {
                           ? 'text-gray-900'
                           : 'text-gray-400'
                       }`}
-                    style={{
-                      fontFamily: '"Permanent Marker"',
-                      color: '#000000',
-                      backgroundColor: isSelected ? '#fde68a' : '#fdfdfd',
-                      // border: isSelected ? '2px solid #333' : '2px solid #888',
-                      borderRadius: '50%',
-                      padding: '5px',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
+                    style={{ color: '#000000' }}
                   >
                     {day.date.getDate()}
                   </div>
                   {dayItems.length > 0 && (
                     <div className="mt-2 w-full">
-                      {/* <div
-                        className="text-xs font-medium text-gray-600 mb-1"
-                        style={{ fontFamily: '"Caveat"', fontSize: '1rem' }}
-                      >
-                        {dayItems.length} item{dayItems.length === 1 ? '' : 's'}
-                      </div> */}
                       <div className="mt-1 flex flex-col gap-1.5">
                         {dayItems.slice(0, 4).map((item) => (
                           <div
@@ -564,18 +521,14 @@ export default function CalendarPage() {
               );
             })}
           </div>
-          <div
-            className="mt-4 flex flex-wrap items-center gap-2 text-sm font-medium"
-            style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}
-          >
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-gray-600">
             <span>Click a date to filter the list below.</span>
             {selectedDateKey && (
               <button
                 onClick={() => setSelectedDateKey(null)}
-                className="bg-red-500 text-white px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all ml-2"
-                style={{ transform: 'rotate(1deg)' }}
+                className="ml-2 px-3 py-1 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
-                CLEAR FILTER X
+                Clear filter
               </button>
             )}
           </div>
@@ -586,138 +539,78 @@ export default function CalendarPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-32 border-2 border-gray-800 bg-gray-200 animate-pulse"
+                className="h-32 border border-gray-200 rounded-md bg-gray-100 animate-pulse"
               />
             ))}
           </div>
         ) : dayFiltered.length === 0 ? (
-          <div
-            className="p-12 text-center"
-            style={{
-              ...(scrapbookTheme as any).paperCard,
-              transform: 'rotate(1deg)',
-              backgroundColor: '#fffdf0',
-            }}
-          >
-            <Sparkles className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
-            <h2
-              className="text-2xl font-black"
-              style={{ fontFamily: '"Permanent Marker"' }}
-            >
-              Looks pretty empty...
-            </h2>
-            <p
-              className="text-lg font-medium mt-2 text-gray-600"
-              style={{ fontFamily: '"Caveat"', fontSize: '1.5rem' }}
-            >
+          <div className="p-12 text-center bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900">No events yet</h2>
+            <p className="text-base mt-2 text-gray-600">
               Go request some vendors or buy some tickets to fill up your calendar!
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="">
             {dayFiltered.map((item) => (
               <article
                 key={item.id}
                 className="transition-transform hover:-translate-y-1"
               >
-                <div className="flex flex-row items-center justify-center gap-4">
+                <div className="flex flex-row items-center justify-center">
                   {item.event && (
                     <ScrapbookEventCardLandscape event={item.event} isFocused={false} />
                   )}
-                  <div className="min-w-[240px] max-w-[320px] flex flex-col gap-2">
-                    <div
-                      className="border-2 border-gray-800 bg-white px-3 py-2 shadow-[2px_2px_0px_#333]"
-                      style={{
-                        fontFamily: '"Permanent Marker"',
-                        transform: 'rotate(-1deg)',
-                      }}
-                    >
-                      Why it’s here
-                    </div>
-                    <div
-                      className="border-2 border-gray-800 bg-[#fffdf0] px-3 py-2 shadow-[2px_2px_0px_#333] flex flex-col gap-2"
-                      style={{ fontFamily: '"Caveat"', fontSize: '1.25rem' }}
-                    >
-                      {(() => {
-                        const eventId = eventIdFromRoute(item.route);
-                        const reasons = eventId ? eventReasons.get(eventId) : undefined;
-                        const chips: Array<{ key: string; label: string }> = [];
-                        if (reasons?.hosting)
-                          chips.push({ key: 'hosting', label: 'You’re hosting' });
-                        if (reasons?.attending)
-                          chips.push({ key: 'attending', label: 'You have tickets' });
-                        if (reasons?.saved)
-                          chips.push({ key: 'saved', label: 'You liked/saved it' });
-                        if (reasons?.vendor_request)
-                          chips.push({
-                            key: 'vendor_request',
-                            label: 'A service was requested',
-                          });
-                        if (reasons?.vendor_application)
-                          console.log(item, "reasons?.vendor_application", reasons?.vendor_application);
-                        chips.push({
-                          key: 'vendor_application',
-                          label: 'You applied to service it',
-                        });
-                        if (chips.length === 0)
-                          chips.push({
-                            key: item.kind,
-                            label: item.subtitle || 'On your calendar',
-                          });
+                  <div className="min-w-[240px] max-w-[320px] flex flex-col">
+                    {(() => {
+                      const eventId = eventIdFromRoute(item.route);
+                      if (!eventId || !user?.id) return null;
 
-                        return (
-                          <>
-                            <div className="flex flex-wrap gap-2">
-                              {chips.map((c) => (
-                                <span
-                                  key={c.key}
-                                  className="px-2 py-0.5 border border-gray-800 bg-white font-bold"
-                                >
-                                  {c.label}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="flex flex-col gap-2 pt-1">
-                              {eventId && reasons?.hosting && (
-                                <Link
-                                  to={`/events/${eventId}/host-event-management/overview`}
-                                  className="bg-blue-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
-                                  style={{ fontFamily: '"Permanent Marker"' }}
-                                >
-                                  Manage as Host
-                                </Link>
-                              )}
-                              {eventId &&
-                                (reasons?.vendor_application ||
-                                  reasons?.vendor_request) && (
-                                  <Link
-                                    to={`/events/${eventId}/service-event-management/overview`}
-                                    className="bg-emerald-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
-                                    style={{ fontFamily: '"Permanent Marker"' }}
-                                  >
-                                    Manage as Vendor
-                                  </Link>
-                                )}
-                              <Link
-                                to={item.route}
-                                className="bg-yellow-200 text-black px-3 py-1 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-center"
-                                style={{ fontFamily: '"Permanent Marker"' }}
-                              >
-                                {item.cta}
-                              </Link>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
+                      const reasons = eventReasons.get(eventId);
+                      const rows = overviewRowsByEventId.get(eventId) || [];
+                      if (!reasons || rows.length === 0) return null;
+
+                      const role: 'host' | 'vendor' | 'attendee' = reasons.hosting
+                        ? 'host'
+                        : reasons.attending
+                          ? 'attendee'
+                          : 'vendor';
+
+                      const overviewRow =
+                        role === 'host'
+                          ? rows.find((row) => row.host_user_id === user.id)
+                          : role === 'attendee'
+                            ? rows.find(
+                                (row) =>
+                                  row.attendee_user_id === user.id &&
+                                  row.ticket_status !== 'cancelled',
+                              )
+                            : rows.find(
+                                (row) =>
+                                  row.need_applied_to_user_id === user.id ||
+                                  row.need_application_requested_by_host_vendor_user_id ===
+                                    user.id ||
+                                  row.need_assigned_user_id === user.id,
+                              );
+
+                      if (!overviewRow) return null;
+
+                      const { currentStep, totalSteps } = getEventStep(
+                        role,
+                        overviewRow,
+                        user.id,
+                      );
+
+                      return (
+                        <div className="">
+                          <StepTabsFlowchart
+                            currentStep={currentStep}
+                            totalSteps={totalSteps}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
-                  <Link
-                    to={item.route}
-                    className="bg-yellow-300 text-black px-4 py-2 font-bold border-2 border-gray-800 shadow-[2px_2px_0px_#333] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center justify-center whitespace-nowrap"
-                    style={{ fontFamily: '"Permanent Marker"' }}
-                  >
-                    {item.cta}
-                  </Link>
                 </div>
               </article>
             ))}

@@ -204,19 +204,19 @@ export function RelevantTrendingNearbySection({ title }: { title: string }) {
         emptyMessage={
           noNearbyAccess
             ? (
-                <EmptyComicCard
-                  title="Location Needed"
-                  description="Enable location to view nearby events in this section."
-                  actionLabel="Browse Online"
-                  actionTo="/search/"
-                />
-              )
+              <EmptyComicCard
+                title="Location Needed"
+                description="Enable location to view nearby events in this section."
+                actionLabel="Browse Online"
+                actionTo="/search/"
+              />
+            )
             : (
-                <EmptyComicCard
-                  title="Nothing Here Yet"
-                  description="No events found for this filter right now."
-                />
-              )
+              <EmptyComicCard
+                title="Nothing Here Yet"
+                description="No events found for this filter right now."
+              />
+            )
         }
       />
     </Box>
@@ -268,27 +268,27 @@ export function OnlineOfflineSection() {
         emptyMessage={
           needsLocationConsent
             ? (
+              <EmptyComicCard
+                title="Offline Needs Location"
+                description="Allow location to discover nearby offline events."
+                tone="cool"
+              />
+            )
+            : tab === 'offline'
+              ? (
                 <EmptyComicCard
-                  title="Offline Needs Location"
-                  description="Allow location to discover nearby offline events."
+                  title="No Offline Events"
+                  description="No offline events found right now."
                   tone="cool"
                 />
               )
-            : tab === 'offline'
-              ? (
-                  <EmptyComicCard
-                    title="No Offline Events"
-                    description="No offline events found right now."
-                    tone="cool"
-                  />
-                )
               : (
-                  <EmptyComicCard
-                    title="No Online Sessions"
-                    description="No online sessions are scheduled right now."
-                    tone="cool"
-                  />
-                )
+                <EmptyComicCard
+                  title="No Online Sessions"
+                  description="No online sessions are scheduled right now."
+                  tone="cool"
+                />
+              )
         }
       />
     </Box>
@@ -542,10 +542,10 @@ export function MapPlaceholderSection() {
       >
         <Box
           sx={{
-            position: isMapInteractive ? 'absolute' : 'relative',
-            inset: isMapInteractive ? 0 : 'auto',
-            width: isMapInteractive ? '100%' : { xs: '100%', md: '50%' },
-            height: isMapInteractive ? '100%' : 'auto',
+            position: { xs: 'relative', md: isMapInteractive ? 'absolute' : 'relative' },
+            inset: { xs: 'auto', md: isMapInteractive ? 0 : 'auto' },
+            width: { xs: '100%', md: isMapInteractive ? '100%' : '50%' },
+            height: { xs: 'auto', md: isMapInteractive ? '100%' : 'auto' },
             zIndex: 1,
           }}
         >
@@ -669,44 +669,7 @@ export function MapPlaceholderSection() {
             overflowY: { xs: 'visible', md: isMapInteractive ? 'auto' : 'visible' },
           }}
         >
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: isMapInteractive ? '0.9rem' : '1rem', mb: 0.5 }}>
-            Location Filters
-          </Typography>
-          <Typography sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: isMapInteractive ? '0.8rem' : '0.9rem', mb: isMapInteractive ? 1.2 : 2 }}>
-            Use the same search controls from the navbar right here.
-          </Typography>
 
-          <Button
-            onClick={() => {
-              toggleLocation();
-              setShowLocationSuggestions(false);
-              if (enabled) {
-                applyLocationParams(locationSearch);
-              } else if (coords) {
-                applyLocationParams(locationName || locationSearch, String(coords.lat), String(coords.lng));
-              }
-            }}
-            sx={{
-              width: '100%',
-              justifyContent: 'flex-start',
-              gap: 1.25,
-              textTransform: 'none',
-              fontFamily: '"Permanent Marker"',
-              color: '#1f2937',
-              border: '2px solid #1a1a1a',
-              boxShadow: '3px 3px 0 #1a1a1a',
-              bgcolor: '#dbeafe',
-              mb: 2,
-              '&:hover': { bgcolor: '#bfdbfe' },
-            }}
-          >
-            <LocateFixed size={18} />
-            {enabled ? 'Disable current location' : 'Use current location'}
-          </Button>
-
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.8rem', color: '#6b7280', mb: 0.75 }}>
-            Or type an address
-          </Typography>
           <Box sx={{ position: 'relative', mb: 2 }}>
             <Box
               component="input"
@@ -785,11 +748,29 @@ export function MapPlaceholderSection() {
               </Box>
             ) : null}
           </Box>
-
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.8rem', color: '#6b7280', mb: 0.75 }}>
-            Miles radius
-          </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Button
+              onClick={() => {
+                toggleLocation();
+                setShowLocationSuggestions(false);
+                if (enabled) {
+                  applyLocationParams(locationSearch);
+                } else if (coords) {
+                  applyLocationParams(locationName || locationSearch, String(coords.lat), String(coords.lng));
+                }
+              }}
+              sx={{
+                textTransform: 'none',
+                fontFamily: '"Permanent Marker"',
+                color: '#111827',
+                border: '2px solid #1a1a1a',
+                boxShadow: '2px 2px 0 #1a1a1a',
+                bgcolor: '#fecaca',
+                '&:hover': { bgcolor: '#fca5a5' },
+              }}
+            >
+              <LocateFixed size={16} />
+            </Button>
             <Box
               component="input"
               type="number"
@@ -817,9 +798,6 @@ export function MapPlaceholderSection() {
             <Typography sx={{ fontFamily: '"Permanent Marker"', color: '#4b5563', fontSize: '0.85rem' }}>
               miles
             </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               onClick={() => applyLocationParams(locationSearch)}
               sx={{
@@ -833,33 +811,9 @@ export function MapPlaceholderSection() {
                 '&:hover': { bgcolor: '#fcd34d' },
               }}
             >
-              <MapPin size={16} style={{ marginRight: 6 }} />
-              Apply
+              <Search size={16} style={{ marginRight: 6 }} />
             </Button>
-            <Button
-              onClick={() => {
-                setLocationSearch('');
-                setShowLocationSuggestions(false);
-                const params = new URLSearchParams(window.location.search);
-                params.delete('location');
-                params.delete('lat');
-                params.delete('lng');
-                params.delete('radius_miles');
-                navigate(params.toString() ? `/?${params.toString()}` : '/');
-              }}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                fontFamily: '"Permanent Marker"',
-                color: '#111827',
-                border: '2px solid #1a1a1a',
-                boxShadow: '2px 2px 0 #1a1a1a',
-                bgcolor: '#fecaca',
-                '&:hover': { bgcolor: '#fca5a5' },
-              }}
-            >
-              Clear
-            </Button>
+
           </Box>
         </Box>
       </Box>
