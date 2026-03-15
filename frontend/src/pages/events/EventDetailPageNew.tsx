@@ -296,7 +296,6 @@ export default function EventDetailPageNew() {
         <Box
           sx={{
             minHeight: '100vh',
-            p: { xs: 2, sm: 4, md: 8 },
             color: 'inherit',
             transition: 'all 0.5s ease',
           }}

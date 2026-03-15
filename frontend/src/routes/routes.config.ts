@@ -139,4 +139,9 @@ export const routesConfig: RouteDefinition[] = [
     componentName: 'Search',
     isPublic: true,
   },
+  {
+    path: '/network',
+    componentName: 'YourNetwork',
+    isPublic: true,
+  },
 ];

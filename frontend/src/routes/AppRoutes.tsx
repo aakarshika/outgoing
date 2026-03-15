@@ -35,6 +35,7 @@ const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
 const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
 const SearchPage = lazy(() => import('@/pages/search/SearchPage'));
+const YourNetworkPage = lazy(() => import('@/pages/network/YourNetworkPage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignUp: SignUpPage,
@@ -60,6 +61,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   Gallery: GalleryPage,
   BrowseFeed: BrowseFeedPage,
   Search: SearchPage,
+  YourNetwork: YourNetworkPage,
   HomeRenewed: HomePageRenewed,
 };
 

@@ -126,7 +126,7 @@ export function isInWhenWindow(
 
   return selectedWhen.some((filter) => {
     if (filter === 'tonight') {
-      return start >= now && start < startOfTomorrow;
+      return start >= startOfToday && start < startOfTomorrow;
     }
     if (filter === 'tomorrow') {
       return start >= startOfTomorrow && start < startOfDayAfterTomorrow;
@@ -290,6 +290,10 @@ export function filterEvents({
   tab: SearchTabId;
 }) {
   const filtered = events.filter((event) => {
+    if (tab === 'tonight-weekend' && event.lifecycle_state === 'live') {
+      return true;
+    }
+
     if (selectedCategories.length > 0) {
       if (!event.category?.slug || !selectedCategories.includes(event.category.slug)) {
         return false;

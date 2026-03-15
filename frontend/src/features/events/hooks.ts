@@ -31,6 +31,9 @@ import {
   fetchFeaturedEvent,
   fetchFeed,
   fetchFriendRequestStatus,
+  fetchMyFriendships,
+  fetchNetworkActivity,
+  fetchNetworkPeople,
   fetchHighlightComments,
   fetchHighlightsFeed,
   fetchHostVendorMessages,
@@ -681,7 +684,32 @@ export function useSendFriendRequest() {
           variables.targetUsername,
         ],
       });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
     },
+  });
+}
+
+export function useMyFriendships(enabled = true) {
+  return useQuery({
+    queryKey: ['my-friendships'],
+    queryFn: () => fetchMyFriendships(),
+    enabled,
+  });
+}
+
+export function useNetworkPeople(enabled = true) {
+  return useQuery({
+    queryKey: ['network-people'],
+    queryFn: () => fetchNetworkPeople(),
+    enabled,
+  });
+}
+
+export function useNetworkActivity(enabled = true) {
+  return useQuery({
+    queryKey: ['network-activity'],
+    queryFn: () => fetchNetworkActivity(),
+    enabled,
   });
 }
 
@@ -719,6 +747,7 @@ export function useUpdateFriendRequest() {
           variables.targetUsername,
         ],
       });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
     },
   });
 }

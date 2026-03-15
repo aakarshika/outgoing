@@ -50,7 +50,35 @@ The new page is currently UI-only. Compared to the old host flow, it is missing 
 - Query cache refresh / patching after save.
 - Toast success/error handling around real mutations.
 
-## Questions I need answered
+## I need all but not :
+
+## I do need the following things from the old flow:
+
+- Lifecycle-aware default step routing based on `event.lifecycle_state`.
+- Multi-step route flow:
+  - `basic-details`
+  - `publish`
+  - `services-prep`
+  - `event-readiness`
+  - `live-attendance`
+  - `wrap-up`
+- Step tab navigation and step-to-step progression.
+- Quick vs advanced input mode for event setup.
+- Event features/tag editing and persistence.
+- Event duration editing.
+- Recurrence editing:
+  - recurring toggle
+  - frequency
+  - days
+  - RRULE generation
+  - occurrence preview
+  - series occurrence generation
+- Apply-to-series behavior for draft occurrences.
+- Series timeline / occurrence switching.
+- Event duration editing. - only start date is input , and duration of event. (event date will be calculated by the frontedn but not by user.)
+
+
+## Questions I answered
 
 ### 1. Scope
 
@@ -158,9 +186,6 @@ The old page’s “services prep” step likely has real sourcing / assignment 
 
 Should the “Find vendors & friends” card:
 
-- reuse that exact logic
-- reuse only the data contracts
-- be a simpler assignment surface
 - stay UI-only for now
 
 ### 10. Series support
@@ -169,11 +194,9 @@ The old page supports recurring events and series occurrence generation.
 
 Do you want recurrence and series management inside the new `/events/:id/manage` page?
 
-If yes:
+- NO. just put a button at the bottom "Duplicate/Recurring event" - does nothing.
 
-- Should “Apply to all drafts” remain?
-- Should the series timeline remain?
-- Should switching between occurrences remain?
+
 
 ### 11. Publish / readiness / live / wrap-up
 
@@ -188,16 +211,17 @@ Should the new workspace absorb these workflows:
 
 Or should `/events/:id/manage` only cover planning/pre-event work?
 
+- will talk about it later. leave it for now.
+
 ### 12. Save model
 
 How should save work in the new page?
 
-- autosave per section
-- explicit “Save” button
-- save draft only
-- section-level save buttons
+- section-level - edit button - may need overlay with its own save button, may switch to edit form mode with save button, 
 
-And should tickets / needs save separately from event details, like the old page effectively does?
+And should tickets / needs save separately from event details, like the old page effectively does? 
+
+- yes. in diff overlay forms
 
 ### 13. Section edit boundaries
 
@@ -212,16 +236,15 @@ Right now the new UI presents these as cards:
 
 Which of these should become editable first, and which can stay read-only placeholders?
 
+- your wish. one by one
+
 ### 14. Checklist source of truth
 
 The old flow had functional state across steps. The new checklist is mocked.
 
 Should checklist items be:
 
-- derived from actual event completeness
-- manually managed
-- lifecycle-driven
-- partly derived and partly manual
+- leave placeholder for now.
 
 ### 15. Chat
 
@@ -229,33 +252,55 @@ The co-organiser chat card is UI-only.
 
 Should this connect to any existing chat system, or is that out of scope for now?
 
+- we have a chatdrawerprovider. use it.
+
 ### 16. Existing components reuse
 
 Do you want me to reuse old components where possible from the old host flow, or should I keep the new page visually distinct and only port over logic/data contracts?
 
 This matters because there are two migration strategies:
 
-- embed/adapt old functional components into the new workspace
-- rebuild each section on top of the new UI using the same APIs and hooks
+- Answer - new page visually distinct and only port over logic/data. 
 
 ### 17. Old page retirement
 
 Once the missing behaviors are migrated, should the old host route:
 
-- redirect to `/events/:id/manage`
 - remain available temporarily
-- keep some advanced functions the new workspace will not own
 
-## Recommended decisions to unblock implementation
 
-If you want the cleanest next step, I need answers to these first:
 
-1. Is `/events/:id/manage` replacing the old host flow or only part of it?
-2. Should the new page preserve the old step/lifecycle behavior?
-3. Which sections must become functional first:
-   - event details
-   - tickets
-   - needs
-   - publish/readiness/live/wrap-up
-4. Whether recurrence/series support must stay in scope.
-5. Whether to reuse old components directly or only port their logic.
+
+
+
+
+
+## Yes. A few points are still ambiguous enough that they’ll change the implementation.
+
+1. one single page only, no step routes
+On routing: should the new page stay exactly at /events/:id/manage with no nested routes at all. yes.
+
+2. For the main “Event details” area, do you want edits to happen:
+in one big overlay
+
+3. For tickets, should “Add ticket” open:
+a larger ticket-manager overlay that shows all tiers and editing together
+
+4. For the new “Features” section, should it be:
+its own card between details and tickets
+
+5. For needs, should these each be separate overlays:
+add/edit need - overlay
+review applicants - new page  - later. 
+browse vendors - new page - later
+assign/invite confirmation - overlay. 
+host override - overlay - with a message.
+
+6. For chat, when clicking from the new page, should I open the existing chat drawer in:
+co-organiser-only chat - is called "HostVendorGroupChat" 
+
+7. Old page retirement: when you said “leave old be” and also “fully replace,” should I treat that as:
+
+old host-management route stays temporarily but is not the target for new work
+
+

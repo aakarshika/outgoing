@@ -13,26 +13,49 @@ import {
   Settings,
   Speech,
   LogIn,
+  LogOut,
   Menu,
   UserPlus,
   Bell,
+  Users,
 } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, matchPath } from 'react-router-dom';
 
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
+import { useEvent } from '@/features/events/hooks';
 
 export function SimpleNavbar() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuth();
+  const eventMatch = matchPath(
+    { path: '/events/:id/*', end: false },
+    location.pathname,
+  );
+  const eventId = eventMatch?.params?.id;
+  const { data: eventResponse } = useEvent(Number(eventId));
+  const event = eventResponse?.data;
+  const isEventHost =
+    isAuthenticated &&
+    !!user &&
+    !!event &&
+    user.username === event.host?.username;
+  const isVendor =
+    isAuthenticated &&
+    !!user &&
+    !!event &&
+    !!(event.user_applications && event.user_applications.length > 0);
+  const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const menuItems = [
     { label: 'Create event', to: '/events/create', Icon: PlusCircle },
     { label: 'Calendar', to: '/calendar', Icon: CalendarDays },
+    { label: 'Your Network', to: '/network', Icon: Users },
     { label: 'Hosting', to: '/dashboard/events', Icon: Speech },
     { label: 'Servicing', to: '/dashboard/services/my-services', Icon: Monitor },
     { label: 'Settings', to: '/profile/settings', Icon: Settings },
@@ -91,16 +114,18 @@ export function SimpleNavbar() {
               outGOing
             </Typography>
           </Box>
-          <Box
-            sx={{
-              flex: 1,
-              minWidth: 320,
-            }}
-          >
-            <NavbarProvider>
-              <SearchBarSimple />
-            </NavbarProvider>
-          </Box>
+          {!eventMatch && (
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 320,
+              }}
+            >
+              <NavbarProvider>
+                <SearchBarSimple />
+              </NavbarProvider>
+            </Box>
+          )}
 
           <Box
             sx={{
@@ -113,6 +138,30 @@ export function SimpleNavbar() {
           >
             {isAuthenticated ? (
               <>
+                {isVendor && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#e6fafa] hover:text-[#008a8a]"
+                    onClick={() =>
+                      navigate(`/events/${eventId}/service-event-management`)
+                    }
+                  >
+                    Manage Service
+                  </Button>
+                )}
+                {isEventHost && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#f0ebff] hover:text-[#7c5dd6]"
+                    onClick={() =>
+                      navigate(`/events/${eventId}/host-event-management`)
+                    }
+                  >
+                    Manage Event
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -218,6 +267,37 @@ export function SimpleNavbar() {
               ) : null}
             </Box>
           ))}
+          {isAuthenticated ? (
+            <>
+              <Divider sx={{ m: 0, borderColor: 'rgba(120,94,60,0.14)' }} />
+              <Box
+                component="button"
+                type="button"
+                onClick={() => {
+                  closeMenuPopover();
+                  logout();
+                }}
+                sx={{
+                  width: '100%',
+                  px: 1.5,
+                  py: 1.15,
+                  border: 0,
+                  backgroundColor: 'transparent',
+                  textAlign: 'left',
+                  fontSize: 13,
+                  color: '#3D3124',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  '&:hover': { backgroundColor: '#FFF1DE' },
+                }}
+              >
+                <LogOut size={14} />
+                Logout
+              </Box>
+            </>
+          ) : null}
         </Box>
       </Popover>
     </Box>

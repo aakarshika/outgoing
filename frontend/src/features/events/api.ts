@@ -481,6 +481,97 @@ export async function fetchDirectMessages(targetUsername: string) {
   return data;
 }
 
+export interface FriendshipItem {
+  id: number;
+  user1: number;
+  user2: number;
+  user1_username: string;
+  user2_username: string;
+  request_sender: number;
+  request_sender_username: string;
+  request_message: string;
+  status: string;
+  accepted_at: string | null;
+  met_at_event: number | null;
+  met_at_event_title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MyFriendshipsResponse {
+  accepted: FriendshipItem[];
+  pending_incoming: FriendshipItem[];
+  pending_outgoing: FriendshipItem[];
+}
+
+export interface NetworkPerson {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+  event_id?: number;
+  event_title?: string;
+}
+
+export interface NetworkPeopleResponse {
+  friends: NetworkPerson[];
+  went_to_events_with: NetworkPerson[];
+  hosts_met: NetworkPerson[];
+  vendors_met: NetworkPerson[];
+}
+
+export async function fetchNetworkPeople(): Promise<NetworkPeopleResponse> {
+  const { data } = await client.get<ApiResponse<NetworkPeopleResponse>>(
+    '/events/network/people/',
+  );
+  const inner = (data as ApiResponse<NetworkPeopleResponse>)?.data;
+  return (
+    inner ?? {
+      friends: [],
+      went_to_events_with: [],
+      hosts_met: [],
+      vendors_met: [],
+    }
+  );
+}
+
+export interface NetworkActivityActor {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+}
+
+export interface NetworkActivityItem {
+  kind: 'hosting' | 'going' | 'interested';
+  actor: NetworkActivityActor;
+  event_id: number;
+  event_title: string;
+  event_subtitle: string;
+  happened_at: string;
+}
+
+export interface NetworkActivityResponse {
+  activity: NetworkActivityItem[];
+}
+
+export async function fetchNetworkActivity(): Promise<NetworkActivityResponse> {
+  const { data } = await client.get<ApiResponse<NetworkActivityResponse>>(
+    '/events/network/activity/',
+  );
+  const inner = (data as ApiResponse<NetworkActivityResponse>)?.data;
+  return inner ?? { activity: [] };
+}
+
+export async function fetchMyFriendships(): Promise<MyFriendshipsResponse> {
+  const { data } = await client.get<ApiResponse<MyFriendshipsResponse>>(
+    '/events/friendships/',
+  );
+  const inner = (data as ApiResponse<MyFriendshipsResponse>)?.data;
+  return inner ?? { accepted: [], pending_incoming: [], pending_outgoing: [] };
+}
+
 export async function fetchAllChatsList() {
   const { data } = await client.get<ApiResponse<AllChatsListResponse>>(
     '/events/conversations/',

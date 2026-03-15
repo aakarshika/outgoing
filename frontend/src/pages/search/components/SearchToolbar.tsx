@@ -176,6 +176,7 @@ export function SearchToolbar({
   onToggleRole,
   onClearRoles,
   onClearManualFilters,
+  onClearLocation,
   stickyTop = 0,
 }: {
   tab: SearchTabId;
@@ -194,6 +195,7 @@ export function SearchToolbar({
   onToggleRole: (role: RoleFilterId) => void;
   onClearRoles: () => void;
   onClearManualFilters: () => void;
+  onClearLocation: () => void;
   stickyTop?: number;
 }) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -230,7 +232,12 @@ export function SearchToolbar({
               active: effectiveWhen.includes('this-weekend'),
               onClick: () => onToggleWhen('this-weekend'),
             },
-            { label: 'Near me (<5km)', active: isNearMeActive, accent: '#1D9E75' },
+            {
+              label: 'Near me (<5km)',
+              active: isNearMeActive,
+              accent: '#1D9E75',
+              onClick: isNearMeActive ? onClearLocation : undefined,
+            },
             { label: 'Outdoor only' },
             {
               label: 'Tomorrow',

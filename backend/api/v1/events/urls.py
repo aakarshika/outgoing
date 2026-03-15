@@ -8,6 +8,9 @@ from .views import (
     EventCategoryListView,
     EventDetailView,
     EventFriendshipRequestCreateView,
+    MyFriendshipsView,
+    MyNetworkActivityView,
+    MyNetworkPeopleView,
     EventHighlightListCreateView,
     EventHighlightLikeToggleView,
     EventHighlightCommentCreateListView,
@@ -39,6 +42,9 @@ urlpatterns = [
     path(
         "my/interested/", MyInterestedEventsView.as_view(), name="my_interested_events"
     ),
+    path("friendships/", MyFriendshipsView.as_view(), name="my_friendships"),
+    path("network/people/", MyNetworkPeopleView.as_view(), name="my_network_people"),
+    path("network/activity/", MyNetworkActivityView.as_view(), name="my_network_activity"),
     path(
         "<int:event_id>/lifecycle/transition/",
         EventLifecycleTransitionView.as_view(),

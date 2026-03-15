@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import type { EventListItem } from '@/types/events';
 import type { VendorOpportunity } from '@/types/needs';
 
-import { TABS } from '../searchConfig';
 import type { SearchTabId } from '../searchTypes';
 import { EventCard, OpportunityCard } from './SearchCards';
 
@@ -76,10 +75,12 @@ function EventGrid({
 function OpportunityList({
   opportunities,
   onOpportunityClick,
+  matchedOpportunityNeedIds,
   heading,
 }: {
   opportunities: VendorOpportunity[];
   onOpportunityClick: (eventId: number) => void;
+  matchedOpportunityNeedIds: Set<number>;
   heading?: string;
 }) {
   return (
@@ -100,6 +101,7 @@ function OpportunityList({
         <OpportunityCard
           key={opportunity.need_id}
           opportunity={opportunity}
+          hasMatchingService={matchedOpportunityNeedIds.has(opportunity.need_id)}
           onClick={() => onOpportunityClick(opportunity.event_id)}
         />
       ))}
@@ -112,6 +114,7 @@ export function SearchResults({
   sectionCount,
   filteredEvents,
   filteredOpportunities,
+  matchedOpportunityNeedIds,
   isFeedLoading,
   isOpportunitiesLoading,
   isAuthenticated,
@@ -123,6 +126,7 @@ export function SearchResults({
   sectionCount: number;
   filteredEvents: EventListItem[];
   filteredOpportunities: VendorOpportunity[];
+  matchedOpportunityNeedIds: Set<number>;
   isFeedLoading: boolean;
   isOpportunitiesLoading: boolean;
   isAuthenticated: boolean;
@@ -130,10 +134,13 @@ export function SearchResults({
   onOpportunityClick: (eventId: number) => void;
   onSignIn: () => void;
 }) {
-  const activeTab = TABS.find((item) => item.id === tab);
-
   return (
     <Stack spacing={2.2}>
+      {tab !== 'my-network' ? (
+        <Typography sx={{ fontSize: 11, color: '#6b7280', px: 0.2 }}>
+          {sectionCount} result{sectionCount === 1 ? '' : 's'}
+        </Typography>
+      ) : null}
       {tab === 'my-network' ? (
         <MessageCard>
           <Typography
@@ -193,6 +200,7 @@ export function SearchResults({
             <OpportunityList
               opportunities={filteredOpportunities}
               onOpportunityClick={onOpportunityClick}
+              matchedOpportunityNeedIds={matchedOpportunityNeedIds}
               heading="Contributor gigs"
             />
           ) : null}
@@ -208,6 +216,7 @@ export function SearchResults({
           <OpportunityList
             opportunities={filteredOpportunities}
             onOpportunityClick={onOpportunityClick}
+            matchedOpportunityNeedIds={matchedOpportunityNeedIds}
           />
         ) : (
           <EmptyState />

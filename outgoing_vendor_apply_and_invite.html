@@ -1,0 +1,247 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .vf{font-family:'DM Sans',sans-serif;background:var(--color-background-tertiary);padding:1.5rem;max-width:680px;margin:0 auto;}
+
+  .flow-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-text-secondary);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+  .flow-line{flex:1;height:0.5px;background:var(--color-border-tertiary);}
+
+  .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:1.5rem;}
+
+  .ev-context{padding:16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;gap:12px;align-items:flex-start;}
+  .ev-thumb{width:52px;height:52px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+  .ev-info{}
+  .ev-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--color-text-primary);margin-bottom:3px;}
+  .ev-meta{font-size:12px;color:var(--color-text-secondary);display:flex;gap:12px;flex-wrap:wrap;}
+  .ev-host{display:flex;align-items:center;gap:5px;margin-top:5px;}
+  .ev-host-av{width:20px;height:20px;border-radius:50%;background:#D85A30;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:500;}
+  .ev-host-name{font-size:12px;color:var(--color-text-secondary);}
+
+  .role-banner{background:#FAECE7;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;}
+  .role-icon{font-size:20px;}
+  .role-info{}
+  .role-title{font-size:14px;font-weight:500;color:#712B13;}
+  .role-sub{font-size:11px;color:#993C1D;margin-top:1px;}
+
+  .invite-banner{background:#EEEDFE;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;}
+  .invite-title{font-size:14px;font-weight:500;color:#26215C;}
+  .invite-sub{font-size:11px;color:#534AB7;margin-top:1px;}
+
+  .terms-block{padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .terms-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-secondary);margin-bottom:10px;}
+  .term-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+  .term-row:last-child{margin-bottom:0;}
+  .term-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:0px;}
+  .term-text{font-size:13px;color:var(--color-text-primary);line-height:1.5;}
+  .term-text b{font-weight:500;}
+  .term-expand{font-size:11px;color:#D85A30;cursor:pointer;margin-top:8px;display:inline-block;}
+
+  .cancel-warn{background:#FAEEDA;border-radius:var(--border-radius-md);padding:10px 13px;margin:14px 16px 0;display:flex;gap:8px;align-items:flex-start;}
+  .cancel-warn-icon{font-size:14px;flex-shrink:0;}
+  .cancel-warn-text{font-size:12px;color:#633806;line-height:1.5;}
+
+  .comp-summary{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .comp-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-secondary);width:100%;margin-bottom:4px;}
+  .comp-chip{padding:7px 14px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid transparent;}
+  .comp-chip.avail{border-color:var(--color-border-secondary);color:var(--color-text-primary);background:var(--color-background-primary);}
+  .comp-chip.selected{border-color:#D85A30;background:#FAECE7;color:#712B13;}
+  .comp-chip-hint{width:100%;font-size:11px;color:var(--color-text-secondary);margin-top:4px;}
+
+  .message-block{padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .msg-label{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;}
+  .msg-hint{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;font-style:italic;}
+  .msg-textarea{width:100%;padding:10px 13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);resize:none;height:80px;line-height:1.5;}
+  .msg-textarea:focus{outline:none;border-color:#D85A30;}
+  .msg-char{font-size:11px;color:var(--color-text-secondary);text-align:right;margin-top:4px;}
+
+  .history-block{padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;}
+  .history-left{display:flex;align-items:center;gap:8px;}
+  .history-icon{width:32px;height:32px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .history-text{font-size:12px;color:var(--color-text-secondary);line-height:1.4;}
+  .history-text b{color:var(--color-text-primary);font-weight:500;}
+  .history-toggle{font-size:11px;color:#D85A30;cursor:pointer;}
+
+  .proof-ps{padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;gap:8px;align-items:flex-start;}
+  .proof-text{font-size:12px;color:var(--color-text-secondary);line-height:1.5;font-style:italic;}
+  .proof-text b{font-weight:500;color:var(--color-text-primary);font-style:normal;}
+
+  .action-block{padding:14px 16px;}
+  .btn-apply{width:100%;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;padding:14px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;margin-bottom:8px;}
+  .btn-save{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:11px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;}
+
+  .invite-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;}
+  .btn-accept{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;padding:13px;border-radius:999px;border:none;background:#1D9E75;color:#fff;cursor:pointer;text-align:center;}
+  .btn-decline{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:13px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;text-align:center;}
+
+  .notification-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-left:3px solid #534AB7;border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1rem;display:flex;gap:12px;align-items:flex-start;cursor:pointer;}
+  .notif-icon{width:40px;height:40px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .notif-body{}
+  .notif-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;line-height:1.4;}
+  .notif-title b{font-weight:500;color:#26215C;}
+  .notif-sub{font-size:12px;color:var(--color-text-secondary);}
+  .notif-time{font-size:11px;color:var(--color-text-secondary);margin-left:auto;flex-shrink:0;}
+</style>
+
+<div class="vf">
+
+  <div class="flow-label"><div class="flow-line"></div>Flow 2 — invite received (notification)<div class="flow-line"></div></div>
+
+  <div class="notification-card">
+    <div class="notif-icon">&#127911;</div>
+    <div class="notif-body">
+      <div class="notif-title"><b>Pinky</b> wants you to DJ at Rooftop Vinyl Night</div>
+      <div class="notif-sub">Indiranagar · Sat 15 Mar · Free entry offered</div>
+    </div>
+    <div class="notif-time">2m ago</div>
+  </div>
+
+  <div class="card">
+    <div class="ev-context">
+      <div class="ev-thumb" style="background:#FAECE7;">&#127926;</div>
+      <div class="ev-info">
+        <div class="ev-name">Rooftop Vinyl Night</div>
+        <div class="ev-meta">
+          <span>Sat 15 Mar · 8pm–midnight</span>
+          <span>Indiranagar Social, Bengaluru</span>
+          <span>&#8377;350 ticket</span>
+        </div>
+        <div class="ev-host">
+          <div class="ev-host-av">P</div>
+          <div class="ev-host-name">Hosted by Pinky — you attended her last event</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="invite-banner">
+      <span style="font-size:20px;">&#127775;</span>
+      <div>
+        <div class="invite-title">Pinky personally invited you to DJ this event</div>
+        <div class="invite-sub">She thinks you'd be great for this. No pressure — read the terms and decide.</div>
+      </div>
+    </div>
+
+    <div class="terms-block">
+      <div class="terms-title">Here's what you're signing up for</div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#FAECE7;color:#993C1D;">&#127911;</div>
+        <div class="term-text"><b>What you'll do:</b> DJ the event from 8pm–midnight. Your playlist, your vibe — Pinky just needs good music.</div>
+      </div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#EAF3DE;color:#3B6D11;">&#8377;</div>
+        <div class="term-text"><b>What you get:</b> Free entry to the event (worth &#8377;350). Pinky is also offering a &#8377;350 cash option if you'd rather not attend.</div>
+      </div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#FAEEDA;color:#854F0B;">&#9888;</div>
+        <div class="term-text"><b>If it gets cancelled:</b> You'll still receive your full compensation regardless of when or why it's cancelled.</div>
+      </div>
+      <span class="term-expand">Read full terms &#8594;</span>
+    </div>
+
+    <div class="cancel-warn">
+      <span class="cancel-warn-icon">&#128203;</span>
+      <div class="cancel-warn-text">This event needs at least <b>20 ticket sales by 13 Mar</b> to go ahead. Currently at 34 — it's happening. But if that changes, you're fully covered.</div>
+    </div>
+
+    <div class="comp-summary">
+      <div class="comp-title">Pick what works for you</div>
+      <div class="comp-chip selected">Free entry</div>
+      <div class="comp-chip avail">&#8377;350 cash</div>
+      <div class="comp-chip-hint">You can change this anytime before the event.</div>
+    </div>
+
+    <div class="proof-ps">
+      <span style="font-size:14px;">&#128247;</span>
+      <div class="proof-text">PS — if you end up recording any of your set, feel free to share it with Pinky afterwards. <b>No pressure at all</b>, but she'd love to have it for the recap.</div>
+    </div>
+
+    <div class="invite-actions">
+      <div class="btn-decline">Not this time</div>
+      <div class="btn-accept">I'm in &#10003;</div>
+    </div>
+  </div>
+
+  <div class="flow-label"><div class="flow-line"></div>Flow 1 — browsing and applying<div class="flow-line"></div></div>
+
+  <div class="card">
+    <div class="ev-context">
+      <div class="ev-thumb" style="background:#FAECE7;">&#127926;</div>
+      <div class="ev-info">
+        <div class="ev-name">Rooftop Vinyl Night</div>
+        <div class="ev-meta">
+          <span>Sat 15 Mar · 8pm</span>
+          <span>Indiranagar, Bengaluru</span>
+          <span>&#8377;350 ticket</span>
+        </div>
+        <div class="ev-host">
+          <div class="ev-host-av">P</div>
+          <div class="ev-host-name">Hosted by Pinky</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="role-banner">
+      <span class="role-icon">&#128247;</span>
+      <div class="role-info">
+        <div class="role-title">Photographer needed · 1 slot open</div>
+        <div class="role-sub">Low-light, candid crowd shots · Edited gallery within 48h</div>
+      </div>
+    </div>
+
+    <div class="terms-block">
+      <div class="terms-title">Before you apply</div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#FAECE7;color:#993C1D;">&#128247;</div>
+        <div class="term-text"><b>What you'll do:</b> Photograph the event 7–11pm. Low-light and candid shots. Share an edited gallery with the host within 48 hours.</div>
+      </div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#EAF3DE;color:#3B6D11;">&#8377;</div>
+        <div class="term-text"><b>What you get:</b> Your choice — free entry (&#8377;350), 40% discount, or &#8377;350 cash. You pick when you apply.</div>
+      </div>
+      <div class="term-row">
+        <div class="term-dot" style="background:#FAEEDA;color:#854F0B;">&#9888;</div>
+        <div class="term-text"><b>If it gets cancelled:</b> You'll receive full compensation regardless. The host carries the risk, not you.</div>
+      </div>
+      <span class="term-expand">Read full terms &#8594;</span>
+    </div>
+
+    <div class="cancel-warn">
+      <span class="cancel-warn-icon">&#128203;</span>
+      <div class="cancel-warn-text">This event needs <b>20 tickets sold by 13 Mar</b> to go ahead. It's at 34 right now — looking good. Just so you know.</div>
+    </div>
+
+    <div class="comp-summary">
+      <div class="comp-title">Pick your compensation</div>
+      <div class="comp-chip selected">Free entry</div>
+      <div class="comp-chip avail">40% discount</div>
+      <div class="comp-chip avail">&#8377;350 cash</div>
+      <div class="comp-chip-hint">You can update this later if your plans change.</div>
+    </div>
+
+    <div class="message-block">
+      <div class="msg-label">Say something to Pinky</div>
+      <div class="msg-hint">Keep it short and real — tell her why you'd be a good fit. No CV needed.</div>
+      <textarea class="msg-textarea" placeholder="Hey Pinky, I shoot a lot of live music events and I'm pretty comfortable in low light — would love to be there for this one.">Hey Pinky, I shoot a lot of live music and I'm very comfortable in low light. Big fan of candid crowd photography. Would love to be there for this one.</textarea>
+      <div class="msg-char">142 / 300</div>
+    </div>
+
+    <div class="history-block">
+      <div class="history-left">
+        <div class="history-icon">&#127942;</div>
+        <div class="history-text"><b>Your contribution history</b> will be shared with Pinky — 5 events, photographer at 3 of them.</div>
+      </div>
+      <div class="history-toggle">Hide</div>
+    </div>
+
+    <div class="proof-ps">
+      <span style="font-size:14px;">&#128247;</span>
+      <div class="proof-text">One small thing — after the event, <b>share a few shots with Pinky</b> so she can confirm the work is done and release your compensation. Totally casual, just a quick gallery share.</div>
+    </div>
+
+    <div class="action-block">
+      <button class="btn-apply">Send application &#8594;</button>
+      <button class="btn-save">Save for later</button>
+    </div>
+  </div>
+
+</div>

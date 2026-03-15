@@ -22,6 +22,7 @@ import type {
   WhenFilterId,
 } from './searchTypes';
 import {
+  buildLocationSearchParams,
   buildClearFiltersSearchParams,
   buildDateSearchParams,
   buildTabSearchParams,
@@ -121,14 +122,15 @@ export default function SearchPage() {
     : undefined;
 
   const feedSort = getFeedSort(tab);
+  const isOnlineTab = tab === 'online';
 
   const { data: feedResponse, isLoading: isFeedLoading } = useFeed({
     search: search || undefined,
-    location: lat && lng ? undefined : location || undefined,
-    lat: lat ? Number(lat) : undefined,
-    lng: lng ? Number(lng) : undefined,
-    radius_km: parsedRadiusKm,
-    online: tab === 'online' ? true : undefined,
+    location: isOnlineTab ? undefined : lat && lng ? undefined : location || undefined,
+    lat: isOnlineTab ? undefined : lat ? Number(lat) : undefined,
+    lng: isOnlineTab ? undefined : lng ? Number(lng) : undefined,
+    radius_km: isOnlineTab ? undefined : parsedRadiusKm,
+    online: isOnlineTab ? true : undefined,
     sort: feedSort,
     lifecycle_states: trendingLifecycleStates,
     start_time_gte: feedTimeRange?.start_time_gte,
@@ -159,6 +161,15 @@ export default function SearchPage() {
         seen.add(item.need_id);
         return true;
       });
+    },
+  });
+
+  const { data: matchedOpportunities = [] } = useQuery({
+    queryKey: ['search', 'opportunities', 'matched', isAuthenticated],
+    enabled: isAuthenticated && tab === 'chip-in',
+    queryFn: async () => {
+      const response = await fetchMyVendorOpportunities();
+      return response.data || [];
     },
   });
 
@@ -208,6 +219,10 @@ export default function SearchPage() {
     tab,
     filteredEvents.length,
     filteredOpportunities.length,
+  );
+  const matchedOpportunityNeedIds = useMemo(
+    () => new Set(matchedOpportunities.map((item) => item.need_id)),
+    [matchedOpportunities],
   );
 
   return (
@@ -275,6 +290,14 @@ export default function SearchPage() {
             replace: true,
           })
         }
+        onClearLocation={() =>
+          setSearchParams(
+            buildLocationSearchParams(normalizedSearchParams, { location: '' }),
+            {
+              replace: true,
+            },
+          )
+        }
         stickyTop={74}
       />
 
@@ -287,6 +310,7 @@ export default function SearchPage() {
           sectionCount={sectionCount}
           filteredEvents={filteredEvents}
           filteredOpportunities={filteredOpportunities}
+          matchedOpportunityNeedIds={matchedOpportunityNeedIds}
           isFeedLoading={isFeedLoading}
           isOpportunitiesLoading={isOpportunitiesLoading}
           isAuthenticated={isAuthenticated}
