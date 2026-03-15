@@ -1,4 +1,5 @@
 import json
+import math
 import random
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -7,6 +8,49 @@ from django.core.management.base import BaseCommand
 
 HERE = Path(__file__).resolve().parent
 HELPERS_DIR = HERE / "seed-helper-data"
+SEED_CENTER_LAT = 39.37
+SEED_CENTER_LNG = -76.57
+SEED_RADIUS_MILES = 200
+PAID_TIER_PRICES = [15, 25, 35, 50, 75, 100]
+
+
+def random_point_within_radius(rng, center_lat, center_lng, radius_miles):
+    """Generate a lat/lng within radius_miles of the given center."""
+    earth_radius_miles = 3958.8
+    distance = radius_miles * math.sqrt(rng.random())
+    bearing = rng.uniform(0, 2 * math.pi)
+
+    lat1 = math.radians(center_lat)
+    lng1 = math.radians(center_lng)
+    angular_distance = distance / earth_radius_miles
+
+    lat2 = math.asin(
+        math.sin(lat1) * math.cos(angular_distance)
+        + math.cos(lat1) * math.sin(angular_distance) * math.cos(bearing)
+    )
+    lng2 = lng1 + math.atan2(
+        math.sin(bearing) * math.sin(angular_distance) * math.cos(lat1),
+        math.cos(angular_distance) - math.sin(lat1) * math.sin(lat2),
+    )
+
+    lng2 = (lng2 + 3 * math.pi) % (2 * math.pi) - math.pi
+    return round(math.degrees(lat2), 6), round(math.degrees(lng2), 6)
+
+
+def random_event_window_in_coming_month(rng, now):
+    """Return start/end datetimes constrained to the next 30 days."""
+    month_end = now + timedelta(days=30)
+
+    # Keep at least one hour for duration by reserving room before month_end.
+    latest_start = month_end - timedelta(hours=1)
+    total_start_seconds = max(1, int((latest_start - now).total_seconds()))
+    start_time = now + timedelta(seconds=rng.randint(1, total_start_seconds))
+
+    # Event duration stays short and end_time never exceeds month_end.
+    max_duration_seconds = max(3600, int((month_end - start_time).total_seconds()))
+    duration_seconds = rng.randint(3600, min(max_duration_seconds, 48 * 3600))
+    end_time = start_time + timedelta(seconds=duration_seconds)
+    return start_time, end_time
 
 class Command(BaseCommand):
     help = "Generates a simple JSON seed dataset strictly adhering to seed_description.md and counts.md."
@@ -125,10 +169,14 @@ class Command(BaseCommand):
                 continue
 
             for t_item in cat_titles:
-                start_days_ahead = rng.randint(1, 30)
-                start_time = now + timedelta(days=start_days_ahead, hours=rng.randint(0, 23))
-                end_time = start_time + timedelta(days=rng.randint(0, 4), hours=rng.randint(1, 12))
+                start_time, end_time = random_event_window_in_coming_month(rng, now)
                 capacity = rng.randint(20, 40)
+                latitude, longitude = random_point_within_radius(
+                    rng,
+                    SEED_CENTER_LAT,
+                    SEED_CENTER_LNG,
+                    SEED_RADIUS_MILES,
+                )
                 
                 event_key = f"evt_{event_counter}"
                 is_published = rng.random() < 0.7
@@ -142,8 +190,11 @@ class Command(BaseCommand):
                     "description": t_item["description"],
                     "location_name": f"{t_item['name']} Venue",
                     "location_address": "123 Main St, New York",
+                    "latitude": latitude,
+                    "longitude": longitude,
                     "start_time": start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "end_time": end_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "cover_image": f"/assets/cover_{event_counter}.png",
                     "status": status,
                     "lifecycle_state": status,
                     "capacity": capacity
@@ -154,12 +205,20 @@ class Command(BaseCommand):
                 num_tiers = rng.randint(1, 3)
                 tier_names = ["General", "Premium", "VIP", "Adults + 1 Child"]
                 tier_cap = capacity // num_tiers
+                has_paid_tier = rng.random() < 0.7
                 for t_idx in range(num_tiers):
+                    if has_paid_tier and t_idx > 0:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    elif has_paid_tier and num_tiers == 1:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    else:
+                        price = 0
+
                     tier_obj = {
                         "_key": f"{event_key}_tier_{t_idx}",
                         "event": event_key,
                         "name": tier_names[t_idx],
-                        "price": 0,
+                        "price": price,
                         "capacity": tier_cap
                     }
                     out_event_ticket_tiers.append(tier_obj)
@@ -228,4 +287,3 @@ class Command(BaseCommand):
             json.dump(result, f, indent=2)
             
         self.stdout.write(self.style.SUCCESS(f"Successfully generated seed data at {out_path}"))
-

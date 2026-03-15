@@ -1,0 +1,971 @@
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Container,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useFeed } from '@/features/events/hooks';
+import type { EventListItem } from '@/types/events';
+
+const categoryChips = [
+  { label: 'Outdoors', icon: '🏃' },
+  { label: 'Music', icon: '🎶' },
+  { label: 'Food & Drink', icon: '🍽️' },
+  { label: 'Arts & Culture', icon: '🎨' },
+  { label: 'Gaming', icon: '🎮' },
+  { label: 'Wellness', icon: '🧘' },
+  { label: 'Tech', icon: '💻' },
+  { label: 'Sports', icon: '⚽' },
+  { label: 'Books', icon: '📚' },
+  { label: 'Film', icon: '🎞️' },
+] as const;
+
+const cityCards = [
+  { name: 'New York', flag: '🌍', count: '2,400+ events' },
+  { name: 'Los Angeles', flag: '🌞', count: '1,800+ events' },
+  { name: 'Chicago', flag: '🍂', count: '1,100+ events' },
+  { name: 'Atlanta', flag: '🌵', count: '890+ events' },
+  { name: 'Miami', flag: '🌴', count: '760+ events' },
+  { name: 'Houston', flag: '🏓', count: '640+ events' },
+] as const;
+
+const howItWorksCards = [
+  {
+    icon: '🔍',
+    background: '#FAECE7',
+    title: 'Discover',
+    description:
+      "Browse thousands of hyper-local and online events built around your actual interests — from underground jazz nights to niche hobby meetups you didn't know existed.",
+  },
+  {
+    icon: '🎉',
+    background: '#FAEEDA',
+    title: 'Go further than attending',
+    description:
+      'Grab a ticket, or claim a contributor role — bring supplies, run the music, cater the food — and earn discounts or get paid. Every event needs people like you.',
+  },
+  {
+    icon: '👥',
+    background: '#EAF3DE',
+    title: 'Find your people',
+    description:
+      "Follow groups, meet regulars, and go from stranger to the person everyone's glad showed up. Communities here are built one event at a time.",
+  },
+  {
+    icon: '💡',
+    background: '#E6F1FB',
+    title: 'Start something',
+    description:
+      'Got an idea? Post it. Set what you need, watch interest build, and let your community help you pull it off. No venue, no budget required — just a spark.',
+  },
+] as const;
+
+const filterChips = [
+  'This weekend',
+  'Tonight',
+  'Free',
+  'Under $20',
+  'Outdoors',
+  'New in town',
+  'Contributor spots open',
+] as const;
+
+type FilterChip = (typeof filterChips)[number];
+
+function formatDayTime(dateString: string) {
+  const date = new Date(dateString);
+  return `${date.toLocaleDateString(undefined, {
+    weekday: 'short',
+  })} · ${date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
+}
+
+function getAccent(event: EventListItem) {
+  const category = (event.category?.name || '').toLowerCase();
+  if (event.location_name?.toLowerCase().includes('online')) return '#E1F5EE';
+  if (category.includes('music')) return '#E6F1FB';
+  if (category.includes('food')) return '#FAECE7';
+  if (category.includes('outdoor') || category.includes('sport')) return '#FAEEDA';
+  if (category.includes('art')) return '#EEEDFE';
+  if (category.includes('book')) return '#FBEAF0';
+  return '#EAF3DE';
+}
+
+function getIcon(event: EventListItem) {
+  const category = (event.category?.name || '').toLowerCase();
+  if (event.location_name?.toLowerCase().includes('online')) return '💻';
+  if (category.includes('music')) return '🎶';
+  if (category.includes('food')) return '🍽️';
+  if (category.includes('outdoor') || category.includes('sport')) return '🏃';
+  if (category.includes('art')) return '🎨';
+  if (category.includes('film')) return '🎞️';
+  if (category.includes('game')) return '🎮';
+  if (category.includes('book')) return '📚';
+  if (category.includes('well')) return '🧘';
+  return '✨';
+}
+
+function getPriceLabel(event: EventListItem) {
+  const prices = [event.ticket_price_standard, event.ticket_price_flexible]
+    .filter((value): value is string => value !== null)
+    .map((value) => Number(value))
+    .filter((value) => !Number.isNaN(value));
+
+  if (prices.length === 0) return '';
+  const lowest = Math.min(...prices);
+  return lowest === 0 ? 'Free' : `$${lowest}`;
+}
+
+function EventCard({
+  event,
+  compactPrice = false,
+}: {
+  event: EventListItem;
+  compactPrice?: boolean;
+}) {
+  const secondary = compactPrice
+    ? `${formatDayTime(event.start_time)}${getPriceLabel(event) ? ` · ${getPriceLabel(event)}` : ''}`
+    : formatDayTime(event.start_time);
+
+  return (
+    <Box
+      sx={{
+        background: 'var(--color-background-primary)',
+        border: '0.5px solid var(--color-border-tertiary)',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        minWidth: 0,
+      }}
+    >
+      <Box
+        sx={{
+          height: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 32,
+          background: getAccent(event),
+        }}
+      >
+        {getIcon(event)}
+      </Box>
+      <Box sx={{ p: 1.5 }}>
+        <Typography
+          sx={{
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.07em',
+            color: 'var(--color-text-secondary)',
+            mb: 0.5,
+          }}
+        >
+          {event.category?.name ||
+            (event.location_name?.toLowerCase().includes('online')
+              ? 'Online'
+              : 'Event')}
+        </Typography>
+        <Typography
+          sx={{
+            fontFamily: 'Syne, sans-serif',
+            fontSize: 13,
+            fontWeight: 700,
+            color: 'var(--color-text-primary)',
+            lineHeight: 1.3,
+            minHeight: 34,
+          }}
+        >
+          {event.title}
+        </Typography>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={1}
+          sx={{ mt: 1 }}
+        >
+          <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+            {secondary}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: 11,
+              color: '#3B6D11',
+              background: '#EAF3DE',
+              px: 1,
+              py: 0.3,
+              borderRadius: '999px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {event.ticket_count || event.interest_count} going
+          </Typography>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}
+
+function ThingsToDoCard({
+  event,
+  showNeedCallout,
+}: {
+  event: EventListItem;
+  showNeedCallout: boolean;
+}) {
+  const isOnline = event.location_name?.toLowerCase().includes('online');
+  const description =
+    event.description ||
+    (isOnline
+      ? 'Join from anywhere and meet people around a shared interest.'
+      : 'A local event built around people showing up, contributing, and connecting.');
+  const priceLabel = getPriceLabel(event);
+
+  return (
+    <Box
+      sx={{
+        background: 'var(--color-background-primary)',
+        border: '0.5px solid var(--color-border-tertiary)',
+        borderLeft: `3px solid ${isOnline ? '#1D9E75' : '#D85A30'}`,
+        borderRadius: '24px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+      }}
+    >
+      {event.cover_image ? (
+        <Box
+          component="img"
+          src={event.cover_image}
+          alt={event.title}
+          sx={{ height: 110, width: '100%', objectFit: 'cover', flexShrink: 0 }}
+        />
+      ) : (
+        <Box
+          sx={{
+            height: 110,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 36,
+            background: getAccent(event),
+            flexShrink: 0,
+          }}
+        >
+          {getIcon(event)}
+        </Box>
+      )}
+      <Box
+        sx={{
+          p: '12px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.75,
+          flex: 1,
+        }}
+      >
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={1}
+        >
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: '0.07em',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {event.category?.name || 'Event'}
+          </Typography>
+          <Box
+            sx={{
+              fontSize: 10,
+              fontWeight: 500,
+              px: 1,
+              py: 0.35,
+              borderRadius: '999px',
+              whiteSpace: 'nowrap',
+              background: isOnline ? '#E1F5EE' : '#FAECE7',
+              color: isOnline ? '#085041' : '#712B13',
+              flexShrink: 0,
+            }}
+          >
+            {isOnline ? 'Online' : 'In person'}
+          </Box>
+        </Stack>
+
+        <Typography
+          sx={{
+            fontFamily: 'Syne, sans-serif',
+            fontSize: 14,
+            fontWeight: 700,
+            color: 'var(--color-text-primary)',
+            lineHeight: 1.3,
+          }}
+        >
+          {event.title}
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: 12,
+            color: 'var(--color-text-secondary)',
+            lineHeight: 1.5,
+            display: '-webkit-box',
+            overflow: 'hidden',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {description}
+        </Typography>
+
+        {showNeedCallout ? (
+          <Box
+            sx={{
+              background: '#FAEEDA',
+              borderRadius: '16px',
+              p: '7px 10px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 0.75,
+            }}
+          >
+            <Typography sx={{ fontSize: 12, color: '#633806', mt: '1px' }}>
+              ⚡
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: '#633806', lineHeight: 1.4 }}>
+              <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
+                Contributor spot open
+              </Box>{' '}
+              - chip in on the day and earn a perk.
+            </Typography>
+          </Box>
+        ) : null}
+
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={1}
+          sx={{
+            mt: 'auto',
+            pt: 1,
+            borderTop: '0.5px solid var(--color-border-tertiary)',
+          }}
+        >
+          <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+            {formatDayTime(event.start_time)}
+            {priceLabel ? ` · ${priceLabel}` : ''}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: 11,
+              color: '#3B6D11',
+              background: '#EAF3DE',
+              px: 1,
+              py: 0.3,
+              borderRadius: '999px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {event.ticket_count || event.interest_count} going
+          </Typography>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}
+
+function SectionHeader({
+  label,
+  title,
+  description,
+}: {
+  label: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Typography
+        sx={{
+          fontFamily: 'Syne, sans-serif',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-secondary)',
+          mb: 1,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          fontFamily: 'Syne, sans-serif',
+          fontSize: { xs: 24, md: 28 },
+          fontWeight: 800,
+          color: 'var(--color-text-primary)',
+          letterSpacing: '-0.03em',
+        }}
+      >
+        {title}
+      </Typography>
+      {description ? (
+        <Typography
+          sx={{
+            fontSize: 15,
+            color: 'var(--color-text-secondary)',
+            mt: 0.75,
+            lineHeight: 1.6,
+          }}
+        >
+          {description}
+        </Typography>
+      ) : null}
+    </Box>
+  );
+}
+
+export default function GuestLandingPage() {
+  const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<FilterChip>('This weekend');
+
+  const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
+    sort: 'trending',
+    page_size: 4,
+  });
+  const { data: onlineResponse, isLoading: loadingOnline } = useFeed({
+    online: true,
+    sort: 'upcoming',
+    page_size: 4,
+  });
+  const { data: discoverResponse, isLoading: loadingDiscover } = useFeed({
+    sort: activeFilter === 'Tonight' ? 'upcoming' : 'trending',
+    online: activeFilter === 'Contributor spots open' ? undefined : false,
+    weekend: activeFilter === 'This weekend' ? true : undefined,
+    page_size: 4,
+  });
+
+  const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]).slice(0, 4);
+  const onlineEvents = ((onlineResponse?.data || []) as EventListItem[]).slice(0, 4);
+
+  const discoverEvents = useMemo(() => {
+    const baseEvents = ((discoverResponse?.data || []) as EventListItem[]).slice(0, 12);
+
+    return baseEvents
+      .filter((event) => {
+        const category = (event.category?.name || '').toLowerCase();
+        const price = getPriceLabel(event);
+
+        switch (activeFilter) {
+          case 'Tonight':
+            return (
+              new Date(event.start_time).toDateString() === new Date().toDateString()
+            );
+          case 'Free':
+            return price === 'Free';
+          case 'Under $20':
+            return price.startsWith('$') ? Number(price.slice(1)) < 20 : false;
+          case 'Outdoors':
+            return category.includes('outdoor') || category.includes('sport');
+          case 'New in town':
+            return category.includes('social') || category.includes('community');
+          case 'Contributor spots open':
+            return category.includes('workshop') || category.includes('community');
+          default:
+            return true;
+        }
+      })
+      .slice(0, 4);
+  }, [activeFilter, discoverResponse]);
+
+  const isLoading = loadingNearby || loadingOnline || loadingDiscover;
+
+  return (
+    <Box sx={{ background: 'var(--color-background-primary)' }}>
+      <Box
+        component="nav"
+        sx={{
+          borderBottom: '0.5px solid var(--color-border-tertiary)',
+          background: 'var(--color-background-primary)',
+        }}
+      >
+        <Container
+          maxWidth={false}
+          sx={{ maxWidth: 1200, px: { xs: 2, md: 4 }, py: 2 }}
+        >
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <Typography
+              sx={{
+                fontFamily: 'Syne, sans-serif',
+                fontWeight: 800,
+                fontSize: 22,
+                color: '#D85A30',
+                letterSpacing: '-0.03em',
+              }}
+            >
+              outgoing
+            </Typography>
+            <Stack
+              direction="row"
+              spacing={3}
+              sx={{
+                display: { xs: 'none', md: 'flex' },
+                color: 'var(--color-text-secondary)',
+                fontSize: 14,
+              }}
+            >
+              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
+                Discover
+              </Box>
+              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
+                How it works
+              </Box>
+              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
+                Cities
+              </Box>
+              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/signup')}>
+                Host an event
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={1.25}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/signin')}
+                sx={{
+                  borderRadius: '999px',
+                  px: 2.25,
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border-secondary)',
+                  textTransform: 'none',
+                }}
+              >
+                Log in
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => navigate('/signup')}
+                sx={{
+                  borderRadius: '999px',
+                  px: 2.5,
+                  textTransform: 'none',
+                  background: '#D85A30',
+                  boxShadow: 'none',
+                }}
+              >
+                Join free
+              </Button>
+            </Stack>
+          </Stack>
+        </Container>
+      </Box>
+
+      <Box
+        sx={{
+          background: '#D85A30',
+          textAlign: 'center',
+          px: 2,
+          py: { xs: 7, md: 10 },
+        }}
+      >
+        <Container maxWidth={false} sx={{ maxWidth: 900 }}>
+          <Chip
+            label="The community-powered event platform"
+            sx={{
+              mb: 3,
+              background: 'rgba(255,255,255,0.18)',
+              color: '#fff',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              fontSize: 12,
+            }}
+          />
+          <Typography
+            sx={{
+              fontFamily: 'Syne, sans-serif',
+              fontSize: { xs: 38, md: 56 },
+              fontWeight: 800,
+              color: '#fff',
+              lineHeight: 1.08,
+              letterSpacing: '-0.04em',
+              maxWidth: 720,
+              mx: 'auto',
+            }}
+          >
+            Show up. Chip in. Belong.
+          </Typography>
+          <Typography
+            sx={{
+              mt: 2,
+              fontSize: { xs: 16, md: 18 },
+              color: 'rgba(255,255,255,0.85)',
+              maxWidth: 580,
+              mx: 'auto',
+              lineHeight: 1.65,
+            }}
+          >
+            Every event starts with one idea and ends with a crowd that built it. Find
+            local and online events built around the things you actually care about —
+            then go further.
+          </Typography>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            justifyContent="center"
+            sx={{ mt: 4 }}
+          >
+            <Button
+              variant="contained"
+              onClick={() => navigate('/signup')}
+              sx={{
+                px: 4.5,
+                py: 1.6,
+                borderRadius: '999px',
+                background: '#fff',
+                color: '#D85A30',
+                textTransform: 'none',
+                fontSize: 16,
+                boxShadow: 'none',
+              }}
+            >
+              Join Outgoing
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/search')}
+              sx={{
+                px: 4.5,
+                py: 1.6,
+                borderRadius: '999px',
+                borderColor: 'rgba(255,255,255,0.5)',
+                color: '#fff',
+                textTransform: 'none',
+                fontSize: 16,
+              }}
+            >
+              Browse events
+            </Button>
+          </Stack>
+        </Container>
+      </Box>
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader label="Explore by interest" title="Popular categories" />
+        <Stack direction="row" flexWrap="wrap" gap={1.25}>
+          {categoryChips.map((chip) => (
+            <Chip
+              key={chip.label}
+              label={`${chip.icon} ${chip.label}`}
+              onClick={() => navigate('/search')}
+              sx={{
+                borderRadius: '999px',
+                px: 1,
+                py: 2.75,
+                border: '0.5px solid var(--color-border-tertiary)',
+                background: 'var(--color-background-primary)',
+                color: 'var(--color-text-primary)',
+                fontSize: 14,
+              }}
+            />
+          ))}
+        </Stack>
+      </Container>
+
+      <Box
+        sx={{
+          height: '0.5px',
+          background: 'var(--color-border-tertiary)',
+          maxWidth: 960,
+          mx: 'auto',
+        }}
+      />
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader
+          label="Near you"
+          title="Events happening in your city"
+          description="Baltimore · This weekend"
+        />
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 1.75,
+          }}
+        >
+          {nearbyEvents.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </Box>
+      </Container>
+
+      <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
+        <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
+          <SectionHeader label="Join from anywhere" title="Events happening online" />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 1.75,
+            }}
+          >
+            {onlineEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader label="Find something now" title="Things to do" />
+        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+          {filterChips.map((chip) => (
+            <Chip
+              key={chip}
+              label={chip}
+              onClick={() => setActiveFilter(chip)}
+              sx={{
+                borderRadius: '999px',
+                background:
+                  activeFilter === chip ? '#D85A30' : 'var(--color-background-primary)',
+                color: activeFilter === chip ? '#fff' : 'var(--color-text-primary)',
+                border:
+                  activeFilter === chip
+                    ? '1px solid #D85A30'
+                    : '0.5px solid var(--color-border-secondary)',
+                px: 1,
+              }}
+            />
+          ))}
+        </Stack>
+        {isLoading ? (
+          <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+            <CircularProgress sx={{ color: '#D85A30' }} />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 1.75,
+            }}
+          >
+            {discoverEvents.map((event) => (
+              <ThingsToDoCard
+                key={event.id}
+                event={event}
+                showNeedCallout={activeFilter === 'Contributor spots open'}
+              />
+            ))}
+          </Box>
+        )}
+      </Container>
+
+      <Box
+        sx={{
+          height: '0.5px',
+          background: 'var(--color-border-tertiary)',
+          maxWidth: 960,
+          mx: 'auto',
+        }}
+      />
+
+      <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
+        <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
+          <SectionHeader label="Go where the people are" title="Popular cities" />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+              gap: 1.5,
+            }}
+          >
+            {cityCards.map((city) => (
+              <Box
+                key={city.name}
+                onClick={() => navigate('/search')}
+                sx={{
+                  background: 'var(--color-background-primary)',
+                  border: '0.5px solid var(--color-border-tertiary)',
+                  borderRadius: '24px',
+                  p: 2,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Typography sx={{ fontSize: 24, mb: 0.5 }}>{city.flag}</Typography>
+                <Typography
+                  sx={{
+                    fontFamily: 'Syne, sans-serif',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  {city.name}
+                </Typography>
+                <Typography
+                  sx={{ fontSize: 11, color: 'var(--color-text-secondary)', mt: 0.3 }}
+                >
+                  {city.count}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader
+          label="How it works"
+          title="Four ways to go"
+          description="However you show up, Outgoing makes it count."
+        />
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 2,
+          }}
+        >
+          {howItWorksCards.map((card) => (
+            <Box
+              key={card.title}
+              sx={{
+                background: 'var(--color-background-primary)',
+                border: '0.5px solid var(--color-border-tertiary)',
+                borderRadius: '24px',
+                p: 2.5,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '16px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 20,
+                  background: card.background,
+                  mb: 1.5,
+                }}
+              >
+                {card.icon}
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: 'Syne, sans-serif',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: 'var(--color-text-primary)',
+                  mb: 0.75,
+                }}
+              >
+                {card.title}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 13,
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.55,
+                }}
+              >
+                {card.description}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Container>
+
+      <Box
+        sx={{ background: '#D85A30', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
+      >
+        <Container maxWidth={false} sx={{ maxWidth: 800 }}>
+          <Typography
+            sx={{
+              fontFamily: 'Syne, sans-serif',
+              fontSize: { xs: 30, md: 40 },
+              fontWeight: 800,
+              color: '#fff',
+              lineHeight: 1.15,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            Go as a guest, a group,
+            <br />
+            or a contributor.
+          </Typography>
+          <Typography
+            sx={{
+              mt: 1.5,
+              fontSize: 16,
+              color: 'rgba(255,255,255,0.85)',
+              maxWidth: 480,
+              mx: 'auto',
+            }}
+          >
+            Or go be the one who started it all.
+          </Typography>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            justifyContent="center"
+            sx={{ mt: 4 }}
+          >
+            <Button
+              variant="contained"
+              onClick={() => navigate('/signup')}
+              sx={{
+                px: 4.5,
+                py: 1.6,
+                borderRadius: '999px',
+                background: '#fff',
+                color: '#D85A30',
+                textTransform: 'none',
+                fontSize: 16,
+                boxShadow: 'none',
+              }}
+            >
+              Browse all events
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/signup')}
+              sx={{
+                px: 4.5,
+                py: 1.6,
+                borderRadius: '999px',
+                borderColor: 'rgba(255,255,255,0.5)',
+                color: '#fff',
+                textTransform: 'none',
+                fontSize: 16,
+              }}
+            >
+              Start an event
+            </Button>
+          </Stack>
+        </Container>
+      </Box>
+    </Box>
+  );
+}

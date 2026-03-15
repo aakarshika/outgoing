@@ -17,6 +17,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/homerenewed',
+    componentName: 'HomeRenewed',
+    isPublic: true,
+  },
+  {
     path: '/alerts',
     componentName: 'Alerts',
     roles: [UserRole.USER, UserRole.ADMIN],
@@ -29,6 +34,11 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/events/create',
     componentName: 'CreateEvent',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/events/:id/manage',
+    componentName: 'PlanningWorkspace',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
@@ -122,6 +132,11 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/browse',
     componentName: 'BrowseFeed',
+    isPublic: true,
+  },
+  {
+    path: '/search',
+    componentName: 'Search',
     isPublic: true,
   },
 ];

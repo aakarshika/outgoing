@@ -171,7 +171,7 @@ export const TinyHostCard = ({
               }}
             />
           ))}
-          <Typography
+          {(displayNeeds?.length && allChips?.length) && (<Typography
             variant="h6"
             sx={{
               fontFamily: '"Caveat", cursive',
@@ -183,6 +183,7 @@ export const TinyHostCard = ({
           >
             and
           </Typography>
+        )}
           {allChips?.map((feature: any, idx: number) => (
             <Chip
               key={feature.name}

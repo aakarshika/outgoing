@@ -9,6 +9,8 @@ type ReverseGeocodeResult = {
 };
 
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
+const REVERSE_GEOCODE_COOLDOWN_MS = 2 * 60 * 1000;
+let reverseGeocodeBlockedUntil = 0;
 
 function isLocalhost() {
   return LOCALHOST_HOSTNAMES.has(window.location.hostname);
@@ -53,11 +55,18 @@ export async function reverseGeocodeCoordinates(
   latitude: number,
   longitude: number,
 ): Promise<ReverseGeocodeResult | null> {
+  if (Date.now() < reverseGeocodeBlockedUntil) {
+    return null;
+  }
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
     );
-    if (!response.ok) return null;
+    if (!response.ok) {
+      reverseGeocodeBlockedUntil = Date.now() + REVERSE_GEOCODE_COOLDOWN_MS;
+      return null;
+    }
 
     const data = await response.json();
     const address = data?.address ?? {};
@@ -75,6 +84,7 @@ export async function reverseGeocodeCoordinates(
       venueName,
     };
   } catch {
+    reverseGeocodeBlockedUntil = Date.now() + REVERSE_GEOCODE_COOLDOWN_MS;
     return null;
   }
 }

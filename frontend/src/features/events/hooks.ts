@@ -5,17 +5,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EventLifecycleState } from '@/types/events';
 
 import {
+  addDirectMessage,
   addEventHighlight,
   addEventReview,
   addHighlightComment,
   addHostVendorMessage,
+  addPrivateMessage,
   addReviewComment,
   cancelTicket,
   createEventSeries,
   deleteEvent,
   deleteEventReview,
+  fetchAllChatsList,
   fetchCarouselEvents,
   fetchCategories,
+  fetchDirectMessages,
   fetchEvent,
   fetchEventAttendees,
   fetchEventAutocomplete,
@@ -24,10 +28,9 @@ import {
   fetchEventSeriesDetail,
   fetchEventSeriesList,
   fetchEventSeriesOccurrences,
-  fetchEventStory,
   fetchFeaturedEvent,
-  fetchAllChatsList,
   fetchFeed,
+  fetchFriendRequestStatus,
   fetchHighlightComments,
   fetchHighlightsFeed,
   fetchHostVendorMessages,
@@ -35,14 +38,17 @@ import {
   fetchMyEvents,
   fetchMyInterestedEvents,
   fetchMyTickets,
+  fetchPrivateMessages,
   fetchRecentlyViewed,
   fetchReviewComments,
   fetchTopVendorsFeed,
   fetchTrendingHighlights,
   fetchUpcomingFeed,
   generateEventSeriesOccurrences,
+  getOrCreatePrivateConversation,
   purchaseTicket,
   recordEventView,
+  sendFriendRequest,
   toggleHighlightLike,
   toggleInterest,
   toggleReviewLike,
@@ -50,15 +56,8 @@ import {
   updateEventReview,
   updateEventSeries,
   updateEventTicketTiers,
-  updateTicket,
-  fetchPrivateMessages,
-  addPrivateMessage,
-  getOrCreatePrivateConversation,
-  fetchDirectMessages,
-  addDirectMessage,
-  fetchFriendRequestStatus,
-  sendFriendRequest,
   updateFriendRequest,
+  updateTicket,
 } from './api';
 
 export function useFeed(params: {
@@ -72,12 +71,19 @@ export function useFeed(params: {
   lng?: number;
   radius_km?: number;
   featured?: boolean;
+  lifecycle_states?: EventLifecycleState[];
+  start_time_gte?: string;
+  start_time_lte?: string;
   page?: number;
   page_size?: number;
 }) {
   return useQuery({
     queryKey: ['feed', params],
     queryFn: () => fetchFeed(params),
+    retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -669,13 +675,20 @@ export function useSendFriendRequest() {
     }) => sendFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
+        queryKey: [
+          'friend-request-status',
+          variables.eventId,
+          variables.targetUsername,
+        ],
       });
     },
   });
 }
 
-export function useFriendRequestStatus(eventId?: number, targetUsername?: string | null) {
+export function useFriendRequestStatus(
+  eventId?: number,
+  targetUsername?: string | null,
+) {
   return useQuery({
     queryKey: ['friend-request-status', eventId, targetUsername],
     queryFn: () =>
@@ -700,7 +713,11 @@ export function useUpdateFriendRequest() {
     }) => updateFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
+        queryKey: [
+          'friend-request-status',
+          variables.eventId,
+          variables.targetUsername,
+        ],
       });
     },
   });

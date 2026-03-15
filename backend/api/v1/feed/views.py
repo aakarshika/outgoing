@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Avg, Case, Count, IntegerField, Q, Value, When
 from django.db.models.functions import Coalesce
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
@@ -68,6 +69,51 @@ class FeedView(APIView):
         end_dt = timezone.make_aware(datetime.combine(monday_date, time.min))
         return events.filter(start_time__gte=start_dt, start_time__lt=end_dt)
 
+    def _parse_datetime_param(self, raw_value):
+        """Parse an ISO datetime query param into an aware datetime."""
+        if not raw_value:
+            return None
+
+        parsed = parse_datetime(raw_value)
+        if parsed is None:
+            return None
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed)
+        return parsed
+
+    def _apply_lifecycle_filter(self, events, request):
+        """Apply explicit lifecycle-state filtering when requested."""
+        raw_states = request.query_params.get("lifecycle_states", "").strip()
+        if not raw_states:
+            return events.filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES)
+
+        allowed_states = {choice[0] for choice in Event.LIFECYCLE_CHOICES}
+        states = [
+            state.strip()
+            for state in raw_states.split(",")
+            if state.strip() in allowed_states
+        ]
+        if not states:
+            return events.none()
+        return events.filter(lifecycle_state__in=states)
+
+    def _apply_start_time_range_filter(self, events, request):
+        """Filter by start_time range when provided."""
+        start_at = self._parse_datetime_param(request.query_params.get("start_time_gte"))
+        end_at = self._parse_datetime_param(request.query_params.get("start_time_lte"))
+
+        if start_at is None and end_at is None:
+            return events
+
+        if not request.query_params.get("lifecycle_states", "").strip():
+            events = events.exclude(lifecycle_state="draft")
+
+        if start_at is not None:
+            events = events.filter(start_time__gte=start_at)
+        if end_at is not None:
+            events = events.filter(start_time__lt=end_at)
+        return events
+
     def get(self, request):
         """
         Get the home feed.
@@ -75,9 +121,8 @@ class FeedView(APIView):
                   ?lat= & ?lng= & ?radius_km=, ?weekend=true,
                   ?featured=true, ?page=, ?page_size=
         """
-        events = Event.objects.filter(
-            lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-        ).select_related("host", "host__profile", "category")
+        events = Event.objects.select_related("host", "host__profile", "category")
+        events = self._apply_lifecycle_filter(events, request)
 
         # Category filter
         category = request.query_params.get("category")
@@ -113,6 +158,7 @@ class FeedView(APIView):
 
         events = self._apply_geo_filter(events, request)
         events = self._apply_weekend_filter(events, request)
+        events = self._apply_start_time_range_filter(events, request)
 
         # Featured mode — return single top event
         featured = request.query_params.get("featured")

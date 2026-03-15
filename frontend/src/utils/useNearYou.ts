@@ -13,6 +13,8 @@ import {
   setNearYouRadiusMiles,
 } from './locationPrefs';
 
+const NEAR_YOU_NAME_KEY = 'outgoing.nearYou.locationName';
+
 export function useNearYou() {
   const [enabled, setEnabled] = useState<boolean>(() => {
     return localStorage.getItem(NEAR_YOU_ENABLED_KEY) === 'true';
@@ -22,7 +24,9 @@ export function useNearYou() {
     return getNearYouCoords();
   });
 
-  const [locationName, setLocationName] = useState<string>('');
+  const [locationName, setLocationName] = useState<string>(() => {
+    return localStorage.getItem(NEAR_YOU_NAME_KEY) || '';
+  });
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
   const [radiusMiles, setRadiusMilesState] = useState<number>(() =>
     getNearYouRadiusMiles(),
@@ -64,9 +68,12 @@ export function useNearYou() {
             const parts = res.displayAddress?.split(', ') || [];
             const cityState =
               parts.length >= 3 ? `${parts[0]}, ${parts[2]}` : res.venueName;
-            setLocationName(cityState || 'Near You');
+            const resolvedName = cityState || 'Near You';
+            setLocationName(resolvedName);
+            localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedName);
           } else {
             setLocationName('Near You');
+            localStorage.setItem(NEAR_YOU_NAME_KEY, 'Near You');
           }
         });
       }
@@ -78,6 +85,7 @@ export function useNearYou() {
       setEnabled(false);
       localStorage.setItem(NEAR_YOU_ENABLED_KEY, 'false');
       localStorage.removeItem(NEAR_YOU_COORDS_KEY);
+      localStorage.removeItem(NEAR_YOU_NAME_KEY);
       setCoords(null);
       setLocationName('');
       window.dispatchEvent(new Event('nearYouChanged'));
@@ -108,9 +116,12 @@ export function useNearYou() {
         const parts = res.displayAddress?.split(', ') || [];
         const cityState =
           parts.length >= 3 ? `${parts[0]}, ${parts[2]}` : res.venueName;
-        setLocationName(cityState || 'Near You');
+        const resolvedName = cityState || 'Near You';
+        setLocationName(resolvedName);
+        localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedName);
       } else {
         setLocationName('Near You');
+        localStorage.setItem(NEAR_YOU_NAME_KEY, 'Near You');
       }
     } catch (error) {
       console.error('Error getting location:', error);

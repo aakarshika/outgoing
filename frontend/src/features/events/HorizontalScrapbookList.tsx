@@ -1,11 +1,8 @@
 import { Box, Button, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
 
-import { HostCard } from '@/components/ui/HostCard';
-
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 import { SideEnvelope } from './SideEnvelope';
-import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 
 interface HorizontalScrapbookListProps {
   title?: string;
@@ -25,7 +22,6 @@ export function HorizontalScrapbookList({
   events,
   isLoading,
   emptyMessage,
-  forceShowHeader,
   onSeeAll,
 }: HorizontalScrapbookListProps) {
   const displayItems = items || events || [];
@@ -166,7 +162,7 @@ export function HorizontalScrapbookList({
           }).concat(
             displayItems.length <= 5
               ? [
-                <Box/>,
+                <Box key="horizontal-scrapbook-spacer" />,
                   // <Box
                   //   key="custom-card"
                   //   sx={{

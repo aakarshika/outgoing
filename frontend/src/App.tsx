@@ -4,11 +4,12 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import { scan } from 'react-scan';
 
 import { Toaster } from '@/components/ui/sonner';
+import { useAuth } from '@/features/auth/hooks';
 
 import { Footer } from './components/Footer';
-import { Navbar } from './components/Navbar';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
+import { SimpleNavbar } from './pages/search/components/SimpleNavbar';
 import { AppRoutes } from './routes/AppRoutes';
 import { ThemeProvider } from './theme/ThemeProvider';
 
@@ -20,9 +21,9 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   });
 }
 
-import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
+import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
 
 function GlobalChatDrawer() {
   const { isOpen, closeChat, params } = useChatDrawer();
@@ -41,19 +42,25 @@ function GlobalChatDrawer() {
 
 function AppContent() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
+  const isSearchRoute = location.pathname.startsWith('/search');
+  const isSignedOutRoot = location.pathname === '/' && !isAuthenticated;
+  const isPlanningWorkspaceRoute = /^\/events\/[^/]+\/manage$/.test(location.pathname);
 
   return (
     <div className="relative flex flex-col min-h-screen text-foreground transition-colors duration-300">
       {backgroundComponent}
-      <Navbar />
+      {!isSearchRoute && !isSignedOutRoot && !isPlanningWorkspaceRoute && (
+        <SimpleNavbar />
+      )}
       <Toaster />
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      {!isGallery && (
+      {!isGallery && !isSignedOutRoot && !isPlanningWorkspaceRoute && (
         <div className="mt-50">
           <Footer />
         </div>

@@ -12,6 +12,7 @@ import { useNearYou } from '@/utils/useNearYou';
 import client from '@/api/client';
 import type { ApiResponse } from '@/types/events';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
+import { normalizeSearchPageParams } from '@/pages/search/searchUtils';
 
 export function isNativeSidebarPath(path: string): boolean {
     const isDashboard =
@@ -176,12 +177,87 @@ export function useNavbarData() {
         event &&
         !!(event.user_applications && event.user_applications.length > 0);
     const isNotOnManagePage = !location.pathname.includes('manage');
-    const shouldShowSearch = location.pathname === '/';
+    const shouldShowSearch = location.pathname === '/' || location.pathname === '/search';
     const isNativeSidebarRoute = isNativeSidebarPath(location.pathname);
 
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname]);
+
+    useEffect(() => {
+        if (!location.pathname.startsWith('/search')) return;
+
+        const params = normalizeSearchPageParams(new URLSearchParams(location.search));
+        const nextSearch = params.get('search') || '';
+        const nextLocation = params.get('location') || '';
+        const nextRadius = Number(params.get('radius_miles'));
+
+        setSearch((current) => (current === nextSearch ? current : nextSearch));
+        setLocationSearch((current) =>
+            current === nextLocation ? current : nextLocation,
+        );
+
+        // Sync radius from URL when the URL changes, but don't re-run on local radius edits.
+        if (!Number.isNaN(nextRadius) && nextRadius > 0) {
+            setRadiusMiles(nextRadius);
+        }
+    }, [
+        location.pathname,
+        location.search,
+        setRadiusMiles,
+    ]);
+
+    const buildSearchPageParams = ({
+        nextSearch = search,
+        nextLocation = locationSearch,
+        nextRadiusMiles = radiusMiles,
+        nextCoords = nearYouEnabled && coords ? coords : null,
+    }: {
+        nextSearch?: string;
+        nextLocation?: string;
+        nextRadiusMiles?: number;
+        nextCoords?: { lat: number | string; lng: number | string } | null;
+    } = {}) => {
+        const params = location.pathname.startsWith('/search')
+            ? new URLSearchParams(location.search)
+            : new URLSearchParams();
+
+        params.set('tab', 'trending');
+
+        const trimmedSearch = nextSearch.trim();
+        if (trimmedSearch) {
+            params.set('search', trimmedSearch);
+        } else {
+            params.delete('search');
+        }
+
+        const trimmedLocation = nextLocation.trim();
+        if (trimmedLocation) {
+            params.set('location', trimmedLocation);
+            params.set('radius_miles', String(nextRadiusMiles));
+
+            if (nextCoords) {
+                params.set('lat', String(nextCoords.lat));
+                params.set('lng', String(nextCoords.lng));
+            } else {
+                params.delete('lat');
+                params.delete('lng');
+            }
+        } else {
+            params.delete('location');
+            params.delete('lat');
+            params.delete('lng');
+            params.delete('radius_miles');
+        }
+
+        return params;
+    };
+
+    const navigateToSearch = (options?: Parameters<typeof buildSearchPageParams>[0]) => {
+        const params = buildSearchPageParams(options);
+        const query = params.toString();
+        navigate(query ? `/search?${query}` : '/search');
+    };
 
     // Keep persistent sidebar state in sync with menu button toggles
     useEffect(() => {
@@ -197,40 +273,19 @@ export function useNavbarData() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setShowSuggestions(false);
-        const params = new URLSearchParams(window.location.search);
-        if (search.trim()) params.set('search', search.trim());
-        else params.delete('search');
-
-        if (locationSearch.trim()) {
-            params.set('location', locationSearch.trim());
-            params.set('radius_miles', String(radiusMiles));
-            if (nearYouEnabled && coords) {
-                params.set('lat', String(coords.lat));
-                params.set('lng', String(coords.lng));
-            }
-        } else {
-            params.delete('location');
-            params.delete('lat');
-            params.delete('lng');
-            params.delete('radius_miles');
-        }
-
-        if (params.toString()) {
-            navigate(`/?${params.toString()}`);
-        } else {
-            navigate('/');
-        }
+        navigateToSearch();
     };
 
     const handleLocationSuggestionClick = (suggestion: LocationSuggestion) => {
         setLocationSearch(suggestion.display_name);
         setShowLocationSuggestions(false);
-        const params = new URLSearchParams(window.location.search);
-        params.set('location', suggestion.display_name);
-        params.set('lat', suggestion.lat);
-        params.set('lng', suggestion.lon);
-        params.set('radius_miles', String(radiusMiles));
-        navigate(`/?${params.toString()}`);
+        navigateToSearch({
+            nextLocation: suggestion.display_name,
+            nextCoords: {
+                lat: suggestion.lat,
+                lng: suggestion.lon,
+            },
+        });
     };
 
     const {
@@ -363,6 +418,7 @@ export function useNavbarData() {
             // Handlers
             handleSearchSubmit,
             handleLocationSuggestionClick,
+            navigateToSearch,
         }),
         [
             isAuthenticated, logout, user, theme, toggleTheme, location, navigate,

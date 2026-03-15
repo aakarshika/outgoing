@@ -47,10 +47,19 @@ export async function fetchFeed(params: {
   lng?: number;
   radius_km?: number;
   featured?: boolean;
+  lifecycle_states?: EventLifecycleState[];
+  start_time_gte?: string;
+  start_time_lte?: string;
   page?: number;
   page_size?: number;
 }) {
-  const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/', { params });
+  const normalizedParams = {
+    ...params,
+    lifecycle_states: params.lifecycle_states?.join(','),
+  };
+  const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/', {
+    params: normalizedParams,
+  });
   return data;
 }
 
@@ -172,7 +181,6 @@ export async function addEventHighlight(eventId: number, formData: FormData) {
   );
   return data;
 }
-
 
 export async function toggleHighlightLike(highlightId: number) {
   const { data } = await client.post<
