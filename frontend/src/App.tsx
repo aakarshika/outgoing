@@ -47,7 +47,9 @@ function AppContent() {
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
   const isSignedOutRoot = location.pathname === '/' && !isAuthenticated;
-  const isPlanningWorkspaceRoute = /^\/events\/[^/]+\/manage$/.test(location.pathname);
+  const isPlanningWorkspaceRoute =
+    location.pathname === '/manage' ||
+    /^\/events\/[^/]+\/manage$/.test(location.pathname);
 
   return (
     <div className="relative flex flex-col min-h-screen text-foreground transition-colors duration-300">

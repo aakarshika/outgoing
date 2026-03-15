@@ -297,6 +297,7 @@ export async function updateEventTicketTiers(
     refund_percentage?: number;
     description?: string;
     admits?: number;
+    max_passes_per_ticket?: number;
   }>,
   updateSeries: boolean = false,
 ) {
@@ -565,9 +566,8 @@ export async function fetchNetworkActivity(): Promise<NetworkActivityResponse> {
 }
 
 export async function fetchMyFriendships(): Promise<MyFriendshipsResponse> {
-  const { data } = await client.get<ApiResponse<MyFriendshipsResponse>>(
-    '/events/friendships/',
-  );
+  const { data } =
+    await client.get<ApiResponse<MyFriendshipsResponse>>('/events/friendships/');
   const inner = (data as ApiResponse<MyFriendshipsResponse>)?.data;
   return inner ?? { accepted: [], pending_incoming: [], pending_outgoing: [] };
 }

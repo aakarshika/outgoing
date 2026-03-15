@@ -590,7 +590,7 @@ export default function GuestLandingPage() {
       >
         <Container maxWidth={false} sx={{ maxWidth: 900 }}>
           <Chip
-            label="The community-powered event platform"
+            label="Our community-powered event platform"
             sx={{
               mb: 3,
               background: 'rgba(255,255,255,0.18)',
@@ -624,9 +624,43 @@ export default function GuestLandingPage() {
               lineHeight: 1.65,
             }}
           >
-            Every event starts with one idea and ends with a crowd that built it. Find
-            local and online events built around the things you actually care about —
-            then go further.
+            Find activities you care about deeply, or stumble onto something you didn't
+            know you loved {'\u2014'} <span className=''><strong>then</strong></span>
+            <Box
+              component="span"
+              aria-label="go"
+              role="img"
+              sx={{
+                display: 'inline-block',
+                width: { xs: 30, md: 36 },
+                height: { xs: 30, md: 35 },
+                // pt: 7,
+                transform: 'translateY(10px)',
+                backgroundColor: 'currentColor',
+                maskImage: "url('/assets/go-symbol.png')",
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                maskSize: 'contain',
+                WebkitMaskImage: "url('/assets/go-symbol.png')",
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                WebkitMaskSize: 'contain',
+              }}
+            />
+            {''}<strong>further.</strong>
+          </Typography>
+          <Typography
+            sx={{
+              mt: 2,
+              fontSize: { xs: 14, md: 16 },
+              color: 'rgba(255,255,255,0.85)',
+              maxWidth: 400,
+              mx: 'auto',
+              lineHeight: 1.65,
+            }}
+          >
+            Grab a ticket, bring the snacks, run the music,
+            or post your own idea and watch your community make it live.
           </Typography>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}

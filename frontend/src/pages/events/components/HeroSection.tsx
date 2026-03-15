@@ -117,7 +117,7 @@ export const HeroSection = ({
               </Box>
             </Box>
 
-            <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+            {/* <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" /> */}
             {/* <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
           The Details
         </Typography> */}

@@ -29,7 +29,7 @@ export const TicketsSection = ({
 
   return (
     <>
-      <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+      {/* <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" /> */}
       <Typography
         variant="h6"
         sx={{

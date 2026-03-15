@@ -274,6 +274,7 @@ export function useUpdateTicketTiers() {
         refund_percentage?: number;
         description?: string;
         admits?: number;
+        max_passes_per_ticket?: number;
       }>;
       updateSeries?: boolean;
     }) => updateEventTicketTiers(eventId, tiers, updateSeries),

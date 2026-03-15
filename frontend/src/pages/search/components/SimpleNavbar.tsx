@@ -2,48 +2,59 @@ import {
   Box,
   Container,
   Divider,
+  Drawer,
   Popover,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
 import {
+  Bell,
   CalendarDays,
-  PlusCircle,
-  MessageCircle,
-  Monitor,
-  Settings,
-  Speech,
   LogIn,
   LogOut,
   Menu,
+  MessageCircle,
+  Monitor,
+  PlusCircle,
+  Settings,
+  Speech,
   UserPlus,
-  Bell,
   Users,
 } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
-import { useNavigate, useLocation, matchPath } from 'react-router-dom';
+import { matchPath, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
+import {
+  QuickCreateSpark,
+  type QuickCreateSubmitPayload,
+} from '@/components/events/QuickCreateSpark';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
+import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
-import { useEvent } from '@/features/events/hooks';
+import { createEvent, updateEventTicketTiers } from '@/features/events/api';
+import { useCategories, useEvent } from '@/features/events/hooks';
 
 export function SimpleNavbar() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
+  const isMobile = useMediaQuery('(max-width:767px)');
   const eventMatch = matchPath(
     { path: '/events/:id/*', end: false },
     location.pathname,
   );
   const eventId = eventMatch?.params?.id;
   const { data: eventResponse } = useEvent(Number(eventId));
+  const { data: categoriesResponse } = useCategories();
   const event = eventResponse?.data;
+  const categories = categoriesResponse?.data || [];
+  const showSearchInHeader = !eventMatch && !isMobile;
   const isEventHost =
-    isAuthenticated &&
-    !!user &&
-    !!event &&
-    user.username === event.host?.username;
+    isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
     isAuthenticated &&
     !!user &&
@@ -51,9 +62,11 @@ export function SimpleNavbar() {
     !!(event.user_applications && event.user_applications.length > 0);
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isQuickCreateSubmitting, setIsQuickCreateSubmitting] = useState(false);
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const menuItems = [
-    { label: 'Create event', to: '/events/create', Icon: PlusCircle },
+    { label: 'Create event', to: '/manage', Icon: PlusCircle },
     { label: 'Calendar', to: '/calendar', Icon: CalendarDays },
     { label: 'Your Network', to: '/network', Icon: Users },
     { label: 'Hosting', to: '/dashboard/events', Icon: Speech },
@@ -69,6 +82,107 @@ export function SimpleNavbar() {
     setMenuAnchorEl(null);
   };
 
+  const handleCreateEventEntry = () => {
+    closeMenuPopover();
+    if (!isAuthenticated) {
+      navigate('/signin');
+      return;
+    }
+    if (isMobile) {
+      setIsQuickCreateOpen(true);
+      return;
+    }
+    navigate('/manage');
+  };
+
+  const handleQuickCreateSubmit = async (
+    action: 'plan' | 'post',
+    payload: QuickCreateSubmitPayload,
+  ) => {
+    setIsQuickCreateSubmitting(true);
+    const formData = new FormData();
+    formData.set('title', payload.title);
+    formData.set(
+      'description',
+      payload.description.trim() ||
+        'Planning is underway. More details are coming soon.',
+    );
+    formData.set('category_id', String(payload.categoryId));
+    formData.set('start_time', payload.startTimeIso);
+    formData.set('end_time', payload.endTimeIso);
+    formData.set('status', action === 'post' ? 'published' : 'draft');
+
+    if (payload.locationMode === 'online') {
+      formData.set('location_name', payload.onlineUrl || 'Online Event');
+      formData.set('location_address', 'Online Event');
+    } else {
+      formData.set('location_name', payload.locationName);
+      formData.set('location_address', payload.locationAddress);
+      if (payload.latitude) formData.set('latitude', payload.latitude);
+      if (payload.longitude) formData.set('longitude', payload.longitude);
+    }
+
+    if (payload.capacity) {
+      formData.set('capacity', payload.capacity);
+    }
+    if (payload.ticketPriceStandard !== null) {
+      formData.set('ticket_price_standard', payload.ticketPriceStandard);
+    }
+    if (payload.features.length > 0) {
+      formData.set('features', JSON.stringify(payload.features));
+    }
+    if (payload.coverFile) {
+      formData.set('cover_image', payload.coverFile);
+    }
+
+    try {
+      const result = await createEvent(formData);
+      const totalCapacityVal = payload.capacity ? parseInt(payload.capacity, 10) : null;
+      const tiersToSave = payload.ticketTiers.map((tier, index) => {
+        const isLastTier = index === payload.ticketTiers.length - 1;
+        let calculatedCapacity =
+          tier.capacity === '' || tier.capacity === null ? null : Number(tier.capacity);
+        if (isLastTier && totalCapacityVal !== null) {
+          const sumOthers = payload.ticketTiers
+            .slice(0, -1)
+            .reduce((sum, item) => sum + (Number(item.capacity) || 0), 0);
+          calculatedCapacity = Math.max(0, totalCapacityVal - sumOthers);
+        }
+
+        return {
+          name: tier.name || 'General Admission',
+          price: Number(tier.price || 0).toFixed(2),
+          capacity: calculatedCapacity,
+          is_refundable: true,
+          description: tier.description || '',
+          admits: Number(tier.admits || 1),
+          max_passes_per_ticket: Number(tier.max_passes_per_ticket || 6),
+        };
+      });
+
+      if (tiersToSave.length > 0) {
+        await updateEventTicketTiers(result.data.id, tiersToSave, false);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+      await queryClient.invalidateQueries({ queryKey: ['feed'] });
+
+      setIsQuickCreateOpen(false);
+      if (action === 'plan') {
+        toast.success('Draft created. Keep building it.');
+        navigate(`/events/${result.data.id}/manage`);
+      } else {
+        toast.success('Event posted');
+        navigate(`/events/${result.data.id}`);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Could not create this event');
+      throw error;
+    } finally {
+      setIsQuickCreateSubmitting(false);
+    }
+  };
+
   return (
     <Box
       component="header"
@@ -81,14 +195,15 @@ export function SimpleNavbar() {
     >
       <Container
         maxWidth={false}
-        sx={{ maxWidth: 1240, px: { xs: 2, sm: 3 }, py: 1.25 }}
+        sx={{ maxWidth: 1240, px: { xs: 1.5, sm: 3 }, py: 1.25 }}
       >
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1.5,
+            gap: { xs: 0.75, sm: 1.5 },
             flexWrap: 'nowrap',
+            minWidth: 0,
           }}
         >
           <Box
@@ -99,26 +214,28 @@ export function SimpleNavbar() {
               cursor: 'pointer',
               flexShrink: 0,
               pr: 0.5,
+              minWidth: 0,
             }}
           >
             <Typography
               sx={{
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: 32,
+                fontSize: { xs: 24, sm: 32 },
                 lineHeight: 1,
                 letterSpacing: '-0.03em',
                 color: '#D85A30',
+                whiteSpace: 'nowrap',
               }}
             >
               outGOing
             </Typography>
           </Box>
-          {!eventMatch && (
+          {showSearchInHeader && (
             <Box
               sx={{
                 flex: 1,
-                minWidth: 320,
+                minWidth: 0,
               }}
             >
               <NavbarProvider>
@@ -131,14 +248,15 @@ export function SimpleNavbar() {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 0.25,
+              gap: { xs: 0.5, sm: 0.25 },
               ml: 'auto',
               flexShrink: 0,
+              minWidth: 0,
             }}
           >
             {isAuthenticated ? (
               <>
-                {isVendor && isNotOnManagePage && eventId && (
+                {!isMobile && isVendor && isNotOnManagePage && eventId && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -150,14 +268,12 @@ export function SimpleNavbar() {
                     Manage Service
                   </Button>
                 )}
-                {isEventHost && isNotOnManagePage && eventId && (
+                {!isMobile && isEventHost && isNotOnManagePage && eventId && (
                   <Button
                     type="button"
                     variant="ghost"
                     className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#f0ebff] hover:text-[#7c5dd6]"
-                    onClick={() =>
-                      navigate(`/events/${eventId}/host-event-management`)
-                    }
+                    onClick={() => navigate(`/events/${eventId}/manage`)}
                   >
                     Manage Event
                   </Button>
@@ -186,20 +302,22 @@ export function SimpleNavbar() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-9 px-4 text-xs"
+                  className="h-9 px-3 text-xs"
                   onClick={() => navigate('/signin')}
                 >
                   <LogIn className="mr-1 h-3.5 w-3.5" />
                   Sign in
                 </Button>
-                <Button
-                  type="button"
-                  className="h-9  px-4 text-xs text-white hover:bg-slate-800"
-                  onClick={() => navigate('/signup')}
-                >
-                  <UserPlus className="mr-1 h-3.5 w-3.5" />
-                  Sign up
-                </Button>
+                {!isMobile ? (
+                  <Button
+                    type="button"
+                    className="h-9 px-4 text-xs text-white hover:bg-slate-800"
+                    onClick={() => navigate('/signup')}
+                  >
+                    <UserPlus className="mr-1 h-3.5 w-3.5" />
+                    Sign up
+                  </Button>
+                ) : null}
               </>
             )}
             <Button
@@ -240,6 +358,10 @@ export function SimpleNavbar() {
                 component="button"
                 type="button"
                 onClick={() => {
+                  if (item.label === 'Create event') {
+                    handleCreateEventEntry();
+                    return;
+                  }
                   closeMenuPopover();
                   navigate(item.to);
                 }}
@@ -300,6 +422,29 @@ export function SimpleNavbar() {
           ) : null}
         </Box>
       </Popover>
+      <Drawer
+        anchor="bottom"
+        open={isQuickCreateOpen}
+        onClose={() => setIsQuickCreateOpen(false)}
+        PaperProps={{
+          sx: {
+            background: 'transparent',
+            boxShadow: 'none',
+            height: '100dvh',
+            maxHeight: '100dvh',
+          },
+        }}
+      >
+        <Box sx={{ height: '100dvh' }}>
+          <QuickCreateSpark
+            categories={categories}
+            layout="sheet"
+            isSubmitting={isQuickCreateSubmitting}
+            onSubmit={handleQuickCreateSubmit}
+            onClose={() => setIsQuickCreateOpen(false)}
+          />
+        </Box>
+      </Drawer>
     </Box>
   );
 }

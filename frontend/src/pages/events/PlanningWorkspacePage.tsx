@@ -19,15 +19,19 @@ import {
   MessageCircle,
   Plus,
   Search,
-  TrendingUp,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
+import {
+  type QuickCreateAction,
+  QuickCreateSpark,
+  type QuickCreateSubmitPayload,
+} from '@/components/events/QuickCreateSpark';
 import { getCategoryLabel, VENDOR_CATEGORIES } from '@/constants/categories';
 import { useAuth } from '@/features/auth/hooks';
-import { updateEvent } from '@/features/events/api';
+import { createEvent, updateEvent } from '@/features/events/api';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { useCategories, useEvent, useUpdateTicketTiers } from '@/features/events/hooks';
 import {
@@ -1405,7 +1409,7 @@ function EventDetailsOverlay({
 
         <WorkspaceCard title="Everything important lives here together">
           <Typography
-            sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
           >
             This section controls the core information people use to decide whether they
             trust, understand, and show up for the event.
@@ -1719,7 +1723,7 @@ function FeaturesOverlay({
         </Stack>
         <WorkspaceCard title="Features">
           <Typography
-            sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
           >
             Keep this simple. Pick from the dropdown, add the feature, and mark it if
             you expect it to be outsourced later.
@@ -1926,7 +1930,7 @@ function TicketsOverlay({
         </Stack>
         <WorkspaceCard title="Tickets & capacity">
           <Typography
-            sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
           >
             Every ticket communicates value. Price, capacity, refund logic, admits, and
             pass limits should all read clearly at a glance.
@@ -2323,7 +2327,7 @@ function ReviewApplicantsOverlay({
 
         <WorkspaceCard title={need.title}>
           <Typography
-            sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
           >
             These people already raised their hand. Read for clarity, reliability, and
             whether they reduce host stress instead of adding more of it.
@@ -2339,7 +2343,7 @@ function ReviewApplicantsOverlay({
                   background: '#fffdfb',
                 }}
               >
-                <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                <Typography sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}>
                   No applications have come in yet. This is the point where a direct
                   invite or a stronger need description usually changes the outcome.
                 </Typography>
@@ -2505,7 +2509,7 @@ function BrowseVendorsOverlay({
 
         <WorkspaceCard title="People who could unblock the event quickly">
           <Typography
-            sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
           >
             This is where you convert uncertainty into a direct ask. The best cards here
             are not random discovery. They are people with a reason to say yes.
@@ -2738,18 +2742,170 @@ function NeedActionDialog({
   );
 }
 
+function CreateWorkspaceLanding({
+  categories,
+  isSubmitting,
+  onSubmit,
+}: {
+  categories: Array<{ id: number; name: string; slug?: string }>;
+  isSubmitting: boolean;
+  onSubmit: (
+    action: QuickCreateAction,
+    payload: QuickCreateSubmitPayload,
+  ) => Promise<void>;
+}) {
+  return (
+    <Box sx={{ minHeight: '100vh', 
+      maxWidth: '1240px',
+      mx: 'auto',
+      
+    background: 'var(--color-background-tertiary)' }}>
+      <Box
+        sx={{
+          px: { xs: 2, md: 3 },
+          py: 2.5,
+          background: 'var(--color-background-primary)',
+          borderBottom: '0.5px solid var(--color-border-tertiary)',
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1.5}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+        >
+          <Box>
+            <Typography sx={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              New planning workspace
+            </Typography>
+            <Typography
+              sx={{ fontFamily: 'Syne, sans-serif', fontSize: 30, fontWeight: 800 }}
+            >
+              Start with the spark.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.8} flexWrap="wrap">
+            {['Draft', 'Published', 'Live', 'Past'].map((status, index) => (
+              <Chip
+                key={status}
+                label={status}
+                sx={{
+                  background: index === 0 ? '#FAECE7' : '#F1EFE8',
+                  color: index === 0 ? '#712B13' : 'var(--color-text-secondary)',
+                  fontWeight: 700,
+                }}
+              />
+            ))}
+          </Stack>
+        </Stack>
+      </Box>
+
+      <Box sx={{ px: { xs: 2, md: 3 }, py: 2.5 }}>
+        <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ mb: 2 }}>
+          {progressSteps.map((step, index) => (
+            <Box
+              key={step.label}
+              sx={{
+                flex: 1,
+                px: 1.4,
+                py: 1.2,
+                borderRadius: '18px',
+                border: '0.5px solid var(--color-border-tertiary)',
+                background: index === 0 ? '#fffdf9' : 'var(--color-background-primary)',
+              }}
+            >
+              <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                Milestone {index + 1}
+              </Typography>
+              <Typography sx={{ fontSize: 14, fontWeight: 700, mt: 0.35 }}>
+                {step.label}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              xl: 'minmax(0, 1.2fr) minmax(360px, 0.8fr)',
+            },
+            gap: 2,
+            alignItems: 'start',
+          }}
+        >
+          <QuickCreateSpark
+            categories={categories}
+            layout="page"
+            isSubmitting={isSubmitting}
+            onSubmit={onSubmit}
+          />
+
+          <Stack spacing={1.5}>
+            {[
+              {
+                title: 'Event Details',
+                text: 'Name, description, time, place, category, cover photo, and recurrence all live here once the event exists.',
+                accent: '#FAECE7',
+              },
+              {
+                title: 'Tickets',
+                text: 'Free, standard, early bird, VIP, contributor. Capacity and thresholds sit alongside live sales progress.',
+                accent: '#EEEDFE',
+              },
+              {
+                title: 'Needs Board',
+                text: 'That one quick-create help line becomes the bridge into explicit asks, vendor outreach, and role tracking.',
+                accent: '#FAEEDA',
+              },
+              {
+                title: 'Co-organiser Space',
+                text: 'The floating chat stays one tap away so the workspace can stay clean while the conversation keeps moving.',
+                accent: '#EAF3DE',
+              },
+            ].map((item) => (
+              <WorkspaceCard key={item.title} title={item.title}>
+                <Box
+                  sx={{
+                    p: 1.2,
+                    borderRadius: '16px',
+                    background: item.accent,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {item.text}
+                  </Typography>
+                </Box>
+              </WorkspaceCard>
+            ))}
+          </Stack>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 export default function PlanningWorkspacePage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { openChat } = useChatDrawer();
   const eventId = Number(id || 0);
+  const isCreateMode = !id;
   const [isAddNeedOpen, setIsAddNeedOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isTicketsOpen, setIsTicketsOpen] = useState(false);
   const [isBrowseVendorsOpen, setIsBrowseVendorsOpen] = useState(false);
+  const [isQuickCreating, setIsQuickCreating] = useState(false);
   const [outsourcedFeatures, setOutsourcedFeatures] = useState<Record<string, boolean>>(
     {},
   );
@@ -2774,7 +2930,12 @@ export default function PlanningWorkspacePage() {
   const categories = (categoryResponse?.data || []).map((item: any) => ({
     id: item.id,
     name: item.name,
+    slug: item.slug,
   }));
+  const quickCreateNeedSeed = useMemo(() => {
+    if (typeof window === 'undefined' || !eventId) return '';
+    return window.sessionStorage.getItem(`outgoing.quickCreateNeeds.${eventId}`) || '';
+  }, [eventId]);
 
   useEffect(() => {
     if (!isEventLoading && event && user && user.username !== event.host.username) {
@@ -3160,6 +3321,92 @@ export default function PlanningWorkspacePage() {
     }
   };
 
+  const handleCreateFromWorkspace = async (
+    action: QuickCreateAction,
+    payload: QuickCreateSubmitPayload,
+  ) => {
+    setIsQuickCreating(true);
+    try {
+      const formData = new FormData();
+      formData.set('title', payload.title);
+      formData.set('description', payload.description);
+      formData.set('category_id', String(payload.categoryId));
+      formData.set('location_name', payload.locationName);
+      formData.set('location_address', payload.locationAddress);
+      formData.set('start_time', payload.startTimeIso);
+      formData.set('end_time', payload.endTimeIso);
+      formData.set('status', action === 'post' ? 'published' : 'draft');
+      if (payload.capacity) {
+        formData.set('capacity', payload.capacity);
+      }
+      if (payload.ticketPriceStandard) {
+        formData.set('ticket_price_standard', payload.ticketPriceStandard);
+      }
+      if (payload.features.length > 0) {
+        formData.set('features', JSON.stringify(payload.features));
+      }
+      if (payload.coverFile) {
+        formData.set('cover_image', payload.coverFile);
+      }
+
+      const result = await createEvent(formData);
+      const totalCapacityVal = payload.capacity ? parseInt(payload.capacity, 10) : null;
+      const tiersToSave = payload.ticketTiers.map((tier, index) => {
+        const isLastTier = index === payload.ticketTiers.length - 1;
+        let calculatedCapacity =
+          tier.capacity === '' || tier.capacity === null ? null : Number(tier.capacity);
+
+        if (isLastTier && totalCapacityVal !== null) {
+          const sumOthers = payload.ticketTiers
+            .slice(0, -1)
+            .reduce((sum, item) => sum + (Number(item.capacity) || 0), 0);
+          calculatedCapacity = Math.max(0, totalCapacityVal - sumOthers);
+        }
+
+        return {
+          name: tier.name || 'General Admission',
+          price: Number(tier.price || 0).toFixed(2),
+          capacity: calculatedCapacity,
+          is_refundable: true,
+          description: tier.description || '',
+          admits: Number(tier.admits || 1),
+          max_passes_per_ticket: Number(tier.max_passes_per_ticket || 6),
+        };
+      });
+
+      if (tiersToSave.length > 0) {
+        await updateTicketTiers.mutateAsync({
+          eventId: result.data.id,
+          tiers: tiersToSave,
+          updateSeries: false,
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+      await queryClient.invalidateQueries({ queryKey: ['feed'] });
+
+      if (payload.needsSeed) {
+        window.sessionStorage.setItem(
+          `outgoing.quickCreateNeeds.${result.data.id}`,
+          payload.needsSeed,
+        );
+      }
+
+      if (action === 'plan') {
+        toast.success('Draft created. Keep building it.');
+        navigate(`/events/${result.data.id}/manage`);
+      } else {
+        toast.success('Event posted');
+        navigate(`/events/${result.data.id}`);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Could not create this event');
+      throw error;
+    } finally {
+      setIsQuickCreating(false);
+    }
+  };
+
   const openVendorActionDialog = (
     vendor: VendorSuggestion,
     need: EventNeed,
@@ -3211,6 +3458,16 @@ export default function PlanningWorkspacePage() {
       toast.error(error?.response?.data?.message || 'Could not update this need');
     }
   };
+
+  if (isCreateMode) {
+    return (
+      <CreateWorkspaceLanding
+        categories={categories}
+        isSubmitting={isQuickCreating}
+        onSubmit={handleCreateFromWorkspace}
+      />
+    );
+  }
 
   if (isEventLoading || !event) {
     return (
@@ -3422,7 +3679,7 @@ export default function PlanningWorkspacePage() {
                     Description
                   </Typography>
                   <Typography
-                    sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                    sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
                   >
                     {event.description ||
                       'Add a description that tells people exactly what the event is, why it matters, and what they should expect.'}
@@ -3440,7 +3697,7 @@ export default function PlanningWorkspacePage() {
 
             <WorkspaceCard title="Features" action="Edit">
               <Typography
-                sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
               >
                 Features are fast signals. People scan them to understand what the event
                 includes before they commit.
@@ -3465,7 +3722,7 @@ export default function PlanningWorkspacePage() {
                   ))
                 ) : (
                   <Typography
-                    sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                    sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
                   >
                     No features added yet.
                   </Typography>
@@ -3624,7 +3881,7 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
               >
                 Needs turn fuzzy hopes into explicit agreements. The clearer the role,
                 the compensation, and the fallback plan, the less chaos the event
@@ -3641,11 +3898,39 @@ export default function PlanningWorkspacePage() {
                     }}
                   >
                     <Typography
-                      sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                      sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
                     >
                       No needs have been added yet. This board gets much more useful
                       once the event has explicit asks instead of implied gaps.
                     </Typography>
+                    {quickCreateNeedSeed ? (
+                      <Box
+                        sx={{
+                          mt: 1.4,
+                          p: 1.4,
+                          borderRadius: '16px',
+                          background: '#FAEEDA',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            color: '#854F0B',
+                            mb: 0.55,
+                          }}
+                        >
+                          From quick create
+                        </Typography>
+                        <Typography
+                          sx={{ fontSize: 13, lineHeight: 1.6, color: '#5A3909' }}
+                        >
+                          "{quickCreateNeedSeed}"
+                        </Typography>
+                      </Box>
+                    ) : null}
                   </Box>
                 ) : null}
                 {eventNeeds.map((need) => {
@@ -3831,7 +4116,7 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 1.25 }}
+                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.25 }}
               >
                 This checklist is a live read on whether the event feels operationally
                 trustworthy, not just aesthetically complete.
@@ -3839,21 +4124,22 @@ export default function PlanningWorkspacePage() {
               <Stack spacing={0}>
                 {checklistItems.map((item, index) => {
                   const isSales = item.variant === 'sales';
+                  const isHighlightedSales = isSales && item.status === 'done';
                   return (
                     <Stack
                       key={item.label}
                       direction="row"
                       spacing={1.1}
                       sx={{
-                        py: isSales ? 1.25 : 1,
-                        px: isSales ? 1.25 : 0,
-                        mx: isSales ? -1.25 : 0,
-                        borderRadius: isSales ? 10 : 0,
+                        py: isHighlightedSales ? 1.25 : 1,
+                        px: isHighlightedSales ? 1.25 : 0,
+                        mx: isHighlightedSales ? -1.25 : 0,
+                        borderRadius: isHighlightedSales ? 10 : 0,
                         borderBottom:
-                          index < checklistItems.length - 1 && !isSales
+                          index < checklistItems.length - 1 && !isHighlightedSales
                             ? '0.5px solid var(--color-border-tertiary)'
                             : 'none',
-                        ...(isSales && {
+                        ...(isHighlightedSales && {
                           background:
                             item.status === 'done'
                               ? 'linear-gradient(135deg, rgba(29, 158, 117, 0.12) 0%, rgba(45, 212, 191, 0.08) 100%)'
@@ -3876,9 +4162,9 @@ export default function PlanningWorkspacePage() {
                     >
                       <Box
                         sx={{
-                          width: isSales ? 20 : 16,
-                          height: isSales ? 20 : 16,
-                          borderRadius: isSales ? 6 : 4,
+                          width: isHighlightedSales ? 20 : 16,
+                          height: isHighlightedSales ? 20 : 16,
+                          borderRadius: isHighlightedSales ? 6 : 4,
                           border: '1.5px solid',
                           borderColor:
                             item.variant === 'host'
@@ -3892,7 +4178,7 @@ export default function PlanningWorkspacePage() {
                             item.variant === 'host'
                               ? '#2563EB'
                               : item.status === 'done'
-                                ? isSales
+                                ? isHighlightedSales
                                   ? 'linear-gradient(145deg, #1D9E75 0%, #2DD4BF 100%)'
                                   : '#1D9E75'
                                 : 'transparent',
@@ -3900,31 +4186,17 @@ export default function PlanningWorkspacePage() {
                           placeItems: 'center',
                           mt: '2px',
                           flexShrink: 0,
-                          ...(isSales &&
-                            item.status !== 'done' && {
-                              borderColor:
-                                item.status === 'warn' ? '#E24B4A' : '#D97706',
-                            }),
                         }}
                       >
-                        {isSales && item.status !== 'done' ? (
-                          <TrendingUp
-                            size={isSales ? 11 : 10}
-                            color={
-                              item.status === 'warn'
-                                ? '#E24B4A'
-                                : 'var(--color-text-secondary)'
-                            }
-                          />
-                        ) : item.status === 'done' ? (
-                          <Check size={isSales ? 12 : 10} color="#fff" />
+                        {item.status === 'done' ? (
+                          <Check size={isHighlightedSales ? 12 : 10} color="#fff" />
                         ) : null}
                       </Box>
                       <Box sx={{ minWidth: 0 }}>
                         <Typography
                           sx={{
-                            fontSize: isSales ? 14 : 13,
-                            fontWeight: isSales ? 600 : 400,
+                            fontSize: isHighlightedSales ? 14 : 13,
+                            fontWeight: isHighlightedSales ? 600 : 400,
                             lineHeight: 1.4,
                             color:
                               item.status === 'warn'
@@ -3932,7 +4204,7 @@ export default function PlanningWorkspacePage() {
                                 : item.variant === 'host'
                                   ? '#1E40AF'
                                   : item.status === 'done'
-                                    ? isSales
+                                    ? isHighlightedSales
                                       ? '#0D766E'
                                       : 'var(--color-text-secondary)'
                                     : 'var(--color-text-primary)',
@@ -3942,7 +4214,7 @@ export default function PlanningWorkspacePage() {
                         >
                           {item.label}
                         </Typography>
-                        <Typography
+                        {/* <Typography
                           sx={{
                             fontSize: isSales ? 11 : 10,
                             mt: 0.25,
@@ -3958,7 +4230,7 @@ export default function PlanningWorkspacePage() {
                           }}
                         >
                           {item.due}
-                        </Typography>
+                        </Typography> */}
                       </Box>
                     </Stack>
                   );
@@ -3979,7 +4251,7 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
               >
                 Strong hosts do not wait for help to arrive by luck. They line up the
                 right person for the right gap while there is still time to recover.

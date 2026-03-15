@@ -11,6 +11,7 @@ export interface EventFeaturesQuickFormProps {
   eventFeatures: EventFeature[];
   setEventFeatures: (features: EventFeature[]) => void;
   readonly?: boolean;
+  showLabels?: boolean;
 }
 
 const DEFAULT_TAG: FeatureTag = 'featured';
@@ -19,6 +20,7 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
   eventFeatures,
   setEventFeatures,
   readonly = false,
+  showLabels = false,
 }) => {
   const [expanded, setExpanded] = React.useState(false);
   const items = expanded ? FEATURE_ITEMS : FEATURE_ITEMS.slice(0, 11);
@@ -45,7 +47,12 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
                 ]);
               }
             }}
-            className={`h-11 w-11 rounded-full border transition-all flex items-center justify-center text-xl
+            className={`border transition-all flex items-center justify-center
+              ${
+                showLabels
+                  ? 'min-h-[3.25rem] rounded-full px-4 gap-2 text-sm font-semibold'
+                  : 'h-11 w-11 rounded-full text-xl'
+              }
               ${
                 selected
                   ? 'shadow-[2px_2px_0px_rgba(0,0,0,0.2)] scale-110'
@@ -65,6 +72,9 @@ export const EventFeaturesQuickForm: React.FC<EventFeaturesQuickFormProps> = ({
             title={item.name}
           >
             <span aria-hidden="true">{item.emoji}</span>
+            {showLabels ? (
+              <span className="text-[12px] leading-none">{item.name}</span>
+            ) : null}
           </button>
         );
       })}

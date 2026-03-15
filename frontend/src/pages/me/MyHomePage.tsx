@@ -11,7 +11,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, CalendarDays, Lightbulb, MapPin, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 import client from '@/api/client';
 import { useAuth } from '@/features/auth/hooks';
@@ -74,6 +74,7 @@ type ContributionCardData = {
 
 type UpcomingEventData = {
   id: string;
+  eventId: number;
   month: string;
   day: string;
   title: string;
@@ -127,6 +128,7 @@ function SectionHeading({
 }
 
 function EventCard({
+  id,
   category,
   title,
   date,
@@ -138,6 +140,8 @@ function EventCard({
 }: FeedEventCard) {
   return (
     <Box
+      component={Link}
+      to={`/events/${id}`}
       sx={{
         minWidth: { xs: 250, sm: 220 },
         maxWidth: 260,
@@ -147,6 +151,11 @@ function EventCard({
         background: 'rgba(255,255,255,0.86)',
         boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
         flexShrink: 0,
+        cursor: 'pointer',
+        textDecoration: 'none',
+        color: 'inherit',
+        display: 'block',
+        '&:hover': { boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)' },
       }}
     >
       <Box
@@ -416,6 +425,7 @@ export default function MyHomePage() {
       const date = new Date(detail.start_time);
       items.set(`event-${detail.id}`, {
         id: `event-${detail.id}`,
+        eventId: detail.id,
         month: date.toLocaleDateString(undefined, { month: 'short' }),
         day: String(date.getDate()).padStart(2, '0'),
         title: detail.title,
@@ -429,6 +439,7 @@ export default function MyHomePage() {
       const date = new Date(event.start_time);
       items.set(`saved-${event.id}`, {
         id: `saved-${event.id}`,
+        eventId: event.id,
         month: date.toLocaleDateString(undefined, { month: 'short' }),
         day: String(date.getDate()).padStart(2, '0'),
         title: event.title,
@@ -449,6 +460,7 @@ export default function MyHomePage() {
       })
       .slice(0, 3);
   }, [overviewRows, savedEvents, user?.id]);
+  const hasUpcomingEvents = upcomingEvents.length > 0;
 
   const weekendEvents = useMemo(() => {
     const baseEvents = (weekendResponse?.data || []) as EventListItem[];
@@ -600,169 +612,129 @@ export default function MyHomePage() {
             }}
           >
             <Stack spacing={3}>
-              <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                spacing={2}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-              >
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Avatar
-                    src={profile?.avatar || user?.avatar || undefined}
-                    sx={{
-                      width: 52,
-                      height: 52,
-                      bgcolor: '#D85A30',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {avatarLetter}
-                  </Avatar>
-                  <SectionHeading
-                    eyebrow="My home"
-                    title={`Hey ${greetingName}`}
-                    description={`${locationLabel} is busy this weekend. Your plans, contributor gigs, and new ideas all live here.`}
-                  />
-                </Stack>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip
-                    icon={<MapPin size={14} />}
-                    label={locationLabel}
-                    sx={{
-                      height: 34,
-                      borderRadius: '999px',
-                      background: 'rgba(255,255,255,0.74)',
-                      color: '#4A3827',
-                      border: '1px solid rgba(143, 105, 66, 0.14)',
-                    }}
-                  />
-                  <Chip
-                    icon={<Sparkles size={14} />}
-                    label={`${trendingEvents.length} events nearby`}
-                    sx={{
-                      height: 34,
-                      borderRadius: '999px',
-                      background: '#D85A30',
-                      color: '#fff',
-                      fontWeight: 700,
-                    }}
-                  />
-                </Stack>
-              </Stack>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', lg: '1.35fr 0.95fr' },
-                  gap: 2,
-                }}
-              >
+              {hasUpcomingEvents ? (
                 <Box
                   sx={{
-                    borderRadius: '28px',
-                    p: { xs: 2.2, sm: 2.8 },
-                    background: 'linear-gradient(135deg, #D85A30 0%, #C84E24 100%)',
-                    color: '#fff',
-                    boxShadow: '0 26px 56px rgba(216, 90, 48, 0.28)',
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', lg: '1.35fr 0.95fr' },
+                    gap: 2,
                   }}
                 >
-                  <Stack spacing={2.5}>
-                    <Chip
-                      label={nextEvent ? 'Trending now' : 'No event yet'}
-                      sx={{
-                        width: 'fit-content',
-                        bgcolor: 'rgba(255,255,255,0.16)',
-                        color: '#fff',
-                        fontWeight: 700,
-                        letterSpacing: '0.03em',
-                      }}
-                    />
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={2}
-                      justifyContent="space-between"
-                      alignItems={{ xs: 'flex-start', sm: 'flex-end' }}
-                    >
-                      <Box>
-                        <Typography
-                          sx={{
-                            fontFamily: 'Syne, sans-serif',
-                            fontSize: { xs: 26, sm: 30 },
-                            fontWeight: 800,
-                            letterSpacing: '-0.04em',
-                          }}
-                        >
-                          {nextEvent?.title || 'Trending events will show up here'}
-                        </Typography>
-                        <Stack
-                          direction="row"
-                          spacing={1.25}
-                          alignItems="center"
-                          sx={{ mt: 1.2, flexWrap: 'wrap' }}
-                        >
-                          <Typography
-                            sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
-                          >
-                            {nextEvent
-                              ? `${formatDate(nextEvent.start_time, {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}, ${formatTime(nextEvent.start_time)}`
-                              : 'Check back soon'}
-                          </Typography>
-                          <Typography
-                            sx={{ fontSize: 14, color: 'rgba(255,255,255,0.60)' }}
-                          >
-                            •
-                          </Typography>
-                          <Typography
-                            sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
-                          >
-                            {nextEvent?.location_name || locationLabel}
-                          </Typography>
-                        </Stack>
-                      </Box>
-                      <Box
+                  <Box
+                    component={nextEvent ? Link : 'div'}
+                    to={nextEvent ? `/events/${nextEvent.id}` : undefined}
+                    sx={{
+                      borderRadius: '28px',
+                      p: { xs: 2.2, sm: 2.8 },
+                      background: 'linear-gradient(135deg, #D85A30 0%, #C84E24 100%)',
+                      color: '#fff',
+                      boxShadow: '0 26px 56px rgba(216, 90, 48, 0.28)',
+                      ...(nextEvent && {
+                        cursor: 'pointer',
+                        textDecoration: 'none',
+                        display: 'block',
+                        '&:hover': { boxShadow: '0 30px 64px rgba(216, 90, 48, 0.35)' },
+                      }),
+                    }}
+                  >
+                    <Stack spacing={2.5}>
+                      <Chip
+                        label={nextEvent ? 'Trending now' : 'No event yet'}
                         sx={{
-                          minWidth: 118,
-                          alignSelf: { xs: 'stretch', sm: 'auto' },
-                          p: 1.6,
-                          borderRadius: '22px',
-                          background: 'rgba(255,255,255,0.14)',
-                          textAlign: { xs: 'left', sm: 'right' },
+                          width: 'fit-content',
+                          bgcolor: 'rgba(255,255,255,0.16)',
+                          color: '#fff',
+                          fontWeight: 700,
+                          letterSpacing: '0.03em',
                         }}
+                      />
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'flex-start', sm: 'flex-end' }}
                       >
-                        <Typography
+                        <Box>
+                          <Typography
+                            sx={{
+                              fontFamily: 'Syne, sans-serif',
+                              fontSize: { xs: 26, sm: 30 },
+                              fontWeight: 800,
+                              letterSpacing: '-0.04em',
+                            }}
+                          >
+                            {nextEvent?.title || 'Trending events will show up here'}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            spacing={1.25}
+                            alignItems="center"
+                            sx={{ mt: 1.2, flexWrap: 'wrap' }}
+                          >
+                            <Typography
+                              sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
+                            >
+                              {nextEvent
+                                ? `${formatDate(nextEvent.start_time, {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}, ${formatTime(nextEvent.start_time)}`
+                                : 'Check back soon'}
+                            </Typography>
+                            <Typography
+                              sx={{ fontSize: 14, color: 'rgba(255,255,255,0.60)' }}
+                            >
+                              •
+                            </Typography>
+                            <Typography
+                              sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
+                            >
+                              {nextEvent?.location_name || locationLabel}
+                            </Typography>
+                          </Stack>
+                        </Box>
+                        <Box
                           sx={{
-                            fontFamily: 'Syne, sans-serif',
-                            fontSize: 40,
-                            fontWeight: 800,
-                            lineHeight: 1,
+                            minWidth: 118,
+                            alignSelf: { xs: 'stretch', sm: 'auto' },
+                            p: 1.6,
+                            borderRadius: '22px',
+                            background: 'rgba(255,255,255,0.14)',
+                            textAlign: { xs: 'left', sm: 'right' },
                           }}
                         >
-                          {nextEventCountdown.countdown}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: 12,
-                            color: 'rgba(255,255,255,0.76)',
-                            letterSpacing: '0.06em',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {nextEventCountdown.countdownLabel}
-                        </Typography>
-                      </Box>
+                          <Typography
+                            sx={{
+                              fontFamily: 'Syne, sans-serif',
+                              fontSize: 40,
+                              fontWeight: 800,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {nextEventCountdown.countdown}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: 12,
+                              color: 'rgba(255,255,255,0.76)',
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {nextEventCountdown.countdownLabel}
+                          </Typography>
+                        </Box>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </Box>
+                  </Box>
 
-                <Stack spacing={1.4}>
-                  {upcomingEvents.length > 0 ? (
-                    upcomingEvents.map((event) => (
+                  <Stack spacing={1.4}>
+                    {upcomingEvents.map((event) => (
                       <Box
                         key={event.id}
+                        component={Link}
+                        to={`/events/${event.eventId}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -771,6 +743,10 @@ export default function MyHomePage() {
                           borderRadius: '24px',
                           background: 'rgba(255,255,255,0.88)',
                           border: '1px solid rgba(143, 105, 66, 0.12)',
+                          cursor: 'pointer',
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          '&:hover': { background: 'rgba(255,255,255,0.96)' },
                         }}
                       >
                         <Box
@@ -833,26 +809,10 @@ export default function MyHomePage() {
                           />
                         </Box>
                       </Box>
-                    ))
-                  ) : (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: '24px',
-                        background: 'rgba(255,255,255,0.88)',
-                        border: '1px solid rgba(143, 105, 66, 0.12)',
-                      }}
-                    >
-                      <Typography
-                        sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}
-                      >
-                        Your upcoming calendar is clear right now. Placeholder cards
-                        stay here until you RSVP, host, save, or take a gig.
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              ) : null}
             </Stack>
           </Box>
 
@@ -871,6 +831,7 @@ export default function MyHomePage() {
                     title="A sharper feed for your next yes"
                   />
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  
                     {weekendFilters.map((filter) => (
                       <Chip
                         key={filter}
@@ -935,9 +896,10 @@ export default function MyHomePage() {
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', xl: '1.2fr 0.8fr' },
                   gap: 3,
+                  minWidth: 0,
                 }}
               >
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <SectionHeading
                     eyebrow="Chip in"
                     title="Earn your way into the room"
@@ -950,7 +912,8 @@ export default function MyHomePage() {
                           key={card.needId}
                           sx={{
                             display: 'flex',
-                            alignItems: 'center',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: { xs: 'stretch', sm: 'center' },
                             gap: 1.5,
                             p: 1.7,
                             borderRadius: '24px',
@@ -958,43 +921,69 @@ export default function MyHomePage() {
                             borderLeft: '4px solid #EF9F27',
                             background: 'rgba(255,255,255,0.88)',
                             boxShadow: '0 14px 34px rgba(111, 76, 35, 0.05)',
+                            minWidth: 0,
                           }}
                         >
-                          <Box
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: '16px',
-                              display: 'grid',
-                              placeItems: 'center',
-                              background: '#FAEEDA',
-                              fontSize: 20,
-                              flexShrink: 0,
-                            }}
+                          <Stack
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
+                            sx={{ minWidth: 0, flex: { xs: 'none', sm: '1 1 auto' } }}
                           >
-                            {card.icon}
-                          </Box>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography
-                              sx={{ fontSize: 14.5, fontWeight: 700, color: '#2B2118' }}
-                            >
-                              {card.title}
-                            </Typography>
-                            <Typography
+                            <Box
                               sx={{
-                                mt: 0.4,
-                                fontSize: 12.5,
-                                color: 'rgba(66, 50, 28, 0.68)',
+                                width: 44,
+                                height: 44,
+                                flexShrink: 0,
+                                borderRadius: '16px',
+                                display: 'grid',
+                                placeItems: 'center',
+                                background: '#FAEEDA',
+                                fontSize: 20,
                               }}
                             >
-                              {card.subtitle}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ ml: 'auto', textAlign: 'right', flexShrink: 0 }}>
+                              {card.icon}
+                            </Box>
+                            <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: 14, sm: 14.5 },
+                                  fontWeight: 700,
+                                  color: '#2B2118',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {card.title}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  mt: 0.4,
+                                  fontSize: 12.5,
+                                  color: 'rgba(66, 50, 28, 0.68)',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {card.subtitle}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <Box
+                            sx={{
+                              flexShrink: 0,
+                              textAlign: { xs: 'left', sm: 'right' },
+                              alignSelf: { xs: 'flex-start', sm: 'center' },
+                            }}
+                          >
                             <Typography
                               sx={{
                                 fontFamily: 'Syne, sans-serif',
-                                fontSize: 16,
+                                fontSize: { xs: 14, sm: 16 },
                                 fontWeight: 800,
                                 color: '#BA7517',
                               }}
@@ -1029,7 +1018,7 @@ export default function MyHomePage() {
                   </Stack>
                 </Box>
 
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <SectionHeading
                     eyebrow="Your network"
                     title="The circles that shape your feed"
@@ -1180,6 +1169,8 @@ export default function MyHomePage() {
                   </Typography>
                 </Box>
                 <Button
+                  component={Link}
+                  to="/events/create"
                   variant="contained"
                   endIcon={<ArrowRight size={16} />}
                   sx={{
