@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useAuth } from '@/features/auth/hooks';
 
 import { Footer } from './components/Footer';
+import { AppBottomNav } from './components/navigation/AppBottomNav';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
 import { SimpleNavbar } from './pages/search/components/SimpleNavbar';
@@ -47,21 +48,17 @@ function AppContent() {
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
   const isSignedOutRoot = !isAuthenticated;
-  const isPlanningWorkspaceRoute =
-    location.pathname === '/manage' ||
-    /^\/events\/[^/]+\/manage$/.test(location.pathname);
 
   return (
-    <div className="relative flex flex-col min-h-screen text-foreground transition-colors duration-300">
+    <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {!isSearchRoute  && (
-        <SimpleNavbar />
-      )}
+      {!isSearchRoute && <SimpleNavbar />}
       <Toaster />
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
+      <AppBottomNav />
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />

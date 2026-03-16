@@ -17,6 +17,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/highlights',
+    componentName: 'Highlights',
+    isPublic: true,
+  },
+  {
     path: '/homerenewed',
     componentName: 'HomeRenewed',
     isPublic: true,
@@ -24,6 +29,11 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/alerts',
     componentName: 'Alerts',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats',
+    componentName: 'Chats',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {

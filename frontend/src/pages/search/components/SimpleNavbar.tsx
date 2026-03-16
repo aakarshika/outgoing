@@ -8,7 +8,22 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bell, LogOut, type LucideIcon, Menu, MessageCircle, Monitor, PlusCircle, Settings, Speech, Users } from 'lucide-react';
+import {
+  Bell,
+  LogOut,
+  type LucideIcon,
+  Menu,
+  MessageCircle,
+  Monitor,
+  PlusCircle,
+  Settings,
+  Speech,
+  Ticket,
+  Users,
+  Pencil,
+  UserIcon,
+  UserPlus,
+} from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -23,7 +38,7 @@ import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
-import { useCategories, useEvent, useMyEvents } from '@/features/events/hooks';
+import { useCategories, useEvent, useMyEvents, useMyTickets } from '@/features/events/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
 type MenuItem = {
@@ -53,10 +68,12 @@ export function SimpleNavbar({
   const { data: categoriesResponse } = useCategories();
   const { data: myEventsResponse } = useMyEvents();
   const { data: myServicesResponse } = useMyServices({ enabled: isAuthenticated });
+  const { data: myTicketsResponse } = useMyTickets();
   const event = eventResponse?.data;
   const categories = categoriesResponse?.data || [];
   const hasHostedEvents = (myEventsResponse?.data?.length ?? 0) > 0;
   const hasServices = (myServicesResponse?.data?.length ?? 0) > 0;
+  const hasTickets = (myTicketsResponse?.data?.length ?? 0) > 0;
   const isEventHost =
     isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
@@ -80,6 +97,13 @@ export function SimpleNavbar({
       label: 'Servicing',
       to: '/managing/services',
       Icon: Monitor,
+    });
+  }
+  if (hasTickets) {
+    hostingAndServicesItems.push({
+      label: 'My Tickets',
+      to: '/managing/attending',
+      Icon: Ticket,
     });
   }
 
@@ -149,7 +173,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-        'Planning is underway. More details are coming soon.',
+      'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -332,8 +356,51 @@ export function SimpleNavbar({
               minWidth: 0,
             }}
           >
+          {isMobile && !isAuthenticated && location.pathname !== '/signin' && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
+              onClick={() => navigate(`/signin`)}
+            >
+              <UserIcon size={14} /> Sign In
+            </Button>
+          )}
+          {isMobile && !isAuthenticated && location.pathname !== '/signup' && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
+              onClick={() => navigate(`/signup`)}
+            >
+              <UserPlus size={14} /> Sign Up
+            </Button>
+          )}
             {isAuthenticated ? (
               <>
+
+                {isMobile && isVendor && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#e6fafa] hover:text-[#008a8a]"
+                    onClick={() =>
+                      navigate(`/events/${eventId}/service-event-management`)
+                    }
+                  >
+                    <Pencil size={14} /> Service
+                  </Button>
+                )}
+                {isMobile && isEventHost && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#f0ebff] hover:text-[#7c5dd6]"
+                    onClick={() => navigate(`/events/${eventId}/manage`)}
+                  >
+                    <Pencil size={14} /> Event
+                  </Button>
+                )}
                 {!isMobile && isVendor && isNotOnManagePage && eventId && (
                   <Button
                     type="button"
@@ -356,24 +423,6 @@ export function SimpleNavbar({
                     Manage Event
                   </Button>
                 )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-[#3f372e] hover:bg-[#f4efe7]"
-                  onClick={() => navigate('/calendar')}
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-9 w-9 p-0 text-[#3f372e] hover:bg-[#f4efe7]"
-                  onClick={() => navigate('/alerts')}
-                  aria-label="Open chats and alerts"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </Button>
               </>
             ) : (
               <></>

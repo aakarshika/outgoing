@@ -125,17 +125,18 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
         elevation={3}
         sx={{
           position: 'relative',
-          minHeight: '500px',
+          minHeight: '100px',
           backgroundColor: '#fffcf2',
           backgroundImage: `
             linear-gradient(#f1f1f1 0.1em, transparent 0.1em),
             linear-gradient(90deg, #f1f1f1 0.1em, transparent 0.1em)
           `,
           backgroundSize: '30px 30px',
-          p: 4,
-          pt: 8,
+          p: 1,
+          pt:3,
+          pr: 4,
           borderRadius: '2px',
-          boxShadow: '10px 10px 0px rgba(0,0,0,0.1)',
+          // boxShadow: '10px 10px 0px rgba(0,0,0,0.1)',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -149,7 +150,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
         }}
       >
         {/* Notebook Header */}
-        <Box sx={{ mb: 4, position: 'relative', zIndex: 2 }}>
+        <Box sx={{position: 'relative', zIndex: 2 }}>
           <Typography
             variant="h4"
             sx={{
@@ -161,7 +162,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
               pb: 1,
             }}
           >
-            Event Notebook Chat
+            Event Chat
           </Typography>
           <Typography
             sx={{
@@ -199,7 +200,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
           {messagesResponse?.data?.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 8, opacity: 0.5 }}>
               <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>
-                The pages are empty... write something!
+                Share with the group
               </Typography>
             </Box>
           ) : (

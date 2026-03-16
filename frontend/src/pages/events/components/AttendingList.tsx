@@ -11,9 +11,10 @@ interface Attendee {
 
 interface AttendingListProps {
   attendees: Attendee[];
+  isEventOver: boolean;
 }
 
-export const AttendingList = ({ attendees }: AttendingListProps) => {
+export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +33,10 @@ export const AttendingList = ({ attendees }: AttendingListProps) => {
           className="text-2xl text-gray-900  px-4 py-1  transform -rotate-1"
           style={{ fontFamily: '"Permanent Marker", cursive' }}
         >
-          CHECK OUT WHO'S GOING
+          {!isEventOver ? 'CHECK OUT WHO\'S GOING' :
+            <span>
+              the <span className="" style={{ color: 'rgb(216, 90, 48)' }}>Go</span>ers
+            </span>}
         </h3>
         <div className="h-0.5 flex-1 bg-gray-800" />
       </div>

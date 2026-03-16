@@ -1,6 +1,5 @@
 import {
   Box,
-  Drawer,
   IconButton,
   InputBase,
   Paper,
@@ -8,19 +7,29 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { Send, X, Minimize2, Maximize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Send, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import {
-  useAddHostVendorMessage,
+  buildChatTimeline,
+  buildUserChatActivities,
+  findFriendshipForUserChat,
+} from '@/features/events/chatTimeline';
+import {
   useAddDirectMessage,
+  useAddHostVendorMessage,
   useAddPrivateMessage,
   useDirectMessages,
+  useEventOverviewRows,
   useHostVendorMessages,
+  useMyFriendships,
+  useNetworkActivity,
+  useNetworkPeople,
   usePrivateMessages,
 } from '@/features/events/hooks';
+
 import { BuddyRequestPanel } from './BuddyRequestPanel';
 
 // --- Compact Message Item Component ---
@@ -90,6 +99,27 @@ const MessageItem = ({ message }: { message: any }) => {
   );
 };
 
+const ActivityItem = ({ label }: { label: string }) => {
+  return (
+    <Box sx={{ py: 0.75, display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.7,
+          borderRadius: '999px',
+          bgcolor: 'rgba(0,0,0,0.05)',
+          color: '#666',
+          fontSize: '0.72rem',
+          textAlign: 'center',
+          maxWidth: '85%',
+        }}
+      >
+        {label}
+      </Box>
+    </Box>
+  );
+};
+
 interface ChatDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -111,11 +141,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Hooks for Group Chat
   const { data: groupMessagesResponse } = useHostVendorMessages(
-    mode === 'group' && eventId ? eventId : undefined,
+    mode === 'group' && eventId ? eventId : 0,
   );
   const addGroupMessage = useAddHostVendorMessage();
 
@@ -141,6 +172,31 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       : mode === 'direct'
         ? addDirectMessage.isPending
         : addPrivateMessage.isPending;
+  const isUserUserChat = !!targetUsername && (mode === 'direct' || mode === 'private');
+  const { data: friendships } = useMyFriendships(isUserUserChat);
+  const { data: networkPeople } = useNetworkPeople(isUserUserChat);
+  const { data: networkActivity } = useNetworkActivity(isUserUserChat);
+  const { data: eventOverviewRows } = useEventOverviewRows(isUserUserChat);
+  const friendship = isUserUserChat
+    ? findFriendshipForUserChat(
+        friendships?.accepted || [],
+        user?.username,
+        targetUsername,
+      )
+    : null;
+  const timelineItems = buildChatTimeline({
+    messages: messages || [],
+    activities: isUserUserChat
+      ? buildUserChatActivities({
+          currentUserId: user?.id,
+          targetUsername,
+          friendship,
+          networkPeople,
+          networkActivity: networkActivity?.activity || [],
+          eventOverviewRows: eventOverviewRows || [],
+        })
+      : [],
+  });
 
   const [messageText, setMessageText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -283,7 +339,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             }}
             className="no-scrollbar"
           >
-            {messages?.length === 0 ? (
+            {timelineItems.length === 0 ? (
               <Box
                 sx={{
                   flex: 1,
@@ -304,9 +360,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 </Typography>
               </Box>
             ) : (
-              messages?.map((message: any) => (
-                <MessageItem key={message.id} message={message} />
-              ))
+              timelineItems.map((item, index) =>
+                item.type === 'activity' ? (
+                  <ActivityItem key={`${item.id}-${index}`} label={item.label} />
+                ) : (
+                  <MessageItem key={`${item.id}-${index}`} message={item.message} />
+                ),
+              )
             )}
           </Box>
 
@@ -364,14 +424,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           flexDirection: 'column',
           zIndex: 100000,
           transition: 'height 0.3s ease',
-        }}
-        PaperProps={{
-          sx: {
-            height: '80vh',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 100000,
-          },
         }}
       >
         {content}

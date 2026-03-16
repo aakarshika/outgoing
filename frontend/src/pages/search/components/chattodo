@@ -1,0 +1,15 @@
+If the chat is of type user-user, then we need to show the friendship details on the chat in between messages. The order will be decided by when that friendship activity occurred. It will be like:
+- became friends 
+- User B 
+- activity happened
+- User B messaged
+- User A messaged
+- activity happened
+- and so on
+Activities are the following: 
+became friends(before all messages), 
+Met at XYZ event(first common event start time), 
+going to XYZ event together (date second person ticket created time), 
+went to XYZ event together (common event start time), 
+userx hosted you, 
+you hosted them, 

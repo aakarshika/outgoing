@@ -25,22 +25,23 @@ import {
   fetchEventAutocomplete,
   fetchEventHighlights,
   fetchEventLifecycleHistory,
+  fetchEventOverviewRows,
   fetchEventSeriesDetail,
   fetchEventSeriesList,
   fetchEventSeriesOccurrences,
   fetchFeaturedEvent,
   fetchFeed,
   fetchFriendRequestStatus,
-  fetchMyFriendships,
-  fetchNetworkActivity,
-  fetchNetworkPeople,
   fetchHighlightComments,
   fetchHighlightsFeed,
   fetchHostVendorMessages,
   fetchIconicHostsFeed,
   fetchMyEvents,
+  fetchMyFriendships,
   fetchMyInterestedEvents,
   fetchMyTickets,
+  fetchNetworkActivity,
+  fetchNetworkPeople,
   fetchPrivateMessages,
   fetchRecentlyViewed,
   fetchReviewComments,
@@ -644,6 +645,15 @@ export function useAllChatsList(enabled = true) {
     queryFn: fetchAllChatsList,
     enabled,
     refetchInterval: 10000,
+  });
+}
+
+export function useEventOverviewRows(enabled = true) {
+  return useQuery({
+    queryKey: ['event-overview-rows'],
+    queryFn: fetchEventOverviewRows,
+    enabled,
+    refetchInterval: 30000,
   });
 }
 

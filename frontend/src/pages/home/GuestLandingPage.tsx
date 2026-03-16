@@ -15,6 +15,8 @@ import { useFeed, useIconicHostsFeed, useTrendingHighlights } from '@/features/e
 import type { EventListItem } from '@/types/events';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
 import { HostCard } from '@/components/ui/HostCard';
+import { HighlightCard } from '@/pages/events/components/HighlightCard';
+import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
 
 const categoryChips = [
   { label: 'Outdoors', icon: '🏃' },
@@ -450,6 +452,8 @@ export default function GuestLandingPage() {
   const [hasNearbySectionInView, setHasNearbySectionInView] = useState(false);
   const [heroAnimationData, setHeroAnimationData] = useState<object | null>(null);
   const nearbySectionRef = useRef<HTMLDivElement | null>(null);
+  const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
+  const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
     sort: 'trending',
@@ -913,7 +917,7 @@ export default function GuestLandingPage() {
         <SectionHeader
           label="The ones who bring it"
           title="Iconic hosts"
-          description="Creators, organisers, and vibes-setters the community keeps coming back for."
+          description="Creators, organisers, and vibe-setters the community keeps coming back for."
         />
         <Box
           sx={{
@@ -921,6 +925,7 @@ export default function GuestLandingPage() {
             gap: 2.5,
             overflowX: 'auto',
             pb: 2,
+            pt: 4,
             scrollSnapType: 'x mandatory',
             '&::-webkit-scrollbar': { display: 'none' },
           }}
@@ -961,27 +966,26 @@ export default function GuestLandingPage() {
             {trendingHighlights.map((highlight: any) => (
               <Box
                 key={highlight.id}
-                sx={{
-                  background: 'var(--color-background-primary)',
-                  border: '0.5px solid var(--color-border-tertiary)',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  minHeight: 180,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                sx={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
+                onClick={() => {
+                  setSelectedHighlightId(highlight.id);
+                  setIsHighlightViewerOpen(true);
                 }}
               >
-                <Typography
-                  sx={{ fontSize: 13, color: 'var(--color-text-tertiary)', px: 2, textAlign: 'center' }}
-                >
-                  Highlight #{highlight.id}
-                </Typography>
+                <HighlightCard highlight={highlight} disableHover />
               </Box>
             ))}
           </Box>
         </Container>
       </Box>
+
+      {selectedHighlightId && (
+        <HighlightChainViewer
+          initialHighlightId={selectedHighlightId}
+          isOpen={isHighlightViewerOpen}
+          onClose={() => setIsHighlightViewerOpen(false)}
+        />
+      )}
 
       <Box
         sx={{

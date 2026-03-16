@@ -48,8 +48,12 @@ import type { ApiResponse, EventDetail } from '@/types/events';
 import type { EventNeed, NeedApplication } from '@/types/needs';
 import type { VendorService } from '@/types/vendors';
 
-type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application';
-type ManagingTab = 'managing' | 'earnings' | 'hosting' | 'services';
+type ManagingKind =
+  | 'hosting'
+  | 'vendor_request'
+  | 'vendor_application'
+  | 'attending';
+type ManagingTab = 'managing' | 'earnings' | 'hosting' | 'attending' | 'services';
 type EarningsRole = 'hosted' | 'serviced';
 
 interface ManagingItem {
@@ -128,6 +132,12 @@ const KIND_STYLES: Record<
     bg: '#E1F5EE',
     color: '#0F6E56',
     dot: 'rgb(0, 159, 132)',
+  },
+  attending: {
+    label: 'Attending',
+    bg: '#FFF7CC',
+    color: '#8A6A00',
+    dot: 'rgb(255, 228, 25)',
   },
 };
 
@@ -281,7 +291,12 @@ function ManagingEventCard({
   const event = item.event;
   const style = KIND_STYLES[item.kind];
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
-  const stepLabel = item.kind === 'hosting' ? 'hosting' : 'servicing';
+  const stepLabel =
+    item.kind === 'hosting'
+      ? 'hosting'
+      : item.kind === 'attending'
+        ? 'attending'
+        : 'servicing';
   const checklistTone = getChecklistTone(nextChecklistItem?.status);
 
   return (
@@ -2319,7 +2334,13 @@ function ServiceApplicationCard({
   );
 }
 
-const VALID_TABS: ManagingTab[] = ['managing', 'earnings', 'hosting', 'services'];
+const VALID_TABS: ManagingTab[] = [
+  'managing',
+  'earnings',
+  'hosting',
+  'attending',
+  'services',
+];
 
 export default function ManagingPage() {
   const { user, loading } = useAuth();
@@ -2522,6 +2543,40 @@ export default function ManagingPage() {
   const upcomingItems = dayFiltered.filter((item) => !item.isPast);
   const topUpcoming = upcomingItems.slice(0, 3);
   const hostingItems = timeline;
+  const attendingItems = useMemo<ManagingItem[]>(() => {
+    if (!user?.id) return [];
+
+    const attendee = new Map<number, EventOverviewRow>();
+
+    overviewRows.forEach((row) => {
+      if (['completed', 'cancelled'].includes(row.event_lifecycle_state)) return;
+      if (!row.event_details) return;
+      if (row.attendee_user_id !== user.id || row.ticket_status === 'cancelled') return;
+
+      attendee.set(row.event_id, row);
+    });
+
+    return Array.from(attendee.values())
+      .sort(
+        (a, b) =>
+          new Date(b.ticket_created_date || 0).getTime() -
+          new Date(a.ticket_created_date || 0).getTime(),
+      )
+      .map((row) => {
+        const detail = row.event_details;
+        return {
+          id: `attending-${row.event_id}`,
+          event: detail,
+          kind: 'attending' as const,
+          title: detail.title,
+          subtitle: 'You are attending this event',
+          location: detail.location_name || 'Location TBD',
+          eventTime: detail.start_time,
+          route: `/events/${row.event_id}`,
+          isPast: new Date(detail.start_time).getTime() < now,
+        };
+      });
+  }, [now, overviewRows, user?.id]);
   const monthDays = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
 
   const eventsByDay = useMemo(() => {
@@ -2680,11 +2735,13 @@ export default function ManagingPage() {
                   }}
                 >
                   {tab === 'managing'
-                    ? 'Managing'
+                    ? 'Upcoming Events'
                     : tab === 'earnings'
                       ? 'Earnings'
                       : tab === 'hosting'
                         ? 'Hosting'
+                        : tab === 'attending'
+                          ? 'Attending'
                         : 'Services'}
                 </Typography>
               </Stack>
@@ -2695,6 +2752,7 @@ export default function ManagingPage() {
                     { key: 'managing', label: 'Managing' },
                     { key: 'earnings', label: 'Earnings' },
                     { key: 'hosting', label: 'Hosting' },
+                    { key: 'attending', label: 'Attending' },
                     { key: 'services', label: 'Services' },
                   ] as const
                 ).map((pageTab) => (
@@ -3099,6 +3157,66 @@ export default function ManagingPage() {
                         item={item}
                         expanded={expandedHostingId === item.id}
                         nextChecklistItem={nextChecklistByItemId.get(item.id)}
+                        onToggle={() =>
+                          setExpandedHostingId((current) =>
+                            current === item.id ? null : item.id,
+                          )
+                        }
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Box>
+          ) : tab === 'attending' ? (
+            <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2.5, md: 3.5 } }}>
+              <Typography
+                sx={{
+                  fontFamily: 'Syne, sans-serif',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(66, 50, 28, 0.62)',
+                  mb: 2,
+                }}
+              >
+                Your attending feed
+              </Typography>
+
+              {attendingItems.length === 0 ? (
+                <Box
+                  sx={{
+                    p: 4,
+                    textAlign: 'center',
+                    borderRadius: '28px',
+                    background: 'rgba(255,255,255,0.88)',
+                    border: '1px solid rgba(143, 105, 66, 0.12)',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: 'Syne, sans-serif',
+                      fontSize: 20,
+                      fontWeight: 800,
+                      color: '#2B2118',
+                    }}
+                  >
+                    No attending events yet
+                  </Typography>
+                  <Typography
+                    sx={{ mt: 1, fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}
+                  >
+                    Events you have tickets for will appear here.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack spacing={1.5}>
+                  {attendingItems.map((item) => (
+                    <Box key={item.id} sx={{ opacity: item.isPast ? 0.72 : 1 }}>
+                      <ExpandableManagingEventCard
+                        item={item}
+                        expanded={expandedHostingId === item.id}
                         onToggle={() =>
                           setExpandedHostingId((current) =>
                             current === item.id ? null : item.id,

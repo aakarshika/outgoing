@@ -99,14 +99,14 @@ export const SearchBar = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search events..."
-            className="flex-1 min-w-[140px] backdrop-blur-md supports-[backdrop-filter]:bg-white/15 rounded-none bg-white/30 px-3 py-2.5 text-base outline-none text-gray-800 placeholder:text-gray-500 "
+            className="flex-1 backdrop-blur-md supports-[backdrop-filter]:bg-white/15 rounded-none bg-white/30 px-3 py-2.5 text-base outline-none text-gray-800 placeholder:text-gray-500 "
             style={{ fontFamily: '"Permanent Marker"' }}
           />
           <div className="relative flex-shrink-0" ref={locationDropdownRef}>
             <button
               type="button"
               onClick={() => setLocationDropdownOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-none backdrop-blur-md supports-[backdrop-filter]:bg-white/15  px-4 py-2  hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all min-w-[160px] justify-between"
+              className="flex items-center gap-2 rounded-none backdrop-blur-md supports-[backdrop-filter]:bg-white/15  px-4 py-2  hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all justify-between"
               style={{ fontFamily: '"Permanent Marker"' }}
             >
               <span className="flex items-center gap-2 truncate">

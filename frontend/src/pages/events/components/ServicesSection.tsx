@@ -2,11 +2,9 @@ import { Box, Collapse, Grid, IconButton, Typography } from '@mui/material';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { getCategoryLabel } from '@/constants/categories';
+import { TinyBusinessCard } from '@/components/ui/TinyBusinessCard';
 
 import { ClassifiedAd } from './ClassifiedAd';
-import { HostBusinessCard } from './HostBusinessCard';
-import { MiniBusinessCard } from './MiniBusinessCard';
 
 export const ServicesSection = ({
   event,
@@ -25,11 +23,11 @@ export const ServicesSection = ({
   setIsApplyModalOpen: (v: boolean) => void;
   highlights?: any[];
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('services_section_expanded', JSON.stringify(isExpanded));
-  }, [isExpanded]);
+  const isEventOver = !['published', 'draft', 'postponed', 'event_ready'].includes(
+    event.lifecycle_state,
+  );
+  const participatingVendors = event?.participating_vendors || [];
+  const [isExpanded, setIsExpanded] = useState(!isEventOver ? false : true);
 
   useEffect(() => {
     const handleScroll = (e: any) => {
@@ -41,7 +39,9 @@ export const ServicesSection = ({
     return () => window.removeEventListener('section-scroll', handleScroll);
   }, []);
 
-  const participatingVendors = event?.participating_vendors || [];
+  useEffect(() => {
+    localStorage.setItem('services_section_expanded', JSON.stringify(isExpanded));
+  }, [isExpanded]);
 
   const myServices = myServicesResponse?.data || [];
   const isCenter = highlights.length === 0;
@@ -71,7 +71,9 @@ export const ServicesSection = ({
             fontSize: '1rem',
           }}
         >
-          hustler APPLICATIONS OPEN!
+          {isEventOver
+            ? 'Shoutout to people who made it possible...'
+            : 'Service needs OPEN! See if they interest you!'}
         </Typography>
         <IconButton size="small">
           {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -101,18 +103,53 @@ export const ServicesSection = ({
                         need.status === 'pending' ||
                         !need.status ||
                         need.status === 'pending');
+                    const assigned_vendor = participatingVendors.find(
+                      (vendor: any) => vendor.id === need.assigned_vendor_id,
+                    );
+                    const hostProfile = {
+                      username:
+                        assigned_vendor?.username ||
+                        assigned_vendor?.vendor_name ||
+                        assigned_vendor?.name ||
+                        'host',
+                      avatar: assigned_vendor?.avatar || null,
+                      rating: assigned_vendor?.rating,
+                    };
                     return (
                       <Grid size={{ xs: 12, md: 6 }} key={need.id}>
-                        <ClassifiedAd
-                          need={need}
-                          event={event}
-                          isEligible={isEligible}
-                          isOpportunity={isOpportunity}
-                          onInquire={(n) => {
-                            setSelectedNeed(n);
-                            setIsApplyModalOpen(true);
-                          }}
-                        />
+                        {!isEventOver ? (
+                          <ClassifiedAd
+                            need={need}
+                            event={event}
+                            myServices={myServices}
+                            isEligible={isEligible}
+                            isOpportunity={isOpportunity}
+                            onInquire={(n) => {
+                              setSelectedNeed(n);
+                              setIsApplyModalOpen(true);
+                            }}
+                          />
+                        ) : (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography
+                              sx={{
+                                fontSize: '1.2rem',
+                                fontWeight: 700,
+                                color: 'rgb(189, 187, 184)',
+                              }}
+                            >
+                              {need.title} by
+                            </Typography>
+
+                            <TinyBusinessCard
+                              name={hostProfile.username}
+                              avatar={hostProfile.avatar || ''}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                              }}
+                            />
+                          </Box>
+                        )}
                       </Grid>
                     );
                   })}

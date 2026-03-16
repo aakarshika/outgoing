@@ -11,10 +11,7 @@ import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { useAuth } from '@/features/auth/hooks';
-import {
-  CategoricalBackground,
-  getCategoryTheme,
-} from '@/features/events/CategoricalBackground';
+import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
   useDeleteEventReview,
   useEvent,
@@ -22,25 +19,21 @@ import {
   useEventStory,
   usePurchaseTicket,
   useRecordEventView,
-  useToggleInterest,
 } from '@/features/events/hooks';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import { useBackground } from '@/theme/BackgroundProvider';
 
+import { GenericFeedSection } from '../home/sections/FeedSections';
 import { AttendingList } from './components/AttendingList';
-import { InkNotebookChat } from './components/InkNotebookChat';
-import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
+import { InkNotebookChat } from './components/InkNotebookChat';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
 import { ReviewsSection } from './components/ReviewsSection';
 import { getDaysAgo } from './components/scrapbookHelpers';
 import { ServicesSection } from './components/ServicesSection';
-import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
-import { WhenWhereCard } from './components/WhenWhereCard';
-import { GenericFeedSection } from '../home/sections/FeedSections';
 
 // --- Main Page Component ---
 
@@ -54,7 +47,6 @@ export default function EventDetailPageNew() {
   const { data: needsResponse } = useEventNeeds(Number(id));
   const { data: myServicesResponse } = useMyServices({ enabled: !!isAuthenticated });
   const purchaseTicket = usePurchaseTicket();
-  const toggleInterest = useToggleInterest();
   const { data: storyResponse } = useEventStory(Number(id));
   const recordView = useRecordEventView(Number(id));
   const { data: occurrencesResponse } = useEventSeriesOccurrences(
@@ -89,8 +81,8 @@ export default function EventDetailPageNew() {
 
   const deleteReview = useDeleteEventReview();
 
-  const event = eventResponse?.data;
-  const story = storyResponse?.data;
+  const event: any = eventResponse?.data;
+  const story: any = storyResponse?.data;
   const needs = needsResponse?.data || [];
   const occurrences = useMemo(() => {
     return (occurrencesResponse?.data || []).sort(
@@ -289,6 +281,10 @@ export default function EventDetailPageNew() {
     }
   };
 
+  const isEventOver = !['published', 'draft', 'postponed', 'event_ready'].includes(
+    event.lifecycle_state,
+  );
+
   return (
     <ThemeProvider theme={scrapbookTheme}>
       <Box
@@ -330,29 +326,17 @@ export default function EventDetailPageNew() {
               overflow: 'visible',
             }}
           >
-            {/* Section 1: Status Banner & Top Bar */}
-            <StatusBannerSection
-              event={event}
-              isHost={isHost}
-              isAuthenticated={isAuthenticated}
-              navigate={navigate}
-              toggleInterest={toggleInterest}
-              occurrences={occurrences}
-            />
-
-            {/* Section 2: Hero — Image + Important Details */}
+            {/* Section 1: Hero — Image + Important Details */}
             <HeroSection
               event={event}
-              isAuthenticated={isAuthenticated}
-              navigate={navigate}
-              toggleInterest={toggleInterest}
+              isHost={isHost}
               highlights={highlights}
               occurrences={occurrences}
               displayNeedsCount={displayNeeds.length}
               displayNeeds={displayNeeds}
             />
 
-            {/* Section 3: Content — Details + Tickets/Attendance */}
+            {/* Section 2: Content — Details + Tickets/Attendance */}
             <Grid container spacing={6}>
               {/* Right Column: Tickets, Attendance, Services */}
               <Grid
@@ -370,20 +354,25 @@ export default function EventDetailPageNew() {
                 </Box>
               </Grid>
             </Grid>
-            <Box id="services">
-              <ServicesSection
-                event={event}
-                displayNeeds={displayNeeds}
-                myServicesResponse={myServicesResponse}
-                isAuthenticated={isAuthenticated}
-                setSelectedNeed={setSelectedNeed}
-                setIsApplyModalOpen={setIsApplyModalOpen}
-                highlights={highlights}
-              />
-            </Box>
+            {
+              <Box id="services">
+                <ServicesSection
+                  event={event}
+                  displayNeeds={displayNeeds}
+                  myServicesResponse={myServicesResponse}
+                  isAuthenticated={isAuthenticated}
+                  setSelectedNeed={setSelectedNeed}
+                  setIsApplyModalOpen={setIsApplyModalOpen}
+                  highlights={highlights}
+                />
+              </Box>
+            }
             {/* Section 4: Attending List */}
             <Box id="attending">
-              <AttendingList attendees={event?.attendees || []} />
+              <AttendingList
+                isEventOver={isEventOver}
+                attendees={event?.attendees || []}
+              />
             </Box>
 
             <InkNotebookChat
@@ -395,13 +384,15 @@ export default function EventDetailPageNew() {
 
             {/* Section 5: Memory Box */}
             <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
-              <Box id="highlights">
-                <MemoryBoxSection
-                  event={event}
-                  highlights={highlights}
-                  setIsHighlightOpen={setIsHighlightOpen}
-                />
-              </Box>
+              {canAccessEventChat && (
+                <Box id="highlights">
+                  <MemoryBoxSection
+                    event={event}
+                    highlights={highlights}
+                    setIsHighlightOpen={setIsHighlightOpen}
+                  />
+                </Box>
+              )}
 
               {/* Section 6: Reviews */}
               <Box id="reviews">
@@ -434,11 +425,12 @@ export default function EventDetailPageNew() {
           sx={{
             maxWidth: '1000px',
             mx: 'auto',
+            pt: 16,
             mt: { xs: 4, sm: 5, md: 6 },
           }}
         >
           <GenericFeedSection
-            title="Check out these Events too! "
+            title="These might be of your interest too..."
             params={{ sort: 'trending' }}
             viewAllPath="/browse?sort=trending&title=Trending Events"
             forceShowHeader={true}

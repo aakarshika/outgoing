@@ -140,11 +140,11 @@ class FeedView(APIView):
             
         location = request.query_params.get("location")
         if location:
+            # Event model does not have city/state fields; keep this scoped
+            # to known text fields so the ORM doesn't error.
             events = events.filter(
                 Q(location_name__icontains=location)
                 | Q(location_address__icontains=location)
-                | Q(location_city__icontains=location)
-                | Q(location_state__icontains=location)
             )
             
         is_online = request.query_params.get("online")

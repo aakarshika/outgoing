@@ -294,14 +294,14 @@ export function QuickCreateServiceDialog({
             />
 
             <TextField
-              label="Service title"
+              label="Company Name"
               placeholder={`${user?.first_name ? `${user.first_name}'s` : 'Your'} ${
                 categorySelected?.label?.length
                   ? categorySelected.label.substring(
                       categorySelected.label.lastIndexOf(' ') + 1,
                     )
                   : ''
-              } Services
+              } Services Inc.
               `}
               required
               fullWidth

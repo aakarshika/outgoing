@@ -29,7 +29,7 @@ export const PosterForTheEventImageCollage = ({ imageUrl, title }: PosterProps) 
       <Box
         sx={{
           width: '100%',
-          height: '350px',
+          height: '100%',
           position: 'absolute',
           padding: 4,
           bgcolor: SCRAPBOOK_PAPER,

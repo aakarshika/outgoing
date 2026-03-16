@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import { type ReactNode } from 'react';
 
 export const SideEnvelope = ({ children }: { children: ReactNode }) => {
+  return <>{children}</>;
   return (
     <Box
       sx={{

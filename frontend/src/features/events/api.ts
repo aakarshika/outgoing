@@ -1,6 +1,7 @@
 /** API functions for the events and feed domain. */
 
 import client from '@/api/client';
+import type { EventOverviewRow } from '@/pages/alerts/utils';
 import type {
   ApiResponse,
   EventAttendee,
@@ -570,6 +571,13 @@ export async function fetchMyFriendships(): Promise<MyFriendshipsResponse> {
     await client.get<ApiResponse<MyFriendshipsResponse>>('/events/friendships/');
   const inner = (data as ApiResponse<MyFriendshipsResponse>)?.data;
   return inner ?? { accepted: [], pending_incoming: [], pending_outgoing: [] };
+}
+
+export async function fetchEventOverviewRows(): Promise<EventOverviewRow[]> {
+  const { data } = await client.get<ApiResponse<EventOverviewRow[]>>(
+    '/alerts/event-overview/',
+  );
+  return data.data || [];
 }
 
 export async function fetchAllChatsList() {

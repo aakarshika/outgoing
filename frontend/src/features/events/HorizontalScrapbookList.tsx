@@ -31,6 +31,7 @@ export function HorizontalScrapbookList({
       <Box
         sx={{
           px: { xs: 2, sm: 4, lg: 8 },
+          pb: 2,
           display: 'flex',
           alignItems: 'baseline',
           justifyContent: 'space-between',
@@ -43,18 +44,6 @@ export function HorizontalScrapbookList({
         }}
       >
         <Box sx={{ position: 'relative' }}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -10,
-              left: -10,
-              width: 40,
-              height: 20,
-              bgcolor: 'rgba(251, 191, 36, 0.4)',
-              transform: 'rotate(-5deg)',
-              zIndex: 0,
-            }}
-          />
           <Typography
             variant="h4"
             sx={{
@@ -102,7 +91,7 @@ export function HorizontalScrapbookList({
           scrollbarWidth: 'none',
           px: { xs: 2, sm: 4, lg: 8 },
           pb: 4,
-          pt: 2,
+          pt: 6,
           pr: { xs: 4, sm: 6, lg: 20 },
           // scrollSnapType: 'x mandatory',
           // scrollbarWidth: 'none',

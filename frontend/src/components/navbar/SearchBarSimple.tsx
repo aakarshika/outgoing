@@ -35,7 +35,7 @@ export const SearchBarSimple = () => {
   return (
     <div className="relative  min-w-0 flex-1 bg-white">
       <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
-        <div className="relative min-w-[100px] flex-1">
+        <div className="relative flex-1">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -53,7 +53,7 @@ export const SearchBarSimple = () => {
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex md:hidden   h-10 min-w-[170px] justify-end gap-2 rounded-full bg-white px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
+            className="flex md:hidden   h-10 justify-end gap-2 rounded-full bg-white px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
           >
             <span className="flex items-center gap-2 truncate">
               <MapPin size={14} className="shrink-0" />
@@ -63,7 +63,7 @@ export const SearchBarSimple = () => {
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex hidden md:flex   h-10 min-w-[170px] items-center justify-between gap-2 rounded-full bg-white px-3 text-sm  transition-colors "
+            className="flex hidden md:flex   h-10 items-center justify-between gap-2 rounded-full bg-white px-3 text-sm  transition-colors "
           >
             <span className="flex items-center gap-2 truncate">
               <MapPin size={14} className="shrink-0" />
@@ -77,7 +77,7 @@ export const SearchBarSimple = () => {
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white p-3 ">
+            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white p-3 shadow-[0px_4px_10px_rgba(0,0,0,0.1)]">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
