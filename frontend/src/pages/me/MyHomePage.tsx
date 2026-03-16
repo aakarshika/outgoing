@@ -8,18 +8,17 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, CalendarDays, Lightbulb, MapPin, Sparkles } from 'lucide-react';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { ArrowRight, Lightbulb, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 import client from '@/api/client';
 import { useAuth } from '@/features/auth/hooks';
+import { fetchFeed } from '@/features/events/api';
 import { useFeed, useMyInterestedEvents } from '@/features/events/hooks';
-import {
-  fetchMyPotentialOpportunities,
-  fetchMyVendorOpportunities,
-} from '@/features/needs/api';
+import { fetchEvent } from '@/features/events/api';
+import { fetchAllOpenOpportunities } from '@/features/needs/api';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 import { ProfileService } from '@/pages/profile/Profile.service';
 import type {
@@ -29,16 +28,43 @@ import type {
   EventListItem,
 } from '@/types/events';
 import type { VendorOpportunity } from '@/types/needs';
+import { OpportunityCardExpandedSection } from '@/pages/search/components/SearchCards';
 
-const weekendFilters = [
-  'All',
-  'Tonight',
-  'Free',
-  'Outdoors',
-  'Music',
-  'Food',
-  'Online',
+const trendingFeedFilters = [
+  { id: 'this-weekend', label: 'This weekend' },
+  { id: 'tonight', label: 'Tonight' },
+  { id: 'free', label: 'Free' },
+  { id: 'online', label: 'Online' },
+  { id: 'outdoors', label: 'Outdoors' },
+  { id: 'fun', label: 'Fun' },
+  { id: 'social', label: 'Social' },
+  { id: 'play-school', label: 'Play school' },
+  { id: 'tech', label: 'Tech' },
 ] as const;
+
+const trendingCategoryGroups = {
+  outdoors: ['outdoor-adventure', 'sports-fitness'],
+  fun: [
+    'comedy',
+    'music',
+    'networking-social',
+    'festivals',
+    'nightlife',
+    'food-drink',
+    'arts-culture',
+  ],
+  social: [
+    'networking-social',
+    'community',
+    'workshops-classes',
+    'arts-culture',
+    'food-drink',
+    'tech-innovation',
+    'festivals',
+  ],
+  'play-school': ['arts-culture', 'workshops-classes'],
+  tech: ['tech-innovation', 'networking-social'],
+} as const;
 
 const networkGroups = [
   { name: 'Network', icon: 'N', background: '#FAECE7', active: true },
@@ -49,7 +75,7 @@ const networkGroups = [
   { name: 'Soon', icon: '+', background: '#F1EFE8', active: false },
 ] as const;
 
-type WeekendFilter = (typeof weekendFilters)[number];
+type TrendingFeedFilter = (typeof trendingFeedFilters)[number]['id'];
 
 type FeedEventCard = {
   id: number;
@@ -63,13 +89,11 @@ type FeedEventCard = {
   extra: string;
 };
 
-type ContributionCardData = {
-  needId: number;
-  icon: string;
-  title: string;
+type ContributionEventCardData = {
+  eventId: number;
+  eventTitle: string;
   subtitle: string;
-  reward: string;
-  rewardLabel: string;
+  opportunities: VendorOpportunity[];
 };
 
 type UpcomingEventData = {
@@ -267,6 +291,84 @@ function getCountdownParts(dateString: string | undefined | null) {
   return { countdown: String(diffDays), countdownLabel: 'days away' };
 }
 
+function getTodayWindow(reference = new Date()) {
+  const start = new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+  );
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { start, end };
+}
+
+function getThisWeekendWindow(reference = new Date()) {
+  const startOfToday = new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+  );
+  const startOfWeek = new Date(startOfToday);
+  const mondayOffset = (startOfWeek.getDay() + 6) % 7;
+  startOfWeek.setDate(startOfWeek.getDate() - mondayOffset);
+
+  const weekendStart = new Date(startOfWeek);
+  weekendStart.setDate(weekendStart.getDate() + 5);
+
+  const nextMonday = new Date(startOfWeek);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+
+  return { start: reference, end: nextMonday, weekendStart };
+}
+
+function isOnlineEvent(event: EventListItem) {
+  const locationName = (event.location_name || '').trim().toLowerCase();
+  const locationAddress = (event.location_address || '').trim().toLowerCase();
+
+  return (
+    locationName.includes('online') ||
+    locationAddress === 'online event' ||
+    locationAddress.includes('online')
+  );
+}
+
+function getLowestTicketPrice(event: EventListItem) {
+  const prices = [
+    ...(event.ticket_tiers?.map((tier) => Number(tier.price)) || []),
+    Number(event.ticket_price_standard),
+    Number(event.ticket_price_flexible),
+  ].filter((value) => Number.isFinite(value));
+
+  return prices.length > 0 ? Math.min(...prices) : 0;
+}
+
+function isFreeEvent(event: EventListItem) {
+  return getLowestTicketPrice(event) === 0;
+}
+
+function isCurrentOrUpcomingEvent(event: EventListItem) {
+  if (!event.start_time) return false;
+  const now = Date.now();
+  const endTime = event.end_time ? new Date(event.end_time).getTime() : NaN;
+  const fallbackTime = new Date(event.start_time).getTime();
+  const relevantEnd = Number.isNaN(endTime) ? fallbackTime : endTime;
+  return relevantEnd >= now;
+}
+
+function isInTonightWindow(event: EventListItem) {
+  if (!event.start_time) return false;
+  const { start, end } = getTodayWindow();
+  const eventStart = new Date(event.start_time);
+  return eventStart >= start && eventStart < end;
+}
+
+function isInThisWeekendWindow(event: EventListItem) {
+  if (!event.start_time) return false;
+  const { start, end, weekendStart } = getThisWeekendWindow();
+  const eventStart = new Date(event.start_time);
+  return eventStart >= start && eventStart >= weekendStart && eventStart < end;
+}
+
 function getEventAccent(event: EventListItem) {
   const category = (event.category?.name || '').toLowerCase();
   if (event.location_name?.toLowerCase().includes('online')) return '#E1F5EE';
@@ -313,6 +415,16 @@ function getBudgetLabel(opportunity: VendorOpportunity) {
   return 'Open call';
 }
 
+function formatNeedList(opportunities: VendorOpportunity[]) {
+  const titles = opportunities.map((opp) => opp.need_title);
+  if (titles.length === 0) return '';
+  if (titles.length === 1) return titles[0];
+  if (titles.length === 2) return `${titles[0]} and ${titles[1]}`;
+  const allButLast = opportunities.slice(0, -1).map((opp) => `${getOpportunityIcon(opp.category)} ${opp.need_title}`).join(', ');
+  const last = `${getOpportunityIcon(opportunities[opportunities.length - 1].category)} ${opportunities[opportunities.length - 1].need_title}`;
+  return `${allButLast}, and ${last}`;
+}
+
 function getRoleStyle(kind: 'hosting' | 'attending' | 'saved' | 'vendor') {
   switch (kind) {
     case 'hosting':
@@ -332,8 +444,17 @@ async function fetchEventOverview() {
 
 export default function MyHomePage() {
   const { user, isAuthenticated, loading } = useAuth();
-  const [selectedWeekendFilter, setSelectedWeekendFilter] =
-    useState<WeekendFilter>('All');
+  const [selectedTrendingFilters, setSelectedTrendingFilters] = useState<
+    TrendingFeedFilter[]
+  >(['this-weekend']);
+  const [expandedNeedCard, setExpandedNeedCard] = useState<
+    number | null
+  >(null);
+  const trendingLifecycleStates = [
+    'published',
+    'event_ready',
+    'live',
+  ] as EventLifecycleState[];
 
   const { data: profileResponse, isLoading: isProfileLoading } = useQuery({
     queryKey: ['my-home', 'profile', user?.username],
@@ -341,62 +462,119 @@ export default function MyHomePage() {
     enabled: !!user?.username,
   });
 
-  const { data: trendingResponse, isLoading: isTrendingLoading } = useFeed({
+  const { data: trendingResponse } = useFeed({
     sort: 'trending',
-    lifecycle_states: ['published', 'event_ready', 'live'] as EventLifecycleState[],
-    page_size: 10,
+    lifecycle_states: trendingLifecycleStates,
+    page_size: 120,
   });
 
-  const { data: weekendResponse, isLoading: isWeekendLoading } = useFeed({
-    sort: 'upcoming',
-    weekend: true,
-    page_size: 16,
-  });
-
-  const { data: recommendedResponse, isLoading: isRecommendedLoading } = useFeed({
+  const { data: recommendedResponse } = useFeed({
     sort: 'upcoming',
     page_size: 16,
   });
 
-  const { data: overviewResponse, isLoading: isOverviewLoading } = useQuery({
+  const { data: overviewResponse } = useQuery({
     queryKey: ['my-home', 'eventOverview'],
     queryFn: fetchEventOverview,
     enabled: !!user,
   });
 
-  const { data: savedResponse, isLoading: isSavedLoading } = useMyInterestedEvents();
+  const { data: savedResponse } = useMyInterestedEvents();
 
-  const { data: opportunities = [], isLoading: isOpportunitiesLoading } = useQuery({
-    queryKey: ['my-home', 'opportunities', user?.id],
+  // Same feed as Search "Chip In" tab: all open opportunities
+  const { data: opportunities = [] } = useQuery({
+    queryKey: ['my-home', 'opportunities', 'chip-in'],
     enabled: !!user,
     queryFn: async () => {
-      const [matched, potential] = await Promise.all([
-        fetchMyVendorOpportunities(),
-        fetchMyPotentialOpportunities(),
-      ]);
-
-      const seen = new Set<number>();
-      return [...(matched.data || []), ...(potential.data || [])].filter((item) => {
-        if (seen.has(item.need_id)) return false;
-        seen.add(item.need_id);
-        return true;
-      });
+      const response = await fetchAllOpenOpportunities();
+      return response.data || [];
     },
   });
 
+  const contributionEventCards = useMemo<ContributionEventCardData[]>(() => {
+    const byEvent = new Map<number, VendorOpportunity[]>();
+    opportunities.forEach((opp) => {
+      const list = byEvent.get(opp.event_id) ?? [];
+      list.push(opp);
+      byEvent.set(opp.event_id, list);
+    });
+    return Array.from(byEvent.entries())
+      .map(([eventId, opps]) => ({
+        eventId,
+        eventTitle: opps[0].event_title,
+        subtitle: `${formatDate(opps[0].event_start_time, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })} · ${opps[0].event_location_name || 'Location TBD'}`,
+        opportunities: opps,
+      }))
+      .slice(0, 3);
+  }, [opportunities]);
+
+  const contributionEventIds = useMemo(
+    () => contributionEventCards.map((c) => c.eventId),
+    [contributionEventCards],
+  );
+
+  const eventQueries = useQueries({
+    queries: contributionEventIds.map((eventId) => ({
+      queryKey: ['event', eventId],
+      queryFn: () => fetchEvent(eventId),
+      enabled: !!eventId,
+    })),
+  });
+
+  const eventCoverByEventId = useMemo(() => {
+    const map = new Map<number, string>();
+    eventQueries.forEach((q, i) => {
+      const eventId = contributionEventIds[i];
+      const cover = (q.data as ApiResponse<EventDetail> | undefined)?.data?.cover_image;
+      if (eventId && cover) map.set(eventId, cover);
+    });
+    return map;
+  }, [eventQueries, contributionEventIds]);
+
   const profile = profileResponse?.data;
-  const greetingName =
-    profile?.first_name || user?.first_name || user?.username || 'there';
-  const avatarLetter = greetingName[0]?.toUpperCase() || 'Y';
   const locationLabel = profile?.location_city || 'Your area';
+  const locationQuery = profile?.location_city?.trim() || undefined;
+  const allTrendingSearchHref = useMemo(() => {
+    const params = new URLSearchParams({ tab: 'trending' });
+    if (locationQuery) params.set('location', locationQuery);
+    return `/search?${params.toString()}`;
+  }, [locationQuery]);
+
+  const { data: nearbyTrendingResponse } = useQuery(
+    {
+      queryKey: ['my-home', 'trending-nearby', locationQuery],
+      enabled: Boolean(locationQuery),
+      queryFn: () =>
+        fetchFeed({
+          sort: 'trending',
+          location: locationQuery,
+          lifecycle_states: trendingLifecycleStates,
+          page_size: 120,
+        }),
+    },
+  );
 
   const trendingEvents = useMemo(
     () =>
       ((trendingResponse?.data || []) as EventListItem[]).filter(
-        (event) => !!event.start_time,
+        (event) => !!event.start_time && isCurrentOrUpcomingEvent(event),
       ),
     [trendingResponse],
   );
+  const nearbyTrendingEvents = useMemo(
+    () =>
+      ((nearbyTrendingResponse?.data || []) as EventListItem[]).filter(
+        (event) => !!event.start_time && isCurrentOrUpcomingEvent(event),
+      ),
+    [nearbyTrendingResponse],
+  );
+  const nearbyTrendingCount = locationQuery
+    ? nearbyTrendingEvents.length
+    : trendingEvents.length;
 
   const nextEvent = trendingEvents[0];
   const nextEventCountdown = getCountdownParts(nextEvent?.start_time);
@@ -461,47 +639,61 @@ export default function MyHomePage() {
       .slice(0, 3);
   }, [overviewRows, savedEvents, user?.id]);
   const hasUpcomingEvents = upcomingEvents.length > 0;
+  const weekendFeedTitle = hasUpcomingEvents
+    ? 'A sharper feed for your next yes'
+    : 'Your first yes starts here';
 
-  const weekendEvents = useMemo(() => {
-    const baseEvents = (weekendResponse?.data || []) as EventListItem[];
+  const filteredTrendingEvents = useMemo(() => {
+    if (selectedTrendingFilters.length === 0) {
+      return trendingEvents.slice(0, 6).map<FeedEventCard>((event) => ({
+        id: event.id,
+        category: event.category?.name || 'Event',
+        title: event.title,
+        date: `${formatDate(event.start_time, { weekday: 'short' })} · ${formatTime(event.start_time)}`,
+        icon: getEventIcon(event),
+        accent: getEventAccent(event),
+        attendees: [event.host.first_name?.[0] || event.host.username[0]].filter(
+          Boolean,
+        ),
+        attendeeColors: ['#D85A30'],
+        extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
+      }));
+    }
 
-    const filtered = baseEvents.filter((event) => {
-      const category = (event.category?.name || '').toLowerCase();
-      const isOnline = event.location_name?.toLowerCase().includes('online');
-      const lowestKnownPrice = [
-        event.ticket_price_standard,
-        event.ticket_price_flexible,
-      ]
-        .filter((value): value is string => value !== null)
-        .map((value) => Number(value))
-        .filter((value) => !Number.isNaN(value));
-      const isFree =
-        lowestKnownPrice.length === 0 ||
-        Math.min(...lowestKnownPrice, Number.POSITIVE_INFINITY) === 0;
-      const startsToday =
-        formatDate(event.start_time, { weekday: 'short' }) ===
-        formatDate(new Date().toISOString(), { weekday: 'short' });
+    const filtered = trendingEvents.filter((event) => {
+      const selectedDateFilters = selectedTrendingFilters.filter((filter) =>
+        ['this-weekend', 'tonight'].includes(filter),
+      );
+      const selectedFormatFilters = selectedTrendingFilters.filter((filter) =>
+        ['free', 'online'].includes(filter),
+      );
+      const selectedCategoryFilters = selectedTrendingFilters.filter(
+        (filter): filter is keyof typeof trendingCategoryGroups =>
+          filter in trendingCategoryGroups,
+      );
+      const categorySlug = event.category?.slug || '';
+      const matchesCategoryGroup =
+        selectedCategoryFilters.length === 0 ||
+        selectedCategoryFilters.some((filter) => {
+          if (filter === 'outdoors' && isOnlineEvent(event)) return false;
+          return (trendingCategoryGroups[filter] as readonly string[]).includes(categorySlug);
+        });
 
-      switch (selectedWeekendFilter) {
-        case 'Tonight':
-          return startsToday;
-        case 'Free':
-          return isFree;
-        case 'Outdoors':
-          return (
-            category.includes('outdoor') ||
-            category.includes('run') ||
-            category.includes('sport')
-          );
-        case 'Music':
-          return category.includes('music');
-        case 'Food':
-          return category.includes('food');
-        case 'Online':
-          return isOnline;
-        default:
-          return true;
-      }
+      const matchesDateFilter =
+        selectedDateFilters.length === 0 ||
+        selectedDateFilters.some((filter) =>
+          filter === 'this-weekend'
+            ? isInThisWeekendWindow(event)
+            : isInTonightWindow(event),
+        );
+
+      const matchesFormatFilter =
+        selectedFormatFilters.length === 0 ||
+        selectedFormatFilters.some((filter) =>
+          filter === 'free' ? isFreeEvent(event) : isOnlineEvent(event),
+        );
+
+      return matchesCategoryGroup && matchesDateFilter && matchesFormatFilter;
     });
 
     return filtered.slice(0, 6).map<FeedEventCard>((event) => ({
@@ -515,12 +707,12 @@ export default function MyHomePage() {
       attendeeColors: ['#D85A30'],
       extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
     }));
-  }, [selectedWeekendFilter, weekendResponse]);
+  }, [selectedTrendingFilters, trendingEvents]);
 
   const recommendedEvents = useMemo(() => {
     const seen = new Set<number>([
       nextEvent?.id || -1,
-      ...weekendEvents.map((event) => event.id),
+      ...filteredTrendingEvents.map((event) => event.id),
     ]);
 
     return ((recommendedResponse?.data || []) as EventListItem[])
@@ -539,31 +731,18 @@ export default function MyHomePage() {
         attendeeColors: ['#534AB7'],
         extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
       }));
-  }, [nextEvent?.id, recommendedResponse, weekendEvents]);
+  }, [filteredTrendingEvents, nextEvent?.id, recommendedResponse]);
 
-  const contributionCards = useMemo<ContributionCardData[]>(() => {
-    return opportunities.slice(0, 3).map((opportunity) => ({
-      needId: opportunity.need_id,
-      icon: getOpportunityIcon(opportunity.category),
-      title: `${opportunity.event_title} needs ${opportunity.need_title}`,
-      subtitle: `${formatDate(opportunity.event_start_time, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      })} · ${opportunity.event_location_name || 'Location TBD'}`,
-      reward: getBudgetLabel(opportunity),
-      rewardLabel: opportunity.is_invited ? 'invited opportunity' : 'open opportunity',
-    }));
-  }, [opportunities]);
+  const toggleTrendingFilter = (filter: TrendingFeedFilter) => {
+    setSelectedTrendingFilters((current) =>
+      current.includes(filter)
+        ? current.filter((item) => item !== filter)
+        : [...current, filter],
+    );
+  };
+  const clearTrendingFilters = () => setSelectedTrendingFilters([]);
 
   const isPageLoading = loading || isProfileLoading;
-  const isContentLoading =
-    isTrendingLoading ||
-    isWeekendLoading ||
-    isRecommendedLoading ||
-    isOverviewLoading ||
-    isSavedLoading ||
-    isOpportunitiesLoading;
 
   if (loading) {
     return (
@@ -588,6 +767,8 @@ export default function MyHomePage() {
   return (
     <Box
       sx={{
+        maxWidth: 1240,
+        mx: 'auto',
         minHeight: '100vh',
         background:
           'radial-gradient(circle at top, rgba(255, 244, 227, 0.9), transparent 32%), linear-gradient(180deg, #FFFDF8 0%, #FFF6EA 48%, #FFFDF8 100%)',
@@ -676,10 +857,10 @@ export default function MyHomePage() {
                             >
                               {nextEvent
                                 ? `${formatDate(nextEvent.start_time, {
-                                    weekday: 'short',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}, ${formatTime(nextEvent.start_time)}`
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}, ${formatTime(nextEvent.start_time)}`
                                 : 'Check back soon'}
                             </Typography>
                             <Typography
@@ -826,34 +1007,118 @@ export default function MyHomePage() {
                   spacing={2}
                   sx={{ mb: 2 }}
                 >
-                  <SectionHeading
-                    eyebrow="Happening this weekend"
-                    title="A sharper feed for your next yes"
-                  />
+                  <Stack spacing={0.75}>
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          fontFamily: 'Syne, sans-serif',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: 'rgba(66, 50, 28, 0.62)',
+                        }}
+                      >
+                        Trending around
+                        <Typography
+                          sx={{
+                            display: 'inline-flex',
+                            gap: 0.5,
+                            fontFamily: 'Syne, sans-serif',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            color: 'rgba(66, 50, 28, 0.62)',
+                          }}
+                        >
+                          <MapPin size={18} color="rgb(255, 148, 86)" /> {locationLabel}
+                        </Typography>
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: 'Syne, sans-serif',
+                        fontSize: { xs: 24, sm: 28 },
+                        fontWeight: 800,
+                        letterSpacing: '-0.04em',
+                        color: '#2B2118',
+                      }}
+                    >
+                      {weekendFeedTitle}
+                    </Typography>
+                  </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  
-                    {weekendFilters.map((filter) => (
+                    <Chip
+                      label={`${nearbyTrendingCount} events nearby`}
+                      sx={{
+                        height: 34,
+                        borderRadius: '999px',
+                        background: '#D85A30',
+                        color: '#fff',
+                        fontWeight: 700,
+                      }}
+                    />
+                    {trendingFeedFilters.map((filter) => (
                       <Chip
-                        key={filter}
-                        label={filter}
-                        onClick={() => setSelectedWeekendFilter(filter)}
+                        key={filter.id}
+                        label={filter.label}
+                        onClick={() => toggleTrendingFilter(filter.id)}
                         sx={{
                           height: 34,
                           borderRadius: '999px',
-                          bgcolor:
-                            selectedWeekendFilter === filter
-                              ? '#D85A30'
-                              : 'rgba(255,255,255,0.9)',
-                          color: selectedWeekendFilter === filter ? '#fff' : '#4A3827',
-                          border:
-                            selectedWeekendFilter === filter
-                              ? 'none'
-                              : '1px solid rgba(143, 105, 66, 0.14)',
+                          bgcolor: selectedTrendingFilters.includes(filter.id)
+                            ? '#D85A30'
+                            : 'rgba(255,255,255,0.9)',
+                          color: selectedTrendingFilters.includes(filter.id)
+                            ? '#fff'
+                            : '#4A3827',
+                          border: selectedTrendingFilters.includes(filter.id)
+                            ? 'none'
+                            : '1px solid rgba(143, 105, 66, 0.14)',
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
                       />
                     ))}
+                    <Chip
+                      component={Link}
+                      to={allTrendingSearchHref}
+                      clickable
+                      label="All"
+                      sx={{
+                        height: 34,
+                        borderRadius: '999px',
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        color: '#4A3827',
+                        border: '1px solid rgba(143, 105, 66, 0.14)',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                      }}
+                    />
+                    <Chip
+                      label="Clear"
+                      onClick={clearTrendingFilters}
+                      sx={{
+                        height: 34,
+                        borderRadius: '999px',
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        color: '#4A3827',
+                        border: '1px solid rgba(143, 105, 66, 0.14)',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    />
                   </Stack>
                 </Stack>
                 <Box
@@ -866,8 +1131,8 @@ export default function MyHomePage() {
                     '&::-webkit-scrollbar': { display: 'none' },
                   }}
                 >
-                  {weekendEvents.length > 0 ? (
-                    weekendEvents.map((event) => (
+                  {filteredTrendingEvents.length > 0 ? (
+                    filteredTrendingEvents.map((event) => (
                       <EventCard key={event.id} {...event} />
                     ))
                   ) : (
@@ -883,8 +1148,7 @@ export default function MyHomePage() {
                       <Typography
                         sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}
                       >
-                        No matches for this weekend filter yet. Placeholder state stays
-                        in place until the feed fills in.
+                        No trending events match the filters you picked right now.
                       </Typography>
                     </Box>
                   )}
@@ -903,116 +1167,158 @@ export default function MyHomePage() {
                   <SectionHeading
                     eyebrow="Chip in"
                     title="Earn your way into the room"
-                    description="This section now merges your matched and potential opportunities the same way search does."
                   />
                   <Stack spacing={1.5} sx={{ mt: 2 }}>
-                    {contributionCards.length > 0 ? (
-                      contributionCards.map((card) => (
-                        <Box
-                          key={card.needId}
-                          sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            alignItems: { xs: 'stretch', sm: 'center' },
-                            gap: 1.5,
-                            p: 1.7,
-                            borderRadius: '24px',
-                            border: '1px solid rgba(143, 105, 66, 0.12)',
-                            borderLeft: '4px solid #EF9F27',
-                            background: 'rgba(255,255,255,0.88)',
-                            boxShadow: '0 14px 34px rgba(111, 76, 35, 0.05)',
-                            minWidth: 0,
-                          }}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={1.5}
-                            alignItems="center"
-                            sx={{ minWidth: 0, flex: { xs: 'none', sm: '1 1 auto' } }}
+                    {contributionEventCards.length > 0 ? (
+                      contributionEventCards.map((eventCard) => {
+                        const coverUrl = eventCoverByEventId.get(eventCard.eventId);
+                        return (
+                          <Box
+                            key={eventCard.eventId}
+                            sx={{
+                              display: 'flex',
+                              width: '100%',
+                              flexDirection: 'column',
+                              alignItems: 'flex-start',
+                              borderRadius: '22px',
+                              border: '1px solid rgba(143, 105, 66, 0.16)',
+                              borderLeft: '4px solid #EF9F27',
+                              borderTop: 'none',
+                              background: 'rgba(255,255,255,0.86)',
+                              boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
+                              minWidth: 0,
+                              overflow: 'hidden',
+                              transition: 'box-shadow 0.2s ease',
+                              '&:hover': {
+                                boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)',
+                              },
+                            }}
                           >
                             <Box
                               sx={{
-                                width: 44,
-                                height: 44,
-                                flexShrink: 0,
-                                borderRadius: '16px',
-                                display: 'grid',
-                                placeItems: 'center',
-                                background: '#FAEEDA',
-                                fontSize: 20,
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                minWidth: 0,
                               }}
                             >
-                              {card.icon}
-                            </Box>
-                            <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
-                              <Typography
+                              {/* image */}
+                              <Box
                                 sx={{
-                                  fontSize: { xs: 14, sm: 14.5 },
-                                  fontWeight: 700,
-                                  color: '#2B2118',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  overflow: 'hidden',
+                                  position: 'relative',
+                                  width: 140,
+                                  minWidth: 140,
+                                  height: 100,
+                                  flexShrink: 0,
                                 }}
                               >
-                                {card.title}
-                              </Typography>
-                              <Typography
+                                {coverUrl && (
+                                  <Box
+                                    component="img"
+                                    src={coverUrl}
+                                    alt={eventCard.eventTitle}
+                                    sx={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                      display: 'block',
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                              {/* content */}
+                              <Stack
+                                spacing={1.25}
                                 sx={{
-                                  mt: 0.4,
-                                  fontSize: 12.5,
-                                  color: 'rgba(66, 50, 28, 0.68)',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  overflow: 'hidden',
+                                  flex: 1,
+                                  minWidth: 0,
+                                  p: 1.6,
+                                  justifyContent: 'center',
                                 }}
                               >
-                                {card.subtitle}
-                              </Typography>
+                                <Typography
+                                  sx={{
+                                    fontSize: { xs: 14, sm: 14.5 },
+                                    fontWeight: 700,
+                                    color: '#2B2118',
+                                  }}
+                                >
+                                  {eventCard.eventTitle}
+                                  {' '}<strong style={{ color: 'rgba(66, 50, 28, 0.68)', fontWeight: 700 }}>needs</strong> {' '}
+                                  {formatNeedList(
+                                    eventCard.opportunities,
+                                  )}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    fontSize: 12.5,
+                                    color: 'rgba(66, 50, 28, 0.68)',
+                                  }}
+                                >
+                                  {eventCard.subtitle}
+                                </Typography>
+                                <Typography
+                                  onClick={() => {
+                                    setExpandedNeedCard(expandedNeedCard === eventCard.eventId ? null : eventCard.eventId);
+                                  }}
+                                  sx={{
+                                    fontFamily: 'Syne, sans-serif',
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    color: '#BA7517',
+                                  }}
+                                >
+                                  {eventCard.opportunities.length == 1 ? getBudgetLabel(eventCard.opportunities[0]) : `Multiple Opportunities`}
+                                </Typography>
+
+                              </Stack>
+
                             </Box>
-                          </Stack>
-                          <Box
-                            sx={{
-                              flexShrink: 0,
-                              textAlign: { xs: 'left', sm: 'right' },
-                              alignSelf: { xs: 'flex-start', sm: 'center' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: 'Syne, sans-serif',
-                                fontSize: { xs: 14, sm: 16 },
-                                fontWeight: 800,
-                                color: '#BA7517',
-                              }}
-                            >
-                              {card.reward}
-                            </Typography>
-                            <Typography
-                              sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.56)' }}
-                            >
-                              {card.rewardLabel}
-                            </Typography>
+
+                            {expandedNeedCard === eventCard.eventId && (
+                              <Box
+                                onClick={(e) => e.stopPropagation()}
+                                sx={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                }}
+                              >
+                                <OpportunityCardExpandedSection
+                                  opportunities={eventCard.opportunities || []}
+                                  hasMatchingService={false}
+                                  expanded={expandedNeedCard === eventCard.eventId ?? false}
+                                />
+                              </Box>
+                            )}
+
                           </Box>
-                        </Box>
-                      ))
+
+                        );
+                      })
                     ) : (
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: '24px',
-                          background: 'rgba(255,255,255,0.88)',
-                          border: '1px solid rgba(143, 105, 66, 0.12)',
-                        }}
-                      >
-                        <Typography
-                          sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}
+                      null
+                    )}
+                    {contributionEventCards.length > 0 && (
+                      <Box sx={{ pt: 0.5 }}>
+                        <Button
+                          component={Link}
+                          to="/search?tab=chip-in"
+                          variant="outlined"
+                          size="medium"
+                          sx={{
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderColor: 'rgba(143, 105, 66, 0.3)',
+                            color: '#2B2118',
+                            '&:hover': {
+                              borderColor: '#EF9F27',
+                              bgcolor: 'rgba(239, 159, 39, 0.06)',
+                            },
+                          }}
                         >
-                          No contributor asks are lined up for you yet. This placeholder
-                          stays until the opportunity feed has matches.
-                        </Typography>
+                          Browse all
+                        </Button>
                       </Box>
                     )}
                   </Stack>
@@ -1021,7 +1327,7 @@ export default function MyHomePage() {
                 <Box sx={{ minWidth: 0 }}>
                   <SectionHeading
                     eyebrow="Your network"
-                    title="The circles that shape your feed"
+                    title=""
                   />
                   <Box
                     sx={{
@@ -1079,8 +1385,7 @@ export default function MyHomePage() {
               <Box>
                 <SectionHeading
                   eyebrow="Based on your interests"
-                  title="Keep the recommendations editorial"
-                  description="Recommendations now come from the feed, with placeholders preserved when the list is empty."
+                  title=""
                 />
                 <Box
                   sx={{
@@ -1188,28 +1493,6 @@ export default function MyHomePage() {
                 </Button>
               </Box>
 
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                sx={{
-                  pt: 1,
-                  borderTop: '1px solid rgba(143, 105, 66, 0.10)',
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <CalendarDays size={16} color="#D85A30" />
-                  <Typography sx={{ fontSize: 13, color: 'rgba(66, 50, 28, 0.72)' }}>
-                    Your home feed is organized around plans, momentum, and people.
-                  </Typography>
-                </Stack>
-                <Typography sx={{ fontSize: 12.5, color: 'rgba(66, 50, 28, 0.56)' }}>
-                  {isContentLoading
-                    ? 'Refreshing your feed...'
-                    : 'Live data wired in with placeholder fallbacks.'}
-                </Typography>
-              </Stack>
             </Stack>
           </Box>
         </Box>

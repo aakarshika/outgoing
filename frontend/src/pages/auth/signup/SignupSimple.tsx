@@ -103,7 +103,7 @@ export default function SignupSimple() {
         { value: '1 profile', label: 'for events, groups, and hosts' },
       ]}
       formEyebrow="Create account"
-      formTitle="Start your Outgoing profile"
+      formTitle="Sign up for "
       formDescription="Set up your account once, then use it to RSVP, message, contribute, and keep track of the events that matter."
       alternatePrompt="Already have an account?"
       alternateLinkLabel="Log in instead"
@@ -111,32 +111,6 @@ export default function SignupSimple() {
     >
       <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-              gap: 2,
-            }}
-          >
-            <TextField
-              label="First name"
-              autoComplete="given-name"
-              fullWidth
-              {...register('firstName')}
-              error={!!errors.firstName}
-              helperText={errors.firstName?.message}
-              sx={authFieldSx}
-            />
-            <TextField
-              label="Last name"
-              autoComplete="family-name"
-              fullWidth
-              {...register('lastName')}
-              error={!!errors.lastName}
-              helperText={errors.lastName?.message}
-              sx={authFieldSx}
-            />
-          </Box>
 
           <TextField
             label="Email"
@@ -146,14 +120,6 @@ export default function SignupSimple() {
             {...register('email')}
             error={!!errors.email}
             helperText={errors.email?.message}
-            sx={authFieldSx}
-          />
-          <TextField
-            label="Phone number"
-            autoComplete="tel"
-            fullWidth
-            {...register('phoneNumber')}
-            helperText="Optional"
             sx={authFieldSx}
           />
           <TextField
@@ -202,18 +168,6 @@ export default function SignupSimple() {
           </Button>
         </Stack>
 
-        <Typography
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'var(--color-text-secondary)',
-            fontSize: 13,
-            lineHeight: 1.6,
-          }}
-        >
-          By continuing, you can browse events, connect with hosts, and manage
-          contributor opportunities from one account.
-        </Typography>
       </Box>
     </AuthSimpleLayout>
   );

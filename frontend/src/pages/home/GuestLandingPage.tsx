@@ -7,7 +7,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import Lottie from 'lottie-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useFeed } from '@/features/events/hooks';
@@ -444,6 +445,9 @@ function SectionHeader({
 export default function GuestLandingPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterChip>('This weekend');
+  const [hasNearbySectionInView, setHasNearbySectionInView] = useState(false);
+  const [heroAnimationData, setHeroAnimationData] = useState<object | null>(null);
+  const nearbySectionRef = useRef<HTMLDivElement | null>(null);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
     sort: 'trending',
@@ -496,90 +500,133 @@ export default function GuestLandingPage() {
 
   const isLoading = loadingNearby || loadingOnline || loadingDiscover;
 
+  useEffect(() => {
+    let ignore = false;
+
+    fetch('/assets/group-lottie.json')
+      .then((response) => response.json())
+      .then((data) => {
+        if (!ignore) {
+          setHeroAnimationData(data);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setHeroAnimationData(null);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const section = nearbySectionRef.current;
+
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHasNearbySectionInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+        rootMargin: '-72px 0px 0px 0px',
+      },
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <Box sx={{ background: 'var(--color-background-primary)' }}>
-      <Box
-        component="nav"
-        sx={{
-          borderBottom: '0.5px solid var(--color-border-tertiary)',
-          background: 'var(--color-background-primary)',
-        }}
+    <Box sx={{ background: '--var(--color-background-primary)' }}>
+         <Box
+      component="header"
+      sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        // backgroundColor: 'var(--color-background-primary)',
+      }}
+    >
+      <Container
+        maxWidth={false}
+        sx={{ maxWidth: 1240, 
+          background: hasNearbySectionInView
+            ? 'rgba(255, 233, 205, 0.7)'
+            : '#D85A30',
+          transition: 'background-color 1000ms ease',
+          px: { xs: 1.5, sm: 3 }, py: 1.25 }}
       >
-        <Container
-          maxWidth={false}
-          sx={{ maxWidth: 1200, px: { xs: 2, md: 4 }, py: 2 }}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 0.75, sm: 1.5 },
+            flexWrap: 'nowrap',
+            minWidth: 0,
+          }}
         >
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={2}
+          <Box
+            onClick={() => navigate('/')}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              pr: 0.5,
+              minWidth: 0,
+            }}
           >
             <Typography
-              sx={{
+            sx={{
+              mt: 2,
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: 22,
-                color: '#D85A30',
+                fontSize: { xs: 24, sm: 32 },
                 letterSpacing: '-0.03em',
-              }}
-            >
-              outgoing
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={3}
+                color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
+                transition: 'color 180ms ease',
+                whiteSpace: 'nowrap',              maxWidth: 580,
+              mx: 'auto',
+              lineHeight: 1.65,
+            }}
+          >
+            <span className=''><strong>out</strong></span>
+            <Box
+              component="span"
+              aria-label="go"
+              role="img"
               sx={{
-                display: { xs: 'none', md: 'flex' },
-                color: 'var(--color-text-secondary)',
-                fontSize: 14,
+                display: 'inline-block',
+                width: { xs: 30, md: 36 },
+                height: { xs: 30, md: 35 },
+                // pt: 7,
+                // mx: 0.5,
+                transform: 'translateY(10px)',
+                backgroundColor: 'currentColor',
+                maskImage: "url('/assets/go-symbol.png')",
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                maskSize: 'contain',
+                WebkitMaskImage: "url('/assets/go-symbol.png')",
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                WebkitMaskSize: 'contain',
               }}
-            >
-              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
-                Discover
-              </Box>
-              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
-                How it works
-              </Box>
-              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/search')}>
-                Cities
-              </Box>
-              <Box sx={{ cursor: 'pointer' }} onClick={() => navigate('/signup')}>
-                Host an event
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={1.25}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/signin')}
-                sx={{
-                  borderRadius: '999px',
-                  px: 2.25,
-                  color: 'var(--color-text-primary)',
-                  borderColor: 'var(--color-border-secondary)',
-                  textTransform: 'none',
-                }}
-              >
-                Log in
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => navigate('/signup')}
-                sx={{
-                  borderRadius: '999px',
-                  px: 2.5,
-                  textTransform: 'none',
-                  background: '#D85A30',
-                  boxShadow: 'none',
-                }}
-              >
-                Join free
-              </Button>
-            </Stack>
-          </Stack>
-        </Container>
-      </Box>
+            />
+            {''}<strong>ing</strong>
+          </Typography>
+          </Box>
 
+        </Box>
+      </Container>
+
+    </Box>
+  
       <Box
         sx={{
           background: '#D85A30',
@@ -588,15 +635,19 @@ export default function GuestLandingPage() {
           py: { xs: 7, md: 10 },
         }}
       >
-        <Container maxWidth={false} sx={{ maxWidth: 900 }}>
+        <Container maxWidth={false} sx={{ maxWidth: 900,
+              mb: 10,
+
+         }}>
           <Chip
-            label="Our community-powered event platform"
+            label="Community-powered events"
             sx={{
               mb: 3,
               background: 'rgba(255,255,255,0.18)',
               color: '#fff',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
+              mt: 10,
               fontSize: 12,
             }}
           />
@@ -614,6 +665,18 @@ export default function GuestLandingPage() {
           >
             Show up. Chip in. Belong.
           </Typography>
+          {heroAnimationData ? (
+            <Box
+              sx={{
+                width: { xs: 180, md: 220 },
+                mx: 'auto',
+                mt: { xs: 1.5, md: 2 },
+                pointerEvents: 'none',
+              }}
+            >
+              <Lottie animationData={heroAnimationData} loop autoplay />
+            </Box>
+          ) : null}
           <Typography
             sx={{
               mt: 2,
@@ -635,6 +698,7 @@ export default function GuestLandingPage() {
                 width: { xs: 30, md: 36 },
                 height: { xs: 30, md: 35 },
                 // pt: 7,
+                mx: 0.5,
                 transform: 'translateY(10px)',
                 backgroundColor: 'currentColor',
                 maskImage: "url('/assets/go-symbol.png')",
@@ -666,14 +730,15 @@ export default function GuestLandingPage() {
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
             justifyContent="center"
-            sx={{ mt: 4 }}
+            alignItems={'center'}
+            sx={{ mt: 4 , }}
           >
             <Button
               variant="contained"
               onClick={() => navigate('/signup')}
               sx={{
                 px: 4.5,
-                py: 1.6,
+                py: 1.6,width: 260, mx: 'auto',
                 borderRadius: '999px',
                 background: '#fff',
                 color: '#D85A30',
@@ -689,7 +754,7 @@ export default function GuestLandingPage() {
               onClick={() => navigate('/search')}
               sx={{
                 px: 4.5,
-                py: 1.6,
+                py: 1.6, maxWidth: 240, mx: 'auto',
                 borderRadius: '999px',
                 borderColor: 'rgba(255,255,255,0.5)',
                 color: '#fff',
@@ -734,7 +799,11 @@ export default function GuestLandingPage() {
         }}
       />
 
-      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+      <Container
+        ref={nearbySectionRef}
+        maxWidth={false}
+        sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}
+      >
         <SectionHeader
           label="Near you"
           title="Events happening in your city"

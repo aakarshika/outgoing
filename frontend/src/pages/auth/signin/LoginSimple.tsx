@@ -107,7 +107,7 @@ export default function LoginSimple() {
         { value: '1 place', label: 'for your plans and people' },
       ]}
       formEyebrow="Log in"
-      formTitle="Sign in to your Outgoing account"
+      formTitle="Sign in to"
       formDescription="Use your existing account to browse events, manage tickets, and keep conversations moving."
       alternatePrompt="New here?"
       alternateLinkLabel="Create an account"
@@ -181,16 +181,6 @@ export default function LoginSimple() {
           >
             Browse events as a guest
           </Button>
-
-          <Typography
-            sx={{
-              textAlign: 'center',
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-            }}
-          >
-            Hosts, tickets, and contributor tools unlock after login.
-          </Typography>
         </Stack>
       </Box>
     </AuthSimpleLayout>

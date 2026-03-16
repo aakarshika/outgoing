@@ -94,7 +94,6 @@ function AuthFormPanel({
       <Box
         sx={{
           width: '100%',
-          borderRadius: '32px',
           border: '0.5px solid var(--color-border-tertiary)',
           background: 'rgba(255,255,255,0.92)',
           backdropFilter: 'blur(18px)',
@@ -103,40 +102,60 @@ function AuthFormPanel({
         }}
       >
         <Typography
+        onClick={() => window.location.href = '/'}
           sx={{
-            fontSize: 12,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            fontWeight: 700,
-            color: '#D85A30',
-          }}
-        >
-          {formEyebrow}
-        </Typography>
-        <Typography
-          sx={{
-            mt: 1,
+            cursor: 'pointer',
+            flexDirection: 'row',
+            display: 'flex',
+            alignItems: 'center',
+            mt: 2,
             fontFamily: 'Syne, sans-serif',
-            fontSize: { xs: 28, md: 36 },
             fontWeight: 800,
-            lineHeight: 1.08,
-            letterSpacing: '-0.04em',
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          {formTitle}
-        </Typography>
-        <Typography
-          sx={{
-            mt: 1.25,
-            color: 'var(--color-text-secondary)',
+            fontSize: { xs: 24, sm: 32 },
+            letterSpacing: '-0.03em',
+            color: '#D85A30',
+            whiteSpace: 'nowrap', maxWidth: 580,
+            mx: 'auto',
             lineHeight: 1.65,
-            maxWidth: 460,
           }}
         >
-          {formDescription}
-        </Typography>
 
+          <Typography
+            sx={{
+              fontFamily: 'Syne, sans-serif',
+            fontSize: { xs: 24, sm: 32 },
+              fontWeight: 800,
+              color: '#4e4542',
+              marginRight: '4px',
+            }}
+          >
+            {formTitle}
+          </Typography>
+          out
+          <Box
+            component="span"
+            aria-label="go"
+            role="img"
+            sx={{
+              display: 'inline-block',
+              width: { xs: 30, md: 36 },
+              height: { xs: 30, md: 35 },
+              // pt: 7,
+              // mx: 0.5,
+              transform: 'translateY(10px)',
+              backgroundColor: 'currentColor',
+              maskImage: "url('/assets/go-symbol.png')",
+              maskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              maskSize: 'contain',
+              WebkitMaskImage: "url('/assets/go-symbol.png')",
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+              WebkitMaskSize: 'contain',
+            }}
+          />
+          {''}<strong>ing</strong>
+        </Typography>
         <Box sx={{ mt: 3 }}>{children}</Box>
 
         <Typography
@@ -153,6 +172,7 @@ function AuthFormPanel({
             to={alternateLinkTo}
             sx={{
               color: '#D85A30',
+              fontSize: 20,
               fontWeight: 700,
               textDecoration: 'none',
               display: 'inline-flex',
@@ -185,7 +205,6 @@ function AuthInfoPanel({
       sx={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '36px',
         p: { xs: 3, md: 4.5 },
         background: 'linear-gradient(180deg, #D85A30 0%, #C44B21 100%)',
         color: '#fff',
@@ -219,17 +238,7 @@ function AuthInfoPanel({
       />
 
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <Chip
-          label={heroEyebrow}
-          sx={{
-            mb: 2.5,
-            background: 'rgba(255,255,255,0.18)',
-            color: '#fff',
-            fontSize: 12,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-          }}
-        />
+        
         <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
@@ -379,89 +388,10 @@ export function AuthSimpleLayout({
           'linear-gradient(180deg, var(--color-background-primary) 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
       }}
     >
-      <Box
-        component="nav"
-        sx={{
-          borderBottom: '0.5px solid var(--color-border-tertiary)',
-          background: 'rgba(255, 253, 249, 0.82)',
-          backdropFilter: 'blur(18px)',
-        }}
-      >
-        <Container
-          maxWidth={false}
-          sx={{ maxWidth: 1200, px: { xs: 2, md: 4 }, py: 2 }}
-        >
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={2}
-          >
-            <Box
-              component={RouterLink}
-              to="/"
-              sx={{
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: 'Syne, sans-serif',
-                  fontWeight: 800,
-                  fontSize: 22,
-                  color: '#D85A30',
-                  letterSpacing: '-0.03em',
-                }}
-              >
-                outgoing
-              </Typography>
-            </Box>
-
-            <Stack direction="row" spacing={1.25}>
-              <Button
-                component={RouterLink}
-                to="/signin"
-                variant={mode === 'signin' ? 'contained' : 'outlined'}
-                sx={{
-                  borderRadius: '999px',
-                  px: 2.25,
-                  textTransform: 'none',
-                  borderColor:
-                    mode === 'signin' ? '#D85A30' : 'var(--color-border-secondary)',
-                  background: mode === 'signin' ? '#D85A30' : 'transparent',
-                  color: mode === 'signin' ? '#fff' : 'var(--color-text-primary)',
-                  boxShadow: 'none',
-                }}
-              >
-                Log in
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/signup"
-                variant={mode === 'signup' ? 'contained' : 'outlined'}
-                sx={{
-                  borderRadius: '999px',
-                  px: 2.25,
-                  textTransform: 'none',
-                  borderColor:
-                    mode === 'signup' ? '#D85A30' : 'var(--color-border-secondary)',
-                  background: mode === 'signup' ? '#D85A30' : 'transparent',
-                  color: mode === 'signup' ? '#fff' : 'var(--color-text-primary)',
-                  boxShadow: 'none',
-                }}
-              >
-                Join free
-              </Button>
-            </Stack>
-          </Stack>
-        </Container>
-      </Box>
 
       <Container
         maxWidth={false}
-        sx={{ maxWidth: 1200, px: { xs: 2, md: 4 }, py: { xs: 3, md: 5 } }}
+        sx={{ maxWidth: 1200}}
       >
         <Box
           sx={{
@@ -470,7 +400,6 @@ export function AuthSimpleLayout({
               xs: '1fr',
               lg: 'minmax(420px, 0.92fr) minmax(0, 1.08fr)',
             },
-            gap: 3,
             alignItems: 'stretch',
           }}
         >

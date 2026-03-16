@@ -31,24 +31,20 @@ export const SearchBarSimple = () => {
   }, [radiusMiles]);
 
   return (
-    <div className="relative hidden min-w-0 flex-1 md:flex ">
+    <div className="relative  min-w-0 flex-1">
       <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]"
-          />
+        <div className="relative min-w-[100px] flex-1">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            placeholder="Search events, people, groups..."
-            className="h-10 w-full rounded-full bg-white/70   py-2 pl-10 pr-4 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
+            placeholder="Search"
+            className="h-10 w-full rounded-full bg-white/70   py-2 pl-4 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
           />
         </div>
 
-        <div className="relative flex-shrink-0 cursor-pointer rounded-full bg-white/70 " ref={locationDropdownRef}>
+        <div className="relative  hidden md:flex  flex-shrink-0 cursor-pointer rounded-full bg-white/70 " ref={locationDropdownRef}>
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}

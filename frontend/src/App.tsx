@@ -46,7 +46,7 @@ function AppContent() {
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
-  const isSignedOutRoot = location.pathname === '/' && !isAuthenticated;
+  const isSignedOutRoot = !isAuthenticated;
   const isPlanningWorkspaceRoute =
     location.pathname === '/manage' ||
     /^\/events\/[^/]+\/manage$/.test(location.pathname);

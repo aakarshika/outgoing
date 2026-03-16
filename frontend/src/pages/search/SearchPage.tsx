@@ -164,6 +164,14 @@ export default function SearchPage() {
     },
   });
 
+  const { data: openEventCardOpportunities = [] } = useQuery({
+    queryKey: ['search', 'event-card-opportunities'],
+    queryFn: async () => {
+      const response = await fetchAllOpenOpportunities();
+      return response.data || [];
+    },
+  });
+
   const { data: matchedOpportunities = [] } = useQuery({
     queryKey: ['search', 'opportunities', 'matched', isAuthenticated],
     enabled: isAuthenticated && tab === 'chip-in',
@@ -224,17 +232,36 @@ export default function SearchPage() {
     () => new Set(matchedOpportunities.map((item) => item.need_id)),
     [matchedOpportunities],
   );
+  const eventCardOpportunityByEventId = useMemo(() => {
+    const byEventId = new Map<number, (typeof openEventCardOpportunities)[number]>();
+    openEventCardOpportunities.forEach((opportunity) => {
+      if (!byEventId.has(opportunity.event_id)) {
+        byEventId.set(opportunity.event_id, opportunity);
+      }
+    });
+    return byEventId;
+  }, [openEventCardOpportunities]);
 
   return (
     <Box
-      sx={{
+
+        sx={{
+          
         minHeight: '100vh',
         background:
           'linear-gradient(180deg, #FFF9F0 0%, #F9F1E4 48%, #F7EEE2 100%)',
-        pb: 6,
+        pb: 60,
       }}
     >
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+        }}
+      >
       <SimpleNavbar />
+      </Box>
       <SearchToolbar
         tab={tab}
         selectedDate={selectedDate}
@@ -310,6 +337,7 @@ export default function SearchPage() {
           sectionCount={sectionCount}
           filteredEvents={filteredEvents}
           filteredOpportunities={filteredOpportunities}
+          eventCardOpportunityByEventId={eventCardOpportunityByEventId}
           matchedOpportunityNeedIds={matchedOpportunityNeedIds}
           isFeedLoading={isFeedLoading}
           isOpportunitiesLoading={isOpportunitiesLoading}

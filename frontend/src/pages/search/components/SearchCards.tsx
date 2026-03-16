@@ -3,7 +3,6 @@ import {
   Button,
   Chip,
   Collapse,
-  Divider,
   Stack,
   TextField,
   Typography,
@@ -36,13 +35,18 @@ import {
 export function EventCard({
   event,
   tab,
+  opportunity,
+  hasMatchingService,
   onClick,
 }: {
   event: EventListItem;
   tab: SearchTabId;
+  opportunity?: VendorOpportunity;
+  hasMatchingService: boolean;
   onClick: () => void;
 }) {
   const { user, isAuthenticated } = useAuth();
+  const [needsExpanded, setNeedsExpanded] = useState(false);
   const online = isOnlineEvent(event);
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
   const accent = categoryTheme.accent;
@@ -61,6 +65,20 @@ export function EventCard({
   const showPriceOverlay =
     event.lifecycle_state === 'published' || event.lifecycle_state === 'live';
   const showRatedOverlay = event.lifecycle_state === 'completed';
+  const needRewardValue = opportunity?.budget_max || opportunity?.budget_min;
+  const needsCtaLabel = opportunity
+    ? opportunity.is_invited
+      ? 'Show invite'
+      : hasMatchingService
+        ? 'Send inquiry'
+        : 'Create service'
+    : null;
+
+  const handleNeedsClick = (clickEvent: React.MouseEvent) => {
+    clickEvent.stopPropagation();
+    if (!opportunity) return;
+    setNeedsExpanded((prev) => !prev);
+  };
 
   return (
     <Box
@@ -296,10 +314,70 @@ export function EventCard({
           </Typography>
         ) : null}
 
+        {opportunity ? (
+          <Box
+            component="button"
+            type="button"
+            onClick={handleNeedsClick}
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 0.8,
+              width: '100%',
+              border: '1px solid rgba(133,79,11,0.08)',
+              borderRadius: '12px',
+              backgroundColor: '#FAEEDA',
+              color: '#412402',
+              px: 1.1,
+              py: 0.9,
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                backgroundColor: '#F7E2C2',
+                borderColor: 'rgba(133,79,11,0.2)',
+              },
+            }}
+          >
+            <Box component="span" sx={{ fontSize: 12, lineHeight: 1.4, mt: 0.1 }}>
+              ⚡
+            </Box>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  lineHeight: 1.4,
+                  color: '#633806',
+                }}
+              >
+                <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
+                  {opportunity.need_title}
+                </Box>{' '}
+                {needRewardValue ? `- up to Rs ${needRewardValue}` : '- tap to view details'}
+              </Typography>
+              {needsCtaLabel ? (
+                <Typography
+                  sx={{ mt: 0.35, fontSize: 10, fontWeight: 700, color: '#854F0B' }}
+                >
+                  {needsCtaLabel}
+                </Typography>
+              ) : null}
+            </Box>
+          </Box>
+        ) : null}
+
         {!online ? (
           <Typography sx={{ fontSize: 11, color: '#6b7280' }}>
             {event.location_name}
           </Typography>
+        ) : null}
+
+        {opportunity ? (
+          <OpportunityCardExpandedSection
+            opportunities={[opportunity]}
+            hasMatchingService={hasMatchingService}
+            expanded={needsExpanded}
+          />
         ) : null}
 
         <Box
@@ -384,18 +462,10 @@ const CARD_THEMES: Record<
   },
 };
 
-export function OpportunityCard({
-  opportunity,
-  hasMatchingService,
-  onClick,
-}: {
-  opportunity: VendorOpportunity;
-  hasMatchingService: boolean;
-  onClick: () => void;
-}) {
-  const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(false);
-  const [selectedComp, setSelectedComp] = useState<'free' | 'discount' | 'cash'>('free');
+function getOpportunityCardState(
+  opportunity: VendorOpportunity,
+  hasMatchingService: boolean,
+) {
   const rewardValue = opportunity.budget_max || opportunity.budget_min;
   const rewardLabel = rewardValue ? `Rs ${rewardValue}` : 'Reward TBD';
   const role = getRoleGroup(opportunity);
@@ -419,8 +489,6 @@ export function OpportunityCard({
       : actionType === 'inquiry'
         ? 'Before you apply'
         : 'Add a service to apply';
-  const eventDay = formatEventDayLabel(opportunity.event_start_time);
-  const eventTime = formatEventTimeLabel(opportunity.event_start_time);
   const numericReward = rewardValue ? Number(rewardValue) : 0;
   const discountPercent = numericReward
     ? Math.min(60, Math.max(20, Math.round(numericReward / 10)))
@@ -443,6 +511,329 @@ export function OpportunityCard({
                 ? 'ST'
                 : 'OT';
 
+  return {
+    actionType,
+    theme,
+    rewardLabel,
+    chipLabel,
+    detailTitle,
+    discountPercent,
+    discountValue,
+    roleIcon,
+  };
+}
+export function OpportunityCardExpandedSection({
+  opportunities,
+  hasMatchingService,
+  expanded,
+}: {
+  opportunities: VendorOpportunity[];
+  hasMatchingService: boolean;
+  expanded: boolean;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <Collapse in={expanded} timeout="auto" unmountOnExit sx={{ width: '100%' }}>
+      <Stack spacing={0} sx={{ width: '100%' }}>
+        {opportunities.map((opportunity) => (
+          <OpportunityCardExpandedItem
+            key={opportunity.need_id}
+            opportunity={opportunity}
+            hasMatchingService={hasMatchingService}
+            onCreateService={() => navigate('/vendors/create')}
+          />
+        ))}
+      </Stack>
+    </Collapse>
+  );
+}
+
+function OpportunityCardExpandedItem({
+  opportunity,
+  hasMatchingService,
+  onCreateService,
+}: {
+  opportunity: VendorOpportunity;
+  hasMatchingService: boolean;
+  onCreateService: () => void;
+}) {
+  const [selectedComp, setSelectedComp] = useState<'free' | 'discount' | 'cash'>('free');
+  const { actionType, rewardLabel, detailTitle, discountPercent, discountValue } =
+    getOpportunityCardState(opportunity, hasMatchingService);
+
+  return (
+    <Stack
+      spacing={1.5}
+      sx={{
+        width: '100%',
+        px: 2,
+        backgroundColor: '#ffffff',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 1.2,
+          width: '100%',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
+            {actionType === 'invite'
+              ? 'You were personally invited for this role'
+              : actionType === 'inquiry'
+                ? `${opportunity.need_title} needed · 1 slot open`
+                : `${opportunity.need_title} needed`}
+          </Typography>
+          <Typography sx={{ mt: 0.5, fontSize: 12, color: '#6b7280', lineHeight: 1.45 }}>
+            {actionType === 'invite'
+              ? "The host thinks you'd be great for this. No pressure — read the terms and decide."
+              : actionType === 'inquiry'
+                ? `${opportunity.need_description || 'Contribute during the event.'} · You pick your compensation.`
+                : 'Are you up for providing it?'}
+          </Typography>
+          {actionType}
+        </Box>
+
+        {actionType !== 'create-service' ? (
+          <Box sx={{ width: '100%' }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: '#6b7280',
+                mb: 1,
+              }}
+            >
+              {detailTitle}
+            </Typography>
+            <Stack spacing={0.9}>
+              <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
+                <Box component="span" sx={{ fontWeight: 600 }}>
+                  What you'll do:{' '}
+                </Box>
+                {opportunity.need_description ||
+                  `Contribute for ${opportunity.need_title} during the event window.`}
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
+                <Box component="span" sx={{ fontWeight: 600 }}>
+                  What you get:{' '}
+                </Box>
+                Your choice — free entry, {discountPercent}% discount, or {rewardLabel} cash.
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
+                <Box component="span" sx={{ fontWeight: 600 }}>
+                  If it gets cancelled:{' '}
+                </Box>
+                You'll still receive your full compensation regardless of when or why it's cancelled.
+              </Typography>
+            </Stack>
+          </Box>
+        ) : null}
+
+        {actionType !== 'create-service' ? (
+          <Box sx={{ width: '100%' }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: '#6b7280',
+                mb: 0.8,
+              }}
+            >
+              Pick compensation
+            </Typography>
+            <Stack direction="row" spacing={0.8} sx={{ flexWrap: 'wrap', gap: 0.8 }}>
+              <Chip
+                label="Free entry"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedComp('free');
+                }}
+                size="small"
+                sx={{
+                  borderRadius: '999px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  border: selectedComp === 'free' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                  backgroundColor: selectedComp === 'free' ? '#FAECE7' : '#fff',
+                  color: selectedComp === 'free' ? '#712B13' : '#374151',
+                }}
+              />
+              <Chip
+                label={`${discountPercent}% discount${discountValue ? ` (save Rs ${discountValue})` : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedComp('discount');
+                }}
+                size="small"
+                sx={{
+                  borderRadius: '999px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  border:
+                    selectedComp === 'discount'
+                      ? '2px solid #D85A30'
+                      : '1px solid #e5e7eb',
+                  backgroundColor: selectedComp === 'discount' ? '#FAECE7' : '#fff',
+                  color: selectedComp === 'discount' ? '#712B13' : '#374151',
+                }}
+              />
+              <Chip
+                label={`${rewardLabel} cash`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedComp('cash');
+                }}
+                size="small"
+                sx={{
+                  borderRadius: '999px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  border: selectedComp === 'cash' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                  backgroundColor: selectedComp === 'cash' ? '#FAECE7' : '#fff',
+                  color: selectedComp === 'cash' ? '#712B13' : '#374151',
+                }}
+              />
+            </Stack>
+          </Box>
+        ) : null}
+
+        {actionType === 'inquiry' ? (
+          <TextField
+            onClick={(e) => e.stopPropagation()}
+            placeholder="Hey, I'd love to help — here's why I'm a good fit..."
+            multiline
+            minRows={3}
+            fullWidth
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                fontSize: 13,
+                borderRadius: 1.5,
+                '& fieldset': { borderColor: 'rgba(17,24,39,0.12)' },
+                '&:hover fieldset': { borderColor: '#D85A30' },
+                '&.Mui-focused fieldset': { borderWidth: 2, borderColor: '#D85A30' },
+              },
+            }}
+          />
+        ) : null}
+      </Box>
+
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          justifyContent: actionType === 'invite' ? 'space-between' : 'flex-end',
+          flexWrap: 'wrap',
+          pt: actionType === 'create-service' ? 0.5 : 0,
+        }}
+      >
+        {actionType === 'invite' ? (
+          <>
+            <Button
+              onClick={(e) => e.stopPropagation()}
+              variant="outlined"
+              size="medium"
+              sx={{
+                borderColor: '#d1d5db',
+                color: '#6b7280',
+                borderRadius: '999px',
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 2,
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                  backgroundColor: 'rgba(0,0,0,0.02)',
+                },
+              }}
+            >
+              Not this time
+            </Button>
+            <Button
+              onClick={(e) => e.stopPropagation()}
+              variant="contained"
+              size="medium"
+              sx={{
+                borderRadius: '999px',
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 2.5,
+                backgroundColor: '#1D9E75',
+                color: '#fff',
+                '&:hover': { backgroundColor: '#15803d' },
+              }}
+            >
+              I'm in ✓
+            </Button>
+          </>
+        ) : actionType === 'inquiry' ? (
+          <Button
+            onClick={(e) => e.stopPropagation()}
+            variant="contained"
+            size="medium"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 2.5,
+              backgroundColor: '#D85A30',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#c04d26' },
+            }}
+          >
+            Send application →
+          </Button>
+        ) : (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreateService();
+            }}
+            variant="contained"
+            size="medium"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 2.5,
+              backgroundColor: '#0d9488',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#0f766e' },
+            }}
+          >
+            Create service
+          </Button>
+        )}
+      </Stack>
+    </Stack>
+  );
+}
+
+export function OpportunityCard({
+  opportunity,
+  hasMatchingService,
+  onClick,
+}: {
+  opportunity: VendorOpportunity;
+  hasMatchingService: boolean;
+  onClick: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const { actionType, theme, rewardLabel, chipLabel, roleIcon } =
+    getOpportunityCardState(opportunity, hasMatchingService);
+  const eventDay = formatEventDayLabel(opportunity.event_start_time);
+  const eventTime = formatEventTimeLabel(opportunity.event_start_time);
+
   const handleChipClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     setExpanded((prev) => !prev);
@@ -450,6 +841,7 @@ export function OpportunityCard({
 
   return (
     <Box
+      onClick={onClick}
       sx={{
         border: '1px solid',
         borderColor: 'rgba(17,24,39,0.06)',
@@ -561,9 +953,7 @@ export function OpportunityCard({
               {opportunity.event_location_name}
             </Typography>
             <Typography
-      onClick={onClick}
-      className="cursor-pointer"
-      sx={{
+              sx={{
                 fontSize: 11,
                 fontWeight: 700,
                 color: theme.rewardColor,
@@ -596,256 +986,11 @@ export function OpportunityCard({
         </Box>
       </Box>
 
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Stack spacing={1.5} sx={{ pt: 0.5 }}>
-          <Divider sx={{ borderColor: 'rgba(17,24,39,0.08)' }} />
-          <Box
-            sx={{
-              borderRadius: theme.expandRadius,
-              border: '1px solid rgba(17,24,39,0.06)',
-              backgroundColor: theme.bannerBg,
-              p: 1.5,
-            }}
-          >
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
-              {actionType === 'invite'
-                ? 'You were personally invited for this role'
-                : actionType === 'inquiry'
-                  ? `${opportunity.need_title} needed · 1 slot open`
-                  : 'List a service in this category to apply'}
-            </Typography>
-            <Typography sx={{ mt: 0.5, fontSize: 12, color: '#6b7280', lineHeight: 1.45 }}>
-              {actionType === 'invite'
-                ? "The host thinks you'd be great for this. No pressure — read the terms and decide."
-                : actionType === 'inquiry'
-                  ? `${opportunity.need_description || 'Contribute during the event.'} · You pick your compensation.`
-                  : `Create a vendor service in "${opportunity.category}" to see this and similar gigs in your feed.`}
-            </Typography>
-          </Box>
-
-          {actionType !== 'create-service' ? (
-            <>
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    color: '#6b7280',
-                    mb: 1,
-                  }}
-                >
-                  {detailTitle}
-                </Typography>
-                <Stack spacing={0.9}>
-                  <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
-                    <Box component="span" sx={{ fontWeight: 600 }}>
-                      What you'll do:{' '}
-                    </Box>
-                    {opportunity.need_description ||
-                      `Contribute for ${opportunity.need_title} during the event window.`}
-                  </Typography>
-                  <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
-                    <Box component="span" sx={{ fontWeight: 600 }}>
-                      What you get:{' '}
-                    </Box>
-                    Your choice — free entry, {discountPercent}% discount, or {rewardLabel} cash.
-                  </Typography>
-                  <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
-                    <Box component="span" sx={{ fontWeight: 600 }}>
-                      If it gets cancelled:{' '}
-                    </Box>
-                    You'll still receive your full compensation regardless of when or why it's cancelled.
-                  </Typography>
-                </Stack>
-              </Box>
-
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    color: '#6b7280',
-                    mb: 0.8,
-                  }}
-                >
-                  Pick compensation
-                </Typography>
-                <Stack direction="row" spacing={0.8} sx={{ flexWrap: 'wrap', gap: 0.8 }}>
-                  <Chip
-                    label="Free entry"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedComp('free');
-                    }}
-                    size="small"
-                    sx={{
-                      borderRadius: '999px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      border:
-                        selectedComp === 'free'
-                          ? '2px solid #D85A30'
-                          : '1px solid #e5e7eb',
-                      backgroundColor: selectedComp === 'free' ? '#FAECE7' : '#fff',
-                      color: selectedComp === 'free' ? '#712B13' : '#374151',
-                    }}
-                  />
-                  <Chip
-                    label={`${discountPercent}% discount${discountValue ? ` (save Rs ${discountValue})` : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedComp('discount');
-                    }}
-                    size="small"
-                    sx={{
-                      borderRadius: '999px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      border:
-                        selectedComp === 'discount'
-                          ? '2px solid #D85A30'
-                          : '1px solid #e5e7eb',
-                      backgroundColor: selectedComp === 'discount' ? '#FAECE7' : '#fff',
-                      color: selectedComp === 'discount' ? '#712B13' : '#374151',
-                    }}
-                  />
-                  <Chip
-                    label={`${rewardLabel} cash`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedComp('cash');
-                    }}
-                    size="small"
-                    sx={{
-                      borderRadius: '999px',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      border:
-                        selectedComp === 'cash'
-                          ? '2px solid #D85A30'
-                          : '1px solid #e5e7eb',
-                      backgroundColor: selectedComp === 'cash' ? '#FAECE7' : '#fff',
-                      color: selectedComp === 'cash' ? '#712B13' : '#374151',
-                    }}
-                  />
-                </Stack>
-              </Box>
-
-              {actionType === 'inquiry' ? (
-                <TextField
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="Hey, I'd love to help — here's why I'm a good fit..."
-                  multiline
-                  minRows={3}
-                  fullWidth
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontSize: 13,
-                      borderRadius: 1.5,
-                      '& fieldset': { borderColor: 'rgba(17,24,39,0.12)' },
-                      '&:hover fieldset': { borderColor: '#D85A30' },
-                      '&.Mui-focused fieldset': { borderWidth: 2, borderColor: '#D85A30' },
-                    },
-                  }}
-                />
-              ) : null}
-            </>
-          ) : null}
-
-          {/* Action buttons — different for each type */}
-          <Stack
-            direction="row"
-            spacing={1.5}
-            sx={{
-              justifyContent: actionType === 'invite' ? 'space-between' : 'flex-end',
-              flexWrap: 'wrap',
-              pt: actionType === 'create-service' ? 0.5 : 0,
-            }}
-          >
-            {actionType === 'invite' ? (
-              <>
-                <Button
-                  onClick={(e) => e.stopPropagation()}
-                  variant="outlined"
-                  size="medium"
-                  sx={{
-                    borderColor: '#d1d5db',
-                    color: '#6b7280',
-                    borderRadius: '999px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: 2,
-                    '&:hover': {
-                      borderColor: '#9ca3af',
-                      backgroundColor: 'rgba(0,0,0,0.02)',
-                    },
-                  }}
-                >
-                  Not this time
-                </Button>
-                <Button
-                  onClick={(e) => e.stopPropagation()}
-                  variant="contained"
-                  size="medium"
-                  sx={{
-                    borderRadius: '999px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: 2.5,
-                    backgroundColor: '#1D9E75',
-                    color: '#fff',
-                    '&:hover': { backgroundColor: '#15803d' },
-                  }}
-                >
-                  I'm in ✓
-                </Button>
-              </>
-            ) : actionType === 'inquiry' ? (
-              <Button
-                onClick={(e) => e.stopPropagation()}
-                variant="contained"
-                size="medium"
-                sx={{
-                  borderRadius: '999px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 2.5,
-                  backgroundColor: '#D85A30',
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#c04d26' },
-                }}
-              >
-                Send application →
-              </Button>
-            ) : (
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate('/vendors/create');
-                }}
-                variant="contained"
-                size="medium"
-                sx={{
-                  borderRadius: '999px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 2.5,
-                  backgroundColor: '#0d9488',
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#0f766e' },
-                }}
-              >
-                Create service
-              </Button>
-            )}
-          </Stack>
-        </Stack>
-      </Collapse>
+      <OpportunityCardExpandedSection
+        opportunities={[opportunity]}
+        hasMatchingService={hasMatchingService}
+        expanded={expanded}
+      />
     </Box>
   );
 }

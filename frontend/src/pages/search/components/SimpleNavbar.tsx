@@ -11,15 +11,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
   CalendarDays,
-  LogIn,
   LogOut,
+  type LucideIcon,
   Menu,
   MessageCircle,
   Monitor,
   PlusCircle,
   Settings,
   Speech,
-  UserPlus,
   Users,
 } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
@@ -37,6 +36,14 @@ import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
 import { useCategories, useEvent } from '@/features/events/hooks';
 
+type MenuItem = {
+  label: string;
+  Icon: LucideIcon;
+  to?: string;
+  action?: 'create-event' | 'logout';
+  muted?: boolean;
+};
+
 export function SimpleNavbar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -52,7 +59,7 @@ export function SimpleNavbar() {
   const { data: categoriesResponse } = useCategories();
   const event = eventResponse?.data;
   const categories = categoriesResponse?.data || [];
-  const showSearchInHeader = !eventMatch && !isMobile;
+  const showSearchInHeader = !eventMatch ;
   const isEventHost =
     isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
@@ -65,13 +72,25 @@ export function SimpleNavbar() {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [isQuickCreateSubmitting, setIsQuickCreateSubmitting] = useState(false);
   const menuPopoverOpen = Boolean(menuAnchorEl);
-  const menuItems = [
-    { label: 'Create event', to: '/manage', Icon: PlusCircle },
-    { label: 'Calendar', to: '/calendar', Icon: CalendarDays },
-    { label: 'Your Network', to: '/network', Icon: Users },
-    { label: 'Hosting', to: '/dashboard/events', Icon: Speech },
-    { label: 'Servicing', to: '/dashboard/services/my-services', Icon: Monitor },
-    { label: 'Settings', to: '/profile/settings', Icon: Settings },
+  const menuGroups: MenuItem[][] = [
+    [
+      {
+        label: 'Create Event',
+        to: '/manage',
+        Icon: PlusCircle,
+        action: 'create-event',
+      },
+    ],
+    [{ label: 'My Network', to: '/network', Icon: Users }],
+    [
+      { label: 'Calendar', to: '/calendar', Icon: CalendarDays },
+      { label: 'Hosting', to: '/dashboard/events', Icon: Speech },
+      { label: 'Servicing', to: '/dashboard/services/my-services', Icon: Monitor },
+    ],
+    [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
+    ...(isAuthenticated
+      ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
+      : []),
   ] as const;
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {
@@ -187,10 +206,12 @@ export function SimpleNavbar() {
     <Box
       component="header"
       sx={{
-        position: 'sticky',
-        top: 0,
+        // position: 'sticky',
+        // top: 0,
         zIndex: 40,
-        backgroundColor: 'var(--color-background-primary)',
+        backgroundColor: 'rgba(255, 255, 255, 0.0)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
       }}
     >
       <Container
@@ -217,7 +238,7 @@ export function SimpleNavbar() {
               minWidth: 0,
             }}
           >
-            <Typography
+            {/* <Typography
               sx={{
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
@@ -229,20 +250,48 @@ export function SimpleNavbar() {
               }}
             >
               outGOing
-            </Typography>
-          </Box>
-          {showSearchInHeader && (
+            </Typography> */}
+            <Typography
+            sx={{
+                fontFamily: 'Syne, sans-serif',
+                fontWeight: 800,
+                fontSize: { xs: 24, sm: 32 },
+                letterSpacing: '-0.03em',
+                color: '#D85A30',
+                whiteSpace: 'nowrap',              maxWidth: 580,
+              mx: 'auto',
+              lineHeight: 1.65,
+            }}
+          >
+            <span className=''><strong>out</strong></span>
             <Box
+              component="span"
+              aria-label="go"
+              role="img"
               sx={{
-                flex: 1,
-                minWidth: 0,
+                display: 'inline-block',
+                width: { xs: 30, md: 36 },
+                height: { xs: 30, md: 35 },
+                // pt: 7,
+                // mx: 0.5,
+                transform: 'translateY(10px)',
+                backgroundColor: 'currentColor',
+                maskImage: "url('/assets/go-symbol.png')",
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                maskSize: 'contain',
+                WebkitMaskImage: "url('/assets/go-symbol.png')",
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                WebkitMaskSize: 'contain',
               }}
-            >
+            />
+            {''}<strong>ing</strong>
+          </Typography>
+          </Box>
               <NavbarProvider>
                 <SearchBarSimple />
               </NavbarProvider>
-            </Box>
-          )}
 
           <Box
             sx={{
@@ -299,25 +348,6 @@ export function SimpleNavbar() {
               </>
             ) : (
               <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-9 px-3 text-xs"
-                  onClick={() => navigate('/signin')}
-                >
-                  <LogIn className="mr-1 h-3.5 w-3.5" />
-                  Sign in
-                </Button>
-                {!isMobile ? (
-                  <Button
-                    type="button"
-                    className="h-9 px-4 text-xs text-white hover:bg-slate-800"
-                    onClick={() => navigate('/signup')}
-                  >
-                    <UserPlus className="mr-1 h-3.5 w-3.5" />
-                    Sign up
-                  </Button>
-                ) : null}
               </>
             )}
             <Button
@@ -351,75 +381,61 @@ export function SimpleNavbar() {
           },
         }}
       >
-        <Box sx={{ py: 0.5 }}>
-          {menuItems.map((item, index) => (
-            <Box key={item.label}>
-              <Box
-                component="button"
-                type="button"
-                onClick={() => {
-                  if (item.label === 'Create event') {
-                    handleCreateEventEntry();
-                    return;
-                  }
-                  closeMenuPopover();
-                  navigate(item.to);
-                }}
-                sx={{
-                  width: '100%',
-                  px: 1.5,
-                  py: 1.15,
-                  border: 0,
-                  backgroundColor: 'transparent',
-                  textAlign: 'left',
-                  fontSize: 13,
-                  color: '#3D3124',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  '&:hover': { backgroundColor: '#FFF1DE' },
-                }}
-              >
-                <item.Icon size={14} />
-                {item.label}
-              </Box>
-              {index < menuItems.length - 1 ? (
-                <Divider sx={{ m: 0, borderColor: 'rgba(120,94,60,0.14)' }} />
+        <Box sx={{ py: 0.75 }}>
+          {menuGroups.map((group, groupIndex) => (
+            <Box key={`group-${groupIndex}`} sx={{ py: 0.35 }}>
+              {group.map((item) => (
+                <Box key={item.label}>
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={() => {
+                      if (item.action === 'create-event') {
+                        handleCreateEventEntry();
+                        return;
+                      }
+                      if (item.action === 'logout') {
+                        closeMenuPopover();
+                        logout();
+                        return;
+                      }
+                      if (!item.to) {
+                        return;
+                      }
+                      closeMenuPopover();
+                      navigate(item.to);
+                    }}
+                    sx={{
+                      width: '100%',
+                      px: 1.5,
+                      py: 1.15,
+                      border: 0,
+                      backgroundColor: 'transparent',
+                      textAlign: 'left',
+                      fontSize: 13,
+                      color: item.muted ? 'rgba(61,49,36,0.58)' : '#3D3124',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      '&:hover': {
+                        backgroundColor: '#FFF1DE',
+                        color: item.muted ? 'rgba(61,49,36,0.72)' : '#3D3124',
+                      },
+                    }}
+                  >
+                    <item.Icon size={14} />
+                    {item.label}
+                  </Box>
+                </Box>
+              ))}
+              {groupIndex < menuGroups.length - 1 ? (
+                <Divider
+                  sx={{ my: 0.6, borderColor: 'rgba(120,94,60,0.14)' }}
+                />
               ) : null}
             </Box>
           ))}
-          {isAuthenticated ? (
-            <>
-              <Divider sx={{ m: 0, borderColor: 'rgba(120,94,60,0.14)' }} />
-              <Box
-                component="button"
-                type="button"
-                onClick={() => {
-                  closeMenuPopover();
-                  logout();
-                }}
-                sx={{
-                  width: '100%',
-                  px: 1.5,
-                  py: 1.15,
-                  border: 0,
-                  backgroundColor: 'transparent',
-                  textAlign: 'left',
-                  fontSize: 13,
-                  color: '#3D3124',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  '&:hover': { backgroundColor: '#FFF1DE' },
-                }}
-              >
-                <LogOut size={14} />
-                Logout
-              </Box>
-            </>
-          ) : null}
         </Box>
       </Popover>
       <Drawer

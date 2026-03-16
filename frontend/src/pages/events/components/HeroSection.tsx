@@ -158,7 +158,7 @@ export const HeroSection = ({
         </Grid>
 
         {/* Right Half - Event Image Section */}
-        <Grid
+        {event.cover_image && (<Grid
           size={{ xs: 12, md: 7 }}
           sx={{
             display: 'flex',
@@ -201,8 +201,8 @@ export const HeroSection = ({
               position: 'absolute',
             }}
           >
-            {event.lifecycle_state === 'draft' ||
-              event.lifecycle_state === 'published' ? (
+            {(event.lifecycle_state === 'draft' ||
+              event.lifecycle_state === 'published') ? (
               <Box
                 sx={{
                   width: '100%',
@@ -224,7 +224,7 @@ export const HeroSection = ({
               </Box>
             )}
           </Box>
-        </Grid>
+        </Grid>)}
       </Grid>
 
     </>

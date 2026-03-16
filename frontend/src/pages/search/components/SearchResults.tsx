@@ -46,10 +46,14 @@ function EmptyState() {
 function EventGrid({
   events,
   tab,
+  eventCardOpportunityByEventId,
+  matchedOpportunityNeedIds,
   onEventClick,
 }: {
   events: EventListItem[];
   tab: SearchTabId;
+  eventCardOpportunityByEventId: Map<number, VendorOpportunity>;
+  matchedOpportunityNeedIds: Set<number>;
   onEventClick: (eventId: number) => void;
 }) {
   return (
@@ -65,6 +69,10 @@ function EventGrid({
           key={event.id}
           event={event}
           tab={tab}
+          opportunity={eventCardOpportunityByEventId.get(event.id)}
+          hasMatchingService={matchedOpportunityNeedIds.has(
+            eventCardOpportunityByEventId.get(event.id)?.need_id ?? -1,
+          )}
           onClick={() => onEventClick(event.id)}
         />
       ))}
@@ -114,6 +122,7 @@ export function SearchResults({
   sectionCount,
   filteredEvents,
   filteredOpportunities,
+  eventCardOpportunityByEventId,
   matchedOpportunityNeedIds,
   isFeedLoading,
   isOpportunitiesLoading,
@@ -126,6 +135,7 @@ export function SearchResults({
   sectionCount: number;
   filteredEvents: EventListItem[];
   filteredOpportunities: VendorOpportunity[];
+  eventCardOpportunityByEventId: Map<number, VendorOpportunity>;
   matchedOpportunityNeedIds: Set<number>;
   isFeedLoading: boolean;
   isOpportunitiesLoading: boolean;
@@ -172,7 +182,13 @@ export function SearchResults({
       tab !== 'free-cheap' &&
       tab !== 'my-network' ? (
         filteredEvents.length > 0 ? (
-          <EventGrid events={filteredEvents} tab={tab} onEventClick={onEventClick} />
+          <EventGrid
+            events={filteredEvents}
+            tab={tab}
+            eventCardOpportunityByEventId={eventCardOpportunityByEventId}
+            matchedOpportunityNeedIds={matchedOpportunityNeedIds}
+            onEventClick={onEventClick}
+          />
         ) : (
           <EmptyState />
         )
@@ -181,7 +197,13 @@ export function SearchResults({
       {tab === 'free-cheap' ? (
         <Stack spacing={2}>
           {filteredEvents.length > 0 ? (
-            <EventGrid events={filteredEvents} tab={tab} onEventClick={onEventClick} />
+            <EventGrid
+              events={filteredEvents}
+              tab={tab}
+              eventCardOpportunityByEventId={eventCardOpportunityByEventId}
+              matchedOpportunityNeedIds={matchedOpportunityNeedIds}
+              onEventClick={onEventClick}
+            />
           ) : null}
 
           {!isAuthenticated ? (

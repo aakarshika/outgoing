@@ -247,11 +247,6 @@ export function SearchToolbar({
           ]
         : tab === 'trending'
           ? [
-              { label: 'Hot right now', active: true, icon: '🔥' },
-              { label: 'Rising fast', icon: '📈' },
-              { label: 'Top rated', icon: '⭐' },
-              { label: 'Most talked about', icon: '💬' },
-              { label: 'Selling out', icon: '🎟️' },
             ]
           : tab === 'free-cheap'
             ? [
