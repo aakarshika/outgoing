@@ -88,7 +88,6 @@ export function HorizontalScrapbookList({
 
   const ListItems = () => {
     return (
-
       <Box
         sx={{
           display: 'flex',
@@ -139,60 +138,66 @@ export function HorizontalScrapbookList({
             />
           ))
         ) : displayItems.length > 0 ? (
-          displayItems.map((item, idx) => {
-            return (
-              <Box
-                key={item.id || idx}
-                sx={{
-                  display: 'flex',
-                  gap: { xs: 3, sm: 4, md: 6 },
-                  alignItems: 'center',
-                }}
-              >
+          displayItems
+            .map((item, idx) => {
+              return (
                 <Box
+                  key={item.id || idx}
                   sx={{
-                    width: { xs: 240, sm: 280, md: 320 },
-                    flexShrink: 0,
+                    display: 'flex',
+                    gap: { xs: 3, sm: 4, md: 6 },
+                    alignItems: 'center',
                   }}
                 >
-                  {renderItem ? renderItem(item) : <ScrapbookEventCard event={item} />}
+                  <Box
+                    sx={{
+                      width: { xs: 240, sm: 280, md: 320 },
+                      flexShrink: 0,
+                    }}
+                  >
+                    {renderItem ? (
+                      renderItem(item)
+                    ) : (
+                      <ScrapbookEventCard event={item} />
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            );
-          }).concat(
-            displayItems.length <= 5
-              ? [
-                <Box key="horizontal-scrapbook-spacer" />,
-                  // <Box
-                  //   key="custom-card"
-                  //   sx={{
-                  //     display: 'flex',
-                  //     gap: { xs: 3, sm: 4, md: 6 },
-                  //     alignItems: 'center',
-                  //   }}
-                  // >
-                  //   <Box
-                  //     sx={{
-                  //       width: { xs: 240, sm: 280, md: 320 },
-                  //       flexShrink: 0,
-                  //     }}
-                  //   >
-                  //     <Box
-                  //       sx={{
-                  //         display: 'flex',
-                  //         justifyContent: 'center',
-                  //         alignItems: 'center',
-                  //         transform: 'translateY(10px)',
-                  //         bgcolor: 'transparent',
-                  //       }}
-                  //     >
-                  //       <PlatformDescriptionCard /> 
-                  //     </Box>
-                  //   </Box>
-                  // </Box>,
-                ]
-              : [],
-          )
+              );
+            })
+            .concat(
+              displayItems.length <= 5
+                ? [
+                    <Box key="horizontal-scrapbook-spacer" />,
+                    // <Box
+                    //   key="custom-card"
+                    //   sx={{
+                    //     display: 'flex',
+                    //     gap: { xs: 3, sm: 4, md: 6 },
+                    //     alignItems: 'center',
+                    //   }}
+                    // >
+                    //   <Box
+                    //     sx={{
+                    //       width: { xs: 240, sm: 280, md: 320 },
+                    //       flexShrink: 0,
+                    //     }}
+                    //   >
+                    //     <Box
+                    //       sx={{
+                    //         display: 'flex',
+                    //         justifyContent: 'center',
+                    //         alignItems: 'center',
+                    //         transform: 'translateY(10px)',
+                    //         bgcolor: 'transparent',
+                    //       }}
+                    //     >
+                    //       <PlatformDescriptionCard />
+                    //     </Box>
+                    //   </Box>
+                    // </Box>,
+                  ]
+                : [],
+            )
         ) : (
           <Box sx={{ py: 4, width: '100%', textAlign: 'center' }}>
             {typeof emptyMessage === 'string' ? (
@@ -215,20 +220,13 @@ export function HorizontalScrapbookList({
           </Box>
         )}
       </Box>
-
     );
   };
-
-
-
-
 
   // Always show the section even if it has no items.
   return (
     <Box sx={{ py: 0, position: 'relative', overflow: 'hidden' }}>
-      {title && (
-        <Title />
-      )}
+      {title && <Title />}
       {showEnvelope ? (
         <SideEnvelope>
           <ListItems />

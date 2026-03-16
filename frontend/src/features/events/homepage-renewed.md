@@ -76,11 +76,11 @@ Build a new home page file and reorder sections using existing section UIs, exis
 ## Pending Clarifications
 
 - Final exact top-to-bottom section order for all blocks in renewed page.
-in gave the final order in the homeplan.md
+  in gave the final order in the homeplan.md
 - Whether current legacy sections not listed in the new plan should be fully removed immediately.
-leave it for the old home page.
+  leave it for the old home page.
 - Exact visual spec for second film strip variant (color/skew values).
-blue and skew - mirrored of current, skew amount low
+  blue and skew - mirrored of current, skew amount low
 
 put the new home page at /
 and move old one to /oldhome

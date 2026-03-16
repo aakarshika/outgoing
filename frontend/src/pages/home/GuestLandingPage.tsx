@@ -543,90 +543,93 @@ export default function GuestLandingPage() {
 
   return (
     <Box sx={{ background: '--var(--color-background-primary)' }}>
-         <Box
-      component="header"
-      sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        // backgroundColor: 'var(--color-background-primary)',
-      }}
-    >
-      <Container
-        maxWidth={false}
-        sx={{ maxWidth: 1240, 
-          background: hasNearbySectionInView
-            ? 'rgba(255, 233, 205, 0.7)'
-            : '#D85A30',
-          transition: 'background-color 1000ms ease',
-          px: { xs: 1.5, sm: 3 }, py: 1.25 }}
+      <Box
+        component="header"
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          // backgroundColor: 'var(--color-background-primary)',
+        }}
       >
-        <Box
+        <Container
+          maxWidth={false}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: { xs: 0.75, sm: 1.5 },
-            flexWrap: 'nowrap',
-            minWidth: 0,
+            maxWidth: 1240,
+            background: hasNearbySectionInView ? 'rgba(255, 233, 205, 0.7)' : '#D85A30',
+            transition: 'background-color 1000ms ease',
+            px: { xs: 1.5, sm: 3 },
+            py: 1.25,
           }}
         >
           <Box
-            onClick={() => navigate('/')}
             sx={{
               display: 'flex',
               alignItems: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-              pr: 0.5,
+              gap: { xs: 0.75, sm: 1.5 },
+              flexWrap: 'nowrap',
               minWidth: 0,
             }}
           >
-            <Typography
-            sx={{
-              mt: 2,
-                fontFamily: 'Syne, sans-serif',
-                fontWeight: 800,
-                fontSize: { xs: 24, sm: 32 },
-                letterSpacing: '-0.03em',
-                color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
-                transition: 'color 180ms ease',
-                whiteSpace: 'nowrap',              maxWidth: 580,
-              mx: 'auto',
-              lineHeight: 1.65,
-            }}
-          >
-            <span className=''><strong>out</strong></span>
             <Box
-              component="span"
-              aria-label="go"
-              role="img"
+              onClick={() => navigate('/')}
               sx={{
-                display: 'inline-block',
-                width: { xs: 30, md: 36 },
-                height: { xs: 30, md: 35 },
-                // pt: 7,
-                // mx: 0.5,
-                transform: 'translateY(10px)',
-                backgroundColor: 'currentColor',
-                maskImage: "url('/assets/go-symbol.png')",
-                maskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                maskSize: 'contain',
-                WebkitMaskImage: "url('/assets/go-symbol.png')",
-                WebkitMaskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                WebkitMaskSize: 'contain',
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                pr: 0.5,
+                minWidth: 0,
               }}
-            />
-            {''}<strong>ing</strong>
-          </Typography>
+            >
+              <Typography
+                sx={{
+                  mt: 2,
+                  fontFamily: 'Syne, sans-serif',
+                  fontWeight: 800,
+                  fontSize: { xs: 24, sm: 32 },
+                  letterSpacing: '-0.03em',
+                  color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
+                  transition: 'color 180ms ease',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 580,
+                  mx: 'auto',
+                  lineHeight: 1.65,
+                }}
+              >
+                <span className="">
+                  <strong>out</strong>
+                </span>
+                <Box
+                  component="span"
+                  aria-label="go"
+                  role="img"
+                  sx={{
+                    display: 'inline-block',
+                    width: { xs: 30, md: 36 },
+                    height: { xs: 30, md: 35 },
+                    // pt: 7,
+                    // mx: 0.5,
+                    transform: 'translateY(10px)',
+                    backgroundColor: 'currentColor',
+                    maskImage: "url('/assets/go-symbol.png')",
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                    maskSize: 'contain',
+                    WebkitMaskImage: "url('/assets/go-symbol.png')",
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    WebkitMaskSize: 'contain',
+                  }}
+                />
+                {''}
+                <strong>ing</strong>
+              </Typography>
+            </Box>
           </Box>
+        </Container>
+      </Box>
 
-        </Box>
-      </Container>
-
-    </Box>
-  
       <Box
         sx={{
           background: '#D85A30',
@@ -635,10 +638,7 @@ export default function GuestLandingPage() {
           py: { xs: 7, md: 10 },
         }}
       >
-        <Container maxWidth={false} sx={{ maxWidth: 900,
-              mb: 10,
-
-         }}>
+        <Container maxWidth={false} sx={{ maxWidth: 900, mb: 10 }}>
           <Chip
             label="Community-powered events"
             sx={{
@@ -688,7 +688,10 @@ export default function GuestLandingPage() {
             }}
           >
             Find activities you care about deeply, or stumble onto something you didn't
-            know you loved {'\u2014'} <span className=''><strong>then</strong></span>
+            know you loved {'\u2014'}{' '}
+            <span className="">
+              <strong>then</strong>
+            </span>
             <Box
               component="span"
               aria-label="go"
@@ -711,7 +714,8 @@ export default function GuestLandingPage() {
                 WebkitMaskSize: 'contain',
               }}
             />
-            {''}<strong>further.</strong>
+            {''}
+            <strong>further.</strong>
           </Typography>
           <Typography
             sx={{
@@ -723,22 +727,24 @@ export default function GuestLandingPage() {
               lineHeight: 1.65,
             }}
           >
-            Grab a ticket, bring the snacks, run the music,
-            or post your own idea and watch your community make it live.
+            Grab a ticket, bring the snacks, run the music, or post your own idea and
+            watch your community make it live.
           </Typography>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
             justifyContent="center"
             alignItems={'center'}
-            sx={{ mt: 4 , }}
+            sx={{ mt: 4 }}
           >
             <Button
               variant="contained"
               onClick={() => navigate('/signup')}
               sx={{
                 px: 4.5,
-                py: 1.6,width: 260, mx: 'auto',
+                py: 1.6,
+                width: 260,
+                mx: 'auto',
                 borderRadius: '999px',
                 background: '#fff',
                 color: '#D85A30',
@@ -754,7 +760,9 @@ export default function GuestLandingPage() {
               onClick={() => navigate('/search')}
               sx={{
                 px: 4.5,
-                py: 1.6, maxWidth: 240, mx: 'auto',
+                py: 1.6,
+                maxWidth: 240,
+                mx: 'auto',
                 borderRadius: '999px',
                 borderColor: 'rgba(255,255,255,0.5)',
                 color: '#fff',

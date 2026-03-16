@@ -12,14 +12,22 @@ import {
   PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
-import { EventUIProvider, MainInfoCard, MainInfoCardImage, ScrapbookEventData, useEventUIData } from './EventItemUIComponents';
+import {
+  EventUIProvider,
+  MainInfoCard,
+  MainInfoCardImage,
+  ScrapbookEventData,
+  useEventUIData,
+} from './EventItemUIComponents';
 import { LightThemeConferencePoster } from './LightThemeConferencePoster';
 
 const isOnlineLike = (event: ScrapbookEventData) => {
-  const hay = `${event.location_name ?? ''} ${event.location_address ?? ''}`.toLowerCase();
-  return /(online|virtual|webinar|zoom|google meet|meet\.google|teams|livestream|stream)/.test(hay);
+  const hay =
+    `${event.location_name ?? ''} ${event.location_address ?? ''}`.toLowerCase();
+  return /(online|virtual|webinar|zoom|google meet|meet\.google|teams|livestream|stream)/.test(
+    hay,
+  );
 };
-
 
 export const ScrapbookEventCard = ({
   event,
@@ -38,15 +46,7 @@ export const ScrapbookEventCard = ({
   disableHover?: boolean;
   isBasicEventCard?: boolean;
 }) => {
-
-
-  const { baseRotation,
-    hoverRotation,
-    isNoImageCard,
-    theme,
-    isHost,
-    isVendor,
-    price } =
+  const { baseRotation, hoverRotation, isNoImageCard, theme, isHost, isVendor, price } =
     useEventUIData({
       event,
       isFocused,
@@ -54,7 +54,7 @@ export const ScrapbookEventCard = ({
       rotation,
       rotationhover,
       disableHover,
-      isBasicEventCard
+      isBasicEventCard,
     });
 
   const isOnlineEvent = isOnlineLike(event);
@@ -85,7 +85,11 @@ export const ScrapbookEventCard = ({
             position: 'relative',
             transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
-              transform: isOnlineEvent ? 'none' : (disableHover ? 'none' : `rotate(${hoverRotation}deg)`),
+              transform: isOnlineEvent
+                ? 'none'
+                : disableHover
+                  ? 'none'
+                  : `rotate(${hoverRotation}deg)`,
             },
           }}
         >
@@ -111,53 +115,54 @@ export const ScrapbookEventCard = ({
                 transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              {isNoImageCard && (
-                <MainInfoCard />
-              )}
+              {isNoImageCard && <MainInfoCard />}
 
-              {!isNoImageCard && (
-                <MainInfoCardImage />
-              )}
+              {!isNoImageCard && <MainInfoCardImage />}
 
-              {(!isBasicEventCard) && (<>
-                {/* Interest Heart */}
-                <LikeButton
-                  eventId={event.id}
-                  initialIsInterested={event.user_is_interested}
-                  initialInterestCount={event.interest_count}
-                />
-
-                {/* Ticket Infographic */}
-                <TicketStatusBadge
-                  ticketCount={event.ticket_count}
-                  capacity={event.capacity}
-                  highlighted={event.user_has_ticket}
-                  sx={{ position: 'absolute', top: 10, left: 55, zIndex: 2 }}
-                />
-
-                {event.category && (
-                  <CategorySticker categoryName={event.category.name!} theme={theme} />
-                )}
-
-                {event.lifecycle_state === 'live' && <LiveBadge />}
-
-                {(isHost || isVendor) && (
-                  <HostVendorBadge
-                    isHost={isHost}
-                    variant="full"
-                    bottomOffset={event.lifecycle_state === 'live' ? 36 : 10}
+              {!isBasicEventCard && (
+                <>
+                  {/* Interest Heart */}
+                  <LikeButton
+                    eventId={event.id}
+                    initialIsInterested={event.user_is_interested}
+                    initialInterestCount={event.interest_count}
                   />
-                )}
 
-                {event.lifecycle_state === 'event_ready' && <FullHouseBadge />}
+                  {/* Ticket Infographic */}
+                  <TicketStatusBadge
+                    ticketCount={event.ticket_count}
+                    capacity={event.capacity}
+                    highlighted={event.user_has_ticket}
+                    sx={{ position: 'absolute', top: 10, left: 55, zIndex: 2 }}
+                  />
 
-                {(event.lifecycle_state === 'published' ||
-                  event.lifecycle_state === 'live') && (
+                  {event.category && (
+                    <CategorySticker
+                      categoryName={event.category.name!}
+                      theme={theme}
+                    />
+                  )}
+
+                  {event.lifecycle_state === 'live' && <LiveBadge />}
+
+                  {(isHost || isVendor) && (
+                    <HostVendorBadge
+                      isHost={isHost}
+                      variant="full"
+                      bottomOffset={event.lifecycle_state === 'live' ? 36 : 10}
+                    />
+                  )}
+
+                  {event.lifecycle_state === 'event_ready' && <FullHouseBadge />}
+
+                  {(event.lifecycle_state === 'published' ||
+                    event.lifecycle_state === 'live') && (
                     <PriceBadge price={price} variant="portrait" />
                   )}
 
-                {event.lifecycle_state === 'completed' && <CompletedRatedBadge />}
-              </>)}
+                  {event.lifecycle_state === 'completed' && <CompletedRatedBadge />}
+                </>
+              )}
               {/* Pencil mark/sketch detail */}
               {
                 <Box
@@ -180,4 +185,3 @@ export const ScrapbookEventCard = ({
     </EventUIProvider>
   );
 };
-

@@ -5,7 +5,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
-import { useFeed, useTopVendorsFeed, useTrendingHighlights } from '@/features/events/hooks';
+import {
+  useFeed,
+  useTopVendorsFeed,
+  useTrendingHighlights,
+} from '@/features/events/hooks';
 import { HeroNegativeStripGallery } from '@/pages/events/components/HeroNegativeStripGallery';
 import { searchLocation } from '@/utils/geolocation';
 import type { LocationSuggestion } from '@/utils/geolocation';
@@ -62,7 +66,9 @@ function EmptyComicCard({
       <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.15rem', mb: 1 }}>
         {title}
       </Typography>
-      <Typography sx={{ fontFamily: 'serif', color: '#374151', mb: actionLabel ? 2 : 0 }}>
+      <Typography
+        sx={{ fontFamily: 'serif', color: '#374151', mb: actionLabel ? 2 : 0 }}
+      >
         {description}
       </Typography>
       {actionLabel && actionTo ? (
@@ -194,7 +200,11 @@ export function RelevantTrendingNearbySection({ title }: { title: string }) {
               active={tab === 'trending'}
               onClick={() => setTab('trending')}
             />
-            <FilterChip label="Nearby" active={tab === 'nearby'} onClick={() => setTab('nearby')} />
+            <FilterChip
+              label="Nearby"
+              active={tab === 'nearby'}
+              onClick={() => setTab('nearby')}
+            />
           </>
         }
       />
@@ -202,21 +212,19 @@ export function RelevantTrendingNearbySection({ title }: { title: string }) {
         events={noNearbyAccess ? [] : data?.data || []}
         isLoading={isLoading}
         emptyMessage={
-          noNearbyAccess
-            ? (
-              <EmptyComicCard
-                title="Location Needed"
-                description="Enable location to view nearby events in this section."
-                actionLabel="Browse Online"
-                actionTo="/search/"
-              />
-            )
-            : (
-              <EmptyComicCard
-                title="Nothing Here Yet"
-                description="No events found for this filter right now."
-              />
-            )
+          noNearbyAccess ? (
+            <EmptyComicCard
+              title="Location Needed"
+              description="Enable location to view nearby events in this section."
+              actionLabel="Browse Online"
+              actionTo="/search/"
+            />
+          ) : (
+            <EmptyComicCard
+              title="Nothing Here Yet"
+              description="No events found for this filter right now."
+            />
+          )
         }
       />
     </Box>
@@ -253,7 +261,11 @@ export function OnlineOfflineSection() {
         onBrowseAll={() => navigate('/search/')}
         tabs={
           <>
-            <FilterChip label="Online" active={tab === 'online'} onClick={() => setTab('online')} />
+            <FilterChip
+              label="Online"
+              active={tab === 'online'}
+              onClick={() => setTab('online')}
+            />
             <FilterChip
               label="Offline"
               active={tab === 'offline'}
@@ -266,29 +278,25 @@ export function OnlineOfflineSection() {
         events={events}
         isLoading={isLoading}
         emptyMessage={
-          needsLocationConsent
-            ? (
-              <EmptyComicCard
-                title="Offline Needs Location"
-                description="Allow location to discover nearby offline events."
-                tone="cool"
-              />
-            )
-            : tab === 'offline'
-              ? (
-                <EmptyComicCard
-                  title="No Offline Events"
-                  description="No offline events found right now."
-                  tone="cool"
-                />
-              )
-              : (
-                <EmptyComicCard
-                  title="No Online Sessions"
-                  description="No online sessions are scheduled right now."
-                  tone="cool"
-                />
-              )
+          needsLocationConsent ? (
+            <EmptyComicCard
+              title="Offline Needs Location"
+              description="Allow location to discover nearby offline events."
+              tone="cool"
+            />
+          ) : tab === 'offline' ? (
+            <EmptyComicCard
+              title="No Offline Events"
+              description="No offline events found right now."
+              tone="cool"
+            />
+          ) : (
+            <EmptyComicCard
+              title="No Online Sessions"
+              description="No online sessions are scheduled right now."
+              tone="cool"
+            />
+          )
         }
       />
     </Box>
@@ -322,8 +330,16 @@ export function GoingSavedSection({
         title="My Going / Saved"
         tabs={
           <>
-            <FilterChip label="Going" active={tab === 'going'} onClick={() => setTab('going')} />
-            <FilterChip label="Saved" active={tab === 'saved'} onClick={() => setTab('saved')} />
+            <FilterChip
+              label="Going"
+              active={tab === 'going'}
+              onClick={() => setTab('going')}
+            />
+            <FilterChip
+              label="Saved"
+              active={tab === 'saved'}
+              onClick={() => setTab('saved')}
+            />
           </>
         }
       />
@@ -361,7 +377,9 @@ export function HostingAndGigsCardsSection() {
             transform: 'rotate(-0.5deg)',
           }}
         >
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.3rem', mb: 1 }}>
+          <Typography
+            sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.3rem', mb: 1 }}
+          >
             Start Hosting
           </Typography>
           <Typography sx={{ fontFamily: 'serif' }}>
@@ -382,7 +400,9 @@ export function HostingAndGigsCardsSection() {
             transform: 'rotate(0.5deg)',
           }}
         >
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.3rem', mb: 1 }}>
+          <Typography
+            sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.3rem', mb: 1 }}
+          >
             Find Gigs
           </Typography>
           <Typography sx={{ fontFamily: 'serif' }}>
@@ -395,14 +415,25 @@ export function HostingAndGigsCardsSection() {
 }
 
 export function MapPlaceholderSection() {
-  const { enabled, coords, toggleLocation, isDetecting, locationName, radiusMiles, setRadiusMiles } =
-    useNearYou();
+  const {
+    enabled,
+    coords,
+    toggleLocation,
+    isDetecting,
+    locationName,
+    radiusMiles,
+    setRadiusMiles,
+  } = useNearYou();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isMapInteractive, setIsMapInteractive] = useState(false);
-  const [locationSearch, setLocationSearch] = useState(searchParams.get('location') || '');
+  const [locationSearch, setLocationSearch] = useState(
+    searchParams.get('location') || '',
+  );
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>(
+    [],
+  );
   const debouncedLocationSearch = useDebouncedValue(locationSearch, 300);
 
   const latParam = searchParams.get('lat');
@@ -440,7 +471,11 @@ export function MapPlaceholderSection() {
     };
   }, [debouncedLocationSearch, enabled]);
 
-  const applyLocationParams = (nextLocation: string, nextLat?: string, nextLng?: string) => {
+  const applyLocationParams = (
+    nextLocation: string,
+    nextLat?: string,
+    nextLng?: string,
+  ) => {
     const params = new URLSearchParams(window.location.search);
     const trimmedLocation = nextLocation.trim();
     if (trimmedLocation) {
@@ -483,7 +518,9 @@ export function MapPlaceholderSection() {
             textAlign: 'center',
           }}
         >
-          <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.2rem', mb: 1 }}>
+          <Typography
+            sx={{ fontFamily: '"Permanent Marker"', fontSize: '1.2rem', mb: 1 }}
+          >
             Nearby Event Map
           </Typography>
           <Typography sx={{ fontFamily: 'serif', color: '#4b5563', mb: 2 }}>
@@ -542,7 +579,10 @@ export function MapPlaceholderSection() {
       >
         <Box
           sx={{
-            position: { xs: 'relative', md: isMapInteractive ? 'absolute' : 'relative' },
+            position: {
+              xs: 'relative',
+              md: isMapInteractive ? 'absolute' : 'relative',
+            },
             inset: { xs: 'auto', md: isMapInteractive ? 0 : 'auto' },
             width: { xs: '100%', md: isMapInteractive ? '100%' : '50%' },
             height: { xs: 'auto', md: isMapInteractive ? '100%' : 'auto' },
@@ -557,7 +597,10 @@ export function MapPlaceholderSection() {
             referrerPolicy="no-referrer-when-downgrade"
             sx={{
               width: '100%',
-              height: { xs: isMapInteractive ? 300 : 260, md: isMapInteractive ? 410 : 360 },
+              height: {
+                xs: isMapInteractive ? 300 : 260,
+                md: isMapInteractive ? 410 : 360,
+              },
               border: 0,
               display: 'block',
               pointerEvents: isMapInteractive ? 'auto' : 'none',
@@ -619,7 +662,9 @@ export function MapPlaceholderSection() {
             <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.85rem' }}>
               Current Location
             </Typography>
-            <Typography sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: '0.75rem' }}>
+            <Typography
+              sx={{ fontFamily: 'serif', color: '#4b5563', fontSize: '0.75rem' }}
+            >
               {locationSearch || locationName || 'Near you'}
             </Typography>
           </Box>
@@ -655,13 +700,19 @@ export function MapPlaceholderSection() {
             width: { xs: '100%', md: isMapInteractive ? 'min(360px, 42%)' : '50%' },
             ml: { xs: 0, md: isMapInteractive ? 'auto' : 0 },
             p: { xs: 2, md: isMapInteractive ? 1.5 : 2.5 },
-            position: { xs: 'relative', md: isMapInteractive ? 'absolute' : 'relative' },
+            position: {
+              xs: 'relative',
+              md: isMapInteractive ? 'absolute' : 'relative',
+            },
             top: { xs: 'auto', md: isMapInteractive ? 12 : 'auto' },
             right: { xs: 'auto', md: isMapInteractive ? 12 : 'auto' },
             zIndex: 4,
             bgcolor: isMapInteractive ? 'rgba(255, 247, 237, 0.72)' : '#fff7ed',
             backdropFilter: isMapInteractive ? 'blur(8px)' : 'none',
-            borderLeft: { xs: 'none', md: isMapInteractive ? 'none' : '1px dashed rgba(26,26,26,0.2)' },
+            borderLeft: {
+              xs: 'none',
+              md: isMapInteractive ? 'none' : '1px dashed rgba(26,26,26,0.2)',
+            },
             border: isMapInteractive ? '1px solid rgba(26,26,26,0.25)' : 'none',
             borderRadius: isMapInteractive ? 1.5 : 0,
             boxShadow: isMapInteractive ? '4px 4px 0 rgba(26,26,26,0.35)' : 'none',
@@ -669,7 +720,6 @@ export function MapPlaceholderSection() {
             overflowY: { xs: 'visible', md: isMapInteractive ? 'auto' : 'visible' },
           }}
         >
-
           <Box sx={{ position: 'relative', mb: 2 }}>
             <Box
               component="input"
@@ -721,7 +771,11 @@ export function MapPlaceholderSection() {
                     onClick={() => {
                       setLocationSearch(suggestion.display_name);
                       setShowLocationSuggestions(false);
-                      applyLocationParams(suggestion.display_name, suggestion.lat, suggestion.lon);
+                      applyLocationParams(
+                        suggestion.display_name,
+                        suggestion.lat,
+                        suggestion.lon,
+                      );
                     }}
                     sx={{
                       width: '100%',
@@ -740,7 +794,13 @@ export function MapPlaceholderSection() {
                     }}
                   >
                     <Search size={14} style={{ marginTop: 2 }} />
-                    <Typography sx={{ fontFamily: '"Permanent Marker"', fontSize: '0.82rem', lineHeight: 1.3 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Permanent Marker"',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.3,
+                      }}
+                    >
                       {suggestion.display_name}
                     </Typography>
                   </Box>
@@ -756,7 +816,11 @@ export function MapPlaceholderSection() {
                 if (enabled) {
                   applyLocationParams(locationSearch);
                 } else if (coords) {
-                  applyLocationParams(locationName || locationSearch, String(coords.lat), String(coords.lng));
+                  applyLocationParams(
+                    locationName || locationSearch,
+                    String(coords.lat),
+                    String(coords.lng),
+                  );
                 }
               }}
               sx={{
@@ -795,7 +859,13 @@ export function MapPlaceholderSection() {
                 bgcolor: '#fff',
               }}
             />
-            <Typography sx={{ fontFamily: '"Permanent Marker"', color: '#4b5563', fontSize: '0.85rem' }}>
+            <Typography
+              sx={{
+                fontFamily: '"Permanent Marker"',
+                color: '#4b5563',
+                fontSize: '0.85rem',
+              }}
+            >
               miles
             </Typography>
             <Button
@@ -813,7 +883,6 @@ export function MapPlaceholderSection() {
             >
               <Search size={16} style={{ marginRight: 6 }} />
             </Button>
-
           </Box>
         </Box>
       </Box>

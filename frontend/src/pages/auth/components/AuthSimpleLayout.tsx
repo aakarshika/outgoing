@@ -102,7 +102,7 @@ function AuthFormPanel({
         }}
       >
         <Typography
-        onClick={() => window.location.href = '/'}
+          onClick={() => (window.location.href = '/')}
           sx={{
             cursor: 'pointer',
             flexDirection: 'row',
@@ -114,16 +114,16 @@ function AuthFormPanel({
             fontSize: { xs: 24, sm: 32 },
             letterSpacing: '-0.03em',
             color: '#D85A30',
-            whiteSpace: 'nowrap', maxWidth: 580,
+            whiteSpace: 'nowrap',
+            maxWidth: 580,
             mx: 'auto',
             lineHeight: 1.65,
           }}
         >
-
           <Typography
             sx={{
               fontFamily: 'Syne, sans-serif',
-            fontSize: { xs: 24, sm: 32 },
+              fontSize: { xs: 24, sm: 32 },
               fontWeight: 800,
               color: '#4e4542',
               marginRight: '4px',
@@ -154,7 +154,8 @@ function AuthFormPanel({
               WebkitMaskSize: 'contain',
             }}
           />
-          {''}<strong>ing</strong>
+          {''}
+          <strong>ing</strong>
         </Typography>
         <Box sx={{ mt: 3 }}>{children}</Box>
 
@@ -238,7 +239,6 @@ function AuthInfoPanel({
       />
 
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        
         <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
@@ -388,11 +388,7 @@ export function AuthSimpleLayout({
           'linear-gradient(180deg, var(--color-background-primary) 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
       }}
     >
-
-      <Container
-        maxWidth={false}
-        sx={{ maxWidth: 1200}}
-      >
+      <Container maxWidth={false} sx={{ maxWidth: 1200 }}>
         <Box
           sx={{
             display: 'grid',

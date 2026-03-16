@@ -111,7 +111,6 @@ export default function SignupSimple() {
     >
       <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2}>
-
           <TextField
             label="Email"
             type="email"
@@ -167,7 +166,6 @@ export default function SignupSimple() {
             {isSubmitting ? 'Creating account...' : 'Create account'}
           </Button>
         </Stack>
-
       </Box>
     </AuthSimpleLayout>
   );

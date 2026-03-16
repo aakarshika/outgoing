@@ -7,7 +7,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
@@ -21,6 +22,7 @@ import {
 } from '@/features/events/scrapbookCard';
 import type { EventListItem } from '@/types/events';
 import type { VendorOpportunity } from '@/types/needs';
+import { applyToNeed, fetchMyApplications } from '@/features/needs/api';
 
 import type { SearchTabId } from '../searchTypes';
 import {
@@ -37,12 +39,14 @@ export function EventCard({
   tab,
   opportunity,
   hasMatchingService,
+  onCreateService,
   onClick,
 }: {
   event: EventListItem;
   tab: SearchTabId;
   opportunity?: VendorOpportunity;
   hasMatchingService: boolean;
+  onCreateService?: (category?: string) => void;
   onClick: () => void;
 }) {
   const { user, isAuthenticated } = useAuth();
@@ -353,7 +357,9 @@ export function EventCard({
                 <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
                   {opportunity.need_title}
                 </Box>{' '}
-                {needRewardValue ? `- up to Rs ${needRewardValue}` : '- tap to view details'}
+                {needRewardValue
+                  ? `- up to Rs ${needRewardValue}`
+                  : '- tap to view details'}
               </Typography>
               {needsCtaLabel ? (
                 <Typography
@@ -377,6 +383,7 @@ export function EventCard({
             opportunities={[opportunity]}
             hasMatchingService={hasMatchingService}
             expanded={needsExpanded}
+            onCreateService={onCreateService}
           />
         ) : null}
 
@@ -411,7 +418,12 @@ export function EventCard({
   );
 }
 
-type CardActionType = 'invite' | 'inquiry' | 'create-service';
+type CardActionType =
+  | 'invite'
+  | 'inquiry'
+  | 'create-service'
+  | 'already-applied'
+  | 'servicing';
 
 const CARD_THEMES: Record<
   CardActionType,
@@ -460,35 +472,71 @@ const CARD_THEMES: Record<
     bannerBg: '#F0FDFA',
     expandRadius: '12px',
   },
+  'already-applied': {
+    borderLeft: '#D85A30',
+    iconBg: '#FAECE7',
+    iconColor: '#993C1D',
+    rewardColor: '#BA7517',
+    chipBg: '#FAECE7',
+    chipColor: '#712B13',
+    chipBorder: '1px solid #D85A30',
+    bannerBg: '#FFF9F5',
+    expandRadius: '12px',
+  },
+  servicing: {
+    borderLeft: '#1D9E75',
+    iconBg: '#E1F5EE',
+    iconColor: '#0F6E56',
+    rewardColor: '#0F6E56',
+    chipBg: '#E1F5EE',
+    chipColor: '#0F6E56',
+    chipBorder: '1px solid #1D9E75',
+    bannerBg: '#F0FDF4',
+    expandRadius: '12px',
+  },
 };
 
 function getOpportunityCardState(
   opportunity: VendorOpportunity,
   hasMatchingService: boolean,
+  applicationStatus?: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | null,
 ) {
   const rewardValue = opportunity.budget_max || opportunity.budget_min;
   const rewardLabel = rewardValue ? `Rs ${rewardValue}` : 'Reward TBD';
   const role = getRoleGroup(opportunity);
-  const hasInvite = opportunity.is_invited;
-  const canSendInquiry = hasMatchingService && !hasInvite;
-  const actionType: CardActionType = hasInvite
-    ? 'invite'
-    : canSendInquiry
-      ? 'inquiry'
-      : 'create-service';
+
+  let actionType: CardActionType;
+  if (applicationStatus === 'accepted') {
+    actionType = 'servicing';
+  } else if (applicationStatus === 'pending') {
+    actionType = 'already-applied';
+  } else {
+    const hasInvite = opportunity.is_invited;
+    const canSendInquiry = hasMatchingService && !hasInvite;
+    actionType = hasInvite ? 'invite' : canSendInquiry ? 'inquiry' : 'create-service';
+  }
+
   const theme = CARD_THEMES[actionType];
   const chipLabel =
-    actionType === 'invite'
-      ? 'Show invite'
-      : actionType === 'inquiry'
-        ? 'Send inquiry'
-        : 'Create service';
+    actionType === 'servicing'
+      ? 'Servicing here'
+      : actionType === 'already-applied'
+        ? 'Already applied'
+        : actionType === 'invite'
+          ? 'Show invite'
+          : actionType === 'inquiry'
+            ? 'Send inquiry'
+            : 'Create service';
   const detailTitle =
-    actionType === 'invite'
-      ? "Here's what you're signing up for"
-      : actionType === 'inquiry'
-        ? 'Before you apply'
-        : 'Add a service to apply';
+    actionType === 'servicing'
+      ? 'You are assigned to this role'
+      : actionType === 'already-applied'
+        ? 'Your application is being reviewed'
+        : actionType === 'invite'
+          ? "Here's what you're signing up for"
+          : actionType === 'inquiry'
+            ? 'Before you apply'
+            : 'Add a service to apply';
   const numericReward = rewardValue ? Number(rewardValue) : 0;
   const discountPercent = numericReward
     ? Math.min(60, Math.max(20, Math.round(numericReward / 10)))
@@ -525,11 +573,15 @@ function getOpportunityCardState(
 export function OpportunityCardExpandedSection({
   opportunities,
   hasMatchingService,
+  matchedNeedIds,
   expanded,
+  onCreateService,
 }: {
   opportunities: VendorOpportunity[];
   hasMatchingService: boolean;
+  matchedNeedIds?: Set<number>;
   expanded: boolean;
+  onCreateService?: (category?: string) => void;
 }) {
   const navigate = useNavigate();
 
@@ -540,8 +592,16 @@ export function OpportunityCardExpandedSection({
           <OpportunityCardExpandedItem
             key={opportunity.need_id}
             opportunity={opportunity}
-            hasMatchingService={hasMatchingService}
-            onCreateService={() => navigate('/vendors/create')}
+            hasMatchingService={
+              matchedNeedIds
+                ? matchedNeedIds.has(opportunity.need_id)
+                : hasMatchingService
+            }
+            onCreateService={() =>
+              onCreateService
+                ? onCreateService(opportunity.category)
+                : navigate(`/vendors/create?category=${opportunity.category}`)
+            }
           />
         ))}
       </Stack>
@@ -558,9 +618,63 @@ function OpportunityCardExpandedItem({
   hasMatchingService: boolean;
   onCreateService: () => void;
 }) {
-  const [selectedComp, setSelectedComp] = useState<'free' | 'discount' | 'cash'>('free');
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedComp, setSelectedComp] = useState<'free' | 'discount' | 'cash'>(
+    'free',
+  );
+  const [message, setMessage] = useState('');
+
+  const { data: applicationsData } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    enabled: isAuthenticated,
+  });
+
+  const myApplication = useMemo(() => {
+    const apps = applicationsData?.data || [];
+    return apps.find((app) => app.need === opportunity.need_id) || null;
+  }, [applicationsData, opportunity.need_id]);
+
+  const applyMutation = useMutation({
+    mutationFn: (payload: { message?: string; proposed_price?: number | null }) =>
+      applyToNeed(opportunity.need_id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
+      queryClient.invalidateQueries({ queryKey: ['myVendorOpportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['my-home'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
+    },
+  });
+
   const { actionType, rewardLabel, detailTitle, discountPercent, discountValue } =
-    getOpportunityCardState(opportunity, hasMatchingService);
+    getOpportunityCardState(opportunity, hasMatchingService, myApplication?.status);
+
+  const numericReward = Number(opportunity.budget_max || opportunity.budget_min || 0);
+
+  const handleSubmitApplication = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const proposedPrice =
+      selectedComp === 'free'
+        ? 0
+        : selectedComp === 'discount'
+          ? discountValue
+          : numericReward;
+    applyMutation.mutate({
+      message: message || undefined,
+      proposed_price: proposedPrice,
+    });
+  };
+
+  const handleNavigateToManagement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/events/${opportunity.event_id}/service-event-management`);
+  };
+
+  const showTermsSection = actionType === 'invite' || actionType === 'inquiry';
+  const showCompensationPicker = actionType === 'invite' || actionType === 'inquiry';
 
   return (
     <Stack
@@ -584,23 +698,32 @@ function OpportunityCardExpandedItem({
       >
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
-            {actionType === 'invite'
-              ? 'You were personally invited for this role'
-              : actionType === 'inquiry'
-                ? `${opportunity.need_title} needed · 1 slot open`
-                : `${opportunity.need_title} needed`}
+            {actionType === 'servicing'
+              ? `You're assigned as ${opportunity.need_title}`
+              : actionType === 'already-applied'
+                ? `${opportunity.need_title} — application pending`
+                : actionType === 'invite'
+                  ? 'You were personally invited for this role'
+                  : actionType === 'inquiry'
+                    ? `${opportunity.need_title} needed · 1 slot open`
+                    : `${opportunity.need_title} needed`}
           </Typography>
-          <Typography sx={{ mt: 0.5, fontSize: 12, color: '#6b7280', lineHeight: 1.45 }}>
-            {actionType === 'invite'
-              ? "The host thinks you'd be great for this. No pressure — read the terms and decide."
-              : actionType === 'inquiry'
-                ? `${opportunity.need_description || 'Contribute during the event.'} · You pick your compensation.`
-                : 'Are you up for providing it?'}
+          <Typography
+            sx={{ mt: 0.5, fontSize: 12, color: '#6b7280', lineHeight: 1.45 }}
+          >
+            {actionType === 'servicing'
+              ? 'You are confirmed for this role. Head to event management to coordinate with the host.'
+              : actionType === 'already-applied'
+                ? 'The host is reviewing your application. You will be notified when they respond.'
+                : actionType === 'invite'
+                  ? "The host thinks you'd be great for this. No pressure — read the terms and decide."
+                  : actionType === 'inquiry'
+                    ? `${opportunity.need_description || 'Contribute during the event.'} · You pick your compensation.`
+                    : 'Are you up for providing it?'}
           </Typography>
-          {actionType}
         </Box>
 
-        {actionType !== 'create-service' ? (
+        {showTermsSection ? (
           <Box sx={{ width: '100%' }}>
             <Typography
               sx={{
@@ -626,19 +749,21 @@ function OpportunityCardExpandedItem({
                 <Box component="span" sx={{ fontWeight: 600 }}>
                   What you get:{' '}
                 </Box>
-                Your choice — free entry, {discountPercent}% discount, or {rewardLabel} cash.
+                Your choice — free entry, {discountPercent}% discount, or {rewardLabel}{' '}
+                cash.
               </Typography>
               <Typography sx={{ fontSize: 13, color: '#111827', lineHeight: 1.5 }}>
                 <Box component="span" sx={{ fontWeight: 600 }}>
                   If it gets cancelled:{' '}
                 </Box>
-                You'll still receive your full compensation regardless of when or why it's cancelled.
+                You'll still receive your full compensation regardless of when or why
+                it's cancelled.
               </Typography>
             </Stack>
           </Box>
         ) : null}
 
-        {actionType !== 'create-service' ? (
+        {showCompensationPicker ? (
           <Box sx={{ width: '100%' }}>
             <Typography
               sx={{
@@ -664,7 +789,8 @@ function OpportunityCardExpandedItem({
                   borderRadius: '999px',
                   fontSize: 12,
                   fontWeight: 500,
-                  border: selectedComp === 'free' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                  border:
+                    selectedComp === 'free' ? '2px solid #D85A30' : '1px solid #e5e7eb',
                   backgroundColor: selectedComp === 'free' ? '#FAECE7' : '#fff',
                   color: selectedComp === 'free' ? '#712B13' : '#374151',
                 }}
@@ -699,7 +825,8 @@ function OpportunityCardExpandedItem({
                   borderRadius: '999px',
                   fontSize: 12,
                   fontWeight: 500,
-                  border: selectedComp === 'cash' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                  border:
+                    selectedComp === 'cash' ? '2px solid #D85A30' : '1px solid #e5e7eb',
                   backgroundColor: selectedComp === 'cash' ? '#FAECE7' : '#fff',
                   color: selectedComp === 'cash' ? '#712B13' : '#374151',
                 }}
@@ -711,6 +838,8 @@ function OpportunityCardExpandedItem({
         {actionType === 'inquiry' ? (
           <TextField
             onClick={(e) => e.stopPropagation()}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder="Hey, I'd love to help — here's why I'm a good fit..."
             multiline
             minRows={3}
@@ -738,7 +867,44 @@ function OpportunityCardExpandedItem({
           pt: actionType === 'create-service' ? 0.5 : 0,
         }}
       >
-        {actionType === 'invite' ? (
+        {actionType === 'servicing' ? (
+          <Button
+            onClick={handleNavigateToManagement}
+            variant="contained"
+            size="medium"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 2.5,
+              backgroundColor: '#1D9E75',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#15803d' },
+            }}
+          >
+            Go to event management
+          </Button>
+        ) : actionType === 'already-applied' ? (
+          <Button
+            onClick={handleNavigateToManagement}
+            variant="outlined"
+            size="medium"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 2.5,
+              borderColor: '#D85A30',
+              color: '#D85A30',
+              '&:hover': {
+                borderColor: '#c04d26',
+                backgroundColor: 'rgba(216,90,48,0.04)',
+              },
+            }}
+          >
+            View application status
+          </Button>
+        ) : actionType === 'invite' ? (
           <>
             <Button
               onClick={(e) => e.stopPropagation()}
@@ -760,7 +926,8 @@ function OpportunityCardExpandedItem({
               Not this time
             </Button>
             <Button
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleSubmitApplication}
+              disabled={applyMutation.isPending}
               variant="contained"
               size="medium"
               sx={{
@@ -773,12 +940,13 @@ function OpportunityCardExpandedItem({
                 '&:hover': { backgroundColor: '#15803d' },
               }}
             >
-              I'm in ✓
+              {applyMutation.isPending ? 'Sending...' : "I'm in"}
             </Button>
           </>
         ) : actionType === 'inquiry' ? (
           <Button
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleSubmitApplication}
+            disabled={applyMutation.isPending}
             variant="contained"
             size="medium"
             sx={{
@@ -791,7 +959,7 @@ function OpportunityCardExpandedItem({
               '&:hover': { backgroundColor: '#c04d26' },
             }}
           >
-            Send application →
+            {applyMutation.isPending ? 'Sending...' : 'Send application'}
           </Button>
         ) : (
           <Button
@@ -815,6 +983,20 @@ function OpportunityCardExpandedItem({
           </Button>
         )}
       </Stack>
+      {applyMutation.isSuccess ? (
+        <Typography
+          sx={{ fontSize: 12, fontWeight: 600, color: '#1D9E75', textAlign: 'right' }}
+        >
+          Application sent!
+        </Typography>
+      ) : null}
+      {applyMutation.isError ? (
+        <Typography
+          sx={{ fontSize: 12, fontWeight: 600, color: '#dc2626', textAlign: 'right' }}
+        >
+          Something went wrong. Please try again.
+        </Typography>
+      ) : null}
     </Stack>
   );
 }
@@ -822,10 +1004,12 @@ function OpportunityCardExpandedItem({
 export function OpportunityCard({
   opportunity,
   hasMatchingService,
+  onCreateService,
   onClick,
 }: {
   opportunity: VendorOpportunity;
   hasMatchingService: boolean;
+  onCreateService?: (category?: string) => void;
   onClick: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -881,7 +1065,14 @@ export function OpportunityCard({
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 1,
+              alignItems: 'flex-start',
+            }}
+          >
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 sx={{
@@ -990,6 +1181,7 @@ export function OpportunityCard({
         opportunities={[opportunity]}
         hasMatchingService={hasMatchingService}
         expanded={expanded}
+        onCreateService={onCreateService}
       />
     </Box>
   );

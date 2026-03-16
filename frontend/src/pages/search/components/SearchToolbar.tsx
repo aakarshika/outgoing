@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Container,
-  Drawer,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Container, Drawer, Stack, Typography } from '@mui/material';
 import { ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -80,7 +73,12 @@ function RailPill({
         py: rounded ? 0.7 : 0.65,
         borderRadius: rounded ? '999px' : 0,
         border: `1.5px solid ${active || filled ? accent : SEARCH_THEME.borderSoft}`,
-        backgroundColor: active || filled ? accent : passive ? SEARCH_THEME.bgMuted : SEARCH_THEME.bgPanel,
+        backgroundColor:
+          active || filled
+            ? accent
+            : passive
+              ? SEARCH_THEME.bgMuted
+              : SEARCH_THEME.bgPanel,
         color: active || filled ? '#ffffff' : SEARCH_THEME.textMuted,
         fontSize: 12,
         fontWeight: 500,
@@ -122,7 +120,9 @@ function MainTab({
         height: 48,
         px: 2.25,
         border: 0,
-        borderBottom: active ? `2.5px solid ${SEARCH_THEME.accent}` : '2.5px solid transparent',
+        borderBottom: active
+          ? `2.5px solid ${SEARCH_THEME.accent}`
+          : '2.5px solid transparent',
         backgroundColor: 'transparent',
         color: active ? SEARCH_THEME.accent : SEARCH_THEME.textMuted,
         display: 'inline-flex',
@@ -201,8 +201,8 @@ export function SearchToolbar({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const isNearMeActive = Boolean(radiusMiles);
 
-  const contextualPills: ContextualPill[] =
-    (tab === 'all'
+  const contextualPills: ContextualPill[] = (
+    tab === 'all'
       ? [
           { label: 'No defaults', active: true },
           { label: 'Newest first', icon: '🗂️' },
@@ -246,8 +246,7 @@ export function SearchToolbar({
             },
           ]
         : tab === 'trending'
-          ? [
-            ]
+          ? []
           : tab === 'free-cheap'
             ? [
                 {
@@ -323,35 +322,52 @@ export function SearchToolbar({
                     { label: 'Interested' },
                     { label: 'Hosting' },
                     { label: 'New connections' },
-                  ]).concat(tab === 'all' ? [
-                    { label: 'In person', active: effectiveFormats.includes('in-person'), onClick: () => onToggleFormat('in-person') },
-                    { label: 'Free', active: effectiveFormats.includes('free'), onClick: () => onToggleFormat('free') },
-                    // { label: 'With friends', active: true, onClick: () => { onToggleFormat('With friends'); } },
-                    { label: 'Tonight only', active: effectiveWhen.includes('tonight'), onClick: () => onToggleWhen('tonight') },
-                  ] : []);
+                  ]
+  ).concat(
+    tab === 'all'
+      ? [
+          {
+            label: 'In person',
+            active: effectiveFormats.includes('in-person'),
+            onClick: () => onToggleFormat('in-person'),
+          },
+          {
+            label: 'Free',
+            active: effectiveFormats.includes('free'),
+            onClick: () => onToggleFormat('free'),
+          },
+          // { label: 'With friends', active: true, onClick: () => { onToggleFormat('With friends'); } },
+          {
+            label: 'Tonight only',
+            active: effectiveWhen.includes('tonight'),
+            onClick: () => onToggleWhen('tonight'),
+          },
+        ]
+      : [],
+  );
 
   return (
     <>
       <Box
         sx={{
           position: 'sticky',
-        maxWidth: 1240,
-        justifyContent: 'center',
-          
+          maxWidth: 1240,
+          justifyContent: 'center',
+
           top: stickyTop,
           zIndex: 20,
-            background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
-            borderBottom: `1px solid ${SEARCH_THEME.borderSoft}`,
+          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
+          borderBottom: `1px solid ${SEARCH_THEME.borderSoft}`,
         }}
       >
-        <Container maxWidth={false} sx={{  px: { xs: 0, sm: 0 } }}>
+        <Container maxWidth={false} sx={{ px: { xs: 0, sm: 0 } }}>
           <Box
             sx={{
               display: 'flex',
               alignItems: 'stretch',
               overflowX: 'auto',
               px: { xs: 1.5, sm: 2.5 },
-                backgroundColor: SEARCH_THEME.bgPanel,
+              backgroundColor: SEARCH_THEME.bgPanel,
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': { display: 'none' },
             }}
@@ -368,7 +384,6 @@ export function SearchToolbar({
                 />
               ))}
             </Box>
-
 
             {tab !== 'my-network' ? (
               <>
@@ -393,9 +408,7 @@ export function SearchToolbar({
                       opacity: 0.55,
                       px: 0.5,
                     }}
-                  >
-                    
-                  </Typography>
+                  ></Typography>
                   {categories.map((category) => (
                     <RailPill
                       key={category.slug}
@@ -413,7 +426,6 @@ export function SearchToolbar({
             ) : null}
 
             <Box sx={railDividerSx} />
-
           </Box>
 
           <Box
@@ -456,7 +468,7 @@ export function SearchToolbar({
               />
             ))}
 
-<Box
+            <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',

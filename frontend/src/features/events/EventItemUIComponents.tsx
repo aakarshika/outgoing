@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo } from "react";
-import { formatEventPrice, getEventCardRoles } from "./scrapbookCard";
+import { createContext, useContext, useMemo } from 'react';
+import { formatEventPrice, getEventCardRoles } from './scrapbookCard';
 import { Box, Typography, TypographyProps } from '@mui/material';
 import { Calendar, Globe } from 'lucide-react';
 
@@ -9,18 +9,24 @@ import { formatEventRelativeTime } from '@/utils/dateUtils';
 import { getCategoryTheme } from './CategoricalBackground';
 import { LocationTag } from './LocationTag';
 import { ImageWatermarkPlaceholder } from './scrapbookCard';
-import { PosterForEventCard } from "@/pages/events/components/PosterForEventCard";
+import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 
 // Calculate font size based on content length with optional multiplier
 // For title: base 3rem, decreases by 0.06rem per character (1/50 * 3 = 0.06)
 // For description: base 2rem, decreases by 0.013rem per character (1/150 * 2 ≈ 0.013)
-export const calculateTitleFontSize = (length: number, multiplier: number = 1): string => {
-  const baseSize = 2.5 - (length / 50);
+export const calculateTitleFontSize = (
+  length: number,
+  multiplier: number = 1,
+): string => {
+  const baseSize = 2.5 - length / 50;
   return Math.max(baseSize * multiplier, 1.2) + 'rem'; // Minimum 0.8rem
 };
 
-export const calculateDescriptionFontSize = (length: number, multiplier: number = 1): string => {
-  const baseSize = 2.2 - (length / 100);
+export const calculateDescriptionFontSize = (
+  length: number,
+  multiplier: number = 1,
+): string => {
+  const baseSize = 2.2 - length / 100;
   return Math.max(baseSize * multiplier, 1) + 'rem'; // Minimum 0.6rem
 };
 
@@ -35,7 +41,7 @@ export const DynamicTitleTypography = ({
 }) => {
   const fontSize = useMemo(
     () => calculateTitleFontSize(children?.toString().length || 0, multiplier),
-    [children?.toString().length, multiplier]
+    [children?.toString().length, multiplier],
   );
 
   return (
@@ -69,7 +75,7 @@ export const DynamicDescriptionTypography = ({
 }) => {
   const fontSize = useMemo(
     () => calculateDescriptionFontSize(children?.toString().length || 0, multiplier),
-    [children?.toString().length, multiplier]
+    [children?.toString().length, multiplier],
   );
 
   return (
@@ -124,8 +130,6 @@ export interface ScrapbookEventData {
   user_applications?: any[];
 }
 
-
-
 export const MainInfoCardImage = () => {
   const { theme, isFocused, event, relativeTime } = useEventUIContext() ?? {};
 
@@ -155,17 +159,12 @@ export const MainInfoCardImage = () => {
             transformOrigin: 'top center',
           }}
         >
-          <PosterForEventCard
-            imageUrl={event?.cover_image || ''}
-            title={'df'}
-          />
+          <PosterForEventCard imageUrl={event?.cover_image || ''} title={'df'} />
         </Box>
       </Box>
 
       <Box sx={{ px: 0.5, pl: '12px' }}>
-        <DynamicTitleTypography multiplier={0.4}>
-          {event.title}
-        </DynamicTitleTypography>
+        <DynamicTitleTypography multiplier={0.4}>{event.title}</DynamicTitleTypography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
           <DynamicDescriptionTypography multiplier={0.5}>
@@ -224,13 +223,12 @@ export const MainInfoCardImage = () => {
         </Box>
       </Box>
     </>
-
-  )
+  );
 };
 
-
 export const MainInfoCard = () => {
-  const { theme, titleFontSize, descriptionFontSize, isFocused, event, relativeTime } = useEventUIContext() ?? {};
+  const { theme, titleFontSize, descriptionFontSize, isFocused, event, relativeTime } =
+    useEventUIContext() ?? {};
 
   if (!event || !theme || !titleFontSize || !descriptionFontSize || !relativeTime) {
     return null; // or return a loading state
@@ -243,12 +241,15 @@ export const MainInfoCard = () => {
       }}
     >
       <MainInfoBaseBox>
-
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-
-          <DynamicTitleTypography
-            sx={{ pt: 2, pb: 1 }}
-          >
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <DynamicTitleTypography sx={{ pt: 2, pb: 1 }}>
             {event.title}
           </DynamicTitleTypography>
 
@@ -276,45 +277,42 @@ export const MainInfoCard = () => {
           </Box>
         </Box>
       </MainInfoBaseBox>
-
     </Box>
-
-  )
+  );
 };
 
 export const OnlineTimeLocationBox = () => {
   const { event, relativeTime } = useEventUIContext() ?? {};
 
-
   return (
-
-      <Box
-        sx={{
-          display: 'flex',
-          width: '100%',
-        }}>
-
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Globe size={12} color="#2121b6ff" />
-          <Typography
-            sx={{
-              fontSize: '0.82rem',
-              fontWeight: 'bolder',
-              color: event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555',
-              fontFamily: 'serif',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {relativeTime}
-          </Typography>
-        </Box>
-
+    <Box
+      sx={{
+        display: 'flex',
+        width: '100%',
+      }}
+    >
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Globe size={12} color="#2121b6ff" />
+        <Typography
+          sx={{
+            fontSize: '0.82rem',
+            fontWeight: 'bolder',
+            color:
+              event?.location_address?.toLowerCase() === 'online event'
+                ? '#5b21b6'
+                : '#555',
+            fontFamily: 'serif',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {relativeTime}
+        </Typography>
       </Box>
+    </Box>
   );
 };
 export const MainInfoTimeLocationBox = () => {
   const { event, relativeTime } = useEventUIContext() ?? {};
-
 
   return (
     <Box
@@ -326,7 +324,6 @@ export const MainInfoTimeLocationBox = () => {
         gap: 1,
       }}
     >
-
       <Box
         sx={{
           display: 'flex',
@@ -335,22 +332,27 @@ export const MainInfoTimeLocationBox = () => {
           width: '100%',
           gap: 1,
         }}
-      ><Box
-        sx={{
-          minWidth: 0,
-          flex: 1,
-          display: 'flex',
-          justifyContent: 'flex-start',
-          overflow: 'hidden',
-        }}
       >
+        <Box
+          sx={{
+            minWidth: 0,
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'flex-start',
+            overflow: 'hidden',
+          }}
+        >
           <LocationTag
             locationName={event?.location_name || ''}
             locationAddress={event?.location_address || ''}
             latitude={event?.latitude}
             longitude={event?.longitude}
             size={13}
-            color={event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555'}
+            color={
+              event?.location_address?.toLowerCase() === 'online event'
+                ? '#5b21b6'
+                : '#555'
+            }
           />
         </Box>
         <Box
@@ -365,7 +367,10 @@ export const MainInfoTimeLocationBox = () => {
             sx={{
               fontSize: '0.82rem',
               fontWeight: 'bolder',
-              color: event?.location_address?.toLowerCase() === 'online event' ? '#5b21b6' : '#555',
+              color:
+                event?.location_address?.toLowerCase() === 'online event'
+                  ? '#5b21b6'
+                  : '#555',
               fontFamily: 'serif',
               whiteSpace: 'nowrap',
             }}
@@ -373,14 +378,14 @@ export const MainInfoTimeLocationBox = () => {
             {relativeTime}
           </Typography>
         </Box>
-
       </Box>
     </Box>
   );
 };
 
 export const MainInfoBaseBox = ({ children }: { children: React.ReactNode }) => {
-  const { theme, titleFontSize, descriptionFontSize, isFocused, event, relativeTime } = useEventUIContext() ?? {};
+  const { theme, titleFontSize, descriptionFontSize, isFocused, event, relativeTime } =
+    useEventUIContext() ?? {};
 
   if (!event || !theme || !titleFontSize || !descriptionFontSize || !relativeTime) {
     return null; // or return a loading state
@@ -400,10 +405,8 @@ export const MainInfoBaseBox = ({ children }: { children: React.ReactNode }) => 
 
       {children}
     </Box>
-
-  )
+  );
 };
-
 
 export function useEventUIData({
   event,
@@ -422,7 +425,6 @@ export function useEventUIData({
   disableHover?: boolean;
   isBasicEventCard?: boolean;
 }) {
-
   const { user, isAuthenticated } = useAuth();
   const { isHost, isVendor } = getEventCardRoles(event, {
     user: user ?? null,
@@ -454,22 +456,22 @@ export function useEventUIData({
   // Dynamic font size calculations based on content length
   const titleFontSize = useMemo(() => {
     const length = event.title?.length || 0;
-    return (3 - (length / 50)) + 'rem';
+    return 3 - length / 50 + 'rem';
   }, [event.title]);
 
   const descriptionFontSize = useMemo(() => {
     const length = event.description?.length || 0;
-    return (2 - (length / 150)) + 'rem';
+    return 2 - length / 150 + 'rem';
   }, [event.description]);
 
   const titleFontSizeWithImage = useMemo(() => {
     const length = event.title?.length || 0;
-    return (2 - (length / 50)) + 'rem';
+    return 2 - length / 50 + 'rem';
   }, [event.title]);
 
   const descriptionFontSizeWithImage = useMemo(() => {
     const length = event.description?.length || 0;
-    return (1.7 - (length / 150)) + 'rem';
+    return 1.7 - length / 150 + 'rem';
   }, [event.description]);
 
   return {
@@ -515,12 +517,16 @@ export function EventUIProvider({
   disableHover?: boolean;
   isBasicEventCard?: boolean;
 }) {
-  const eventUIData = useEventUIData({ event, isFocused, showClip, rotation, rotationhover, disableHover, isBasicEventCard });
-  return (
-    <EventUI.Provider value={eventUIData}>
-      {children}
-    </EventUI.Provider>
-  );
+  const eventUIData = useEventUIData({
+    event,
+    isFocused,
+    showClip,
+    rotation,
+    rotationhover,
+    disableHover,
+    isBasicEventCard,
+  });
+  return <EventUI.Provider value={eventUIData}>{children}</EventUI.Provider>;
 }
 // Hook for child components
 export function useEventUIContext() {

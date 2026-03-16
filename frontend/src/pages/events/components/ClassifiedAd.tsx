@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button as MuiButton,
-  Paper,
-  Popover,
-  Typography,
-} from '@mui/material';
+import { Box, Button as MuiButton, Paper, Popover, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -148,7 +142,11 @@ export const ClassifiedAd = ({
             mt: 0,
           }}
         >
-          {((need.status === 'open' || !need.status || need.status === "pending") || !need.status || need.status === "pending") &&
+          {(need.status === 'open' ||
+            !need.status ||
+            need.status === 'pending' ||
+            !need.status ||
+            need.status === 'pending') &&
             !isHost &&
             (userApplication ? (
               <MuiButton
@@ -206,35 +204,40 @@ export const ClassifiedAd = ({
         </Box>
       </Paper>
 
-      {((need.status === 'open' || !need.status || need.status === "pending") || !need.status || need.status === "pending") && isOpportunity && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 10,
-            right: 14,
-            px: 1.5,
-            py: 0.6,
-            border: '2px solid rgba(22, 163, 74, 0.6)',
-            borderRadius: '4px',
-            transform: 'rotate(4deg)',
-            pointerEvents: 'none',
-            zIndex: 2,
-            bgcolor: 'rgba(255, 255, 255, 0.85)',
-          }}
-        >
-          <Typography
+      {(need.status === 'open' ||
+        !need.status ||
+        need.status === 'pending' ||
+        !need.status ||
+        need.status === 'pending') &&
+        isOpportunity && (
+          <Box
             sx={{
-              fontFamily: '"Permanent Marker", cursive',
-              fontSize: '0.65rem',
-              color: 'rgba(22, 163, 74, 0.8)',
-              letterSpacing: 2,
-              textTransform: 'uppercase',
+              position: 'absolute',
+              top: 10,
+              right: 14,
+              px: 1.5,
+              py: 0.6,
+              border: '2px solid rgba(22, 163, 74, 0.6)',
+              borderRadius: '4px',
+              transform: 'rotate(4deg)',
+              pointerEvents: 'none',
+              zIndex: 2,
+              bgcolor: 'rgba(255, 255, 255, 0.85)',
             }}
           >
-            OPPORTUNITY
-          </Typography>
-        </Box>
-      )}
+            <Typography
+              sx={{
+                fontFamily: '"Permanent Marker", cursive',
+                fontSize: '0.65rem',
+                color: 'rgba(22, 163, 74, 0.8)',
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+              }}
+            >
+              OPPORTUNITY
+            </Typography>
+          </Box>
+        )}
 
       {need.status === 'filled' && (
         <>

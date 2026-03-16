@@ -11,14 +11,18 @@ import {
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Lightbulb, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import client from '@/api/client';
 import { useAuth } from '@/features/auth/hooks';
 import { fetchFeed } from '@/features/events/api';
 import { useFeed, useMyInterestedEvents } from '@/features/events/hooks';
 import { fetchEvent } from '@/features/events/api';
-import { fetchAllOpenOpportunities } from '@/features/needs/api';
+import {
+  fetchAllOpenOpportunities,
+  fetchMyApplications,
+  fetchMyVendorOpportunities,
+} from '@/features/needs/api';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 import { ProfileService } from '@/pages/profile/Profile.service';
 import type {
@@ -27,7 +31,7 @@ import type {
   EventLifecycleState,
   EventListItem,
 } from '@/types/events';
-import type { VendorOpportunity } from '@/types/needs';
+import type { NeedApplication, VendorOpportunity } from '@/types/needs';
 import { OpportunityCardExpandedSection } from '@/pages/search/components/SearchCards';
 
 const trendingFeedFilters = [
@@ -406,23 +410,45 @@ function getOpportunityIcon(category: string) {
   return '🛠️';
 }
 
-function getBudgetLabel(opportunity: VendorOpportunity) {
-  if (opportunity.budget_min && opportunity.budget_max) {
-    return `$${opportunity.budget_min}-${opportunity.budget_max}`;
-  }
-  if (opportunity.budget_max) return `Up to $${opportunity.budget_max}`;
-  if (opportunity.budget_min) return `From $${opportunity.budget_min}`;
-  return 'Open call';
-}
-
 function formatNeedList(opportunities: VendorOpportunity[]) {
   const titles = opportunities.map((opp) => opp.need_title);
   if (titles.length === 0) return '';
   if (titles.length === 1) return titles[0];
   if (titles.length === 2) return `${titles[0]} and ${titles[1]}`;
-  const allButLast = opportunities.slice(0, -1).map((opp) => `${getOpportunityIcon(opp.category)} ${opp.need_title}`).join(', ');
+  const allButLast = opportunities
+    .slice(0, -1)
+    .map((opp) => `${getOpportunityIcon(opp.category)} ${opp.need_title}`)
+    .join(', ');
   const last = `${getOpportunityIcon(opportunities[opportunities.length - 1].category)} ${opportunities[opportunities.length - 1].need_title}`;
   return `${allButLast}, and ${last}`;
+}
+
+function getChipInActionLabel(
+  opp: VendorOpportunity,
+  matchedNeedIds: Set<number>,
+  appByNeedId: Map<number, NeedApplication>,
+) {
+  const app = appByNeedId.get(opp.need_id);
+  if (app?.status === 'accepted') return 'Servicing here';
+  if (app?.status === 'pending') return 'Already applied';
+  if (opp.is_invited) return 'Show invite';
+  if (matchedNeedIds.has(opp.need_id)) return 'Send inquiry';
+  return 'Create service';
+}
+
+function getChipInActionColor(label: string) {
+  switch (label) {
+    case 'Servicing here':
+      return '#1D9E75';
+    case 'Already applied':
+      return '#D85A30';
+    case 'Show invite':
+      return '#534AB7';
+    case 'Send inquiry':
+      return '#D85A30';
+    default:
+      return '#0d9488';
+  }
 }
 
 function getRoleStyle(kind: 'hosting' | 'attending' | 'saved' | 'vendor') {
@@ -443,13 +469,12 @@ async function fetchEventOverview() {
 }
 
 export default function MyHomePage() {
+  const navigate = useNavigate();
   const { user, isAuthenticated, loading } = useAuth();
   const [selectedTrendingFilters, setSelectedTrendingFilters] = useState<
     TrendingFeedFilter[]
   >(['this-weekend']);
-  const [expandedNeedCard, setExpandedNeedCard] = useState<
-    number | null
-  >(null);
+  const [expandedNeedCard, setExpandedNeedCard] = useState<number | null>(null);
   const trendingLifecycleStates = [
     'published',
     'event_ready',
@@ -490,6 +515,34 @@ export default function MyHomePage() {
       return response.data || [];
     },
   });
+
+  const { data: matchedOpportunities = [] } = useQuery({
+    queryKey: ['my-home', 'opportunities', 'matched'],
+    enabled: !!user,
+    queryFn: async () => {
+      const response = await fetchMyVendorOpportunities();
+      return response.data || [];
+    },
+  });
+
+  const matchedOpportunityNeedIds = useMemo(
+    () => new Set(matchedOpportunities.map((item) => item.need_id)),
+    [matchedOpportunities],
+  );
+
+  const { data: applicationsResponse } = useQuery({
+    queryKey: ['myApplications'],
+    enabled: !!user,
+    queryFn: fetchMyApplications,
+  });
+
+  const applicationByNeedId = useMemo(() => {
+    const map = new Map<number, NeedApplication>();
+    (applicationsResponse?.data || []).forEach((app) => {
+      if (app.need != null) map.set(app.need, app);
+    });
+    return map;
+  }, [applicationsResponse]);
 
   const contributionEventCards = useMemo<ContributionEventCardData[]>(() => {
     const byEvent = new Map<number, VendorOpportunity[]>();
@@ -544,19 +597,17 @@ export default function MyHomePage() {
     return `/search?${params.toString()}`;
   }, [locationQuery]);
 
-  const { data: nearbyTrendingResponse } = useQuery(
-    {
-      queryKey: ['my-home', 'trending-nearby', locationQuery],
-      enabled: Boolean(locationQuery),
-      queryFn: () =>
-        fetchFeed({
-          sort: 'trending',
-          location: locationQuery,
-          lifecycle_states: trendingLifecycleStates,
-          page_size: 120,
-        }),
-    },
-  );
+  const { data: nearbyTrendingResponse } = useQuery({
+    queryKey: ['my-home', 'trending-nearby', locationQuery],
+    enabled: Boolean(locationQuery),
+    queryFn: () =>
+      fetchFeed({
+        sort: 'trending',
+        location: locationQuery,
+        lifecycle_states: trendingLifecycleStates,
+        page_size: 120,
+      }),
+  });
 
   const trendingEvents = useMemo(
     () =>
@@ -676,7 +727,9 @@ export default function MyHomePage() {
         selectedCategoryFilters.length === 0 ||
         selectedCategoryFilters.some((filter) => {
           if (filter === 'outdoors' && isOnlineEvent(event)) return false;
-          return (trendingCategoryGroups[filter] as readonly string[]).includes(categorySlug);
+          return (trendingCategoryGroups[filter] as readonly string[]).includes(
+            categorySlug,
+          );
         });
 
       const matchesDateFilter =
@@ -857,10 +910,10 @@ export default function MyHomePage() {
                             >
                               {nextEvent
                                 ? `${formatDate(nextEvent.start_time, {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}, ${formatTime(nextEvent.start_time)}`
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}, ${formatTime(nextEvent.start_time)}`
                                 : 'Check back soon'}
                             </Typography>
                             <Typography
@@ -1169,136 +1222,184 @@ export default function MyHomePage() {
                     title="Earn your way into the room"
                   />
                   <Stack spacing={1.5} sx={{ mt: 2 }}>
-                    {contributionEventCards.length > 0 ? (
-                      contributionEventCards.map((eventCard) => {
-                        const coverUrl = eventCoverByEventId.get(eventCard.eventId);
-                        return (
-                          <Box
-                            key={eventCard.eventId}
-                            sx={{
-                              display: 'flex',
-                              width: '100%',
-                              flexDirection: 'column',
-                              alignItems: 'flex-start',
-                              borderRadius: '22px',
-                              border: '1px solid rgba(143, 105, 66, 0.16)',
-                              borderLeft: '4px solid #EF9F27',
-                              borderTop: 'none',
-                              background: 'rgba(255,255,255,0.86)',
-                              boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
-                              minWidth: 0,
-                              overflow: 'hidden',
-                              transition: 'box-shadow 0.2s ease',
-                              '&:hover': {
-                                boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)',
-                              },
-                            }}
-                          >
+                    {contributionEventCards.length > 0
+                      ? contributionEventCards.map((eventCard) => {
+                          const coverUrl = eventCoverByEventId.get(eventCard.eventId);
+                          return (
                             <Box
+                              key={eventCard.eventId}
                               sx={{
-                                flex: 1,
                                 display: 'flex',
-                                flexDirection: 'row',
+                                width: '100%',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                borderRadius: '22px',
+                                border: '1px solid rgba(143, 105, 66, 0.16)',
+                                borderLeft: '4px solid #EF9F27',
+                                borderTop: 'none',
+                                background: 'rgba(255,255,255,0.86)',
+                                boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
                                 minWidth: 0,
+                                overflow: 'hidden',
+                                transition: 'box-shadow 0.2s ease',
+                                '&:hover': {
+                                  boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)',
+                                },
                               }}
                             >
-                              {/* image */}
                               <Box
-                                sx={{
-                                  position: 'relative',
-                                  width: 140,
-                                  minWidth: 140,
-                                  height: 100,
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {coverUrl && (
-                                  <Box
-                                    component="img"
-                                    src={coverUrl}
-                                    alt={eventCard.eventTitle}
-                                    sx={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      display: 'block',
-                                    }}
-                                  />
-                                )}
-                              </Box>
-                              {/* content */}
-                              <Stack
-                                spacing={1.25}
                                 sx={{
                                   flex: 1,
-                                  minWidth: 0,
-                                  p: 1.6,
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <Typography
-                                  sx={{
-                                    fontSize: { xs: 14, sm: 14.5 },
-                                    fontWeight: 700,
-                                    color: '#2B2118',
-                                  }}
-                                >
-                                  {eventCard.eventTitle}
-                                  {' '}<strong style={{ color: 'rgba(66, 50, 28, 0.68)', fontWeight: 700 }}>needs</strong> {' '}
-                                  {formatNeedList(
-                                    eventCard.opportunities,
-                                  )}
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    fontSize: 12.5,
-                                    color: 'rgba(66, 50, 28, 0.68)',
-                                  }}
-                                >
-                                  {eventCard.subtitle}
-                                </Typography>
-                                <Typography
-                                  onClick={() => {
-                                    setExpandedNeedCard(expandedNeedCard === eventCard.eventId ? null : eventCard.eventId);
-                                  }}
-                                  sx={{
-                                    fontFamily: 'Syne, sans-serif',
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    color: '#BA7517',
-                                  }}
-                                >
-                                  {eventCard.opportunities.length == 1 ? getBudgetLabel(eventCard.opportunities[0]) : `Multiple Opportunities`}
-                                </Typography>
-
-                              </Stack>
-
-                            </Box>
-
-                            {expandedNeedCard === eventCard.eventId && (
-                              <Box
-                                onClick={(e) => e.stopPropagation()}
-                                sx={{
-                                  width: '100%',
                                   display: 'flex',
                                   flexDirection: 'row',
+                                  minWidth: 0,
                                 }}
                               >
-                                <OpportunityCardExpandedSection
-                                  opportunities={eventCard.opportunities || []}
-                                  hasMatchingService={false}
-                                  expanded={expandedNeedCard === eventCard.eventId ?? false}
-                                />
+                                {/* image */}
+                                <Box
+                                  sx={{
+                                    position: 'relative',
+                                    width: 140,
+                                    minWidth: 140,
+                                    height: 100,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {coverUrl && (
+                                    <Box
+                                      component="img"
+                                      src={coverUrl}
+                                      alt={eventCard.eventTitle}
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        display: 'block',
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                                {/* content */}
+                                <Stack
+                                  spacing={1.25}
+                                  sx={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    p: 1.6,
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      fontSize: { xs: 14, sm: 14.5 },
+                                      fontWeight: 700,
+                                      color: '#2B2118',
+                                    }}
+                                  >
+                                    {eventCard.eventTitle}{' '}
+                                    <strong
+                                      style={{
+                                        color: 'rgba(66, 50, 28, 0.68)',
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      needs
+                                    </strong>{' '}
+                                    {formatNeedList(eventCard.opportunities)}
+                                  </Typography>
+                                  <Typography
+                                    sx={{
+                                      fontSize: 12.5,
+                                      color: 'rgba(66, 50, 28, 0.68)',
+                                    }}
+                                  >
+                                    {eventCard.subtitle}
+                                  </Typography>
+                                  <Stack
+                                    direction="row"
+                                    spacing={0.8}
+                                    sx={{ flexWrap: 'wrap', gap: 0.8 }}
+                                  >
+                                    {eventCard.opportunities.map((opp) => {
+                                      const label = getChipInActionLabel(
+                                        opp,
+                                        matchedOpportunityNeedIds,
+                                        applicationByNeedId,
+                                      );
+                                      const color = getChipInActionColor(label);
+                                      return (
+                                        <Box
+                                          key={opp.need_id}
+                                          component="button"
+                                          type="button"
+                                          onClick={(e: React.MouseEvent) => {
+                                            e.stopPropagation();
+                                            if (
+                                              label === 'Servicing here' ||
+                                              label === 'Already applied'
+                                            ) {
+                                              navigate(
+                                                `/events/${opp.event_id}/service-event-management`,
+                                              );
+                                            } else {
+                                              setExpandedNeedCard(
+                                                expandedNeedCard === eventCard.eventId
+                                                  ? null
+                                                  : eventCard.eventId,
+                                              );
+                                            }
+                                          }}
+                                          sx={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                            px: 1.2,
+                                            py: 0.5,
+                                            borderRadius: '999px',
+                                            border: `1px solid ${color}`,
+                                            backgroundColor: 'transparent',
+                                            color,
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            fontFamily: 'Syne, sans-serif',
+                                            transition: 'background-color 0.15s ease',
+                                            '&:hover': {
+                                              backgroundColor: `${color}10`,
+                                            },
+                                          }}
+                                        >
+                                          {label}
+                                        </Box>
+                                      );
+                                    })}
+                                  </Stack>
+                                </Stack>
                               </Box>
-                            )}
 
-                          </Box>
-
-                        );
-                      })
-                    ) : (
-                      null
-                    )}
+                              {expandedNeedCard === eventCard.eventId && (
+                                <Box
+                                  onClick={(e) => e.stopPropagation()}
+                                  sx={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                  }}
+                                >
+                                  <OpportunityCardExpandedSection
+                                    opportunities={eventCard.opportunities || []}
+                                    hasMatchingService={false}
+                                    matchedNeedIds={matchedOpportunityNeedIds}
+                                    expanded={
+                                      expandedNeedCard === eventCard.eventId ?? false
+                                    }
+                                  />
+                                </Box>
+                              )}
+                            </Box>
+                          );
+                        })
+                      : null}
                     {contributionEventCards.length > 0 && (
                       <Box sx={{ pt: 0.5 }}>
                         <Button
@@ -1325,10 +1426,7 @@ export default function MyHomePage() {
                 </Box>
 
                 <Box sx={{ minWidth: 0 }}>
-                  <SectionHeading
-                    eyebrow="Your network"
-                    title=""
-                  />
+                  <SectionHeading eyebrow="Your network" title="" />
                   <Box
                     sx={{
                       display: 'flex',
@@ -1383,10 +1481,7 @@ export default function MyHomePage() {
               </Box>
 
               <Box>
-                <SectionHeading
-                  eyebrow="Based on your interests"
-                  title=""
-                />
+                <SectionHeading eyebrow="Based on your interests" title="" />
                 <Box
                   sx={{
                     display: 'flex',
@@ -1492,7 +1587,6 @@ export default function MyHomePage() {
                   Start an event
                 </Button>
               </Box>
-
             </Stack>
           </Box>
         </Box>

@@ -90,7 +90,10 @@ function EventCardRow({ event }: { event: EventListItem }) {
         </div>
 
         {/* Info on Right */}
-        <div className="flex flex-col justify-center gap-3 p-2 bg-transparent" style={{ maxWidth: '400px' }}>
+        <div
+          className="flex flex-col justify-center gap-3 p-2 bg-transparent"
+          style={{ maxWidth: '400px' }}
+        >
           <div>
             <div
               className="text-gray-900 text-lg mb-0.5"
@@ -141,7 +144,6 @@ function EventCardRow({ event }: { event: EventListItem }) {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

@@ -49,12 +49,14 @@ function EventGrid({
   eventCardOpportunityByEventId,
   matchedOpportunityNeedIds,
   onEventClick,
+  onCreateService,
 }: {
   events: EventListItem[];
   tab: SearchTabId;
   eventCardOpportunityByEventId: Map<number, VendorOpportunity>;
   matchedOpportunityNeedIds: Set<number>;
   onEventClick: (eventId: number) => void;
+  onCreateService?: (category?: string) => void;
 }) {
   return (
     <Box
@@ -73,6 +75,7 @@ function EventGrid({
           hasMatchingService={matchedOpportunityNeedIds.has(
             eventCardOpportunityByEventId.get(event.id)?.need_id ?? -1,
           )}
+          onCreateService={onCreateService}
           onClick={() => onEventClick(event.id)}
         />
       ))}
@@ -85,11 +88,13 @@ function OpportunityList({
   onOpportunityClick,
   matchedOpportunityNeedIds,
   heading,
+  onCreateService,
 }: {
   opportunities: VendorOpportunity[];
   onOpportunityClick: (eventId: number) => void;
   matchedOpportunityNeedIds: Set<number>;
   heading?: string;
+  onCreateService?: (category?: string) => void;
 }) {
   return (
     <Stack spacing={1}>
@@ -110,6 +115,7 @@ function OpportunityList({
           key={opportunity.need_id}
           opportunity={opportunity}
           hasMatchingService={matchedOpportunityNeedIds.has(opportunity.need_id)}
+          onCreateService={onCreateService}
           onClick={() => onOpportunityClick(opportunity.event_id)}
         />
       ))}
@@ -129,6 +135,7 @@ export function SearchResults({
   isAuthenticated,
   onEventClick,
   onOpportunityClick,
+  onCreateService,
   onSignIn,
 }: {
   tab: SearchTabId;
@@ -142,6 +149,7 @@ export function SearchResults({
   isAuthenticated: boolean;
   onEventClick: (eventId: number) => void;
   onOpportunityClick: (eventId: number) => void;
+  onCreateService?: (category?: string) => void;
   onSignIn: () => void;
 }) {
   return (
@@ -188,6 +196,7 @@ export function SearchResults({
             eventCardOpportunityByEventId={eventCardOpportunityByEventId}
             matchedOpportunityNeedIds={matchedOpportunityNeedIds}
             onEventClick={onEventClick}
+            onCreateService={onCreateService}
           />
         ) : (
           <EmptyState />
@@ -203,6 +212,7 @@ export function SearchResults({
               eventCardOpportunityByEventId={eventCardOpportunityByEventId}
               matchedOpportunityNeedIds={matchedOpportunityNeedIds}
               onEventClick={onEventClick}
+              onCreateService={onCreateService}
             />
           ) : null}
 
@@ -224,6 +234,7 @@ export function SearchResults({
               onOpportunityClick={onOpportunityClick}
               matchedOpportunityNeedIds={matchedOpportunityNeedIds}
               heading="Contributor gigs"
+              onCreateService={onCreateService}
             />
           ) : null}
 
@@ -239,6 +250,7 @@ export function SearchResults({
             opportunities={filteredOpportunities}
             onOpportunityClick={onOpportunityClick}
             matchedOpportunityNeedIds={matchedOpportunityNeedIds}
+            onCreateService={onCreateService}
           />
         ) : (
           <EmptyState />

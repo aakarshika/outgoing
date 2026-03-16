@@ -44,7 +44,10 @@ export const SearchBarSimple = () => {
           />
         </div>
 
-        <div className="relative  hidden md:flex  flex-shrink-0 cursor-pointer rounded-full bg-white/70 " ref={locationDropdownRef}>
+        <div
+          className="relative  hidden md:flex  flex-shrink-0 cursor-pointer rounded-full bg-white/70 "
+          ref={locationDropdownRef}
+        >
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
@@ -53,7 +56,9 @@ export const SearchBarSimple = () => {
             <span className="flex items-center gap-2 truncate">
               <MapPin size={14} className="shrink-0" />
               <span className="truncate">
-                {nearYouEnabled ? nearYouName || 'Near you' : locationSearch || 'Location'}
+                {nearYouEnabled
+                  ? nearYouName || 'Near you'
+                  : locationSearch || 'Location'}
               </span>
             </span>
             <span className="shrink-0 text-xs">{radiusMiles} mi</span>
@@ -70,7 +75,10 @@ export const SearchBarSimple = () => {
                 }}
                 className="mb-3 flex w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-left text-sm text-[var(--color-text-primary)]"
               >
-                <LocateFixed size={16} className={nearYouEnabled ? 'text-[#D85A30]' : ''} />
+                <LocateFixed
+                  size={16}
+                  className={nearYouEnabled ? 'text-[#D85A30]' : ''}
+                />
                 <span>Use current location</span>
               </button>
 
@@ -82,9 +90,12 @@ export const SearchBarSimple = () => {
                     if (nearYouEnabled) toggleNearYou();
                   }}
                   onFocus={() => {
-                    if (locationSuggestions.length > 0) setShowLocationSuggestions(true);
+                    if (locationSuggestions.length > 0)
+                      setShowLocationSuggestions(true);
                   }}
-                  onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+                  onBlur={() =>
+                    setTimeout(() => setShowLocationSuggestions(false), 200)
+                  }
                   placeholder="City or address..."
                   className="h-10 w-full rounded-xl bg-white/70 px-3 text-sm text-[var(--color-text-primary)] outline-none"
                 />
@@ -117,7 +128,9 @@ export const SearchBarSimple = () => {
               </div>
 
               <div className="mt-3 flex items-center gap-2">
-                <label className="text-xs text-[var(--color-text-secondary)]">Radius</label>
+                <label className="text-xs text-[var(--color-text-secondary)]">
+                  Radius
+                </label>
                 <input
                   type="number"
                   min={1}
@@ -142,7 +155,9 @@ export const SearchBarSimple = () => {
                   }}
                   className="h-8 w-20 rounded-lg bg-white/70 px-2 text-sm text-[var(--color-text-primary)] outline-none"
                 />
-                <span className="text-xs text-[var(--color-text-secondary)]">miles</span>
+                <span className="text-xs text-[var(--color-text-secondary)]">
+                  miles
+                </span>
               </div>
 
               {locationSearch && (
@@ -171,7 +186,6 @@ export const SearchBarSimple = () => {
           <Search size={16} />
         </button>
       </form>
-
     </div>
   );
 };

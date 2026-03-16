@@ -34,8 +34,8 @@ export const LocationTag = ({
         const a =
           Math.sin(dLat / 2) ** 2 +
           Math.cos((pos.coords.latitude * Math.PI) / 180) *
-          Math.cos((latitude * Math.PI) / 180) *
-          Math.sin(dLon / 2) ** 2;
+            Math.cos((latitude * Math.PI) / 180) *
+            Math.sin(dLon / 2) ** 2;
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         setDistanceMiles(Math.round(R * c));
       },
@@ -45,7 +45,6 @@ export const LocationTag = ({
       { timeout: 5000 },
     );
   }, [latitude, longitude, isOnline]);
-
 
   let displayText = locationName;
   if (distanceMiles !== null && distanceMiles < 50) {

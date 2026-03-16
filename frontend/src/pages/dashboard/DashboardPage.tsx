@@ -27,14 +27,24 @@ const dashboardNavItems: DashboardNavItem[] = [
   { to: '/dashboard/tickets', label: 'My Tickets', icon: Ticket, indent: 2 },
 
   { label: 'Activities', type: 'heading', indent: 1 },
-  { to: '/dashboard/activities', label: 'My Activities', icon: MessageSquare, indent: 2 },
+  {
+    to: '/dashboard/activities',
+    label: 'My Activities',
+    icon: MessageSquare,
+    indent: 2,
+  },
 
   { label: 'Organizing', type: 'heading', indent: 1 },
   { to: '/dashboard/events', label: 'My Events', icon: Calendar, indent: 2 },
 
   { label: 'Services', type: 'heading', indent: 1 },
   { to: '/dashboard/services', label: 'My Services', icon: Briefcase, indent: 2 },
-  { to: '/dashboard/services/opportunities', label: 'Service Opportunities', icon: Briefcase, indent: 2 },
+  {
+    to: '/dashboard/services/opportunities',
+    label: 'Service Opportunities',
+    icon: Briefcase,
+    indent: 2,
+  },
 ];
 
 export default function DashboardPage() {
@@ -62,11 +72,15 @@ export default function DashboardPage() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${activeTab === t.key
-                  ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
-                  : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
-                  }`}
-                style={{ fontFamily: '"Permanent Marker", cursive', fontSize: '0.85rem' }}
+                className={`flex items-center gap-2 px-5 py-2.5 border-2 border-b-0 transition-all whitespace-nowrap ${
+                  activeTab === t.key
+                    ? 'bg-yellow-300/60 border-gray-800 text-gray-900 -rotate-1 shadow-[2px_-2px_0px_#333] font-bold relative z-10 -mb-[2px]'
+                    : 'bg-white/60 border-gray-400 text-gray-500 hover:bg-yellow-100/40 hover:text-gray-700'
+                }`}
+                style={{
+                  fontFamily: '"Permanent Marker", cursive',
+                  fontSize: '0.85rem',
+                }}
               >
                 <t.icon className="h-4 w-4" /> {t.label}
               </button>

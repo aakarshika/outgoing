@@ -14,7 +14,8 @@ function EmptyState({ label }: { label: string }) {
 }
 
 export function AllChatsList() {
-  const { isAllChatsSidebarOpen, setIsAllChatsSidebarOpen, isAuthenticated } = useNavbarContext();
+  const { isAllChatsSidebarOpen, setIsAllChatsSidebarOpen, isAuthenticated } =
+    useNavbarContext();
   const { openChat } = useChatDrawer();
   const { data, isLoading } = useAllChatsList(isAuthenticated && isAllChatsSidebarOpen);
 
@@ -29,7 +30,9 @@ export function AllChatsList() {
     other_username: string | null;
   }) => {
     openChat({
-      title: chat.event_title || (chat.other_username ? `Chat with ${chat.other_username}` : 'Chat'),
+      title:
+        chat.event_title ||
+        (chat.other_username ? `Chat with ${chat.other_username}` : 'Chat'),
       mode: 'private',
       eventId: chat.event_id ?? undefined,
       conversationId: chat.conversation_id,
@@ -37,7 +40,10 @@ export function AllChatsList() {
     setIsAllChatsSidebarOpen(false);
   };
 
-  const handleOpenGroupConversation = (chat: { event_id: number; event_title: string }) => {
+  const handleOpenGroupConversation = (chat: {
+    event_id: number;
+    event_title: string;
+  }) => {
     openChat({
       title: chat.event_title || 'Event Group Chat',
       mode: 'group',
@@ -63,9 +69,7 @@ export function AllChatsList() {
         <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">All Chats</h2>
-            <p className="text-sm text-gray-600">
-              Management + network conversations
-            </p>
+            <p className="text-sm text-gray-600">Management + network conversations</p>
           </div>
           <button
             type="button"
@@ -79,10 +83,14 @@ export function AllChatsList() {
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
           <section>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">Management</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">
+              Management
+            </p>
             <div className="space-y-2">
               {isLoading ? <EmptyState label="Loading management chats..." /> : null}
-              {!isLoading && managementGroupChats.length === 0 && managementChats.length === 0 ? (
+              {!isLoading &&
+              managementGroupChats.length === 0 &&
+              managementChats.length === 0 ? (
                 <EmptyState label="No management chats yet." />
               ) : null}
               {managementGroupChats.map((chat) => (
@@ -139,7 +147,9 @@ export function AllChatsList() {
           </section>
 
           <section>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">Network</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">
+              Network
+            </p>
             <div className="space-y-2">
               {isLoading ? <EmptyState label="Loading network chats..." /> : null}
               {!isLoading && networkChats.length === 0 ? (

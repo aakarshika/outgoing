@@ -13,7 +13,10 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
-import { useAddHostVendorMessage, useHostVendorMessages } from '@/features/events/hooks';
+import {
+  useAddHostVendorMessage,
+  useHostVendorMessages,
+} from '@/features/events/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { BuddyRequestPanel } from './BuddyRequestPanel';
 
@@ -97,7 +100,9 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
     if (username === eventHostUsername) {
       return { label: 'Host', color: '#d97706' }; // Amber
     }
-    const isVendor = participatingVendors.some((v) => v.username === username || v.vendor_username === username);
+    const isVendor = participatingVendors.some(
+      (v) => v.username === username || v.vendor_username === username,
+    );
     if (isVendor) {
       return { label: 'Vendor', color: '#059669' }; // Emerald
     }
@@ -279,16 +284,18 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
                       filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.1))',
                       position: 'relative',
                       whiteSpace: 'pre-wrap',
-                      '&::after': isMine ? {
-                        content: '""',
-                        position: 'absolute',
-                        bottom: -4,
-                        right: 0,
-                        width: '40%',
-                        height: '2px',
-                        background: `${role.color}40`,
-                        borderRadius: '100%',
-                      } : {},
+                      '&::after': isMine
+                        ? {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: -4,
+                            right: 0,
+                            width: '40%',
+                            height: '2px',
+                            background: `${role.color}40`,
+                            borderRadius: '100%',
+                          }
+                        : {},
                     }}
                   >
                     {msg.text}

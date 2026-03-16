@@ -6,13 +6,13 @@ Rebuild the home page as a config-driven sequence of modular sections so we can 
 
 ## Questions To Finalize Before Implementation
 
-1. What is the exact final top-to-bottom order for signed-in users? - 
-    home page is for everyone. no auth. 
-4. Should the top "Relevant / Trending / Nearby" block and the bottom repeated block use the same data behavior or different behavior?
-    same. exact same component. 
-5. If both filter blocks are identical, do you want different titles/styling to avoid repetition fatigue? 
-    no. 
-Do not change inside any of the cards. just the home page. 
+1. What is the exact final top-to-bottom order for signed-in users? -
+   home page is for everyone. no auth.
+2. Should the top "Relevant / Trending / Nearby" block and the bottom repeated block use the same data behavior or different behavior?
+   same. exact same component.
+3. If both filter blocks are identical, do you want different titles/styling to avoid repetition fatigue?
+   no.
+   Do not change inside any of the cards. just the home page.
 
 ### Filter Behavior
 
@@ -24,20 +24,19 @@ Do not change inside any of the cards. just the home page.
 11. For each filter section, should the default selected tab be fixed (which one) or remembered per user?
 12. Should tab selection be reflected in URL params for shareable state?
 
-answers 6 - 12 - Only use the existing FeedSection component. it takes input as a list of events. fetch these events from the existing apis for fetching feed. no change there. if it is missing, ignore it. 
+answers 6 - 12 - Only use the existing FeedSection component. it takes input as a list of events. fetch these events from the existing apis for fetching feed. no change there. if it is missing, ignore it.
 
-
-13. Should "Browse all" route to one universal browse page or filter-specific URLs? 
-     /search/ - will implement later.
+13. Should "Browse all" route to one universal browse page or filter-specific URLs?
+    /search/ - will implement later.
 14. For "Online / Offline", should "Offline" mean `online=false`, or "has physical location coordinates/address"?
-    ONLINE / OFFLINE only means the type of event. if the location_address of the event has value "Online Event" then online else offline.  
+    ONLINE / OFFLINE only means the type of event. if the location_address of the event has value "Online Event" then online else offline.
 15. Should "Online / Offline" appear for signed-out users too?
     YES.
 
 ### Going / Saved / User Data
 
 16. Confirm "Going" source: purchased tickets only, or tickets + RSVP/interested?
-    all. use the existing api from dashboard -> tickets - will return an events list. use the list for the  feedsection ui..
+    all. use the existing api from dashboard -> tickets - will return an events list. use the list for the feedsection ui..
 17. Confirm "Saved" source: liked/interested events only?
     all. use the existing api from dashboard -> saved. same as tickets.
 18. If an event appears in both "Going" and "Saved", should it show in both tabs or be deduped globally?
@@ -46,7 +45,6 @@ answers 6 - 12 - Only use the existing FeedSection component. it takes input as 
     message "start browsing to find what to do "
 20. If "Saved" is empty, should empty state CTA point to `/`, `/browse`, or a specific discovery page?
     message "Your likes and save the dates will appear here."
-
 
 ### New CTA Cards
 
@@ -62,26 +60,16 @@ answers 6 - 12 - Only use the existing FeedSection component. it takes input as 
     for services - take to /dashboard/services/opportunities
     for events - to /dashboard/events
 
-### Map Section - 
+### Map Section -
 
 26. Should map section be shown to signed-out users? yes, if they enabled location for that moment.
     do all the following later. only show placeholder for now.
-    it will be comic themed border and slightly skewed window. with borders all around. in mobile view for responsive - will take full width with no borders
-        27. Confirm map data rule: include events starting in 0-30 days plus all currently "live" events.
-        28. How should "live" be defined technically (event lifecycle state, start/end window, or explicit flag)?
-        29. Do you want map points clustered when dense, or always individual markers?
-        30. Should clicking a marker open quick card, event drawer, or navigate immediately to event detail?
-        31. What should happen when location is not allowed for map section?
-        32. Should map support manual location search if geolocation is unavailable?
-        33. Are category colors already standardized, or should we define a new legend mapping?
-        34. Do you want a visible legend for category colors?
-        35. Any required map library preference (existing stack-compatible choice)?
-        36. Any performance constraints for marker count (cap, pagination, viewport fetch)?
+    it will be comic themed border and slightly skewed window. with borders all around. in mobile view for responsive - will take full width with no borders 27. Confirm map data rule: include events starting in 0-30 days plus all currently "live" events. 28. How should "live" be defined technically (event lifecycle state, start/end window, or explicit flag)? 29. Do you want map points clustered when dense, or always individual markers? 30. Should clicking a marker open quick card, event drawer, or navigate immediately to event detail? 31. What should happen when location is not allowed for map section? 32. Should map support manual location search if geolocation is unavailable? 33. Are category colors already standardized, or should we define a new legend mapping? 34. Do you want a visible legend for category colors? 35. Any required map library preference (existing stack-compatible choice)? 36. Any performance constraints for marker count (cap, pagination, viewport fetch)?
 
 ### Highlights / Film Strips
 
 37. For "Highlight film strip - section 1", should source be trending highlights, curated list, or latest highlights?
-    its already there. do not change. 
+    its already there. do not change.
 38. For "Memories - section 2", should source be all highlights user has ever added (auth-only), or global archive when signed out?
     all highlights user has ever added (auth-only) - remove section for no auth
 39. If user has zero memories, should this section hide or show a prompt to upload highlights?
@@ -110,23 +98,13 @@ USE THE EXISTING apis. placeholder if new api is needed.
 
 ### Product / UX / Tech Constraints
 
-CREATE A NEW "HOME PAGE RENEWED" file. do not update this one. 
-51. Do you want to preserve all existing sections not listed in the new plan, or only the listed ones?
-remove existing.
-52. Should we keep current hero and bedroom carousel unchanged at the top?
-yes
-53. Any required loading skeleton style for new sections?
-54. Any analytics events needed for tab switches, map interactions, and CTA clicks?
-55. Should this rollout be behind a feature flag for staged release?
-56. Is backend work allowed in this phase, or must we ship frontend-only with current endpoints?
-    no backend. frontend only.
-57. What is the priority if scope is too large for one PR (which sections first)?
-    1. create new homepage file. reuse all sections from previous one. 
-        use all existing apis and HorizontalScrollableList and SrapbookEventcard, Hostcard and VendorBusinesscard.
-        apply - reordering + placeholders for new sections
-        add labels for filter buttons. 
-        skip going, saved, myservices, my events.
-    2. new sections
-        add new sections
-        wire going, saved, myservices, my events. - data from dashboard and ui from feed section.
-    3. do any changes if needed inside the sections. add filter buttons. for example generic feed section needs filters but no change in ui. 
+CREATE A NEW "HOME PAGE RENEWED" file. do not update this one. 51. Do you want to preserve all existing sections not listed in the new plan, or only the listed ones?
+remove existing. 52. Should we keep current hero and bedroom carousel unchanged at the top?
+yes 53. Any required loading skeleton style for new sections? 54. Any analytics events needed for tab switches, map interactions, and CTA clicks? 55. Should this rollout be behind a feature flag for staged release? 56. Is backend work allowed in this phase, or must we ship frontend-only with current endpoints?
+no backend. frontend only. 57. What is the priority if scope is too large for one PR (which sections first)? 1. create new homepage file. reuse all sections from previous one.
+use all existing apis and HorizontalScrollableList and SrapbookEventcard, Hostcard and VendorBusinesscard.
+apply - reordering + placeholders for new sections
+add labels for filter buttons.
+skip going, saved, myservices, my events. 2. new sections
+add new sections
+wire going, saved, myservices, my events. - data from dashboard and ui from feed section. 3. do any changes if needed inside the sections. add filter buttons. for example generic feed section needs filters but no change in ui.

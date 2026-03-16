@@ -32,10 +32,7 @@ export const UserActionCard = () => {
         <Sparkles size={28} />
       </Box>
 
-      <Typography
-        variant="h5"
-        sx={{ fontFamily: '"serif"', color: '#1e3a8a', mb: 3 }}
-      >
+      <Typography variant="h5" sx={{ fontFamily: '"serif"', color: '#1e3a8a', mb: 3 }}>
         Get Involved!
       </Typography>
 

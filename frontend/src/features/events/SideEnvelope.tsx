@@ -49,7 +49,6 @@ export const SideEnvelope = ({ children }: { children: ReactNode }) => {
               pointerEvents: 'none',
             }}
           />
-
         </Box>
       </Box>
 
@@ -94,7 +93,7 @@ export const SideEnvelope = ({ children }: { children: ReactNode }) => {
             inset: 0,
             background:
               'linear-gradient(135deg, rgba(196, 196, 196, 0.55), rgba(255,255,255,0) 40%)',
-              opacity: 0.7,
+            opacity: 0.7,
           }}
         />
 

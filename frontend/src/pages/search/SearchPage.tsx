@@ -1,8 +1,9 @@
 import { Box, Container } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { useCategories, useFeed } from '@/features/events/hooks';
 import {
@@ -40,8 +41,11 @@ import {
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
+  const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const normalizedSearchParams = useMemo(
     () => normalizeSearchPageParams(searchParams),
     [searchParams],
@@ -242,14 +246,21 @@ export default function SearchPage() {
     return byEventId;
   }, [openEventCardOpportunities]);
 
+  const openQuickCreateService = (category?: string) => {
+    if (!isAuthenticated) {
+      navigate('/signin');
+      return;
+    }
+
+    setQuickCreateServiceCategory(category || '');
+    setIsQuickCreateServiceOpen(true);
+  };
+
   return (
     <Box
-
-        sx={{
-          
+      sx={{
         minHeight: '100vh',
-        background:
-          'linear-gradient(180deg, #FFF9F0 0%, #F9F1E4 48%, #F7EEE2 100%)',
+        background: 'linear-gradient(180deg, #FFF9F0 0%, #F9F1E4 48%, #F7EEE2 100%)',
         pb: 60,
       }}
     >
@@ -260,7 +271,7 @@ export default function SearchPage() {
           zIndex: 40,
         }}
       >
-      <SimpleNavbar />
+        <SimpleNavbar onCreateService={openQuickCreateService} />
       </Box>
       <SearchToolbar
         tab={tab}
@@ -344,9 +355,19 @@ export default function SearchPage() {
           isAuthenticated={isAuthenticated}
           onEventClick={(eventId) => navigate(`/events/${eventId}`)}
           onOpportunityClick={(eventId) => navigate(`/events/${eventId}`)}
+          onCreateService={openQuickCreateService}
           onSignIn={() => navigate('/signin')}
         />
       </Container>
+      <QuickCreateServiceDialog
+        open={isQuickCreateServiceOpen}
+        defaultCategory={quickCreateServiceCategory}
+        onClose={async () => {
+          setIsQuickCreateServiceOpen(false);
+          setQuickCreateServiceCategory('');
+          await queryClient.invalidateQueries({ queryKey: ['search'] });
+        }}
+      />
     </Box>
   );
 }

@@ -156,19 +156,20 @@ export const TinyHostCard = ({
               }}
             />
           ))}
-          {(displayNeeds?.length && allChips?.length) && (<Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              color: 'text.secondary',
-              mb: 2,
-            }}
-          >
-            and
-          </Typography>
-        )}
+          {displayNeeds?.length && allChips?.length && (
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: '"Caveat", cursive',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                color: 'text.secondary',
+                mb: 2,
+              }}
+            >
+              and
+            </Typography>
+          )}
           {allChips?.map((feature: any, idx: number) => (
             <Chip
               key={feature.name}

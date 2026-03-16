@@ -376,7 +376,9 @@ export function ServicesPrepStep({ event, readonly }: ServicesPrepStepProps) {
                                 <span className="font-bold">Filled by host</span>
                               </>
                             )}
-                            {(need.status === 'open' || !need.status || need.status === "pending") && (
+                            {(need.status === 'open' ||
+                              !need.status ||
+                              need.status === 'pending') && (
                               <>
                                 <Link
                                   to={`/vendors?eventId=${event.id}&needId=${need.id}&category=${encodeURIComponent(
@@ -668,24 +670,29 @@ export function TooltipForHostOverride({
             Host Override
           </p>
           <p className="text-xs text-gray-700 mt-1">
-            [<em>If your needs are not met by any vendor in time, you can provide it as the host.</em>]
-            You can undo this later.
+            [
+            <em>
+              If your needs are not met by any vendor in time, you can provide it as the
+              host.
+            </em>
+            ] You can undo this later.
           </p>
           <div className="mt-2 flex items-center gap-2">
-            {(need.status === 'open' || !need.status || need.status === "pending") && !readonly && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleHostOverride(need.id);
-                }}
-                className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 border-2 border-gray-900 bg-yellow-100 text-gray-900 hover:bg-yellow-200 transition-all whitespace-nowrap"
-                style={{
-                  fontFamily: '"Permanent Marker", cursive',
-                }}
-              >
-                <CheckCircle2 className="h-2.5 w-2.5" /> Mark Filled
-              </button>
-            )}
+            {(need.status === 'open' || !need.status || need.status === 'pending') &&
+              !readonly && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleHostOverride(need.id);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 border-2 border-gray-900 bg-yellow-100 text-gray-900 hover:bg-yellow-200 transition-all whitespace-nowrap"
+                  style={{
+                    fontFamily: '"Permanent Marker", cursive',
+                  }}
+                >
+                  <CheckCircle2 className="h-2.5 w-2.5" /> Mark Filled
+                </button>
+              )}
             {need.status === 'override_filled' && !readonly && (
               <button
                 onClick={(e) => {

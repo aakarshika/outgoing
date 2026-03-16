@@ -5,6 +5,7 @@ This is the reduced version of the earlier question list after checking the actu
 Bottom line: the current needs system is intentionally narrow. The richer overlay can exist visually, but most of its fields do not have a real backend home yet.
 
 Relevant files checked:
+
 - [`backend/apps/needs/models.py`](/Users/aakarshika/Dev/outgoing/backend/apps/needs/models.py)
 - [`backend/api/v1/needs/serializers.py`](/Users/aakarshika/Dev/outgoing/backend/api/v1/needs/serializers.py)
 - [`backend/api/v1/needs/views.py`](/Users/aakarshika/Dev/outgoing/backend/api/v1/needs/views.py)
@@ -18,6 +19,7 @@ Relevant files checked:
 ### 1. Current backend need model is small and explicit
 
 Today, a real need supports:
+
 - `title`
 - `description`
 - `category`
@@ -29,6 +31,7 @@ Today, a real need supports:
 - `application_count`
 
 There is no current backend support for:
+
 - role type separate from category
 - slots / number of openings
 - fill deadline
@@ -41,6 +44,7 @@ There is no current backend support for:
 - draft status for needs
 
 Conclusion:
+
 - the overlay is currently richer than the actual data model
 - most of that richness will require backend work before it can persist truthfully
 
@@ -73,6 +77,7 @@ type NeedUpdatePayload = {
 ### 3. Application flow is basic and single-need oriented
 
 What exists today:
+
 - vendor applies to a need with:
   - `service_id`
   - `message`
@@ -84,6 +89,7 @@ What exists today:
   - use host override via need status
 
 What does not exist yet:
+
 - richer vendor assignment metadata
 - multi-slot acceptance logic
 - compensation agreements
@@ -91,23 +97,27 @@ What does not exist yet:
 - any sign of multiple accepted applicants per need
 
 Practical interpretation:
+
 - one need should be treated like one fillable assignment for now
 - `pending` is best treated as derived UI state, not a real backend status
 
 ### 4. Vendor invite flow is narrow but real
 
 `NeedInviteCreateView` only needs:
+
 - `need_id`
 - `vendor_id`
 - optional `message`
 
 Also important:
+
 - invite only works when need status is `open`
 - backend checks that the target user has at least one active `VendorService`
 
 ### 5. Events, tickets, and services are richer than needs
 
 Event/ticket side already supports:
+
 - event capacity
 - ticket tiers
 - refund percentages
@@ -116,6 +126,7 @@ Event/ticket side already supports:
 - series support
 
 Vendor services already support:
+
 - title
 - description
 - category
@@ -124,6 +135,7 @@ Vendor services already support:
 - portfolio
 
 So the current mismatch is real:
+
 - events/tickets are detailed
 - needs are not
 
@@ -134,6 +146,7 @@ These are my best current answers without inventing backend behavior.
 ### Role type vs title vs category
 
 Best mapping for v1:
+
 - role type picker -> backend `category`
 - short editable label -> backend `title`
 - long explanatory text -> backend `description`
@@ -143,6 +156,7 @@ This is the cleanest mapping and aligns with the current contract.
 ### Suggested wording and generated vendor-facing copy
 
 Best answer:
+
 - helper UI only
 - do not persist
 
@@ -151,6 +165,7 @@ There is no backend field for either one today.
 ### Slots and fill deadline
 
 Best answer:
+
 - not supported today
 - treat each need as one fillable opening
 - do not persist fill deadline
@@ -158,12 +173,14 @@ Best answer:
 ### Compensation model
 
 Best answer:
+
 - the only real persisted compensation in v1 is `budget_min` and `budget_max`
 - all richer compensation choices are UI-only unless backend expands
 
 ### Thresholds, decision deadline, cancellation rules
 
 Best answer:
+
 - not supported as need fields today
 - do not persist them from the overlay
 
@@ -172,6 +189,7 @@ If they matter operationally, they need new backend fields and a clear ownership
 ### Create vs edit
 
 Best answer:
+
 - same overlay can handle both
 - create/edit should use the narrow payload above
 - accepted-application locking is a product decision, not something the current model answers for us
@@ -179,6 +197,7 @@ Best answer:
 ### Status model
 
 Best answer:
+
 - real statuses remain:
   - `open`
   - `filled`
@@ -190,6 +209,7 @@ Best answer:
 ### Review applicants
 
 Best answer:
+
 - `Approve` maps to `useReviewNeedApplication({ status: 'accepted' })`
 - `Reject` maps to `useReviewNeedApplication({ status: 'rejected' })`
 - current system behaves like one accepted result per need, not multi-slot acceptance
@@ -197,6 +217,7 @@ Best answer:
 ### Host override
 
 Best answer:
+
 - keep using `status = 'override_filled'`
 - undo should most likely restore `open`
 
@@ -207,6 +228,7 @@ The exact effect on existing applications is still a product decision.
 If I wire the overlay today without backend changes, the safest truthful implementation is this:
 
 ### Persist for real
+
 - save only:
   - `title`
   - `description`
@@ -216,9 +238,11 @@ If I wire the overlay today without backend changes, the safest truthful impleme
   - `budget_max`
 
 ### Edit for real
+
 - edit only those same fields plus `status`
 
 ### UI-only sections
+
 - slots
 - fill deadline
 - compensation option selector
@@ -265,9 +289,11 @@ I recommend this unless backend is changing immediately.
 Should the overlay expose `criticality` directly, or should I default it silently?
 
 If default:
+
 - use `replaceable`
 
 If exposed:
+
 - I should add a real control for:
   - `essential`
   - `replaceable`
@@ -276,6 +302,7 @@ If exposed:
 ### 5. Edit restrictions after applications exist
 
 If a need already has applications, should hosts still be allowed to edit:
+
 - title
 - description
 - category
@@ -283,6 +310,7 @@ If a need already has applications, should hosts still be allowed to edit:
 - criticality
 
 My default assumption would be:
+
 - yes, editable while no application is accepted
 - probably lock or warn after an application is accepted
 
@@ -293,6 +321,7 @@ The overlay UI currently has `Save draft`.
 But there is no draft state in the backend for needs.
 
 Should `Save draft` for now mean:
+
 - just close the overlay with no persistence
 - or should I remove/rename it because that would be misleading
 
@@ -311,6 +340,6 @@ If you want to answer this in one message, these 5 answers are enough:
 
 1. `Option A` or `Option B`
 2. Should role type map to `category` and short label map to `title`? - yes
-3. Should compensation save only as `budget_min` / `budget_max` for now? - no. i want the new design. 
+3. Should compensation save only as `budget_min` / `budget_max` for now? - no. i want the new design.
 4. Should `criticality` be exposed or default to `replaceable`? - remove field from ui.
 5. After applications exist, which fields should be locked, if any? - none. later

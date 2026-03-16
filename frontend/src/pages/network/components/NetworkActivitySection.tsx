@@ -22,10 +22,7 @@ export function NetworkActivitySection({
         boxShadow: '0 24px 50px rgba(110, 74, 36, 0.06)',
       }}
     >
-      <SectionIntro
-        eyebrow="Circle"
-        title="The network is moving"
-      />
+      <SectionIntro eyebrow="Circle" title="The network is moving" />
       <Stack spacing={1.2} sx={{ mt: 2 }}>
         {activityItems.length === 0 ? (
           <Box sx={{ py: 2, textAlign: 'center' }}>

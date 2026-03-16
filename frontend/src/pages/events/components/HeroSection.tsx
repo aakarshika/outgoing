@@ -153,26 +153,16 @@ export const HeroSection = ({
                 allChips={event.features}
               />
             </Box>
-
           </Box>
         </Grid>
 
         {/* Right Half - Event Image Section */}
-        {event.cover_image && (<Grid
-          size={{ xs: 12, md: 7 }}
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            position: 'relative',
-          }}
-        >
-          <Box
+        {event.cover_image && (
+          <Grid
+            size={{ xs: 12, md: 7 }}
             sx={{
-              width: '100%',
-              minHeight: { xs: 300, md: 450 },
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               justifyContent: 'center',
               position: 'relative',
             }}
@@ -180,53 +170,63 @@ export const HeroSection = ({
             <Box
               sx={{
                 width: '100%',
-                height: { xs: 200, md: 200 },
-                position: 'absolute',
-                bgcolor: 'black',
-                opacity: 0.14,
-                WebkitMaskImage: "url('/assets/go-symbol.png')",
-                maskImage: "url('/assets/go-symbol.png')",
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
+                minHeight: { xs: 300, md: 450 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
               }}
-            />
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              position: 'absolute',
-            }}
-          >
-            {(event.lifecycle_state === 'draft' ||
-              event.lifecycle_state === 'published') ? (
+            >
               <Box
                 sx={{
                   width: '100%',
+                  height: { xs: 200, md: 200 },
+                  position: 'absolute',
+                  bgcolor: 'black',
+                  opacity: 0.14,
+                  WebkitMaskImage: "url('/assets/go-symbol.png')",
+                  maskImage: "url('/assets/go-symbol.png')",
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
                 }}
-              >
-                <PosterForTheEventImageCollage
-                  imageUrl={event.cover_image}
-                  title={event.title}
-                />
-              </Box>
-            ) : (
-              <Box sx={{ width: '100%' }}>
-                <HeroNegativeStripGallery
-                  images={galleryImages}
-                  title={event.title}
-                  host={event.host}
-                  categorySlug={event.category?.slug}
-                />
-              </Box>
-            )}
-          </Box>
-        </Grid>)}
+              />
+            </Box>
+            <Box
+              sx={{
+                width: '100%',
+                position: 'absolute',
+              }}
+            >
+              {event.lifecycle_state === 'draft' ||
+              event.lifecycle_state === 'published' ? (
+                <Box
+                  sx={{
+                    width: '100%',
+                  }}
+                >
+                  <PosterForTheEventImageCollage
+                    imageUrl={event.cover_image}
+                    title={event.title}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ width: '100%' }}>
+                  <HeroNegativeStripGallery
+                    images={galleryImages}
+                    title={event.title}
+                    host={event.host}
+                    categorySlug={event.category?.slug}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Grid>
+        )}
       </Grid>
-
     </>
   );
 };

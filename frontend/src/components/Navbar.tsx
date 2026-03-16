@@ -1,5 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, Ticket, CalendarDays, MessageSquare, Briefcase, Settings, User, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Ticket,
+  CalendarDays,
+  MessageSquare,
+  Briefcase,
+  Settings,
+  User,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
 import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
@@ -16,15 +28,9 @@ import {
 } from './navbar/NavbarComponents';
 import { NavbarProvider, useNavbarContext } from './navbar/NavbarContext';
 
-
 function SidebarContent() {
-  const {
-    isAuthenticated,
-    hostingEvents,
-    vendorEvents,
-    attendeeEvents,
-    logout,
-  } = useNavbarContext();
+  const { isAuthenticated, hostingEvents, vendorEvents, attendeeEvents, logout } =
+    useNavbarContext();
 
   return (
     <>
@@ -114,12 +120,11 @@ function SidebarContent() {
           </div>
         </div>
       )}
-
     </>
   );
 }
 
-// Inner component that consumes context 
+// Inner component that consumes context
 function NavbarLayout() {
   const {
     isAuthenticated,

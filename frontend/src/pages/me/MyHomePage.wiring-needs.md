@@ -52,7 +52,6 @@ Which real source should populate the top featured event card?
 
 - Trending feed. `useFeed()` - it is already being used in SearchPage. use the same.
 
-
 ### 4. Data source for "upcoming events"
 
 What exactly should the upcoming list represent?
@@ -75,13 +74,11 @@ Should this section reuse the opportunity logic already used in search?
 - `fetchMyPotentialOpportunities()`
 - both merged - see SearchPage
 
-
 ### 7. Groups section
 
 What is a "group" in the current product model?
 
-- Nothing. Replace with "Network" - does nothing. 
-
+- Nothing. Replace with "Network" - does nothing.
 
 ### 8. Recommended events
 

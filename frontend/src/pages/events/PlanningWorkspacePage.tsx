@@ -13,13 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  ArrowLeft,
-  Check,
-  MessageCircle,
-  Plus,
-  Search,
-} from 'lucide-react';
+import { ArrowLeft, Check, MessageCircle, Plus, Search } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -1409,7 +1403,12 @@ function EventDetailsOverlay({
 
         <WorkspaceCard title="Everything important lives here together">
           <Typography
-            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{
+              fontSize: 13,
+              display: 'none',
+              color: 'var(--color-text-secondary)',
+              mb: 2,
+            }}
           >
             This section controls the core information people use to decide whether they
             trust, understand, and show up for the event.
@@ -1723,7 +1722,12 @@ function FeaturesOverlay({
         </Stack>
         <WorkspaceCard title="Features">
           <Typography
-            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{
+              fontSize: 13,
+              display: 'none',
+              color: 'var(--color-text-secondary)',
+              mb: 2,
+            }}
           >
             Keep this simple. Pick from the dropdown, add the feature, and mark it if
             you expect it to be outsourced later.
@@ -1930,7 +1934,12 @@ function TicketsOverlay({
         </Stack>
         <WorkspaceCard title="Tickets & capacity">
           <Typography
-            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{
+              fontSize: 13,
+              display: 'none',
+              color: 'var(--color-text-secondary)',
+              mb: 2,
+            }}
           >
             Every ticket communicates value. Price, capacity, refund logic, admits, and
             pass limits should all read clearly at a glance.
@@ -2327,7 +2336,12 @@ function ReviewApplicantsOverlay({
 
         <WorkspaceCard title={need.title}>
           <Typography
-            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{
+              fontSize: 13,
+              display: 'none',
+              color: 'var(--color-text-secondary)',
+              mb: 2,
+            }}
           >
             These people already raised their hand. Read for clarity, reliability, and
             whether they reduce host stress instead of adding more of it.
@@ -2343,7 +2357,13 @@ function ReviewApplicantsOverlay({
                   background: '#fffdfb',
                 }}
               >
-                <Typography sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}>
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    display: 'none',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
                   No applications have come in yet. This is the point where a direct
                   invite or a stronger need description usually changes the outcome.
                 </Typography>
@@ -2509,7 +2529,12 @@ function BrowseVendorsOverlay({
 
         <WorkspaceCard title="People who could unblock the event quickly">
           <Typography
-            sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 2 }}
+            sx={{
+              fontSize: 13,
+              display: 'none',
+              color: 'var(--color-text-secondary)',
+              mb: 2,
+            }}
           >
             This is where you convert uncertainty into a direct ask. The best cards here
             are not random discovery. They are people with a reason to say yes.
@@ -2755,11 +2780,15 @@ function CreateWorkspaceLanding({
   ) => Promise<void>;
 }) {
   return (
-    <Box sx={{ minHeight: '100vh', 
-      maxWidth: '1240px',
-      mx: 'auto',
-      
-    background: 'var(--color-background-tertiary)' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        maxWidth: '1240px',
+        mx: 'auto',
+
+        background: 'var(--color-background-tertiary)',
+      }}
+    >
       <Box
         sx={{
           px: { xs: 2, md: 3 },
@@ -3679,7 +3708,11 @@ export default function PlanningWorkspacePage() {
                     Description
                   </Typography>
                   <Typography
-                    sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
+                    sx={{
+                      fontSize: 13,
+                      display: 'none',
+                      color: 'var(--color-text-secondary)',
+                    }}
                   >
                     {event.description ||
                       'Add a description that tells people exactly what the event is, why it matters, and what they should expect.'}
@@ -3697,7 +3730,12 @@ export default function PlanningWorkspacePage() {
 
             <WorkspaceCard title="Features" action="Edit">
               <Typography
-                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{
+                  fontSize: 13,
+                  display: 'none',
+                  color: 'var(--color-text-secondary)',
+                  mb: 1.5,
+                }}
               >
                 Features are fast signals. People scan them to understand what the event
                 includes before they commit.
@@ -3722,7 +3760,11 @@ export default function PlanningWorkspacePage() {
                   ))
                 ) : (
                   <Typography
-                    sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
+                    sx={{
+                      fontSize: 13,
+                      display: 'none',
+                      color: 'var(--color-text-secondary)',
+                    }}
                   >
                     No features added yet.
                   </Typography>
@@ -3881,7 +3923,12 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{
+                  fontSize: 13,
+                  display: 'none',
+                  color: 'var(--color-text-secondary)',
+                  mb: 1.5,
+                }}
               >
                 Needs turn fuzzy hopes into explicit agreements. The clearer the role,
                 the compensation, and the fallback plan, the less chaos the event
@@ -3898,7 +3945,11 @@ export default function PlanningWorkspacePage() {
                     }}
                   >
                     <Typography
-                      sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)' }}
+                      sx={{
+                        fontSize: 13,
+                        display: 'none',
+                        color: 'var(--color-text-secondary)',
+                      }}
                     >
                       No needs have been added yet. This board gets much more useful
                       once the event has explicit asks instead of implied gaps.
@@ -4116,7 +4167,12 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.25 }}
+                sx={{
+                  fontSize: 13,
+                  display: 'none',
+                  color: 'var(--color-text-secondary)',
+                  mb: 1.25,
+                }}
               >
                 This checklist is a live read on whether the event feels operationally
                 trustworthy, not just aesthetically complete.
@@ -4251,7 +4307,12 @@ export default function PlanningWorkspacePage() {
               }
             >
               <Typography
-                sx={{ fontSize: 13, display:'none' , color: 'var(--color-text-secondary)', mb: 1.5 }}
+                sx={{
+                  fontSize: 13,
+                  display: 'none',
+                  color: 'var(--color-text-secondary)',
+                  mb: 1.5,
+                }}
               >
                 Strong hosts do not wait for help to arrive by luck. They line up the
                 right person for the right gap while there is still time to recover.

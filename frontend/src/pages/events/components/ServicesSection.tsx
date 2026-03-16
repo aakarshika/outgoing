@@ -94,7 +94,13 @@ export const ServicesSection = ({
                         need.category.toLowerCase().includes(s.category.toLowerCase()),
                     );
                     const isOpportunity =
-                      isAuthenticated && !isEligible && ((need.status === 'open' || !need.status || need.status === "pending") || !need.status || need.status === "pending");
+                      isAuthenticated &&
+                      !isEligible &&
+                      (need.status === 'open' ||
+                        !need.status ||
+                        need.status === 'pending' ||
+                        !need.status ||
+                        need.status === 'pending');
                     return (
                       <Grid size={{ xs: 12, md: 6 }} key={need.id}>
                         <ClassifiedAd

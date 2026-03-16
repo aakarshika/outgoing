@@ -490,7 +490,8 @@ export const HighlightFeedViewer = ({
                 onClick={handleNext}
                 Icon={ChevronRight}
                 sx={{
-                  visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
+                  visibility:
+                    activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
                 }}
               />
             </Box>

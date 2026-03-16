@@ -87,29 +87,27 @@ export function NetworkHeroSection({
                   >
                     Search your people
                   </Typography>
-                <Button
-                  variant="contained"
-                  endIcon={<ArrowRight size={16} />}
-                  onClick={onPlanClick}
-                  sx={{
-                    flexShrink: 0,
-                    borderRadius: '999px',
-                    px: 2.3,
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    color: '#2B2118',
-                    background: '#FFF5EE',
-                    boxShadow: 'none',
-                  }}
-                >
-                  Make a plan
-                </Button>
+                  <Button
+                    variant="contained"
+                    endIcon={<ArrowRight size={16} />}
+                    onClick={onPlanClick}
+                    sx={{
+                      flexShrink: 0,
+                      borderRadius: '999px',
+                      px: 2.3,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      color: '#2B2118',
+                      background: '#FFF5EE',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    Make a plan
+                  </Button>
                 </Stack>
               </Stack>
             </Box>
-
           </Box>
-
         </Stack>
       </Box>
     </Box>

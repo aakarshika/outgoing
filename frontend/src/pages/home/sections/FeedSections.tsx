@@ -65,7 +65,6 @@ export const GenericFeedSection = ({
       </Box>
     );
   }
-
 };
 
 // --- Trending ---
@@ -300,11 +299,7 @@ export const HomePageNegativeStripGallery = () => {
           transformStyle: 'preserve-3d',
         }}
       >
-        <HeroNegativeStripGallery
-          images={images}
-          title={title}
-          host={host}
-        />
+        <HeroNegativeStripGallery images={images} title={title} host={host} />
       </Box>
     </Box>
   );

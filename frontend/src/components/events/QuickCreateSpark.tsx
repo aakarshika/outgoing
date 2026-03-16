@@ -1640,7 +1640,6 @@ export function QuickCreateSpark({
               </Box>
             ))}
           </Box>
-
         </Stack>
       </Box>
 

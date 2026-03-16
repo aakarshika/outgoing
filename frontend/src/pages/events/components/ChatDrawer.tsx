@@ -115,17 +115,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   // Hooks for Group Chat
   const { data: groupMessagesResponse } = useHostVendorMessages(
-    mode === 'group' && eventId ? eventId : undefined
+    mode === 'group' && eventId ? eventId : undefined,
   );
   const addGroupMessage = useAddHostVendorMessage();
 
   // Hooks for Private Chat
   const { data: privateMessagesResponse } = usePrivateMessages(
-    mode === 'private' && conversationId ? conversationId : undefined
+    mode === 'private' && conversationId ? conversationId : undefined,
   );
   const addPrivateMessage = useAddPrivateMessage();
   const { data: directMessagesResponse } = useDirectMessages(
-    mode === 'direct' && targetUsername ? targetUsername : undefined
+    mode === 'direct' && targetUsername ? targetUsername : undefined,
   );
   const addDirectMessage = useAddDirectMessage();
 
@@ -162,7 +162,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       targetUsername,
       messageCount: messages?.length ?? 0,
     });
-  }, [conversationId, eventId, isMinimized, isMobile, isOpen, messages?.length, mode, targetUsername]);
+  }, [
+    conversationId,
+    eventId,
+    isMinimized,
+    isMobile,
+    isOpen,
+    messages?.length,
+    mode,
+    targetUsername,
+  ]);
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -176,17 +185,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     if (mode === 'group' && eventId) {
       addGroupMessage.mutate(
         { eventId, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     } else if (mode === 'direct' && targetUsername) {
       addDirectMessage.mutate(
         { targetUsername, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     } else if (mode === 'private' && conversationId) {
       addPrivateMessage.mutate(
         { conversationId, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     }
   };
@@ -219,25 +228,35 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             maxWidth: '180px',
           }}
         >
-          {title}  
+          {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {!isMobile && (
-            <IconButton onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }} size="small">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMinimized(!isMinimized);
+              }}
+              size="small"
+            >
               {isMinimized ? <Maximize2 size={18} /> : <Minimize2 size={18} />}
             </IconButton>
           )}
-          <IconButton onClick={(e) => { e.stopPropagation(); onClose(); }} size="small">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            size="small"
+          >
             <X size={18} />
           </IconButton>
         </Box>
       </Box>
       <Box sx={{ p: 1, fontSize: '0.75rem', color: '#666', textAlign: 'center' }}>
-
-      {isMobile ? '(Mobile)' : '(Web)'}
-          {isMinimized? ' (Minimized)' : '(Maximized)'}
-{isOpen ? '(Open)' : '(Closed)'}
-
+        {isMobile ? '(Mobile)' : '(Web)'}
+        {isMinimized ? ' (Minimized)' : '(Maximized)'}
+        {isOpen ? '(Open)' : '(Closed)'}
       </Box>
       {!isMinimized && (
         <>
@@ -265,8 +284,22 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             className="no-scrollbar"
           >
             {messages?.length === 0 ? (
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-                <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem', textAlign: 'center' }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.5,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: '"Caveat", cursive',
+                    fontSize: '1.2rem',
+                    textAlign: 'center',
+                  }}
+                >
                   {mode === 'direct' ? 'Say hii' : 'No messages yet...'}
                 </Typography>
               </Box>
@@ -291,7 +324,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
               }}
             >
               <InputBase
-                sx={{ ml: 1, flex: 1, fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
+                sx={{
+                  ml: 1,
+                  flex: 1,
+                  fontFamily: '"Caveat", cursive',
+                  fontSize: '1rem',
+                }}
                 placeholder="Type..."
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}

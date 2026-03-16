@@ -63,26 +63,29 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                       )}
                     </div>
 
-<div className="flex items-center gap-2">
-                    <ComicButton 
+                    <div className="flex items-center gap-2">
+                      <ComicButton
                         type="button"
-                        onClick={() => navigate(`/events/${application.event_id}/service-event-management`)}
+                        onClick={() =>
+                          navigate(
+                            `/events/${application.event_id}/service-event-management`,
+                          )
+                        }
                         color="#1e3a5f"
                         accentColor="#00CCCC"
-                        Icon={application.event_status == 'Completed' ? undefined : Pencil}
-                        label={` ${application.event_status == 'Completed' ? "Go to Gig" : "Manage Gig"}`}
-                      >
-                      </ComicButton>
-                    {application.status === 'pending' && (
-                      <ComicButton 
-                        type="button"
-                        onClick={() => setEditingApplication(application)}
-                        
-                        Icon={Edit2}
-                        label="Edit"
-                      >
-                      </ComicButton>
-                    )}
+                        Icon={
+                          application.event_status == 'Completed' ? undefined : Pencil
+                        }
+                        label={` ${application.event_status == 'Completed' ? 'Go to Gig' : 'Manage Gig'}`}
+                      ></ComicButton>
+                      {application.status === 'pending' && (
+                        <ComicButton
+                          type="button"
+                          onClick={() => setEditingApplication(application)}
+                          Icon={Edit2}
+                          label="Edit"
+                        ></ComicButton>
+                      )}
                     </div>
                   </div>
 

@@ -98,9 +98,11 @@ function buildTrackTemplate(length: number, expandedIndex: number | null) {
     return `repeat(${length}, minmax(0, 1fr))`;
   }
 
-  return Array.from({ length }).map((_, index) =>
-    index === expandedIndex ? 'minmax(0, 1.9fr)' : 'minmax(0, 0.85fr)',
-  ).join(' ');
+  return Array.from({ length })
+    .map((_, index) =>
+      index === expandedIndex ? 'minmax(0, 1.9fr)' : 'minmax(0, 0.85fr)',
+    )
+    .join(' ');
 }
 
 function StepTabsFlowchart({
@@ -195,15 +197,23 @@ export default function CalendarPage() {
       const eventId = String(row.event_id);
       const reasons = ensure(eventId);
       if (user?.id && row.host_user_id === user.id) reasons.hosting = true;
-      if (user?.id && row.attendee_user_id === user.id && row.ticket_status !== 'cancelled') {
+      if (
+        user?.id &&
+        row.attendee_user_id === user.id &&
+        row.ticket_status !== 'cancelled'
+      ) {
         reasons.attending = true;
       }
-      if (user?.id && row.need_application_requested_by_host_vendor_user_id === user.id) {
+      if (
+        user?.id &&
+        row.need_application_requested_by_host_vendor_user_id === user.id
+      ) {
         reasons.vendor_request = true;
       }
       if (
         user?.id &&
-        (row.need_applied_to_user_id === user.id || row.need_assigned_user_id === user.id)
+        (row.need_applied_to_user_id === user.id ||
+          row.need_assigned_user_id === user.id)
       ) {
         reasons.vendor_application = true;
       }
@@ -223,31 +233,33 @@ export default function CalendarPage() {
       }
     });
 
-    const overviewTimeline: CalendarItem[] = Array.from(detailByEventId.entries()).flatMap(
-      ([eventId, detail]) => {
-        const reasons = eventReasons.get(eventId);
-        if (!reasons) return [];
+    const overviewTimeline: CalendarItem[] = Array.from(
+      detailByEventId.entries(),
+    ).flatMap(([eventId, detail]) => {
+      const reasons = eventReasons.get(eventId);
+      if (!reasons) return [];
 
-        const kind: CalendarKind = reasons.hosting
-          ? 'hosting'
-          : reasons.attending
-            ? 'attending'
-            : reasons.vendor_application
-              ? 'vendor_application'
-              : reasons.vendor_request
-                ? 'vendor_request'
-                : 'saved';
+      const kind: CalendarKind = reasons.hosting
+        ? 'hosting'
+        : reasons.attending
+          ? 'attending'
+          : reasons.vendor_application
+            ? 'vendor_application'
+            : reasons.vendor_request
+              ? 'vendor_request'
+              : 'saved';
 
-        const isPast = new Date(detail.start_time).getTime() < now;
-        const subtitleByKind: Record<CalendarKind, string> = {
-          hosting: isPast ? 'Hosted event' : 'Upcoming hosted event',
-          attending: isPast ? 'Attended event' : 'Upcoming event',
-          saved: isPast ? 'Saved event (past)' : 'Saved event',
-          vendor_request: 'Service request for this event',
-          vendor_application: 'You applied to service this event',
-        };
+      const isPast = new Date(detail.start_time).getTime() < now;
+      const subtitleByKind: Record<CalendarKind, string> = {
+        hosting: isPast ? 'Hosted event' : 'Upcoming hosted event',
+        attending: isPast ? 'Attended event' : 'Upcoming event',
+        saved: isPast ? 'Saved event (past)' : 'Saved event',
+        vendor_request: 'Service request for this event',
+        vendor_application: 'You applied to service this event',
+      };
 
-        return [{
+      return [
+        {
           id: `${kind}-${eventId}`,
           event: detail,
           kind,
@@ -259,9 +271,9 @@ export default function CalendarPage() {
           cta: 'View Event',
           tag: kind.replace('_', ' '),
           isPast,
-        }];
-      },
-    );
+        },
+      ];
+    });
 
     const savedOnlyTimeline: CalendarItem[] = mySaved
       .filter((event) => !detailByEventId.has(String(event.id)))
@@ -346,8 +358,8 @@ export default function CalendarPage() {
   });
   const dayFiltered = selectedDateKey
     ? typeFiltered.filter(
-      (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
-    )
+        (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
+      )
     : typeFiltered;
   const monthDays = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
   const selectedDayIndex = useMemo(
@@ -355,7 +367,8 @@ export default function CalendarPage() {
     [monthDays, selectedDateKey],
   );
   const selectedColumnIndex = selectedDayIndex >= 0 ? selectedDayIndex % 7 : null;
-  const selectedRowIndex = selectedDayIndex >= 0 ? Math.floor(selectedDayIndex / 7) : null;
+  const selectedRowIndex =
+    selectedDayIndex >= 0 ? Math.floor(selectedDayIndex / 7) : null;
   const dayGridStyle = useMemo(
     () => ({
       gridTemplateColumns: buildTrackTemplate(7, selectedColumnIndex),
@@ -384,52 +397,54 @@ export default function CalendarPage() {
             { key: 'vendor', label: 'Servicing', color: 'rgb(67, 237, 209)' },
             { key: 'saved', label: 'Saved', color: 'rgb(236, 80, 80)' },
           ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key as CalendarFilter)}
-                className={`px-4 py-2 rounded-md border text-sm font-semibold inline-flex items-center gap-2 transition-colors ${
-                  filter === tab.key
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-              >
-                {tab.key === 'hosting' && (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key as CalendarFilter)}
+              className={`px-4 py-2 rounded-md border text-sm font-semibold inline-flex items-center gap-2 transition-colors ${
+                filter === tab.key
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              {tab.key === 'hosting' && (
+                <span
+                  className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                  style={{ backgroundColor: KIND_DOT_COLORS.hosting }}
+                />
+              )}
+              {tab.key === 'attending' && (
+                <span
+                  className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                  style={{ backgroundColor: KIND_DOT_COLORS.attending }}
+                />
+              )}
+              {tab.key === 'saved' && (
+                <span
+                  className="h-2.5 w-2.5 rounded-full border border-gray-800"
+                  style={{ backgroundColor: KIND_DOT_COLORS.saved }}
+                />
+              )}
+              {tab.key === 'vendor' && (
+                <span className="inline-flex items-center gap-1">
                   <span
                     className="h-2.5 w-2.5 rounded-full border border-gray-800"
-                    style={{ backgroundColor: KIND_DOT_COLORS.hosting }}
+                    style={{ backgroundColor: KIND_DOT_COLORS.vendor_request }}
                   />
-                )}
-                {tab.key === 'attending' && (
                   <span
                     className="h-2.5 w-2.5 rounded-full border border-gray-800"
-                    style={{ backgroundColor: KIND_DOT_COLORS.attending }}
+                    style={{ backgroundColor: KIND_DOT_COLORS.vendor_application }}
                   />
-                )}
-                {tab.key === 'saved' && (
-                  <span
-                    className="h-2.5 w-2.5 rounded-full border border-gray-800"
-                    style={{ backgroundColor: KIND_DOT_COLORS.saved }}
-                  />
-                )}
-                {tab.key === 'vendor' && (
-                  <span className="inline-flex items-center gap-1">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full border border-gray-800"
-                      style={{ backgroundColor: KIND_DOT_COLORS.vendor_request }}
-                    />
-                    <span
-                      className="h-2.5 w-2.5 rounded-full border border-gray-800"
-                      style={{ backgroundColor: KIND_DOT_COLORS.vendor_application }}
-                    />
-                  </span>
-                )}
-                {tab.label}
-              </button>
+                </span>
+              )}
+              {tab.label}
+            </button>
           ))}
         </section>
         <section className="mb-8 p-4 sm:p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
           <div className="mb-6 flex items-center justify-between pb-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{monthLabel(visibleMonth)}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              {monthLabel(visibleMonth)}
+            </h2>
             <div className="flex items-center gap-2">
               <button
                 className="p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100 transition-colors"
@@ -473,18 +488,20 @@ export default function CalendarPage() {
                   onClick={() =>
                     setSelectedDateKey((prev) => (prev === day.key ? null : day.key))
                   }
-                  className={`relative min-h-[70px] h-full border rounded-md text-left transition-[background-color,box-shadow,transform] duration-300 sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${day.inMonth
+                  className={`relative min-h-[70px] h-full border rounded-md text-left transition-[background-color,box-shadow,transform] duration-300 sm:min-h-[90px] sm:p-2 flex flex-col items-start justify-start p-1.5 ${
+                    day.inMonth
                       ? 'bg-white border-gray-200 hover:bg-gray-50'
                       : 'bg-gray-100 border-gray-400 text-gray-400'
-                    } ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+                  } ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
                 >
                   <div
-                    className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${day.isToday
+                    className={`absolute top-0 left-0 text-sm font-bold w-full z-10 ${
+                      day.isToday
                         ? 'text-red-500 underline decoration-2 underline-offset-2'
                         : day.inMonth
                           ? 'text-gray-900'
                           : 'text-gray-400'
-                      }`}
+                    }`}
                     style={{ color: '#000000' }}
                   >
                     {day.date.getDate()}

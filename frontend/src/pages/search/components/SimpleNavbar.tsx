@@ -40,11 +40,15 @@ type MenuItem = {
   label: string;
   Icon: LucideIcon;
   to?: string;
-  action?: 'create-event' | 'logout';
+  action?: 'create-event' | 'create-service' | 'logout';
   muted?: boolean;
 };
 
-export function SimpleNavbar() {
+export function SimpleNavbar({
+  onCreateService,
+}: {
+  onCreateService?: (category?: string) => void;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -59,7 +63,6 @@ export function SimpleNavbar() {
   const { data: categoriesResponse } = useCategories();
   const event = eventResponse?.data;
   const categories = categoriesResponse?.data || [];
-  const showSearchInHeader = !eventMatch ;
   const isEventHost =
     isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
@@ -79,6 +82,11 @@ export function SimpleNavbar() {
         to: '/manage',
         Icon: PlusCircle,
         action: 'create-event',
+      },
+      {
+        label: 'Create Service',
+        Icon: Monitor,
+        action: 'create-service',
       },
     ],
     [{ label: 'My Network', to: '/network', Icon: Users }],
@@ -112,6 +120,15 @@ export function SimpleNavbar() {
       return;
     }
     navigate('/manage');
+  };
+
+  const handleCreateServiceEntry = () => {
+    closeMenuPopover();
+    if (onCreateService) {
+      onCreateService();
+      return;
+    }
+    navigate('/vendors/create');
   };
 
   const handleQuickCreateSubmit = async (
@@ -252,46 +269,50 @@ export function SimpleNavbar() {
               outGOing
             </Typography> */}
             <Typography
-            sx={{
+              sx={{
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
                 fontSize: { xs: 24, sm: 32 },
                 letterSpacing: '-0.03em',
                 color: '#D85A30',
-                whiteSpace: 'nowrap',              maxWidth: 580,
-              mx: 'auto',
-              lineHeight: 1.65,
-            }}
-          >
-            <span className=''><strong>out</strong></span>
-            <Box
-              component="span"
-              aria-label="go"
-              role="img"
-              sx={{
-                display: 'inline-block',
-                width: { xs: 30, md: 36 },
-                height: { xs: 30, md: 35 },
-                // pt: 7,
-                // mx: 0.5,
-                transform: 'translateY(10px)',
-                backgroundColor: 'currentColor',
-                maskImage: "url('/assets/go-symbol.png')",
-                maskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                maskSize: 'contain',
-                WebkitMaskImage: "url('/assets/go-symbol.png')",
-                WebkitMaskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                WebkitMaskSize: 'contain',
+                whiteSpace: 'nowrap',
+                maxWidth: 580,
+                mx: 'auto',
+                lineHeight: 1.65,
               }}
-            />
-            {''}<strong>ing</strong>
-          </Typography>
+            >
+              <span className="">
+                <strong>out</strong>
+              </span>
+              <Box
+                component="span"
+                aria-label="go"
+                role="img"
+                sx={{
+                  display: 'inline-block',
+                  width: { xs: 30, md: 36 },
+                  height: { xs: 30, md: 35 },
+                  // pt: 7,
+                  // mx: 0.5,
+                  transform: 'translateY(10px)',
+                  backgroundColor: 'currentColor',
+                  maskImage: "url('/assets/go-symbol.png')",
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  maskSize: 'contain',
+                  WebkitMaskImage: "url('/assets/go-symbol.png')",
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  WebkitMaskSize: 'contain',
+                }}
+              />
+              {''}
+              <strong>ing</strong>
+            </Typography>
           </Box>
-              <NavbarProvider>
-                <SearchBarSimple />
-              </NavbarProvider>
+          <NavbarProvider>
+            <SearchBarSimple />
+          </NavbarProvider>
 
           <Box
             sx={{
@@ -347,8 +368,7 @@ export function SimpleNavbar() {
                 </Button>
               </>
             ) : (
-              <>
-              </>
+              <></>
             )}
             <Button
               type="button"
@@ -394,6 +414,10 @@ export function SimpleNavbar() {
                         handleCreateEventEntry();
                         return;
                       }
+                      if (item.action === 'create-service') {
+                        handleCreateServiceEntry();
+                        return;
+                      }
                       if (item.action === 'logout') {
                         closeMenuPopover();
                         logout();
@@ -430,9 +454,7 @@ export function SimpleNavbar() {
                 </Box>
               ))}
               {groupIndex < menuGroups.length - 1 ? (
-                <Divider
-                  sx={{ my: 0.6, borderColor: 'rgba(120,94,60,0.14)' }}
-                />
+                <Divider sx={{ my: 0.6, borderColor: 'rgba(120,94,60,0.14)' }} />
               ) : null}
             </Box>
           ))}

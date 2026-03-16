@@ -51,7 +51,7 @@ export const LikeButton = ({
       onClick={handleInterestClick}
       className={
         className ??
-        "absolute top-2 left-2 flex items-center gap-1 rounded-full bg-white/80 backdrop-blur-sm p-1.5 transition-all hover:bg-white hover:scale-110 shadow-sm z-10"
+        'absolute top-2 left-2 flex items-center gap-1 rounded-full bg-white/80 backdrop-blur-sm p-1.5 transition-all hover:bg-white hover:scale-110 shadow-sm z-10'
       }
       aria-label={isInterested ? 'Remove interest' : 'Mark interested'}
     >

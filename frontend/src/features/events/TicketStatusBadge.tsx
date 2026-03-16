@@ -17,12 +17,12 @@ export const TicketStatusBadge = ({
   highlighted,
   variant = 'default',
   rightAligned = false,
-  userTicketCount ,
+  userTicketCount,
   sx = {},
 }: TicketStatusBadgeProps) => {
   if (!capacity) return null;
 
-  const isLarge =  (userTicketCount && userTicketCount > 0);
+  const isLarge = userTicketCount && userTicketCount > 0;
   const soldCopy = `${ticketCount || 0}/${capacity}${isLarge ? ' Sold' : ''}`;
   const ticketCopy =
     isLarge && typeof userTicketCount === 'number'
@@ -57,17 +57,17 @@ export const TicketStatusBadge = ({
       {isLarge ? (
         <Box>
           {/* {ticketCopy && ( */}
-            <Typography
-              sx={{
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                fontFamily: '"Caveat", cursive',
-                letterSpacing: '0.3px',
-                lineHeight: 1.05,
-              }}
-            >
-              {ticketCopy}
-            </Typography>
+          <Typography
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              fontFamily: '"Caveat", cursive',
+              letterSpacing: '0.3px',
+              lineHeight: 1.05,
+            }}
+          >
+            {ticketCopy}
+          </Typography>
           <Typography
             sx={{
               fontSize: '0.78rem',

@@ -77,7 +77,6 @@ The new page is currently UI-only. Compared to the old host flow, it is missing 
 - Series timeline / occurrence switching.
 - Event duration editing. - only start date is input , and duration of event. (event date will be calculated by the frontedn but not by user.)
 
-
 ## Questions I answered
 
 ### 1. Scope
@@ -85,7 +84,6 @@ The new page is currently UI-only. Compared to the old host flow, it is missing 
 Should `/events/:id/manage` fully replace [`ManageForHostPage.tsx`](/Users/aakarshika/Dev/outgoing/frontend/src/pages/events/ManageForHostPage.tsx), or is it only a new lightweight planning surface for part of the host workflow?
 
 -fully replace
-
 
 ### 2. Routing model
 
@@ -101,13 +99,13 @@ In the old page, lifecycle state changes which step opens by default.
 
 Should the new page:
 
-- always open the same workspace. 
+- always open the same workspace.
 
 ### 4. Event loading and permissions
 
 Should `/events/:id/manage` immediately load the real event and enforce host-only access exactly like the old page?
 
-If not exactly, what should the unauthorized behavior be? 
+If not exactly, what should the unauthorized behavior be?
 
 - redirect to /
 
@@ -136,7 +134,7 @@ The old page had both `quick` and `advanced` input modes.
 
 Do you still want those in the new manage experience, or should the new workspace have only one editing mode?
 
-- no modes. single page. 
+- no modes. single page.
 
 ### 7. Tickets
 
@@ -170,7 +168,7 @@ What should the actual need workflow be?
 Do all of those belong in this workspace?
 
 - create new / edit existing need - on the needs overlay.
-- review applicants - new overlay. 
+- review applicants - new overlay.
 - assign vendor/friend - assign/invite button will open a little confirmation box right there with an optional message.
 - on this section top right will be a button "browse vendors" - new overlay
 - mark filled/open/pending - - - host override functionality will also be there with a similar box that i had.
@@ -196,8 +194,6 @@ Do you want recurrence and series management inside the new `/events/:id/manage`
 
 - NO. just put a button at the bottom "Duplicate/Recurring event" - does nothing.
 
-
-
 ### 11. Publish / readiness / live / wrap-up
 
 The old page has distinct functional steps after setup.
@@ -217,9 +213,9 @@ Or should `/events/:id/manage` only cover planning/pre-event work?
 
 How should save work in the new page?
 
-- section-level - edit button - may need overlay with its own save button, may switch to edit form mode with save button, 
+- section-level - edit button - may need overlay with its own save button, may switch to edit form mode with save button,
 
-And should tickets / needs save separately from event details, like the old page effectively does? 
+And should tickets / needs save separately from event details, like the old page effectively does?
 
 - yes. in diff overlay forms
 
@@ -260,7 +256,7 @@ Do you want me to reuse old components where possible from the old host flow, or
 
 This matters because there are two migration strategies:
 
-- Answer - new page visually distinct and only port over logic/data. 
+- Answer - new page visually distinct and only port over logic/data.
 
 ### 17. Old page retirement
 
@@ -268,39 +264,30 @@ Once the missing behaviors are migrated, should the old host route:
 
 - remain available temporarily
 
-
-
-
-
-
-
-
 ## Yes. A few points are still ambiguous enough that they’ll change the implementation.
 
 1. one single page only, no step routes
-On routing: should the new page stay exactly at /events/:id/manage with no nested routes at all. yes.
+   On routing: should the new page stay exactly at /events/:id/manage with no nested routes at all. yes.
 
 2. For the main “Event details” area, do you want edits to happen:
-in one big overlay
+   in one big overlay
 
 3. For tickets, should “Add ticket” open:
-a larger ticket-manager overlay that shows all tiers and editing together
+   a larger ticket-manager overlay that shows all tiers and editing together
 
 4. For the new “Features” section, should it be:
-its own card between details and tickets
+   its own card between details and tickets
 
 5. For needs, should these each be separate overlays:
-add/edit need - overlay
-review applicants - new page  - later. 
-browse vendors - new page - later
-assign/invite confirmation - overlay. 
-host override - overlay - with a message.
+   add/edit need - overlay
+   review applicants - new page - later.
+   browse vendors - new page - later
+   assign/invite confirmation - overlay.
+   host override - overlay - with a message.
 
 6. For chat, when clicking from the new page, should I open the existing chat drawer in:
-co-organiser-only chat - is called "HostVendorGroupChat" 
+   co-organiser-only chat - is called "HostVendorGroupChat"
 
 7. Old page retirement: when you said “leave old be” and also “fully replace,” should I treat that as:
 
 old host-management route stays temporarily but is not the target for new work
-
-
