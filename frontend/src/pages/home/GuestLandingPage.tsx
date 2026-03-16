@@ -11,8 +11,10 @@ import Lottie from 'lottie-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useFeed } from '@/features/events/hooks';
+import { useFeed, useIconicHostsFeed, useTrendingHighlights } from '@/features/events/hooks';
 import type { EventListItem } from '@/types/events';
+import { SmallEventCard } from '@/components/events/SmallEventCard';
+import { HostCard } from '@/components/ui/HostCard';
 
 const categoryChips = [
   { label: 'Outdoors', icon: '🏃' },
@@ -498,6 +500,12 @@ export default function GuestLandingPage() {
       .slice(0, 4);
   }, [activeFilter, discoverResponse]);
 
+  const { data: iconicHostsResponse } = useIconicHostsFeed();
+  const { data: trendingHighlightsResponse } = useTrendingHighlights(12);
+
+  const iconicHosts = (iconicHostsResponse?.data || []).slice(0, 8);
+  const trendingHighlights = (trendingHighlightsResponse?.data || []).slice(0, 8);
+
   const isLoading = loadingNearby || loadingOnline || loadingDiscover;
 
   useEffect(() => {
@@ -543,7 +551,7 @@ export default function GuestLandingPage() {
 
   return (
     <Box sx={{ background: '--var(--color-background-primary)' }}>
-      <Box
+      {false && (<Box
         component="header"
         sx={{
           position: 'sticky',
@@ -628,7 +636,7 @@ export default function GuestLandingPage() {
             </Box>
           </Box>
         </Container>
-      </Box>
+      </Box>)}
 
       <Box
         sx={{
@@ -825,7 +833,7 @@ export default function GuestLandingPage() {
           }}
         >
           {nearbyEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <SmallEventCard key={event.id} event={event} />
           ))}
         </Box>
       </Container>
@@ -891,6 +899,89 @@ export default function GuestLandingPage() {
           </Box>
         )}
       </Container>
+
+      <Box
+        sx={{
+          height: '0.5px',
+          background: 'var(--color-border-tertiary)',
+          maxWidth: 960,
+          mx: 'auto',
+        }}
+      />
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader
+          label="The ones who bring it"
+          title="Iconic hosts"
+          description="Creators, organisers, and vibes-setters the community keeps coming back for."
+        />
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2.5,
+            overflowX: 'auto',
+            pb: 2,
+            scrollSnapType: 'x mandatory',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          {iconicHosts.map((host: any) => (
+            <Box key={host.id} sx={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
+              <HostCard
+                host={host}
+                rating={host.avg_rating ? Number(host.avg_rating) : undefined}
+              />
+            </Box>
+          ))}
+        </Box>
+      </Container>
+
+      <Box
+        sx={{
+          height: '0.5px',
+          background: 'var(--color-border-tertiary)',
+          maxWidth: 960,
+          mx: 'auto',
+        }}
+      />
+
+      <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
+        <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
+          <SectionHeader
+            label="What people are talking about"
+            title="Trending highlights"
+          />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 1.75,
+            }}
+          >
+            {trendingHighlights.map((highlight: any) => (
+              <Box
+                key={highlight.id}
+                sx={{
+                  background: 'var(--color-background-primary)',
+                  border: '0.5px solid var(--color-border-tertiary)',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  minHeight: 180,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  sx={{ fontSize: 13, color: 'var(--color-text-tertiary)', px: 2, textAlign: 'center' }}
+                >
+                  Highlight #{highlight.id}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Container>
+      </Box>
 
       <Box
         sx={{
@@ -1045,7 +1136,7 @@ export default function GuestLandingPage() {
           >
             <Button
               variant="contained"
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/search?tab=trending')}
               sx={{
                 px: 4.5,
                 py: 1.6,

@@ -8,19 +8,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Bell,
-  CalendarDays,
-  LogOut,
-  type LucideIcon,
-  Menu,
-  MessageCircle,
-  Monitor,
-  PlusCircle,
-  Settings,
-  Speech,
-  Users,
-} from 'lucide-react';
+import { Bell, LogOut, type LucideIcon, Menu, MessageCircle, Monitor, PlusCircle, Settings, Speech, Users } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,12 +17,14 @@ import {
   QuickCreateSpark,
   type QuickCreateSubmitPayload,
 } from '@/components/events/QuickCreateSpark';
+import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
-import { useCategories, useEvent } from '@/features/events/hooks';
+import { useCategories, useEvent, useMyEvents } from '@/features/events/hooks';
+import { useMyServices } from '@/features/vendors/hooks';
 
 type MenuItem = {
   label: string;
@@ -61,8 +51,12 @@ export function SimpleNavbar({
   const eventId = eventMatch?.params?.id;
   const { data: eventResponse } = useEvent(Number(eventId));
   const { data: categoriesResponse } = useCategories();
+  const { data: myEventsResponse } = useMyEvents();
+  const { data: myServicesResponse } = useMyServices({ enabled: isAuthenticated });
   const event = eventResponse?.data;
   const categories = categoriesResponse?.data || [];
+  const hasHostedEvents = (myEventsResponse?.data?.length ?? 0) > 0;
+  const hasServices = (myServicesResponse?.data?.length ?? 0) > 0;
   const isEventHost =
     isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
@@ -74,7 +68,21 @@ export function SimpleNavbar({
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [isQuickCreateSubmitting, setIsQuickCreateSubmitting] = useState(false);
+  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
+  const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const menuPopoverOpen = Boolean(menuAnchorEl);
+  const hostingAndServicesItems: MenuItem[] = [];
+  if (hasHostedEvents) {
+    hostingAndServicesItems.push({ label: 'Hosting', to: '/managing', Icon: Speech });
+  }
+  if (hasServices) {
+    hostingAndServicesItems.push({
+      label: 'Servicing',
+      to: '/managing/services',
+      Icon: Monitor,
+    });
+  }
+
   const menuGroups: MenuItem[][] = [
     [
       {
@@ -90,16 +98,12 @@ export function SimpleNavbar({
       },
     ],
     [{ label: 'My Network', to: '/network', Icon: Users }],
-    [
-      { label: 'Calendar', to: '/calendar', Icon: CalendarDays },
-      { label: 'Hosting', to: '/dashboard/events', Icon: Speech },
-      { label: 'Servicing', to: '/dashboard/services/my-services', Icon: Monitor },
-    ],
+    ...(hostingAndServicesItems.length ? [hostingAndServicesItems] : []),
     [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
       : []),
-  ] as const;
+  ];
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -128,7 +132,11 @@ export function SimpleNavbar({
       onCreateService();
       return;
     }
-    navigate('/vendors/create');
+    if (!isAuthenticated) {
+      navigate('/signin');
+      return;
+    }
+    setIsQuickCreateServiceOpen(true);
   };
 
   const handleQuickCreateSubmit = async (
@@ -483,6 +491,16 @@ export function SimpleNavbar({
           />
         </Box>
       </Drawer>
+
+      <QuickCreateServiceDialog
+        open={isQuickCreateServiceOpen}
+        defaultCategory={quickCreateServiceCategory}
+        onClose={async () => {
+          setIsQuickCreateServiceOpen(false);
+          setQuickCreateServiceCategory('');
+          await queryClient.invalidateQueries({ queryKey: ['my-home'] });
+        }}
+      />
     </Box>
   );
 }

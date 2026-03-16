@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  MessageSquareIcon,
   Briefcase,
   Calendar,
   CalendarDays,
@@ -9,6 +7,7 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  MessageSquareIcon,
   Pencil,
   Plus,
   Search,
@@ -18,10 +17,12 @@ import {
   User,
   UserPlus,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
+import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import type { EventSearchSuggestion } from '@/types/events';
+
 import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 
@@ -45,6 +46,7 @@ export const SearchBar = () => {
     showLocationSuggestions,
     locationSuggestions,
     handleLocationSuggestionClick,
+    clearLocationSelection,
     setRadiusMiles,
     suggestions,
     navigate,
@@ -225,9 +227,7 @@ export const SearchBar = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setLocationSearch('');
-                      if (nearYouEnabled) toggleNearYou();
-                      navigateToSearch({ nextLocation: '' });
+                      clearLocationSelection();
                       setLocationDropdownOpen(false);
                     }}
                     className="mt-3 w-full rounded-none bg-red-100 px-3 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-gray-800 font-bold"

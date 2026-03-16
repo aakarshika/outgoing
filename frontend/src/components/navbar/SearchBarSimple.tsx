@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
 import { LocateFixed, MapPin, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import { useNavbarContext } from './NavbarContext';
 
 export const SearchBarSimple = () => {
@@ -21,6 +22,7 @@ export const SearchBarSimple = () => {
     showLocationSuggestions,
     locationSuggestions,
     handleLocationSuggestionClick,
+    clearLocationSelection,
     setRadiusMiles,
     navigateToSearch,
   } = useNavbarContext();
@@ -31,7 +33,7 @@ export const SearchBarSimple = () => {
   }, [radiusMiles]);
 
   return (
-    <div className="relative  min-w-0 flex-1">
+    <div className="relative  min-w-0 flex-1 bg-white">
       <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
         <div className="relative min-w-[100px] flex-1">
           <input
@@ -40,18 +42,28 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full rounded-full bg-white/70   py-2 pl-4 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full bg-white   py-2 pl-4 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
           />
         </div>
 
         <div
-          className="relative  hidden md:flex  flex-shrink-0 cursor-pointer rounded-full bg-white/70 "
+          className="relative  flex-shrink-0 cursor-pointer rounded-full bg-white "
           ref={locationDropdownRef}
         >
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex h-10 min-w-[170px] items-center justify-between gap-2 rounded-full bg-white/70 px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
+            className="flex md:hidden   h-10 min-w-[170px] justify-end gap-2 rounded-full bg-white px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
+          >
+            <span className="flex items-center gap-2 truncate">
+              <MapPin size={14} className="shrink-0" />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setLocationDropdownOpen((open) => !open)}
+            className="flex hidden md:flex   h-10 min-w-[170px] items-center justify-between gap-2 rounded-full bg-white px-3 text-sm  transition-colors "
           >
             <span className="flex items-center gap-2 truncate">
               <MapPin size={14} className="shrink-0" />
@@ -65,7 +77,7 @@ export const SearchBarSimple = () => {
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white/70 p-3 ">
+            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white p-3 ">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -73,7 +85,7 @@ export const SearchBarSimple = () => {
                   toggleNearYou();
                   setLocationDropdownOpen(false);
                 }}
-                className="mb-3 flex w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-left text-sm text-[var(--color-text-primary)]"
+                className="mb-3 flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left text-sm text-[var(--color-text-primary)]"
               >
                 <LocateFixed
                   size={16}
@@ -97,11 +109,11 @@ export const SearchBarSimple = () => {
                     setTimeout(() => setShowLocationSuggestions(false), 200)
                   }
                   placeholder="City or address..."
-                  className="h-10 w-full rounded-xl bg-white/70 px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                  className="h-10 w-full rounded-xl bg-white px-3 text-sm text-[var(--color-text-primary)] outline-none"
                 />
 
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl ">
+                  <div className="absolute left-0 bg-white right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl ">
                     {locationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}
@@ -112,7 +124,7 @@ export const SearchBarSimple = () => {
                           setShowLocationSuggestions(false);
                           setLocationDropdownOpen(false);
                         }}
-                        className="flex w-full items-start gap-2 border-b border-white/70 px-3 py-2 text-left last:border-b-0 hover:bg-white/70"
+                        className="flex w-full bg-white items-start gap-2 border-b border-white px-3 py-2 text-left last:border-b-0 hover:bg-white"
                       >
                         <Search
                           size={14}
@@ -153,38 +165,26 @@ export const SearchBarSimple = () => {
                       setRadiusInput(String(radiusMiles));
                     }
                   }}
-                  className="h-8 w-20 rounded-lg bg-white/70 px-2 text-sm text-[var(--color-text-primary)] outline-none"
+                  className="h-8 w-20 rounded-lg bg-white px-2 text-sm text-[var(--color-text-primary)] outline-none"
                 />
                 <span className="text-xs text-[var(--color-text-secondary)]">
                   miles
                 </span>
               </div>
 
-              {locationSearch && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocationSearch('');
-                    if (nearYouEnabled) toggleNearYou();
-                    navigateToSearch({ nextLocation: '' });
-                    setLocationDropdownOpen(false);
-                  }}
-                  className="mt-3 w-full rounded-xl  px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]"
-                >
-                  Clear location
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  clearLocationSelection();
+                  setLocationDropdownOpen(false);
+                }}
+                className="mt-3 bg-gray-100 w-full rounded-xl  px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-gray-200"
+              >
+                Clear location
+              </button>
             </div>
           )}
         </div>
-
-        <button
-          type="submit"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
-          aria-label="Search"
-        >
-          <Search size={16} />
-        </button>
       </form>
     </div>
   );

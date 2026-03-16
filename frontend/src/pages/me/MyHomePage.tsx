@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -8,31 +7,37 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Lightbulb, MapPin } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import client from '@/api/client';
+import { SmallEventCard } from '@/components/events/SmallEventCard';
+import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { fetchFeed } from '@/features/events/api';
-import { useFeed, useMyInterestedEvents } from '@/features/events/hooks';
 import { fetchEvent } from '@/features/events/api';
+import { useFeed, useMyInterestedEvents } from '@/features/events/hooks';
 import {
   fetchAllOpenOpportunities,
-  fetchMyApplications,
   fetchMyVendorOpportunities,
 } from '@/features/needs/api';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 import { ProfileService } from '@/pages/profile/Profile.service';
+import { EventCardWithAllNeeds } from '@/pages/search/components/SearchCards';
 import type {
   ApiResponse,
   EventDetail,
   EventLifecycleState,
   EventListItem,
 } from '@/types/events';
-import type { NeedApplication, VendorOpportunity } from '@/types/needs';
-import { OpportunityCardExpandedSection } from '@/pages/search/components/SearchCards';
+import type { VendorOpportunity } from '@/types/needs';
+import {
+  getStoredSearchLocation,
+  inferCityFromLocationLabel,
+  LOCATION_PREFERENCES_CHANGED_EVENT,
+} from '@/utils/locationPrefs';
 
 const trendingFeedFilters = [
   { id: 'this-weekend', label: 'This weekend' },
@@ -80,18 +85,6 @@ const networkGroups = [
 ] as const;
 
 type TrendingFeedFilter = (typeof trendingFeedFilters)[number]['id'];
-
-type FeedEventCard = {
-  id: number;
-  category: string;
-  title: string;
-  date: string;
-  icon: string;
-  accent: string;
-  attendees: readonly string[];
-  attendeeColors: readonly string[];
-  extra: string;
-};
 
 type ContributionEventCardData = {
   eventId: number;
@@ -152,111 +145,6 @@ function SectionHeading({
         </Typography>
       ) : null}
     </Stack>
-  );
-}
-
-function EventCard({
-  id,
-  category,
-  title,
-  date,
-  icon,
-  accent,
-  attendees,
-  attendeeColors,
-  extra,
-}: FeedEventCard) {
-  return (
-    <Box
-      component={Link}
-      to={`/events/${id}`}
-      sx={{
-        minWidth: { xs: 250, sm: 220 },
-        maxWidth: 260,
-        borderRadius: '22px',
-        overflow: 'hidden',
-        border: '1px solid rgba(143, 105, 66, 0.16)',
-        background: 'rgba(255,255,255,0.86)',
-        boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
-        flexShrink: 0,
-        cursor: 'pointer',
-        textDecoration: 'none',
-        color: 'inherit',
-        display: 'block',
-        '&:hover': { boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)' },
-      }}
-    >
-      <Box
-        sx={{
-          height: 118,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: accent,
-          fontSize: 34,
-        }}
-      >
-        {icon}
-      </Box>
-      <Stack spacing={1.1} sx={{ p: 1.6 }}>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'rgba(66, 50, 28, 0.56)',
-          }}
-        >
-          {category}
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: 'Syne, sans-serif',
-            fontSize: 15,
-            fontWeight: 700,
-            lineHeight: 1.3,
-            color: '#2B2118',
-          }}
-        >
-          {title}
-        </Typography>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          spacing={1}
-        >
-          <Typography sx={{ fontSize: 12, color: 'rgba(66, 50, 28, 0.68)' }}>
-            {date}
-          </Typography>
-          <Stack direction="row" alignItems="center" spacing={0.75}>
-            {attendees.length > 0 ? (
-              <Stack direction="row" sx={{ '& > *:not(:first-of-type)': { ml: -0.7 } }}>
-                {attendees.map((person, index) => (
-                  <Avatar
-                    key={`${title}-${person}`}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      border: '1.5px solid #fff',
-                      fontSize: 8,
-                      fontWeight: 700,
-                      bgcolor: attendeeColors[index] || '#D85A30',
-                    }}
-                  >
-                    {person}
-                  </Avatar>
-                ))}
-              </Stack>
-            ) : null}
-            <Typography sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.68)' }}>
-              {extra}
-            </Typography>
-          </Stack>
-        </Stack>
-      </Stack>
-    </Box>
   );
 }
 
@@ -373,84 +261,6 @@ function isInThisWeekendWindow(event: EventListItem) {
   return eventStart >= start && eventStart >= weekendStart && eventStart < end;
 }
 
-function getEventAccent(event: EventListItem) {
-  const category = (event.category?.name || '').toLowerCase();
-  if (event.location_name?.toLowerCase().includes('online')) return '#E1F5EE';
-  if (category.includes('music')) return '#E6F1FB';
-  if (category.includes('food')) return '#EAF3DE';
-  if (category.includes('art')) return '#FBEAF0';
-  if (category.includes('film')) return '#FAEEDA';
-  return '#FAECE7';
-}
-
-function getEventIcon(event: EventListItem) {
-  const category = (event.category?.name || '').toLowerCase();
-  if (category.includes('music')) return '🎶';
-  if (category.includes('food')) return '🍽️';
-  if (category.includes('art')) return '🎨';
-  if (category.includes('film')) return '🎞️';
-  if (category.includes('game')) return '🎮';
-  if (category.includes('well')) return '🧘';
-  if (
-    category.includes('run') ||
-    category.includes('sport') ||
-    category.includes('outdoor')
-  ) {
-    return '🏃';
-  }
-  return '✨';
-}
-
-function getOpportunityIcon(category: string) {
-  const normalized = category.toLowerCase();
-  if (normalized.includes('music') || normalized.includes('dj')) return '🎧';
-  if (normalized.includes('food') || normalized.includes('cater')) return '🍽️';
-  if (normalized.includes('photo') || normalized.includes('video')) return '📷';
-  if (normalized.includes('design') || normalized.includes('art')) return '🎨';
-  return '🛠️';
-}
-
-function formatNeedList(opportunities: VendorOpportunity[]) {
-  const titles = opportunities.map((opp) => opp.need_title);
-  if (titles.length === 0) return '';
-  if (titles.length === 1) return titles[0];
-  if (titles.length === 2) return `${titles[0]} and ${titles[1]}`;
-  const allButLast = opportunities
-    .slice(0, -1)
-    .map((opp) => `${getOpportunityIcon(opp.category)} ${opp.need_title}`)
-    .join(', ');
-  const last = `${getOpportunityIcon(opportunities[opportunities.length - 1].category)} ${opportunities[opportunities.length - 1].need_title}`;
-  return `${allButLast}, and ${last}`;
-}
-
-function getChipInActionLabel(
-  opp: VendorOpportunity,
-  matchedNeedIds: Set<number>,
-  appByNeedId: Map<number, NeedApplication>,
-) {
-  const app = appByNeedId.get(opp.need_id);
-  if (app?.status === 'accepted') return 'Servicing here';
-  if (app?.status === 'pending') return 'Already applied';
-  if (opp.is_invited) return 'Show invite';
-  if (matchedNeedIds.has(opp.need_id)) return 'Send inquiry';
-  return 'Create service';
-}
-
-function getChipInActionColor(label: string) {
-  switch (label) {
-    case 'Servicing here':
-      return '#1D9E75';
-    case 'Already applied':
-      return '#D85A30';
-    case 'Show invite':
-      return '#534AB7';
-    case 'Send inquiry':
-      return '#D85A30';
-    default:
-      return '#0d9488';
-  }
-}
-
 function getRoleStyle(kind: 'hosting' | 'attending' | 'saved' | 'vendor') {
   switch (kind) {
     case 'hosting':
@@ -470,11 +280,15 @@ async function fetchEventOverview() {
 
 export default function MyHomePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isAuthenticated, loading } = useAuth();
   const [selectedTrendingFilters, setSelectedTrendingFilters] = useState<
     TrendingFeedFilter[]
   >(['this-weekend']);
-  const [expandedNeedCard, setExpandedNeedCard] = useState<number | null>(null);
+  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
+  const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
+  const [storedLocation, setStoredLocation] = useState(() => getStoredSearchLocation());
+
   const trendingLifecycleStates = [
     'published',
     'event_ready',
@@ -530,20 +344,6 @@ export default function MyHomePage() {
     [matchedOpportunities],
   );
 
-  const { data: applicationsResponse } = useQuery({
-    queryKey: ['myApplications'],
-    enabled: !!user,
-    queryFn: fetchMyApplications,
-  });
-
-  const applicationByNeedId = useMemo(() => {
-    const map = new Map<number, NeedApplication>();
-    (applicationsResponse?.data || []).forEach((app) => {
-      if (app.need != null) map.set(app.need, app);
-    });
-    return map;
-  }, [applicationsResponse]);
-
   const contributionEventCards = useMemo<ContributionEventCardData[]>(() => {
     const byEvent = new Map<number, VendorOpportunity[]>();
     opportunities.forEach((opp) => {
@@ -578,19 +378,42 @@ export default function MyHomePage() {
     })),
   });
 
-  const eventCoverByEventId = useMemo(() => {
-    const map = new Map<number, string>();
+  const eventDetailByEventId = useMemo(() => {
+    const map = new Map<number, EventDetail>();
     eventQueries.forEach((q, i) => {
       const eventId = contributionEventIds[i];
-      const cover = (q.data as ApiResponse<EventDetail> | undefined)?.data?.cover_image;
-      if (eventId && cover) map.set(eventId, cover);
+      const detail = (q.data as ApiResponse<EventDetail> | undefined)?.data;
+      if (eventId && detail) map.set(eventId, detail);
     });
     return map;
   }, [eventQueries, contributionEventIds]);
 
   const profile = profileResponse?.data;
-  const locationLabel = profile?.location_city || 'Your area';
-  const locationQuery = profile?.location_city?.trim() || undefined;
+  useEffect(() => {
+    const syncStoredLocation = () => {
+      setStoredLocation(getStoredSearchLocation());
+    };
+
+    syncStoredLocation();
+    window.addEventListener(LOCATION_PREFERENCES_CHANGED_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
+
+    return () => {
+      window.removeEventListener(
+        LOCATION_PREFERENCES_CHANGED_EVENT,
+        syncStoredLocation,
+      );
+      window.removeEventListener('storage', syncStoredLocation);
+    };
+  }, []);
+
+  const currentCity =
+    storedLocation?.city ||
+    inferCityFromLocationLabel(storedLocation?.label || '') ||
+    '';
+  const locationLabel = currentCity || profile?.location_city || 'Your area';
+  const locationQuery =
+    storedLocation?.label?.trim() || profile?.location_city?.trim() || undefined;
   const allTrendingSearchHref = useMemo(() => {
     const params = new URLSearchParams({ tab: 'trending' });
     if (locationQuery) params.set('location', locationQuery);
@@ -623,10 +446,6 @@ export default function MyHomePage() {
       ),
     [nearbyTrendingResponse],
   );
-  const nearbyTrendingCount = locationQuery
-    ? nearbyTrendingEvents.length
-    : trendingEvents.length;
-
   const nextEvent = trendingEvents[0];
   const nextEventCountdown = getCountdownParts(nextEvent?.start_time);
 
@@ -693,25 +512,14 @@ export default function MyHomePage() {
   const weekendFeedTitle = hasUpcomingEvents
     ? 'A sharper feed for your next yes'
     : 'Your first yes starts here';
+  const baseTrendingEvents = locationQuery ? nearbyTrendingEvents : trendingEvents;
 
   const filteredTrendingEvents = useMemo(() => {
     if (selectedTrendingFilters.length === 0) {
-      return trendingEvents.slice(0, 6).map<FeedEventCard>((event) => ({
-        id: event.id,
-        category: event.category?.name || 'Event',
-        title: event.title,
-        date: `${formatDate(event.start_time, { weekday: 'short' })} · ${formatTime(event.start_time)}`,
-        icon: getEventIcon(event),
-        accent: getEventAccent(event),
-        attendees: [event.host.first_name?.[0] || event.host.username[0]].filter(
-          Boolean,
-        ),
-        attendeeColors: ['#D85A30'],
-        extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
-      }));
+      return baseTrendingEvents.slice(0, 6);
     }
 
-    const filtered = trendingEvents.filter((event) => {
+    const filtered = baseTrendingEvents.filter((event) => {
       const selectedDateFilters = selectedTrendingFilters.filter((filter) =>
         ['this-weekend', 'tonight'].includes(filter),
       );
@@ -749,18 +557,8 @@ export default function MyHomePage() {
       return matchesCategoryGroup && matchesDateFilter && matchesFormatFilter;
     });
 
-    return filtered.slice(0, 6).map<FeedEventCard>((event) => ({
-      id: event.id,
-      category: event.category?.name || 'Event',
-      title: event.title,
-      date: `${formatDate(event.start_time, { weekday: 'short' })} · ${formatTime(event.start_time)}`,
-      icon: getEventIcon(event),
-      accent: getEventAccent(event),
-      attendees: [event.host.first_name?.[0] || event.host.username[0]].filter(Boolean),
-      attendeeColors: ['#D85A30'],
-      extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
-    }));
-  }, [selectedTrendingFilters, trendingEvents]);
+    return filtered.slice(0, 6);
+  }, [baseTrendingEvents, selectedTrendingFilters]);
 
   const recommendedEvents = useMemo(() => {
     const seen = new Set<number>([
@@ -770,20 +568,7 @@ export default function MyHomePage() {
 
     return ((recommendedResponse?.data || []) as EventListItem[])
       .filter((event) => !seen.has(event.id))
-      .slice(0, 6)
-      .map<FeedEventCard>((event) => ({
-        id: event.id,
-        category: event.category?.name || 'Event',
-        title: event.title,
-        date: `${formatDate(event.start_time, { month: 'short', day: 'numeric' })} · ${formatTime(event.start_time)}`,
-        icon: getEventIcon(event),
-        accent: getEventAccent(event),
-        attendees: [event.host.first_name?.[0] || event.host.username[0]].filter(
-          Boolean,
-        ),
-        attendeeColors: ['#534AB7'],
-        extra: `+${Math.max(event.ticket_count, event.interest_count)}`,
-      }));
+      .slice(0, 6);
   }, [filteredTrendingEvents, nextEvent?.id, recommendedResponse]);
 
   const toggleTrendingFilter = (filter: TrendingFeedFilter) => {
@@ -794,6 +579,15 @@ export default function MyHomePage() {
     );
   };
   const clearTrendingFilters = () => setSelectedTrendingFilters([]);
+  const openQuickCreateService = (category?: string) => {
+    if (!isAuthenticated) {
+      navigate('/signin');
+      return;
+    }
+
+    setQuickCreateServiceCategory(category || '');
+    setIsQuickCreateServiceOpen(true);
+  };
 
   const isPageLoading = loading || isProfileLoading;
 
@@ -1112,16 +906,6 @@ export default function MyHomePage() {
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Chip
-                      label={`${nearbyTrendingCount} events nearby`}
-                      sx={{
-                        height: 34,
-                        borderRadius: '999px',
-                        background: '#D85A30',
-                        color: '#fff',
-                        fontWeight: 700,
-                      }}
-                    />
                     {trendingFeedFilters.map((filter) => (
                       <Chip
                         key={filter.id}
@@ -1148,15 +932,33 @@ export default function MyHomePage() {
                       component={Link}
                       to={allTrendingSearchHref}
                       clickable
-                      label="All"
+                      label={
+                        <Box
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                          }}
+                        >
+                          All
+                          <ArrowRight size={14} />
+                        </Box>
+                      }
                       sx={{
                         height: 34,
                         borderRadius: '999px',
-                        bgcolor: 'rgba(255,255,255,0.9)',
-                        color: '#4A3827',
-                        border: '1px solid rgba(143, 105, 66, 0.14)',
+                        px: 0.35,
+                        bgcolor: '#2B2118',
+                        color: '#FFF8EF',
+                        boxShadow: '0 10px 20px rgba(66, 50, 28, 0.18)',
                         fontWeight: 700,
                         textDecoration: 'none',
+                        '& .MuiChip-label': {
+                          px: 1.4,
+                        },
+                        '&:hover': {
+                          bgcolor: '#3B2E22',
+                        },
                       }}
                     />
                     <Chip
@@ -1165,11 +967,14 @@ export default function MyHomePage() {
                       sx={{
                         height: 34,
                         borderRadius: '999px',
-                        bgcolor: 'rgba(255,255,255,0.9)',
-                        color: '#4A3827',
-                        border: '1px solid rgba(143, 105, 66, 0.14)',
+                        bgcolor: 'rgba(255, 244, 227, 0.92)',
+                        color: '#B45309',
+                        border: '1px dashed rgba(180, 83, 9, 0.38)',
                         fontWeight: 700,
                         cursor: 'pointer',
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 237, 213, 0.98)',
+                        },
                       }}
                     />
                   </Stack>
@@ -1186,7 +991,7 @@ export default function MyHomePage() {
                 >
                   {filteredTrendingEvents.length > 0 ? (
                     filteredTrendingEvents.map((event) => (
-                      <EventCard key={event.id} {...event} />
+                      <SmallEventCard key={event.id} event={event} />
                     ))
                   ) : (
                     <Box
@@ -1224,179 +1029,19 @@ export default function MyHomePage() {
                   <Stack spacing={1.5} sx={{ mt: 2 }}>
                     {contributionEventCards.length > 0
                       ? contributionEventCards.map((eventCard) => {
-                          const coverUrl = eventCoverByEventId.get(eventCard.eventId);
+                          const eventDetail = eventDetailByEventId.get(
+                            eventCard.eventId,
+                          );
+                          if (!eventDetail) return null;
                           return (
-                            <Box
+                            <EventCardWithAllNeeds
                               key={eventCard.eventId}
-                              sx={{
-                                display: 'flex',
-                                width: '100%',
-                                flexDirection: 'column',
-                                alignItems: 'flex-start',
-                                borderRadius: '22px',
-                                border: '1px solid rgba(143, 105, 66, 0.16)',
-                                borderLeft: '4px solid #EF9F27',
-                                borderTop: 'none',
-                                background: 'rgba(255,255,255,0.86)',
-                                boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
-                                minWidth: 0,
-                                overflow: 'hidden',
-                                transition: 'box-shadow 0.2s ease',
-                                '&:hover': {
-                                  boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)',
-                                },
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  display: 'flex',
-                                  flexDirection: 'row',
-                                  minWidth: 0,
-                                }}
-                              >
-                                {/* image */}
-                                <Box
-                                  sx={{
-                                    position: 'relative',
-                                    width: 140,
-                                    minWidth: 140,
-                                    height: 100,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {coverUrl && (
-                                    <Box
-                                      component="img"
-                                      src={coverUrl}
-                                      alt={eventCard.eventTitle}
-                                      sx={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover',
-                                        display: 'block',
-                                      }}
-                                    />
-                                  )}
-                                </Box>
-                                {/* content */}
-                                <Stack
-                                  spacing={1.25}
-                                  sx={{
-                                    flex: 1,
-                                    minWidth: 0,
-                                    p: 1.6,
-                                    justifyContent: 'center',
-                                  }}
-                                >
-                                  <Typography
-                                    sx={{
-                                      fontSize: { xs: 14, sm: 14.5 },
-                                      fontWeight: 700,
-                                      color: '#2B2118',
-                                    }}
-                                  >
-                                    {eventCard.eventTitle}{' '}
-                                    <strong
-                                      style={{
-                                        color: 'rgba(66, 50, 28, 0.68)',
-                                        fontWeight: 700,
-                                      }}
-                                    >
-                                      needs
-                                    </strong>{' '}
-                                    {formatNeedList(eventCard.opportunities)}
-                                  </Typography>
-                                  <Typography
-                                    sx={{
-                                      fontSize: 12.5,
-                                      color: 'rgba(66, 50, 28, 0.68)',
-                                    }}
-                                  >
-                                    {eventCard.subtitle}
-                                  </Typography>
-                                  <Stack
-                                    direction="row"
-                                    spacing={0.8}
-                                    sx={{ flexWrap: 'wrap', gap: 0.8 }}
-                                  >
-                                    {eventCard.opportunities.map((opp) => {
-                                      const label = getChipInActionLabel(
-                                        opp,
-                                        matchedOpportunityNeedIds,
-                                        applicationByNeedId,
-                                      );
-                                      const color = getChipInActionColor(label);
-                                      return (
-                                        <Box
-                                          key={opp.need_id}
-                                          component="button"
-                                          type="button"
-                                          onClick={(e: React.MouseEvent) => {
-                                            e.stopPropagation();
-                                            if (
-                                              label === 'Servicing here' ||
-                                              label === 'Already applied'
-                                            ) {
-                                              navigate(
-                                                `/events/${opp.event_id}/service-event-management`,
-                                              );
-                                            } else {
-                                              setExpandedNeedCard(
-                                                expandedNeedCard === eventCard.eventId
-                                                  ? null
-                                                  : eventCard.eventId,
-                                              );
-                                            }
-                                          }}
-                                          sx={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: 0.5,
-                                            px: 1.2,
-                                            py: 0.5,
-                                            borderRadius: '999px',
-                                            border: `1px solid ${color}`,
-                                            backgroundColor: 'transparent',
-                                            color,
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                            cursor: 'pointer',
-                                            fontFamily: 'Syne, sans-serif',
-                                            transition: 'background-color 0.15s ease',
-                                            '&:hover': {
-                                              backgroundColor: `${color}10`,
-                                            },
-                                          }}
-                                        >
-                                          {label}
-                                        </Box>
-                                      );
-                                    })}
-                                  </Stack>
-                                </Stack>
-                              </Box>
-
-                              {expandedNeedCard === eventCard.eventId && (
-                                <Box
-                                  onClick={(e) => e.stopPropagation()}
-                                  sx={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                  }}
-                                >
-                                  <OpportunityCardExpandedSection
-                                    opportunities={eventCard.opportunities || []}
-                                    hasMatchingService={false}
-                                    matchedNeedIds={matchedOpportunityNeedIds}
-                                    expanded={
-                                      expandedNeedCard === eventCard.eventId ?? false
-                                    }
-                                  />
-                                </Box>
-                              )}
-                            </Box>
+                              event={eventDetail}
+                              opportunities={eventCard.opportunities}
+                              matchedNeedIds={matchedOpportunityNeedIds}
+                              onCreateService={openQuickCreateService}
+                              onClick={() => navigate(`/events/${eventCard.eventId}`)}
+                            />
                           );
                         })
                       : null}
@@ -1495,7 +1140,7 @@ export default function MyHomePage() {
                 >
                   {recommendedEvents.length > 0 ? (
                     recommendedEvents.map((event) => (
-                      <EventCard key={event.id} {...event} />
+                      <SmallEventCard key={event.id} event={event} />
                     ))
                   ) : (
                     <Box
@@ -1591,6 +1236,15 @@ export default function MyHomePage() {
           </Box>
         </Box>
       </Container>
+      <QuickCreateServiceDialog
+        open={isQuickCreateServiceOpen}
+        defaultCategory={quickCreateServiceCategory}
+        onClose={async () => {
+          setIsQuickCreateServiceOpen(false);
+          setQuickCreateServiceCategory('');
+          await queryClient.invalidateQueries({ queryKey: ['my-home'] });
+        }}
+      />
     </Box>
   );
 }

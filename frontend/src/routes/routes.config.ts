@@ -82,6 +82,11 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
+    path: '/managing/:tab?',
+    componentName: 'Managing',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
     path: '/vendors',
     componentName: 'BrowseVendors',
     isPublic: true,

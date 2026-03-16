@@ -6,6 +6,19 @@ type Coordinates = {
 type ReverseGeocodeResult = {
   displayAddress: string;
   venueName: string;
+  city: string;
+  state: string;
+};
+
+type LocationAddress = {
+  city?: string;
+  town?: string;
+  village?: string;
+  hamlet?: string;
+  municipality?: string;
+  county?: string;
+  state?: string;
+  region?: string;
 };
 
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
@@ -70,6 +83,14 @@ export async function reverseGeocodeCoordinates(
 
     const data = await response.json();
     const address = data?.address ?? {};
+    const city =
+      address?.city ||
+      address?.town ||
+      address?.village ||
+      address?.hamlet ||
+      address?.municipality ||
+      address?.county ||
+      '';
     const venueName =
       data?.name ||
       address?.amenity ||
@@ -82,6 +103,8 @@ export async function reverseGeocodeCoordinates(
     return {
       displayAddress: data?.display_name || '',
       venueName,
+      city,
+      state: address?.state || address?.region || '',
     };
   } catch {
     reverseGeocodeBlockedUntil = Date.now() + REVERSE_GEOCODE_COOLDOWN_MS;
@@ -94,6 +117,7 @@ export type LocationSuggestion = {
   lat: string;
   lon: string;
   place_id: number;
+  address?: LocationAddress;
 };
 
 export async function searchLocation(query: string): Promise<LocationSuggestion[]> {

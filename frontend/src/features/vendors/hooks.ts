@@ -47,6 +47,13 @@ export function useCreateVendorService() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myServices'] });
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['myVendorOpportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['myPotentialOpportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
+      queryClient.invalidateQueries({ queryKey: ['my-home'] });
+      queryClient.invalidateQueries({
+        queryKey: ['eventCardAllNeeds', 'matchedOpportunities'],
+      });
     },
   });
 }

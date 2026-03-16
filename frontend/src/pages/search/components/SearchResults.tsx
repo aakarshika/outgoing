@@ -48,6 +48,7 @@ function EventGrid({
   tab,
   eventCardOpportunityByEventId,
   matchedOpportunityNeedIds,
+  cardVariant = 'portrait',
   onEventClick,
   onCreateService,
 }: {
@@ -55,6 +56,7 @@ function EventGrid({
   tab: SearchTabId;
   eventCardOpportunityByEventId: Map<number, VendorOpportunity>;
   matchedOpportunityNeedIds: Set<number>;
+  cardVariant?: 'portrait' | 'landscape';
   onEventClick: (eventId: number) => void;
   onCreateService?: (category?: string) => void;
 }) {
@@ -62,7 +64,10 @@ function EventGrid({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gridTemplateColumns:
+          cardVariant === 'landscape'
+            ? '1fr'
+            : { xs: '1fr', sm: 'repeat(auto-fill, minmax(220px, 1fr))' },
         gap: 1.6,
       }}
     >
@@ -75,6 +80,7 @@ function EventGrid({
           hasMatchingService={matchedOpportunityNeedIds.has(
             eventCardOpportunityByEventId.get(event.id)?.need_id ?? -1,
           )}
+          variant={cardVariant}
           onCreateService={onCreateService}
           onClick={() => onEventClick(event.id)}
         />
@@ -152,6 +158,9 @@ export function SearchResults({
   onCreateService?: (category?: string) => void;
   onSignIn: () => void;
 }) {
+  const chipInEventIds = new Set(filteredOpportunities.map((opportunity) => opportunity.event_id));
+  const chipInEvents = filteredEvents.filter((event) => chipInEventIds.has(event.id));
+
   return (
     <Stack spacing={2.2}>
       {tab !== 'my-network' ? (
@@ -245,11 +254,14 @@ export function SearchResults({
       ) : null}
 
       {tab === 'chip-in' ? (
-        filteredOpportunities.length > 0 ? (
-          <OpportunityList
-            opportunities={filteredOpportunities}
-            onOpportunityClick={onOpportunityClick}
+        chipInEvents.length > 0 ? (
+          <EventGrid
+            events={chipInEvents}
+            tab={tab}
+            eventCardOpportunityByEventId={eventCardOpportunityByEventId}
             matchedOpportunityNeedIds={matchedOpportunityNeedIds}
+            cardVariant="landscape"
+            onEventClick={onEventClick}
             onCreateService={onCreateService}
           />
         ) : (

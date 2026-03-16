@@ -24,6 +24,7 @@ const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'))
 const ManageForVendorPage = lazy(() => import('@/pages/events/ManageForVendorPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
+const ManagingPage = lazy(() => import('@/pages/managing/ManagingPage'));
 const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
 const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPage'));
 const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
@@ -50,6 +51,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   ManageForVendor: ManageForVendorPage,
   Dashboard: DashboardPage,
   Calendar: CalendarPage,
+  Managing: ManagingPage,
   BrowseVendors: BrowseVendorsPage,
   VendorPortfolio: VendorPortfolioPage,
   CreateService: CreateServicePage,

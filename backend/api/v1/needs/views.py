@@ -1,7 +1,7 @@
 """Views for event needs and applications."""
 
 from django.db.models import Exists, F, OuterRef
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -51,7 +51,7 @@ def _serialize_opportunity(need, *, is_invited=False):
 class EventNeedsView(APIView):
     """List or create needs for a specific event."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, event_id):
         """List needs for an event."""

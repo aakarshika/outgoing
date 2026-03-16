@@ -2,24 +2,30 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  useMemo,
 } from 'react';
-import { useLocation, useNavigate, matchPath } from 'react-router-dom';
+import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 
+import client from '@/api/client';
 import { useAlerts } from '@/features/alerts/hooks';
 import { useAuth } from '@/features/auth/hooks';
 import { useEvent, useEventAutocomplete } from '@/features/events/hooks';
-import { useTheme } from '@/theme/ThemeProvider';
-import { canUseBrowserGeolocation, searchLocation } from '@/utils/geolocation';
-import type { LocationSuggestion } from '@/utils/geolocation';
-import { useDebouncedValue } from '@/utils/useDebouncedValue';
-import { useNearYou } from '@/utils/useNearYou';
-import client from '@/api/client';
-import type { ApiResponse } from '@/types/events';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 import { normalizeSearchPageParams } from '@/pages/search/searchUtils';
+import { useTheme } from '@/theme/ThemeProvider';
+import type { ApiResponse } from '@/types/events';
+import type { LocationSuggestion } from '@/utils/geolocation';
+import { canUseBrowserGeolocation, searchLocation } from '@/utils/geolocation';
+import {
+  clearStoredSearchLocation,
+  getStoredSearchLocation,
+  inferCityFromLocationLabel,
+  setStoredSearchLocation,
+} from '@/utils/locationPrefs';
+import { useDebouncedValue } from '@/utils/useDebouncedValue';
+import { useNearYou } from '@/utils/useNearYou';
 
 export function isNativeSidebarPath(path: string): boolean {
   const isDashboard = path === '/dashboard' || path.startsWith('/dashboard/');
@@ -59,7 +65,9 @@ export function useNavbarData() {
   } = useNearYou();
 
   const [search, setSearch] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
+  const [locationSearch, setLocationSearch] = useState(
+    () => getStoredSearchLocation()?.label || '',
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>(
@@ -194,15 +202,35 @@ export function useNavbarData() {
     const nextSearch = params.get('search') || '';
     const nextLocation = params.get('location') || '';
     const nextRadius = Number(params.get('radius_miles'));
+    const lat = params.get('lat');
+    const lng = params.get('lng');
 
     setSearch((current) => (current === nextSearch ? current : nextSearch));
     setLocationSearch((current) => (current === nextLocation ? current : nextLocation));
+
+    if (!nearYouEnabled) {
+      if (nextLocation.trim()) {
+        setStoredSearchLocation({
+          label: nextLocation,
+          city: inferCityFromLocationLabel(nextLocation),
+          coords:
+            lat && lng
+              ? {
+                  lat,
+                  lng,
+                }
+              : null,
+        });
+      } else {
+        clearStoredSearchLocation();
+      }
+    }
 
     // Sync radius from URL when the URL changes, but don't re-run on local radius edits.
     if (!Number.isNaN(nextRadius) && nextRadius > 0) {
       setRadiusMiles(nextRadius);
     }
-  }, [location.pathname, location.search, setRadiusMiles]);
+  }, [location.pathname, location.search, nearYouEnabled, setRadiusMiles]);
 
   const buildSearchPageParams = ({
     nextSearch = search,
@@ -273,12 +301,41 @@ export function useNavbarData() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowSuggestions(false);
+
+    if (!nearYouEnabled) {
+      const trimmedLocation = locationSearch.trim();
+      if (trimmedLocation) {
+        setStoredSearchLocation({
+          label: trimmedLocation,
+          city: inferCityFromLocationLabel(trimmedLocation),
+        });
+      } else {
+        clearStoredSearchLocation();
+      }
+    }
+
     navigateToSearch();
   };
 
   const handleLocationSuggestionClick = (suggestion: LocationSuggestion) => {
     setLocationSearch(suggestion.display_name);
     setShowLocationSuggestions(false);
+    const city =
+      suggestion.address?.city ||
+      suggestion.address?.town ||
+      suggestion.address?.village ||
+      suggestion.address?.hamlet ||
+      suggestion.address?.municipality ||
+      suggestion.address?.county ||
+      inferCityFromLocationLabel(suggestion.display_name);
+    setStoredSearchLocation({
+      label: suggestion.display_name,
+      city,
+      coords: {
+        lat: suggestion.lat,
+        lng: suggestion.lon,
+      },
+    });
     navigateToSearch({
       nextLocation: suggestion.display_name,
       nextCoords: {
@@ -286,6 +343,15 @@ export function useNavbarData() {
         lng: suggestion.lon,
       },
     });
+  };
+
+  const clearLocationSelection = () => {
+    setLocationSearch('');
+    clearStoredSearchLocation();
+    if (nearYouEnabled) {
+      toggleNearYou();
+    }
+    navigateToSearch({ nextLocation: '' });
   };
 
   const { hostingEvents, vendorEvents, attendeeEvents } = useMemo(() => {
@@ -417,6 +483,7 @@ export function useNavbarData() {
       // Handlers
       handleSearchSubmit,
       handleLocationSuggestionClick,
+      clearLocationSelection,
       navigateToSearch,
     }),
     [
@@ -451,6 +518,7 @@ export function useNavbarData() {
       isNotOnManagePage,
       shouldShowSearch,
       isNativeSidebarRoute,
+      clearLocationSelection,
     ],
   );
 }

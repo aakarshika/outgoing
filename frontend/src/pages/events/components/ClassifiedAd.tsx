@@ -18,7 +18,7 @@ export const ClassifiedAd = ({
   isEligible?: boolean;
   isOpportunity?: boolean;
 }) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [hostAnchorEl, setHostAnchorEl] = useState<HTMLElement | null>(null);
   const assigned_vendor = need.applications.find(
@@ -142,6 +142,27 @@ export const ClassifiedAd = ({
             mt: 0,
           }}
         >
+          {!isAuthenticated && (
+              <MuiButton
+                variant="outlined"
+                size="small"
+                onClick={() =>
+                  navigate(
+                    `/events/${(event as any)?.id}/service-event-management/application`,
+                  )
+                }
+                sx={{
+                  borderRadius: 0,
+                  borderColor: '#0284c7',
+                  color: '#0284c7',
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: '#0284c7', color: '#fff' },
+                }}
+              >
+                Think you're a good fit? Sign in to apply
+              </MuiButton>
+            )}
           {(need.status === 'open' ||
             !need.status ||
             need.status === 'pending' ||

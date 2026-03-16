@@ -54,7 +54,7 @@ function AppContent() {
   return (
     <div className="relative flex flex-col min-h-screen text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {!isSearchRoute && !isSignedOutRoot && !isPlanningWorkspaceRoute && (
+      {!isSearchRoute  && (
         <SimpleNavbar />
       )}
       <Toaster />
@@ -62,7 +62,7 @@ function AppContent() {
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      {!isGallery && !isSignedOutRoot && !isPlanningWorkspaceRoute && (
+      {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />
         </div>

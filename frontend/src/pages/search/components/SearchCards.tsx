@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Button,
   Chip,
@@ -8,21 +9,27 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import {
+  CompletedRatedBadge,
   getEventCardRoles,
   HostVendorBadge,
   LiveBadge,
   PriceBadge,
-  CompletedRatedBadge,
 } from '@/features/events/scrapbookCard';
+import {
+  applyToNeed,
+  fetchMyApplications,
+  fetchMyVendorOpportunities,
+} from '@/features/needs/api';
 import type { EventListItem } from '@/types/events';
-import type { VendorOpportunity } from '@/types/needs';
-import { applyToNeed, fetchMyApplications } from '@/features/needs/api';
+import type { NeedApplication, VendorOpportunity } from '@/types/needs';
+
+import { fetchMyServices } from '@/features/vendors/api';
 
 import type { SearchTabId } from '../searchTypes';
 import {
@@ -39,6 +46,7 @@ export function EventCard({
   tab,
   opportunity,
   hasMatchingService,
+  variant = 'portrait',
   onCreateService,
   onClick,
 }: {
@@ -46,11 +54,17 @@ export function EventCard({
   tab: SearchTabId;
   opportunity?: VendorOpportunity;
   hasMatchingService: boolean;
+  variant?: 'portrait' | 'landscape';
   onCreateService?: (category?: string) => void;
   onClick: () => void;
 }) {
   const { user, isAuthenticated } = useAuth();
   const [needsExpanded, setNeedsExpanded] = useState(false);
+  const { data: applicationsData } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    enabled: isAuthenticated && Boolean(opportunity),
+  });
   const online = isOnlineEvent(event);
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
   const accent = categoryTheme.accent;
@@ -69,14 +83,19 @@ export function EventCard({
   const showPriceOverlay =
     event.lifecycle_state === 'published' || event.lifecycle_state === 'live';
   const showRatedOverlay = event.lifecycle_state === 'completed';
+  const myApplication = useMemo(() => {
+    if (!opportunity) return null;
+    const apps = applicationsData?.data || [];
+    return apps.find((app) => app.need === opportunity.need_id) || null;
+  }, [applicationsData, opportunity]);
   const needRewardValue = opportunity?.budget_max || opportunity?.budget_min;
   const needsCtaLabel = opportunity
-    ? opportunity.is_invited
-      ? 'Show invite'
-      : hasMatchingService
-        ? 'Send inquiry'
-        : 'Create service'
+    ? getOpportunityCardState(opportunity, hasMatchingService, myApplication?.status)
+        .chipLabel
     : null;
+  const isLandscape = variant === 'landscape';
+  const imageHeight = isLandscape ? '100%' : 120;
+  const imageWidth = isLandscape ? 220 : '100%';
 
   const handleNeedsClick = (clickEvent: React.MouseEvent) => {
     clickEvent.stopPropagation();
@@ -95,23 +114,32 @@ export function EventCard({
         overflow: 'hidden',
         cursor: 'pointer',
         display: 'flex',
-        flexDirection: 'column',
-        minHeight: 260,
+        flexDirection: isLandscape ? 'row' : 'column',
+        alignItems: 'stretch',
+        minHeight: isLandscape ? 220 : 260,
       }}
     >
-      <Box sx={{ position: 'relative', width: '100%', height: 120, flexShrink: 0 }}>
+      <Box
+        sx={{
+          position: 'relative',
+          width: imageWidth,
+          height: imageHeight,
+          minHeight: isLandscape ? 220 : 120,
+          flexShrink: 0,
+        }}
+      >
         {event.cover_image ? (
           <Box
             component="img"
             src={event.cover_image}
             alt={event.title}
-            sx={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
+            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
           <Box
             sx={{
               width: '100%',
-              height: 120,
+              height: '100%',
               bgcolor: categoryTheme.bg || '#f3f4f6',
               display: 'block',
             }}
@@ -123,7 +151,7 @@ export function EventCard({
         {(isHost || isVendor) && (
           <HostVendorBadge
             isHost={isHost}
-            variant="full"
+            variant={isLandscape ? 'short' : 'full'}
             bottomOffset={event.lifecycle_state === 'live' ? 36 : 10}
             sx={{ position: 'absolute', left: 8, zIndex: 2 }}
           />
@@ -142,7 +170,16 @@ export function EventCard({
         )}
       </Box>
 
-      <Box sx={{ p: 1.6, display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
+      <Box
+        sx={{
+          p: isLandscape ? 1.8 : 1.6,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isLandscape ? 1.15 : 1,
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -293,7 +330,7 @@ export function EventCard({
         <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
-            fontSize: 15,
+            fontSize: isLandscape ? 18 : 15,
             lineHeight: 1.3,
             fontWeight: 700,
             color: '#111827',
@@ -305,12 +342,12 @@ export function EventCard({
         {event.description ? (
           <Typography
             sx={{
-              fontSize: 11,
+              fontSize: isLandscape ? 12 : 11,
               lineHeight: 1.45,
               color: '#6b7280',
               display: '-webkit-box',
               overflow: 'hidden',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: isLandscape ? 3 : 2,
               WebkitBoxOrient: 'vertical',
             }}
           >
@@ -332,8 +369,8 @@ export function EventCard({
               borderRadius: '12px',
               backgroundColor: '#FAEEDA',
               color: '#412402',
-              px: 1.1,
-              py: 0.9,
+              px: isLandscape ? 1.25 : 1.1,
+              py: isLandscape ? 1 : 0.9,
               textAlign: 'left',
               cursor: 'pointer',
               transition: 'background-color 0.15s ease, border-color 0.15s ease',
@@ -349,7 +386,7 @@ export function EventCard({
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography
                 sx={{
-                  fontSize: 11,
+                  fontSize: isLandscape ? 12 : 11,
                   lineHeight: 1.4,
                   color: '#633806',
                 }}
@@ -363,7 +400,12 @@ export function EventCard({
               </Typography>
               {needsCtaLabel ? (
                 <Typography
-                  sx={{ mt: 0.35, fontSize: 10, fontWeight: 700, color: '#854F0B' }}
+                  sx={{
+                    mt: 0.35,
+                    fontSize: isLandscape ? 11 : 10,
+                    fontWeight: 700,
+                    color: '#854F0B',
+                  }}
                 >
                   {needsCtaLabel}
                 </Typography>
@@ -380,6 +422,7 @@ export function EventCard({
 
         {opportunity ? (
           <OpportunityCardExpandedSection
+            applicationsData={applicationsData}
             opportunities={[opportunity]}
             hasMatchingService={hasMatchingService}
             expanded={needsExpanded}
@@ -403,15 +446,28 @@ export function EventCard({
               ? event.location_name
               : `${formatEventDayLabel(event.start_time)} / ${formatEventTimeLabel(event.start_time)}`}
           </Typography>
-          <Typography
-            sx={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: online ? '#085041' : '#D85A30',
-            }}
-          >
-            {online ? 'Join' : 'View event'}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Avatar
+                src={event.host.avatar || undefined}
+                sx={{
+                  width: 18,
+                  height: 18,
+                  fontSize: 8,
+                  fontWeight: 700,
+                  bgcolor: accent,
+                  color: '#fff',
+                }}
+              >
+                {event.host.first_name?.[0] || event.host.username[0]}
+              </Avatar>
+              {Math.max(event.ticket_count, event.interest_count) > 0 && (
+                <Typography sx={{ fontSize: 10, color: '#9ca3af', fontWeight: 600 }}>
+                  +{Math.max(event.ticket_count, event.interest_count)}
+                </Typography>
+              )}
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -571,12 +627,14 @@ function getOpportunityCardState(
   };
 }
 export function OpportunityCardExpandedSection({
+  applicationsData,
   opportunities,
   hasMatchingService,
   matchedNeedIds,
   expanded,
   onCreateService,
 }: {
+  applicationsData: { success: boolean; data: NeedApplication[] };
   opportunities: VendorOpportunity[];
   hasMatchingService: boolean;
   matchedNeedIds?: Set<number>;
@@ -584,12 +642,19 @@ export function OpportunityCardExpandedSection({
   onCreateService?: (category?: string) => void;
 }) {
   const navigate = useNavigate();
+  console.log('applicationsData', applicationsData);
+  console.log('opportunities', opportunities);
 
   return (
     <Collapse in={expanded} timeout="auto" unmountOnExit sx={{ width: '100%' }}>
       <Stack spacing={0} sx={{ width: '100%' }}>
         {opportunities.map((opportunity) => (
           <OpportunityCardExpandedItem
+            application={
+              applicationsData?.data.find(
+                (app) => app.need_id === opportunity.need_id,
+              ) || null
+            }
             key={opportunity.need_id}
             opportunity={opportunity}
             hasMatchingService={
@@ -610,10 +675,12 @@ export function OpportunityCardExpandedSection({
 }
 
 function OpportunityCardExpandedItem({
+  application,
   opportunity,
   hasMatchingService,
   onCreateService,
 }: {
+  application: NeedApplication | null;
   opportunity: VendorOpportunity;
   hasMatchingService: boolean;
   onCreateService: () => void;
@@ -626,20 +693,37 @@ function OpportunityCardExpandedItem({
   );
   const [message, setMessage] = useState('');
 
-  const { data: applicationsData } = useQuery({
-    queryKey: ['myApplications'],
-    queryFn: fetchMyApplications,
+  const { data: myServicesData } = useQuery({
+    queryKey: ['myServices'],
+    queryFn: fetchMyServices,
     enabled: isAuthenticated,
   });
 
-  const myApplication = useMemo(() => {
-    const apps = applicationsData?.data || [];
-    return apps.find((app) => app.need === opportunity.need_id) || null;
-  }, [applicationsData, opportunity.need_id]);
+  const matchedServiceDescription = useMemo(() => {
+    const services = myServicesData?.data || [];
+    const match = services.find((s) => s.category === opportunity.category);
+    return match?.description || '';
+  }, [myServicesData, opportunity.category]);
+  const matchedServiceId = useMemo(() => {
+    const services = myServicesData?.data || [];
+    const match = services.find((s) => s.category === opportunity.category);
+    return match?.id ?? null;
+  }, [myServicesData, opportunity.category]);
+
+  useEffect(() => {
+    if (matchedServiceDescription && !message) {
+      setMessage(matchedServiceDescription);
+    }
+  }, [matchedServiceDescription]);
+
+  const myApplication = application || null;
 
   const applyMutation = useMutation({
-    mutationFn: (payload: { message?: string; proposed_price?: number | null }) =>
-      applyToNeed(opportunity.need_id, payload),
+    mutationFn: (payload: {
+      message?: string;
+      proposed_price?: number | null;
+      service_id?: number | null;
+    }) => applyToNeed(opportunity.need_id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myApplications'] });
       queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
@@ -665,6 +749,7 @@ function OpportunityCardExpandedItem({
     applyMutation.mutate({
       message: message || undefined,
       proposed_price: proposedPrice,
+      service_id: matchedServiceId,
     });
   };
 
@@ -1001,6 +1086,828 @@ function OpportunityCardExpandedItem({
   );
 }
 
+function getNeedsSummaryLabel(titles: string[], max = 2) {
+  if (titles.length === 0) return '';
+  if (titles.length === 1) return titles[0];
+  if (titles.length <= max)
+    return titles.slice(0, -1).join(', ') + ' and ' + titles[titles.length - 1];
+  const shown = titles.slice(0, max).join(', ');
+  const remaining = titles.length - max;
+  return `${shown}, and ${remaining} other${remaining > 1 ? 's' : ''}`;
+}
+
+function getAggregateStatus(
+  opportunities: VendorOpportunity[],
+  applicationByNeedId: Map<
+    number,
+    { status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' }
+  >,
+): { label: string; bg: string; color: string; border: string } {
+  let hasAccepted = false;
+  let hasPending = false;
+  let hasInvite = false;
+
+  for (const opp of opportunities) {
+    const app = applicationByNeedId.get(opp.need_id);
+    if (app?.status === 'accepted') hasAccepted = true;
+    else if (app?.status === 'pending') hasPending = true;
+    if (opp.is_invited) hasInvite = true;
+  }
+
+  if (hasAccepted)
+    return {
+      label: 'Servicing here',
+      bg: '#E1F5EE',
+      color: '#0F6E56',
+      border: '1px solid #1D9E75',
+    };
+  if (hasPending)
+    return {
+      label: 'You have applied',
+      bg: '#FAECE7',
+      color: '#712B13',
+      border: '1px solid #D85A30',
+    };
+  if (hasInvite)
+    return {
+      label: 'You have been invited',
+      bg: '#EEEDFE',
+      color: '#26215C',
+      border: '1px solid #534AB7',
+    };
+  if (opportunities.length > 1)
+    return {
+      label: 'Multiple opportunities',
+      bg: '#FAEEDA',
+      color: '#633806',
+      border: '1px solid #EF9F27',
+    };
+  return {
+    label: 'Open opportunity',
+    bg: '#FAEEDA',
+    color: '#633806',
+    border: '1px solid #EF9F27',
+  };
+}
+
+type NeedActionKind =
+  | 'create-service'
+  | 'invite-received'
+  | 'send-inquiry'
+  | 'application-sent'
+  | 'you-are-servicing';
+
+function getNeedActionConfig(
+  opportunity: VendorOpportunity,
+  hasMatchingService: boolean,
+  applicationStatus?: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | null,
+): {
+  kind: NeedActionKind;
+  label: string;
+  color: { text: string; bg: string; border: string };
+} {
+  if (applicationStatus === 'accepted') {
+    return {
+      kind: 'you-are-servicing',
+      label: 'you are servicing',
+      color: { text: '#0F6E56', bg: '#E1F5EE', border: '#1D9E75' },
+    };
+  }
+  if (applicationStatus === 'pending') {
+    return {
+      kind: 'application-sent',
+      label: 'application sent',
+      color: { text: '#712B13', bg: '#FAECE7', border: '#D85A30' },
+    };
+  }
+  if (opportunity.is_invited) {
+    return {
+      kind: 'invite-received',
+      label: 'invite received',
+      color: { text: '#26215C', bg: '#EEEDFE', border: '#534AB7' },
+    };
+  }
+  if (hasMatchingService) {
+    return {
+      kind: 'send-inquiry',
+      label: 'send inquiry',
+      color: { text: '#712B13', bg: '#FAECE7', border: '#D85A30' },
+    };
+  }
+  return {
+    kind: 'create-service',
+    label: 'create service',
+    color: { text: '#0f766e', bg: '#CCFBF1', border: '#0d9488' },
+  };
+}
+
+function EventCardNeedActionPanel({
+  opportunity,
+  actionKind,
+  onCreateService,
+}: {
+  opportunity: VendorOpportunity;
+  actionKind: NeedActionKind;
+  onCreateService?: (category?: string) => void;
+}) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedComp, setSelectedComp] = useState<'free' | 'discount' | 'cash'>(
+    'free',
+  );
+  const [message, setMessage] = useState('');
+  const { data: applicationsData } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    enabled: isAuthenticated,
+  });
+
+  const { data: myServicesData } = useQuery({
+    queryKey: ['myServices'],
+    queryFn: fetchMyServices,
+    enabled: isAuthenticated,
+  });
+
+  const matchedServiceDescription = useMemo(() => {
+    const services = myServicesData?.data || [];
+    const match = services.find((s) => s.category === opportunity.category);
+    return match?.description || '';
+  }, [myServicesData, opportunity.category]);
+  const matchedServiceId = useMemo(() => {
+    const services = myServicesData?.data || [];
+    const match = services.find((s) => s.category === opportunity.category);
+    return match?.id ?? null;
+  }, [myServicesData, opportunity.category]);
+
+  useEffect(() => {
+    if (matchedServiceDescription && !message) {
+      setMessage(matchedServiceDescription);
+    }
+  }, [matchedServiceDescription]);
+
+  const myApplication = useMemo(() => {
+    const apps = applicationsData?.data || [];
+    return apps.find((app) => app.need_id === opportunity.need_id) || null;
+  }, [applicationsData, opportunity.need_id]);
+
+  const applyMutation = useMutation({
+    mutationFn: (payload: {
+      message?: string;
+      proposed_price?: number | null;
+      service_id?: number | null;
+    }) => applyToNeed(opportunity.need_id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['eventNeeds'] });
+      queryClient.invalidateQueries({ queryKey: ['myVendorOpportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['my-home'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
+    },
+  });
+
+  const { discountPercent, discountValue, rewardLabel, detailTitle } =
+    getOpportunityCardState(
+      opportunity,
+      actionKind === 'send-inquiry' || actionKind === 'invite-received',
+      myApplication?.status,
+    );
+  const numericReward = Number(opportunity.budget_max || opportunity.budget_min || 0);
+
+  const handleSubmitApplication = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const proposedPrice =
+      selectedComp === 'free'
+        ? 0
+        : selectedComp === 'discount'
+          ? discountValue
+          : numericReward;
+    applyMutation.mutate({
+      message: message || undefined,
+      proposed_price: proposedPrice,
+      service_id: matchedServiceId,
+    });
+  };
+
+  return (
+    <Box
+      sx={{
+        mt: 1,
+        ml: { xs: 0, sm: 5.25 },
+        borderRadius: '16px',
+        border: '1px solid rgba(143, 105, 66, 0.12)',
+        backgroundColor: '#fff',
+        px: { xs: 1.25, sm: 1.5 },
+        py: 1.25,
+      }}
+    >
+      <Stack spacing={1.2}>
+        <Box>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#2B2118' }}>
+            {actionKind === 'invite-received'
+              ? 'You were invited for this need'
+              : 'Send your inquiry for this need'}
+          </Typography>
+          <Typography sx={{ mt: 0.4, fontSize: 12, color: 'rgba(66, 50, 28, 0.7)' }}>
+            {opportunity.need_description ||
+              'Review the role details and send your application.'}
+          </Typography>
+        </Box>
+
+        <Box>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: '#6b7280',
+              mb: 0.8,
+            }}
+          >
+            {detailTitle}
+          </Typography>
+          <Stack spacing={0.75}>
+            <Typography sx={{ fontSize: 12, color: '#111827', lineHeight: 1.5 }}>
+              <Box component="span" sx={{ fontWeight: 700 }}>
+                What you&apos;ll do:{' '}
+              </Box>
+              {opportunity.need_description ||
+                `Contribute for ${opportunity.need_title} during the event window.`}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: '#111827', lineHeight: 1.5 }}>
+              <Box component="span" sx={{ fontWeight: 700 }}>
+                What you get:{' '}
+              </Box>
+              Your choice of free entry, {discountPercent}% discount, or {rewardLabel}{' '}
+              cash.
+            </Typography>
+          </Stack>
+        </Box>
+
+        <Box>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: '#6b7280',
+              mb: 0.8,
+            }}
+          >
+            Pick compensation
+          </Typography>
+          <Stack direction="row" spacing={0.8} sx={{ flexWrap: 'wrap', gap: 0.8 }}>
+            <Chip
+              label="Free entry"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedComp('free');
+              }}
+              size="small"
+              sx={{
+                borderRadius: '999px',
+                fontSize: 12,
+                fontWeight: 500,
+                border:
+                  selectedComp === 'free' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                backgroundColor: selectedComp === 'free' ? '#FAECE7' : '#fff',
+                color: selectedComp === 'free' ? '#712B13' : '#374151',
+              }}
+            />
+            <Chip
+              label={`${discountPercent}% discount${discountValue ? ` (save Rs ${discountValue})` : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedComp('discount');
+              }}
+              size="small"
+              sx={{
+                borderRadius: '999px',
+                fontSize: 12,
+                fontWeight: 500,
+                border:
+                  selectedComp === 'discount'
+                    ? '2px solid #D85A30'
+                    : '1px solid #e5e7eb',
+                backgroundColor: selectedComp === 'discount' ? '#FAECE7' : '#fff',
+                color: selectedComp === 'discount' ? '#712B13' : '#374151',
+              }}
+            />
+            <Chip
+              label={`${rewardLabel} cash`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedComp('cash');
+              }}
+              size="small"
+              sx={{
+                borderRadius: '999px',
+                fontSize: 12,
+                fontWeight: 500,
+                border:
+                  selectedComp === 'cash' ? '2px solid #D85A30' : '1px solid #e5e7eb',
+                backgroundColor: selectedComp === 'cash' ? '#FAECE7' : '#fff',
+                color: selectedComp === 'cash' ? '#712B13' : '#374151',
+              }}
+            />
+          </Stack>
+        </Box>
+
+        <TextField
+          onClick={(e) => e.stopPropagation()}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Tell the host why you're a good fit..."
+          multiline
+          minRows={3}
+          fullWidth
+          size="small"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              fontSize: 13,
+              borderRadius: 1.5,
+              '& fieldset': { borderColor: 'rgba(17,24,39,0.12)' },
+              '&:hover fieldset': { borderColor: '#D85A30' },
+              '&.Mui-focused fieldset': { borderWidth: 2, borderColor: '#D85A30' },
+            },
+          }}
+        />
+
+        <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (actionKind === 'create-service') {
+                if (onCreateService) onCreateService(opportunity.category);
+                else navigate(`/vendors/create?category=${opportunity.category}`);
+                return;
+              }
+              navigate(`/events/${opportunity.event_id}`);
+            }}
+            variant="outlined"
+            size="small"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 600,
+              borderColor: 'rgba(143, 105, 66, 0.24)',
+              color: '#2B2118',
+            }}
+          >
+            View event
+          </Button>
+          <Button
+            onClick={handleSubmitApplication}
+            disabled={applyMutation.isPending}
+            variant="contained"
+            size="small"
+            sx={{
+              borderRadius: '999px',
+              textTransform: 'none',
+              fontWeight: 700,
+              px: 2,
+              backgroundColor: '#1D9E75',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#15803d' },
+            }}
+          >
+            {applyMutation.isPending ? 'Sending...' : 'Send application'}
+          </Button>
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+
+export function EventCardWithAllNeeds({
+  event,
+  opportunities,
+  matchedNeedIds: externalMatchedNeedIds,
+  onCreateService,
+  onClick,
+}: {
+  event: EventListItem;
+  opportunities: VendorOpportunity[];
+  matchedNeedIds?: Set<number>;
+  onCreateService?: (category?: string) => void;
+  onClick: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [expandedNeedId, setExpandedNeedId] = useState<number | null>(null);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const categoryTheme = getCategoryTheme(event.category ?? undefined);
+  const online = (event.location_address || '').trim().toLowerCase() === 'online event';
+
+  const { data: applicationsData } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    enabled: isAuthenticated,
+  });
+
+  const { data: myMatchedOpportunities = [] } = useQuery({
+    queryKey: ['eventCardAllNeeds', 'matchedOpportunities'],
+    queryFn: async () => {
+      const matched = await fetchMyVendorOpportunities();
+      return matched.data || [];
+    },
+    enabled: isAuthenticated,
+  });
+
+  const matchedNeedIds = useMemo(() => {
+    const set = new Set(externalMatchedNeedIds);
+    myMatchedOpportunities.forEach((opp) => set.add(opp.need_id));
+    return set;
+  }, [externalMatchedNeedIds, myMatchedOpportunities]);
+
+  const applicationByNeedId = useMemo(() => {
+    const map = new Map<
+      number,
+      { status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' }
+    >();
+    (applicationsData?.data || []).forEach((app) => {
+      if (app.need_id != null) map.set(app.need_id, app);
+    });
+    return map;
+  }, [applicationsData]);
+
+  const needTitles = opportunities.map((o) => o.need_title);
+  const summaryText = getNeedsSummaryLabel(needTitles);
+  const aggregateStatus = getAggregateStatus(opportunities, applicationByNeedId);
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded((prev) => !prev);
+    if (expanded) {
+      setExpandedNeedId(null);
+    }
+  };
+
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        border: '1px solid rgba(143, 105, 66, 0.14)',
+        borderLeft: `4px solid #EF9F27`,
+        borderRadius: '22px',
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        boxShadow: '0 8px 28px rgba(108, 71, 33, 0.06)',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+        '&:hover': {
+          boxShadow: '0 14px 40px rgba(108, 71, 33, 0.1)',
+          transform: 'translateY(-1px)',
+        },
+      }}
+    >
+      {/* Top row: image + event info + needs summary */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'stretch',
+        }}
+      >
+        {/* Event image */}
+        <Box
+          sx={{
+            position: 'relative',
+            width: 180,
+            minWidth: 180,
+            height: 'auto',
+            minHeight: 140,
+            flexShrink: 0,
+          }}
+        >
+          {event.cover_image ? (
+            <Box
+              component="img"
+              src={event.cover_image}
+              alt={event.title}
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: '100%',
+                height: '100%',
+                bgcolor: categoryTheme.bg || '#FAEEDA',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 32,
+              }}
+            >
+              {event.category?.name?.toLowerCase().includes('music')
+                ? '🎶'
+                : event.category?.name?.toLowerCase().includes('food')
+                  ? '🍽️'
+                  : '✨'}
+            </Box>
+          )}
+        </Box>
+
+        {/* Event info + needs summary */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            p: { xs: 1.5, sm: 2 },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 1,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(66, 50, 28, 0.56)',
+                }}
+              >
+                {event.category?.name || 'Event'}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: 'Syne, sans-serif',
+                  fontSize: { xs: 15, sm: 17 },
+                  fontWeight: 800,
+                  color: '#2B2118',
+                  lineHeight: 1.3,
+                  letterSpacing: '-0.01em',
+                  mt: 0.3,
+                }}
+              >
+                {event.title}
+              </Typography>
+              <Typography
+                sx={{ fontSize: 12, color: 'rgba(66, 50, 28, 0.68)', mt: 0.4 }}
+              >
+                {formatEventDayLabel(event.start_time)} ·{' '}
+                {formatEventTimeLabel(event.start_time)}
+                {!online && event.location_name ? ` · ${event.location_name}` : ''}
+              </Typography>
+            </Box>
+            {online && (
+              <Box
+                sx={{
+                  px: 0.9,
+                  py: 0.35,
+                  borderRadius: '999px',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: '#085041',
+                  backgroundColor: '#E1F5EE',
+                  flexShrink: 0,
+                }}
+              >
+                Online
+              </Box>
+            )}
+          </Box>
+
+          {/* Needs summary banner */}
+          <Box
+            component="button"
+            type="button"
+            onClick={handleToggle}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              width: '100%',
+              border: '1px solid rgba(133,79,11,0.1)',
+              borderRadius: '14px',
+              backgroundColor: '#FAEEDA',
+              color: '#412402',
+              px: 1.25,
+              py: 1,
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                backgroundColor: '#F7E2C2',
+                borderColor: 'rgba(133,79,11,0.2)',
+              },
+            }}
+          >
+            <Box component="span" sx={{ fontSize: 13, lineHeight: 1 }}>
+              ⚡
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 12, lineHeight: 1.4, color: '#633806' }}>
+                Event{' '}
+                <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
+                  needs
+                </Box>{' '}
+                {summaryText}
+              </Typography>
+            </Box>
+            <Chip
+              label={aggregateStatus.label}
+              size="small"
+              sx={{
+                borderRadius: '999px',
+                fontSize: 10,
+                fontWeight: 700,
+                height: 24,
+                color: aggregateStatus.color,
+                backgroundColor: aggregateStatus.bg,
+                border: aggregateStatus.border,
+                flexShrink: 0,
+                '& .MuiChip-label': { px: 1 },
+              }}
+            />
+            <Box
+              component="span"
+              sx={{
+                fontSize: 14,
+                color: '#854F0B',
+                transition: 'transform 0.2s ease',
+                transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                flexShrink: 0,
+                ml: 0.25,
+              }}
+            >
+              ▾
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Expanded: list all needs */}
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            borderTop: '1px solid rgba(143, 105, 66, 0.10)',
+            px: { xs: 1.5, sm: 2 },
+            py: 1.5,
+            backgroundColor: 'rgba(255,252,245,0.6)',
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'rgba(66, 50, 28, 0.5)',
+              mb: 1,
+            }}
+          >
+            {opportunities.length} open role{opportunities.length !== 1 ? 's' : ''}
+          </Typography>
+
+          <Stack spacing={0}>
+            {opportunities.map((opp) => {
+              const hasMatch = matchedNeedIds.has(opp.need_id);
+              const app = applicationByNeedId.get(opp.need_id);
+              const action = getNeedActionConfig(opp, hasMatch, app?.status);
+              const rewardValue = opp.budget_max || opp.budget_min;
+              const isNeedExpanded =
+                expandedNeedId === opp.need_id &&
+                (action.kind === 'invite-received' || action.kind === 'send-inquiry');
+
+              return (
+                <Box
+                  key={opp.need_id}
+                  sx={{
+                    py: 1,
+                    px: 0.5,
+                    borderBottom: '1px solid rgba(143, 105, 66, 0.06)',
+                    '&:last-child': { borderBottom: 'none' },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.25,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '10px',
+                        backgroundColor: action.color.bg,
+                        color: action.color.text,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {opp.category?.slice(0, 2).toUpperCase() || '??'}
+                    </Box>
+
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: '#2B2118',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {opp.need_title}
+                      </Typography>
+                      <Typography
+                        sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.56)', mt: 0.15 }}
+                      >
+                        {rewardValue ? `Up to Rs ${rewardValue}` : 'Reward TBD'}
+                        {opp.need_description ? ` · ${opp.need_description}` : ''}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      component="button"
+                      type="button"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        if (
+                          action.kind === 'you-are-servicing' ||
+                          action.kind === 'application-sent'
+                        ) {
+                          navigate(`/events/${opp.event_id}/service-event-management`);
+                          return;
+                        }
+                        if (action.kind === 'create-service') {
+                          if (onCreateService) onCreateService(opp.category);
+                          else navigate(`/vendors/create?category=${opp.category}`);
+                          return;
+                        }
+                        setExpandedNeedId((current) =>
+                          current === opp.need_id ? null : opp.need_id,
+                        );
+                      }}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        px: 1.25,
+                        py: 0.5,
+                        borderRadius: '999px',
+                        border: `1px solid ${action.color.border}`,
+                        backgroundColor: isNeedExpanded
+                          ? action.color.bg
+                          : 'transparent',
+                        color: action.color.text,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: 'Syne, sans-serif',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        textTransform: 'capitalize',
+                        transition: 'background-color 0.15s ease',
+                        '&:hover': { backgroundColor: `${action.color.bg}` },
+                      }}
+                    >
+                      {action.label}
+                    </Box>
+                  </Box>
+
+                  <Collapse in={isNeedExpanded} timeout="auto" unmountOnExit>
+                    <EventCardNeedActionPanel
+                      opportunity={opp}
+                      actionKind={action.kind}
+                      onCreateService={onCreateService}
+                    />
+                  </Collapse>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
+      </Collapse>
+    </Box>
+  );
+}
+
 export function OpportunityCard({
   opportunity,
   hasMatchingService,
@@ -1013,8 +1920,18 @@ export function OpportunityCard({
   onClick: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { data: applicationsData } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    enabled: isAuthenticated,
+  });
+  const myApplication = useMemo(() => {
+    const apps = applicationsData?.data || [];
+    return apps.find((app) => app.need_id === opportunity.need_id) || null;
+  }, [applicationsData, opportunity.need_id]);
   const { actionType, theme, rewardLabel, chipLabel, roleIcon } =
-    getOpportunityCardState(opportunity, hasMatchingService);
+    getOpportunityCardState(opportunity, hasMatchingService, myApplication?.status);
   const eventDay = formatEventDayLabel(opportunity.event_start_time);
   const eventTime = formatEventTimeLabel(opportunity.event_start_time);
 
@@ -1178,6 +2095,7 @@ export function OpportunityCard({
       </Box>
 
       <OpportunityCardExpandedSection
+        applicationsData={applicationsData || { success: true, data: [] }}
         opportunities={[opportunity]}
         hasMatchingService={hasMatchingService}
         expanded={expanded}

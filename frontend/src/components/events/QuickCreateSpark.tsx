@@ -577,6 +577,22 @@ export function QuickCreateSpark({
 
   const renderBasicsSection = () => (
     <Stack spacing={2.2}>
+      <Typography
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                mt: 1.25,
+                px: 1.25,
+                py: 0.5,
+                borderRadius: '999px',
+                backgroundColor: 'rgba(216, 90, 48, 0.1)',
+                color: '#B04A27',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.01em',
+              }}
+            >
+From idea to sold-out event — plan, collaborate with the community, and watch the tickets roll in.            </Typography>
       <TextField
         value={title}
         onChange={(event) => setTitle(event.target.value)}
@@ -1784,7 +1800,7 @@ export function QuickCreateSpark({
                 color: 'rgba(66, 50, 28, 0.56)',
               }}
             >
-              Quick Create Event
+              Create Event
             </Typography>
             {onClose ? (
               <Button

@@ -178,7 +178,7 @@ export default function SearchPage() {
 
   const { data: matchedOpportunities = [] } = useQuery({
     queryKey: ['search', 'opportunities', 'matched', isAuthenticated],
-    enabled: isAuthenticated && tab === 'chip-in',
+    enabled: isAuthenticated,
     queryFn: async () => {
       const response = await fetchMyVendorOpportunities();
       return response.data || [];
@@ -229,7 +229,9 @@ export default function SearchPage() {
 
   const sectionCount = getSectionCount(
     tab,
-    filteredEvents.length,
+    tab === 'chip-in'
+      ? new Set(filteredOpportunities.map((opportunity) => opportunity.event_id)).size
+      : filteredEvents.length,
     filteredOpportunities.length,
   );
   const matchedOpportunityNeedIds = useMemo(

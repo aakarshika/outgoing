@@ -1,9 +1,9 @@
 import {
   Box,
+  Button as MuiButton,
   CircularProgress,
   Dialog,
   DialogContent,
-  IconButton,
   MenuItem,
   Stack,
   TextField,
@@ -13,13 +13,13 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
 import { VENDOR_CATEGORIES } from '@/constants/categories';
 import { useCreateVendorService } from '@/features/vendors/hooks';
 import { compressImage } from '@/utils/image';
+import { useAuth } from '@/features/auth/AuthContext';
 
 type QuickCreateServiceFormData = {
   title: string;
@@ -29,6 +29,22 @@ type QuickCreateServiceFormData = {
   travel_radius_miles: string;
   portfolio_url: string;
 };
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '18px',
+    background: '#fff',
+    '& fieldset': {
+      borderColor: 'rgba(143, 105, 66, 0.18)',
+    },
+    '&:hover fieldset': {
+      borderColor: 'rgba(216, 90, 48, 0.42)',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#D85A30',
+    },
+  },
+} as const;
 
 export function QuickCreateServiceDialog({
   open,
@@ -40,6 +56,7 @@ export function QuickCreateServiceDialog({
   defaultCategory?: string;
 }) {
   const isMobile = useMediaQuery('(max-width:767px)');
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const createMutation = useCreateVendorService();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -48,6 +65,8 @@ export function QuickCreateServiceDialog({
     register,
     handleSubmit,
     reset,
+    control,
+    watch,
     formState: { errors },
   } = useForm<QuickCreateServiceFormData>({
     defaultValues: {
@@ -73,6 +92,11 @@ export function QuickCreateServiceDialog({
     setImagePreview(null);
     setSelectedImage(null);
   }, [defaultCategory, open, reset]);
+
+  const watchedCategory = watch('category');
+  const categorySelected = VENDOR_CATEGORIES.flatMap((g) => g.items).find(
+    (item) => item.id === watchedCategory,
+  );
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -130,12 +154,20 @@ export function QuickCreateServiceDialog({
       fullScreen={isMobile}
       maxWidth="sm"
       fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : '28px',
+          overflow: 'hidden',
+        },
+      }}
     >
       <DialogContent
         sx={{
           p: 0,
-          overflow: 'hidden',
-          bgcolor: '#FCF7EE',
+          overflow: 'auto',
+          background:
+            'radial-gradient(circle at top left, rgba(255, 216, 173, 0.48), transparent 30%), linear-gradient(180deg, #FFF7EE 0%, #FFFDF9 38%, #F7F1FF 100%)',
+          color: '#2B2118',
         }}
       >
         <Box
@@ -144,36 +176,69 @@ export function QuickCreateServiceDialog({
             alignItems: 'center',
             justifyContent: 'space-between',
             px: { xs: 2, sm: 3 },
-            py: 2,
-            borderBottom: '1px solid rgba(120,94,60,0.14)',
-            background:
-              'linear-gradient(180deg, rgba(255,252,247,1) 0%, rgba(252,247,238,1) 100%)',
+            pt: 2.5,
+            pb: 1.5,
+            borderBottom: '1px solid rgba(143, 105, 66, 0.12)',
           }}
         >
           <Box>
             <Typography
               sx={{
-                fontFamily: 'Syne, sans-serif',
-                fontSize: { xs: 20, sm: 24 },
+                fontSize: 12,
                 fontWeight: 800,
-                color: '#3F3123',
-                letterSpacing: '-0.02em',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'rgba(66, 50, 28, 0.56)',
               }}
             >
-              Quick create service
+              List your service
             </Typography>
-            <Typography sx={{ mt: 0.4, fontSize: 12, color: '#7A6A55' }}>
-              Add a service without leaving this page.
+            <Typography
+              sx={{
+                mt: 0.5,
+                fontFamily: 'Syne, sans-serif',
+                fontSize: { xs: 24, sm: 30 },
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                color: '#2B2118',
+                lineHeight: 1.1,
+              }}
+            >
+              Any talent or equipment you would like to offer?
+            </Typography>
+            <Typography
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                mt: 1.25,
+                px: 1.25,
+                py: 0.5,
+                borderRadius: '999px',
+                backgroundColor: 'rgba(216, 90, 48, 0.1)',
+                color: '#B04A27',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.01em',
+              }}
+            >
+              All skill levels welcome — from beginner to pro.<br></br> Help your community grow, and receieve self-growth, discounts, or money!
             </Typography>
           </Box>
-          <IconButton
+          <MuiButton
+            type="button"
             onClick={onClose}
             disabled={createMutation.isPending}
-            sx={{ color: '#6B5B48' }}
+            sx={{
+              minWidth: 0,
+              width: 42,
+              height: 42,
+              borderRadius: '999px',
+              color: '#2B2118',
+            }}
             aria-label="Close service quick create"
           >
             <X size={18} />
-          </IconButton>
+          </MuiButton>
         </Box>
 
         <Box
@@ -184,115 +249,164 @@ export function QuickCreateServiceDialog({
             py: 2.5,
           }}
         >
-          <Stack spacing={2}>
+          <Stack spacing={2.2}>
+            <Controller
+              name="category"
+              control={control}
+              rules={{ required: 'Category is required' }}
+              render={({ field }) => (
+                <TextField
+                  label="Service Type"
+                  select
+                  fullWidth
+                  required
+                  error={!!errors.category}
+                  helperText={errors.category?.message || 'Choose the closest fit.'}
+                  sx={fieldSx}
+                  {...field}
+                >
+                  <MenuItem value="" disabled>
+                    Service Type
+                  </MenuItem>
+                  {VENDOR_CATEGORIES.flatMap((group) => [
+                    <MenuItem
+                      key={`${group.group}-label`}
+                      value={`group-${group.group}`}
+                      disabled
+                      sx={{
+                        opacity: 1,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: 'rgba(66, 50, 28, 0.58)',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {group.group}
+                    </MenuItem>,
+                    ...group.items.map((item) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.label}
+                      </MenuItem>
+                    )),
+                  ])}
+                </TextField>
+              )}
+            />
+
             <TextField
               label="Service title"
-              placeholder="DJ for house parties"
+              placeholder={`${user?.first_name ? `${user.first_name}'s` : 'Your'} ${
+                categorySelected?.label?.length
+                  ? categorySelected.label.substring(
+                      categorySelected.label.lastIndexOf(' ') + 1,
+                    )
+                  : ''
+              } Services
+              `}
+              required
               fullWidth
               autoFocus={!isMobile}
               error={!!errors.title}
               helperText={errors.title?.message}
+              sx={fieldSx}
               {...register('title', { required: 'Title is required' })}
             />
-
-            <TextField
-              label="Category"
-              select
-              fullWidth
-              error={!!errors.category}
-              helperText={errors.category?.message || 'Choose the closest fit.'}
-              defaultValue={defaultCategory}
-              {...register('category', { required: 'Category is required' })}
-            >
-              <MenuItem value="" disabled>
-                Select a category
-              </MenuItem>
-              {VENDOR_CATEGORIES.flatMap((group) => [
-                <MenuItem
-                  key={`${group.group}-label`}
-                  value={`group-${group.group}`}
-                  disabled
-                  sx={{
-                    opacity: 1,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    color: '#7A6A55',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {group.group}
-                </MenuItem>,
-                ...group.items.map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.label}
-                  </MenuItem>
-                )),
-              ])}
-            </TextField>
 
             <TextField
               label="Description"
               placeholder="What do you offer, what kind of events do you handle, and what should hosts know?"
               fullWidth
+              required
               multiline
               minRows={4}
               error={!!errors.description}
               helperText={errors.description?.message}
+              sx={{
+                ...fieldSx,
+                '& .MuiInputBase-input': {
+                  fontSize: 16,
+                  lineHeight: 1.7,
+                },
+              }}
               {...register('description', {
                 required: 'Description is required',
               })}
             />
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                label="Base price"
-                placeholder="2500"
-                fullWidth
-                error={!!errors.base_price}
-                helperText={errors.base_price?.message || 'Optional'}
-                {...register('base_price', {
-                  pattern: {
-                    value: /^\d*\.?\d*$/,
-                    message: 'Use numbers only',
-                  },
-                })}
-              />
-              <TextField
-                label="Travel radius (miles)"
-                placeholder="20"
-                fullWidth
-                error={!!errors.travel_radius_miles}
-                helperText={errors.travel_radius_miles?.message || 'Optional'}
-                {...register('travel_radius_miles', {
-                  pattern: {
-                    value: /^\d*\.?\d*$/,
-                    message: 'Use numbers only',
-                  },
-                })}
-              />
-            </Stack>
 
             <TextField
               label="Portfolio URL"
               placeholder="https://..."
               fullWidth
               error={!!errors.portfolio_url}
-              helperText={errors.portfolio_url?.message || 'Optional'}
+              helperText={errors.portfolio_url?.message || ''}
+              sx={fieldSx}
               {...register('portfolio_url')}
             />
 
-            <Box>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start gap-2 border-dashed border-[#CDBBA5] bg-white/70 text-[#5A4938] hover:bg-[#FFF7EC]"
-                onClick={() =>
-                  document.getElementById('quick-create-service-image')?.click()
-                }
-              >
-                <ImagePlus className="h-4 w-4" />
-                {selectedImage ? 'Change portfolio image' : 'Add portfolio image'}
-              </Button>
+            <Box
+              sx={{
+                borderRadius: '24px',
+                border: '1px dashed rgba(143, 105, 66, 0.3)',
+                background: '#fff',
+                overflow: 'hidden',
+              }}
+            >
+              {imagePreview ? (
+                <Box sx={{ position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={imagePreview}
+                    alt="Selected portfolio"
+                    sx={{
+                      display: 'block',
+                      width: '100%',
+                      height: 200,
+                      objectFit: 'cover',
+                    }}
+                  />
+                  <MuiButton
+                    type="button"
+                    onClick={() =>
+                      document.getElementById('quick-create-service-image')?.click()
+                    }
+                    sx={{
+                      position: 'absolute',
+                      right: 14,
+                      bottom: 14,
+                      borderRadius: '999px',
+                      textTransform: 'none',
+                      bgcolor: '#fff',
+                      color: '#2B2118',
+                      '&:hover': { bgcolor: '#fff' },
+                    }}
+                  >
+                    Change photo
+                  </MuiButton>
+                </Box>
+              ) : (
+                <MuiButton
+                  type="button"
+                  onClick={() =>
+                    document.getElementById('quick-create-service-image')?.click()
+                  }
+                  sx={{
+                    width: '100%',
+                    minHeight: 160,
+                    borderRadius: 0,
+                    textTransform: 'none',
+                    color: '#2B2118',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                  }}
+                >
+                  <ImagePlus size={26} />
+                  <Typography sx={{ fontWeight: 700 }}>Add a portfolio image</Typography>
+                  <Typography sx={{ fontSize: 13, color: 'rgba(66, 50, 28, 0.7)' }}>
+                    Show off your best work.
+                  </Typography>
+                </MuiButton>
+              )}
               <input
                 id="quick-create-service-image"
                 type="file"
@@ -300,21 +414,6 @@ export function QuickCreateServiceDialog({
                 onChange={handleImageChange}
                 style={{ display: 'none' }}
               />
-              {imagePreview ? (
-                <Box
-                  component="img"
-                  src={imagePreview}
-                  alt="Selected portfolio"
-                  sx={{
-                    mt: 1.25,
-                    width: '100%',
-                    maxHeight: 180,
-                    objectFit: 'cover',
-                    borderRadius: 2,
-                    border: '1px solid rgba(120,94,60,0.14)',
-                  }}
-                />
-              ) : null}
             </Box>
 
             <Stack
@@ -323,19 +422,41 @@ export function QuickCreateServiceDialog({
               justifyContent="flex-end"
               sx={{ pt: 1 }}
             >
-              <Button
+              <MuiButton
                 type="button"
-                variant="ghost"
-                className="text-[#5A4938] hover:bg-[#F3E8D8]"
                 onClick={onClose}
                 disabled={createMutation.isPending}
+                sx={{
+                  borderRadius: '999px',
+                  px: 2.5,
+                  py: 1.2,
+                  textTransform: 'none',
+                  color: '#2B2118',
+                  border: '1px solid rgba(143, 105, 66, 0.18)',
+                  background: '#fff',
+                  fontWeight: 700,
+                }}
               >
                 Cancel
-              </Button>
-              <Button
+              </MuiButton>
+              <MuiButton
                 type="submit"
-                className="bg-[#0F8C84] text-white hover:bg-[#0C756F]"
+                variant="contained"
                 disabled={createMutation.isPending}
+                sx={{
+                  borderRadius: '999px',
+                  px: 3,
+                  py: 1.4,
+                  textTransform: 'none',
+                  background: '#D85A30',
+                  boxShadow: 'none',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  '&:hover': {
+                    background: '#C44C24',
+                    boxShadow: 'none',
+                  },
+                }}
               >
                 {createMutation.isPending ? (
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
@@ -345,7 +466,7 @@ export function QuickCreateServiceDialog({
                 ) : (
                   'Create service'
                 )}
-              </Button>
+              </MuiButton>
             </Stack>
           </Stack>
         </Box>

@@ -1,28 +1,47 @@
 import { Edit2, Pencil } from 'lucide-react';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { EditApplicationModal } from '@/components/events/EditApplicationModal';
+import { ComicButton } from '@/components/ui/ComicButton';
 
 import { EnclosingBox } from '../manage-redesign/ui/EnclosingBox';
 import { VendorAgreement } from './VendorAgreement';
-import { ComicButton } from '@/components/ui/ComicButton';
+import { Button, Chip } from '@mui/material';
 
 interface ApplicationDetailsListProps {
   applications: any[];
+  tone?: 'comic' | 'warm';
 }
 
 export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
   applications,
+  tone = 'comic',
 }) => {
+  const navigate = useNavigate();
   const [editingApplication, setEditingApplication] = useState<any | null>(null);
   const [openApplicationIds, setOpenApplicationIds] = useState<
     Record<string | number, boolean>
   >({});
+  const isWarm = tone === 'warm';
+  const boxBackground = isWarm
+    ? 'bg-[#fffaf2] border border-[#ead8c3] text-[#2b2118] shadow-sm rounded-[18px]'
+    : 'bg-white border text-gray-800 shadow-sm';
+  const eventLinkClass = isWarm
+    ? 'text-[#b45309] underline decoration-2 decoration-[#f2c78f] font-semibold'
+    : 'text-blue-600 underline decoration-2 decoration-blue-200 font-semibold';
+  const messageClass = isWarm
+    ? 'flex-1 w-full h-full mt-2 p-3 bg-[#fff4e6] rounded text-sm text-[#6b4f34] italic border border-[#f0dcc4]'
+    : 'flex-1 w-full h-full mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 italic border border-gray-100';
+  const barcodeColor = isWarm ? '#D85A30' : '#00CCCC';
+  const manageButtonColor = isWarm ? '#7C3E1D' : '#1e3a5f';
+  const manageButtonAccent = isWarm ? '#F7D8A8' : '#00CCCC';
+  const editButtonColor = isWarm ? '#7C3E1D' : undefined;
+  const editButtonAccent = isWarm ? '#FAE6C7' : undefined;
 
   if (!applications || applications.length === 0) {
     return (
-      <EnclosingBox background="bg-white border text-gray-800 shadow-sm" rotation={0}>
+      <EnclosingBox background={boxBackground} rotation={0}>
         <div className="mb-2">
           <div className="text-gray-500 italic py-4">
             No application found for this event.
@@ -41,10 +60,7 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
 
           return (
             <div key={key} className="space-y-6">
-              <EnclosingBox
-                background="bg-white border text-gray-800 shadow-sm"
-                rotation={0}
-              >
+              <EnclosingBox background={boxBackground} rotation={0}>
                 <div className="mb-2">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
@@ -55,7 +71,7 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                           </span>
                           <Link
                             to={`/events/${application.event_id}`}
-                            className="text-blue-600 underline decoration-2 decoration-blue-200 font-semibold"
+                            className={eventLinkClass}
                           >
                             {application.event_title || 'View event'}
                           </Link>
@@ -63,7 +79,7 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {tone === 'comic' ? (<div className="flex items-center gap-2">
                       <ComicButton
                         type="button"
                         onClick={() =>
@@ -71,8 +87,8 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                             `/events/${application.event_id}/service-event-management`,
                           )
                         }
-                        color="#1e3a5f"
-                        accentColor="#00CCCC"
+                        color={manageButtonColor}
+                        accentColor={manageButtonAccent}
                         Icon={
                           application.event_status == 'Completed' ? undefined : Pencil
                         }
@@ -83,10 +99,56 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                           type="button"
                           onClick={() => setEditingApplication(application)}
                           Icon={Edit2}
+                          color={editButtonColor}
+                          accentColor={editButtonAccent}
                           label="Edit"
                         ></ComicButton>
                       )}
-                    </div>
+                    </div>) : (
+                      <div className="flex items-center gap-2">
+                        {/* <Button
+                          size="small"
+                          onClick={() =>
+                            navigate(
+                              `/events/${application.event_id}/service-event-management`,
+                            )
+                          }
+                          startIcon={application.event_status !== 'Completed' ? <Pencil size={14} /> : undefined}
+                          sx={{
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            borderRadius: '14px',
+                            px: 1.6,
+                            color: '#7C3E1D',
+                            bgcolor: '#FFF4E6',
+                            border: '1px solid rgba(143,105,66,0.14)',
+                            '&:hover': { bgcolor: '#FAECE7' },
+                          }}
+                        >
+                          {application.event_status === 'Completed' ? 'Go to Gig' : 'Manage Gig'}
+                        </Button> */}
+                        {application.status === 'pending' && (
+                          <Button
+                            size="small"
+                            onClick={() => setEditingApplication(application)}
+                            startIcon={<Edit2 size={14} />}
+                            sx={{
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              fontSize: 12,
+                              borderRadius: '14px',
+                              px: 1.6,
+                              color: '#7C3E1D',
+                              bgcolor: '#FAE6C7',
+                              border: '1px solid rgba(143,105,66,0.14)',
+                              '&:hover': { bgcolor: '#F7D8A8' },
+                            }}
+                          >
+                            Edit Application
+                          </Button>
+                        )}
+                      </div>)}
                   </div>
 
                   <>
@@ -138,9 +200,7 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                       </div>
                       <div className="flex h-full w-full justify-between ">
                         {application.message && (
-                          <div className="flex-1 w-full h-full mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 italic border border-gray-100">
-                            "{application.message}"
-                          </div>
+                          <div className={messageClass}>"{application.message}"</div>
                         )}
 
                         {application.status !== 'pending' && (
@@ -158,7 +218,8 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                               className="ml-4 items-center border-2 border-[#00CCCC] px-2 py-1 justify-center font-bold text-xs font-black"
                               style={{
                                 fontFamily: '"Permanent Marker", cursive',
-                                color: '#00CCCC',
+                                color: barcodeColor,
+                                borderColor: barcodeColor,
                               }}
                             >
                               Barcode {!isOpen ? '\\/' : '/\\'}

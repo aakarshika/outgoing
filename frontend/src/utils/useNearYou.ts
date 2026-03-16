@@ -6,14 +6,35 @@ import {
   reverseGeocodeCoordinates,
 } from './geolocation';
 import {
+  clearStoredSearchLocation,
   getNearYouCoords,
   getNearYouRadiusMiles,
+  getStoredSearchLocation,
+  inferCityFromLocationLabel,
   NEAR_YOU_COORDS_KEY,
   NEAR_YOU_ENABLED_KEY,
   setNearYouRadiusMiles,
+  setStoredSearchLocation,
 } from './locationPrefs';
 
 const NEAR_YOU_NAME_KEY = 'outgoing.nearYou.locationName';
+
+function resolveCurrentLocation(
+  res: {
+    displayAddress: string;
+    venueName: string;
+    city: string;
+  } | null,
+) {
+  const city =
+    res?.city?.trim() || inferCityFromLocationLabel(res?.displayAddress || '');
+  const label = city || res?.venueName || 'Near You';
+
+  return {
+    city,
+    label,
+  };
+}
 
 export function useNearYou() {
   const [enabled, setEnabled] = useState<boolean>(() => {
@@ -36,6 +57,7 @@ export function useNearYou() {
   useEffect(() => {
     // If already enabled from localStorage, the enabled-sync hook will handle it.
     if (enabled) return;
+    if (getStoredSearchLocation()?.label) return;
 
     // Try auto-enabling if possible (won't prompt if denied)
     if ('geolocation' in navigator) {
@@ -49,6 +71,7 @@ export function useNearYou() {
           setEnabled(true);
           localStorage.setItem(NEAR_YOU_ENABLED_KEY, 'true');
           localStorage.setItem(NEAR_YOU_COORDS_KEY, JSON.stringify(newCoords));
+          setStoredSearchLocation({ label: 'Near You', coords: newCoords });
         },
         () => {
           // ignore error silently on auto-load
@@ -64,17 +87,14 @@ export function useNearYou() {
       if (storedCoords) {
         setCoords(storedCoords);
         reverseGeocodeCoordinates(storedCoords.lat, storedCoords.lng).then((res) => {
-          if (res) {
-            const parts = res.displayAddress?.split(', ') || [];
-            const cityState =
-              parts.length >= 3 ? `${parts[0]}, ${parts[2]}` : res.venueName;
-            const resolvedName = cityState || 'Near You';
-            setLocationName(resolvedName);
-            localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedName);
-          } else {
-            setLocationName('Near You');
-            localStorage.setItem(NEAR_YOU_NAME_KEY, 'Near You');
-          }
+          const resolvedLocation = resolveCurrentLocation(res);
+          setLocationName(resolvedLocation.label);
+          localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedLocation.label);
+          setStoredSearchLocation({
+            label: resolvedLocation.label,
+            city: resolvedLocation.city,
+            coords: storedCoords,
+          });
         });
       }
     }
@@ -88,6 +108,7 @@ export function useNearYou() {
       localStorage.removeItem(NEAR_YOU_NAME_KEY);
       setCoords(null);
       setLocationName('');
+      clearStoredSearchLocation();
       window.dispatchEvent(new Event('nearYouChanged'));
       return;
     }
@@ -109,20 +130,18 @@ export function useNearYou() {
 
       setCoords(newCoords);
       setEnabled(true);
+      setStoredSearchLocation({ label: 'Near You', coords: newCoords });
       window.dispatchEvent(new Event('nearYouChanged'));
 
       const res = await reverseGeocodeCoordinates(latitude, longitude);
-      if (res) {
-        const parts = res.displayAddress?.split(', ') || [];
-        const cityState =
-          parts.length >= 3 ? `${parts[0]}, ${parts[2]}` : res.venueName;
-        const resolvedName = cityState || 'Near You';
-        setLocationName(resolvedName);
-        localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedName);
-      } else {
-        setLocationName('Near You');
-        localStorage.setItem(NEAR_YOU_NAME_KEY, 'Near You');
-      }
+      const resolvedLocation = resolveCurrentLocation(res);
+      setLocationName(resolvedLocation.label);
+      localStorage.setItem(NEAR_YOU_NAME_KEY, resolvedLocation.label);
+      setStoredSearchLocation({
+        label: resolvedLocation.label,
+        city: resolvedLocation.city,
+        coords: newCoords,
+      });
     } catch (error) {
       console.error('Error getting location:', error);
       setLocationName('');
