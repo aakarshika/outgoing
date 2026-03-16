@@ -1,9 +1,9 @@
 """Views for event needs and applications."""
 
 from django.db.models import Exists, F, OuterRef
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.events.models import Event
 from apps.needs.models import EventNeed, NeedApplication, NeedInvite
@@ -20,10 +20,38 @@ from .serializers import (
 )
 
 
+ACTIVE_OPPORTUNITY_STATUSES = ("open", "pending")
+
+
+def _fallback_need_title(need):
+    """Provide a readable title for legacy seed data with blank need titles."""
+    if need.title:
+        return need.title
+    return str(need.category).replace("_", " ").replace("-", " ").title()
+
+
+def _serialize_opportunity(need, *, is_invited=False):
+    """Shape an EventNeed into the opportunity payload expected by the frontend."""
+    return {
+        "need_id": need.id,
+        "event_id": need.event_id,
+        "event_title": need.event.title,
+        "event_start_time": need.event.start_time,
+        "event_location_name": need.event.location_name,
+        "need_title": _fallback_need_title(need),
+        "need_description": need.description,
+        "category": need.category,
+        "criticality": need.criticality,
+        "budget_min": need.budget_min,
+        "budget_max": need.budget_max,
+        "is_invited": is_invited,
+    }
+
+
 class EventNeedsView(APIView):
     """List or create needs for a specific event."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, event_id):
         """List needs for an event."""
@@ -318,6 +346,26 @@ class MyNeedInvitesView(APIView):
         return success_response(data=serializer.data)
 
 
+class AllOpenOpportunitiesView(APIView):
+    """List all open event needs for visible events without user-based filtering."""
+
+    permission_classes = []
+
+    def get(self, request):
+        """Return every open need attached to a visible event."""
+        qs = (
+            EventNeed.objects.filter(
+                status__in=ACTIVE_OPPORTUNITY_STATUSES,
+                event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
+            )
+            .select_related("event")
+            .order_by("event__start_time", "id")
+        )
+
+        data = [_serialize_opportunity(need) for need in qs]
+        return success_response(data=data)
+
+
 class MyVendorOpportunitiesView(APIView):
     """List open event needs that match current vendor service categories."""
 
@@ -335,7 +383,7 @@ class MyVendorOpportunitiesView(APIView):
 
         base_qs = (
             EventNeed.objects.filter(
-                status="open",
+                status__in=ACTIVE_OPPORTUNITY_STATUSES,
                 category__in=categories,
                 event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
             )
@@ -352,20 +400,10 @@ class MyVendorOpportunitiesView(APIView):
         needs = base_qs.annotate(is_invited=Exists(invited_subquery))
 
         data = [
-            {
-                "need_id": need.id,
-                "event_id": need.event_id,
-                "event_title": need.event.title,
-                "event_start_time": need.event.start_time,
-                "event_location_name": need.event.location_name,
-                "need_title": need.title,
-                "need_description": need.description,
-                "category": need.category,
-                "criticality": need.criticality,
-                "budget_min": need.budget_min,
-                "budget_max": need.budget_max,
-                "is_invited": bool(getattr(need, "is_invited", False)),
-            }
+            _serialize_opportunity(
+                need,
+                is_invited=bool(getattr(need, "is_invited", False)),
+            )
             for need in needs
         ]
         return success_response(data=data)
@@ -386,7 +424,7 @@ class MyPotentialOpportunitiesView(APIView):
 
         qs = (
             EventNeed.objects.filter(
-                status="open",
+                status__in=ACTIVE_OPPORTUNITY_STATUSES,
                 event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
             )
             .exclude(category__in=my_categories)
@@ -395,21 +433,5 @@ class MyPotentialOpportunitiesView(APIView):
             .distinct()
         )
 
-        data = [
-            {
-                "need_id": need.id,
-                "event_id": need.event_id,
-                "event_title": need.event.title,
-                "event_start_time": need.event.start_time,
-                "event_location_name": need.event.location_name,
-                "need_title": need.title,
-                "need_description": need.description,
-                "category": need.category,
-                "criticality": need.criticality,
-                "budget_min": need.budget_min,
-                "budget_max": need.budget_max,
-                "is_invited": False,
-            }
-            for need in qs
-        ]
+        data = [_serialize_opportunity(need) for need in qs]
         return success_response(data=data)

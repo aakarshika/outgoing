@@ -86,7 +86,7 @@ const HighlightInteractionsMobile = ({
         />
       </Box>
 
-      <Box sx={{ textAlign: 'center' }}>
+      {isAuthenticated && (<Box sx={{ textAlign: 'center' }}>
         <ComicIconButton
           onClick={() => isAuthenticated && toggleLike.mutate(highlight.id)}
           Icon={Heart}
@@ -104,7 +104,7 @@ const HighlightInteractionsMobile = ({
         >
           {highlight.likes_count}
         </Typography>
-      </Box>
+      </Box>)}
 
       <Box sx={{ textAlign: 'center' }}>
         <ComicIconButton
@@ -127,14 +127,14 @@ const HighlightInteractionsMobile = ({
       </Box>
 
       {/* Navigation Buttons Mobile */}
-      <Box
+      {isAuthenticated && (<Box
         sx={{
           textAlign: 'center',
         }}
       >
         <ComicIconButton onClick={handlePrev} Icon={ChevronLeft} />
         <ComicIconButton onClick={handleNext} Icon={ChevronRight} />
-      </Box>
+      </Box>)}
     </Stack>
   );
 };
@@ -170,6 +170,17 @@ export const HighlightFeedViewer = ({
   const activeHighlight = highlights[activeIndex] || highlights[0];
 
   useEffect(() => {
+    // Lock background scroll while viewer is open (especially on mobile)
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen && !activeHighlightId && highlights.length > 0) {
       setActiveHighlightId(highlights[0].id);
     }
@@ -187,9 +198,20 @@ export const HighlightFeedViewer = ({
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (!isMobile) return;
-    const scrollTop = e.currentTarget.scrollTop;
-    const index = Math.round(scrollTop / window.innerHeight);
-    const highlight = highlights[index];
+    const container = e.currentTarget;
+    const scrollTop = container.scrollTop;
+    const containerHeight = container.clientHeight || window.innerHeight || 1;
+
+    // Derive index based on how many full screens we've scrolled
+    const rawIndex = scrollTop / containerHeight;
+    const index = Math.round(rawIndex);
+
+    const clampedIndex = Math.min(
+      Math.max(index, 0),
+      Math.max(highlights.length - 1, 0),
+    );
+    const highlight = highlights[clampedIndex];
+
     if (highlight && highlight.id !== activeHighlightId) {
       setActiveHighlightId(highlight.id);
       window.history.replaceState(
@@ -257,7 +279,16 @@ export const HighlightFeedViewer = ({
           flexDirection: 'column',
         }}
       >
-        <ComicIconButton onClick={onClose} Icon={X} />
+        <ComicIconButton
+          onClick={onClose}
+          Icon={X}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 100,
+          }}
+        />
 
         <Box
           ref={scrollContainerRef}
@@ -270,6 +301,9 @@ export const HighlightFeedViewer = ({
             '&::-webkit-scrollbar': { display: 'none' },
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
           }}
         >
           {highlights.map((h) => (
@@ -301,6 +335,67 @@ export const HighlightFeedViewer = ({
                   transform: 'scale(1.1)',
                 }}
               />
+
+              {/* Event details + Go to event (mobile) */}
+              {h.event && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    zIndex: 5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1.5,
+                    bgcolor: 'rgba(0,0,0,0.6)',
+                    borderRadius: 999,
+                    px: 2,
+                    py: 1,
+                    border: '2px solid rgba(255,255,255,0.7)',
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        color: 'white',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {h.event.title}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '0.75rem',
+                        color: 'rgba(255,255,255,0.85)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {h.event.location_name}
+                    </Typography>
+                  </Box>
+                  <ComicButton
+                    size="sm"
+                    shape="rounded"
+                    color="#000000"
+                    accentColor="#fffbeb"
+                    onClick={() => {
+                      if (h.event?.id) {
+                        navigate(`/events/${h.event.id}`);
+                      }
+                    }}
+                  >
+                    Go to event
+                  </ComicButton>
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -490,7 +585,8 @@ export const HighlightFeedViewer = ({
                 onClick={handleNext}
                 Icon={ChevronRight}
                 sx={{
-                  visibility: activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
+                  visibility:
+                    activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
                 }}
               />
             </Box>
@@ -542,8 +638,9 @@ export const HighlightFeedViewer = ({
                 color="#000000"
                 accentColor="#fffbeb"
                 onClick={() => {
-                  if (eventId) {
-                    navigate(`/events/${eventId}`);
+                  const targetId = activeHighlight?.event?.id ?? (eventId ? Number(eventId) : undefined);
+                  if (targetId) {
+                    navigate(`/events/${targetId}`);
                   }
                 }}
               >

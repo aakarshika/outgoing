@@ -1,11 +1,8 @@
 import { Box, Button, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
 
-import { HostCard } from '@/components/ui/HostCard';
-
 import { ScrapbookEventCard } from './ScrapbookEventCard';
 import { SideEnvelope } from './SideEnvelope';
-import { PlatformDescriptionCard } from './cards/PlatformDescriptionCard';
 
 interface HorizontalScrapbookListProps {
   title?: string;
@@ -25,7 +22,6 @@ export function HorizontalScrapbookList({
   events,
   isLoading,
   emptyMessage,
-  forceShowHeader,
   onSeeAll,
 }: HorizontalScrapbookListProps) {
   const displayItems = items || events || [];
@@ -35,6 +31,7 @@ export function HorizontalScrapbookList({
       <Box
         sx={{
           px: { xs: 2, sm: 4, lg: 8 },
+          pb: 2,
           display: 'flex',
           alignItems: 'baseline',
           justifyContent: 'space-between',
@@ -47,18 +44,6 @@ export function HorizontalScrapbookList({
         }}
       >
         <Box sx={{ position: 'relative' }}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -10,
-              left: -10,
-              width: 40,
-              height: 20,
-              bgcolor: 'rgba(251, 191, 36, 0.4)',
-              transform: 'rotate(-5deg)',
-              zIndex: 0,
-            }}
-          />
           <Typography
             variant="h4"
             sx={{
@@ -92,7 +77,6 @@ export function HorizontalScrapbookList({
 
   const ListItems = () => {
     return (
-
       <Box
         sx={{
           display: 'flex',
@@ -107,7 +91,7 @@ export function HorizontalScrapbookList({
           scrollbarWidth: 'none',
           px: { xs: 2, sm: 4, lg: 8 },
           pb: 4,
-          pt: 2,
+          pt: 6,
           pr: { xs: 4, sm: 6, lg: 20 },
           // scrollSnapType: 'x mandatory',
           // scrollbarWidth: 'none',
@@ -143,60 +127,66 @@ export function HorizontalScrapbookList({
             />
           ))
         ) : displayItems.length > 0 ? (
-          displayItems.map((item, idx) => {
-            return (
-              <Box
-                key={item.id || idx}
-                sx={{
-                  display: 'flex',
-                  gap: { xs: 3, sm: 4, md: 6 },
-                  alignItems: 'center',
-                }}
-              >
+          displayItems
+            .map((item, idx) => {
+              return (
                 <Box
+                  key={item.id || idx}
                   sx={{
-                    width: { xs: 240, sm: 280, md: 320 },
-                    flexShrink: 0,
+                    display: 'flex',
+                    gap: { xs: 3, sm: 4, md: 6 },
+                    alignItems: 'center',
                   }}
                 >
-                  {renderItem ? renderItem(item) : <ScrapbookEventCard event={item} />}
+                  <Box
+                    sx={{
+                      width: { xs: 240, sm: 280, md: 320 },
+                      flexShrink: 0,
+                    }}
+                  >
+                    {renderItem ? (
+                      renderItem(item)
+                    ) : (
+                      <ScrapbookEventCard event={item} />
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            );
-          }).concat(
-            displayItems.length <= 5
-              ? [
-                <Box/>,
-                  // <Box
-                  //   key="custom-card"
-                  //   sx={{
-                  //     display: 'flex',
-                  //     gap: { xs: 3, sm: 4, md: 6 },
-                  //     alignItems: 'center',
-                  //   }}
-                  // >
-                  //   <Box
-                  //     sx={{
-                  //       width: { xs: 240, sm: 280, md: 320 },
-                  //       flexShrink: 0,
-                  //     }}
-                  //   >
-                  //     <Box
-                  //       sx={{
-                  //         display: 'flex',
-                  //         justifyContent: 'center',
-                  //         alignItems: 'center',
-                  //         transform: 'translateY(10px)',
-                  //         bgcolor: 'transparent',
-                  //       }}
-                  //     >
-                  //       <PlatformDescriptionCard /> 
-                  //     </Box>
-                  //   </Box>
-                  // </Box>,
-                ]
-              : [],
-          )
+              );
+            })
+            .concat(
+              displayItems.length <= 5
+                ? [
+                    <Box key="horizontal-scrapbook-spacer" />,
+                    // <Box
+                    //   key="custom-card"
+                    //   sx={{
+                    //     display: 'flex',
+                    //     gap: { xs: 3, sm: 4, md: 6 },
+                    //     alignItems: 'center',
+                    //   }}
+                    // >
+                    //   <Box
+                    //     sx={{
+                    //       width: { xs: 240, sm: 280, md: 320 },
+                    //       flexShrink: 0,
+                    //     }}
+                    //   >
+                    //     <Box
+                    //       sx={{
+                    //         display: 'flex',
+                    //         justifyContent: 'center',
+                    //         alignItems: 'center',
+                    //         transform: 'translateY(10px)',
+                    //         bgcolor: 'transparent',
+                    //       }}
+                    //     >
+                    //       <PlatformDescriptionCard />
+                    //     </Box>
+                    //   </Box>
+                    // </Box>,
+                  ]
+                : [],
+            )
         ) : (
           <Box sx={{ py: 4, width: '100%', textAlign: 'center' }}>
             {typeof emptyMessage === 'string' ? (
@@ -219,20 +209,13 @@ export function HorizontalScrapbookList({
           </Box>
         )}
       </Box>
-
     );
   };
-
-
-
-
 
   // Always show the section even if it has no items.
   return (
     <Box sx={{ py: 0, position: 'relative', overflow: 'hidden' }}>
-      {title && (
-        <Title />
-      )}
+      {title && <Title />}
       {showEnvelope ? (
         <SideEnvelope>
           <ListItems />

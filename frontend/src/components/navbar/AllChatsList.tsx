@@ -1,47 +1,106 @@
-import { MessageSquare, X } from 'lucide-react';
+import { ChevronRight, MessageCircle, Users, X } from 'lucide-react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { Hostname } from '@/components/ui/Hostname';
+import { UserAvatar } from '@/components/ui/UserAvatar';
+import { useAuth } from '@/features/auth/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
-import { useAllChatsList } from '@/features/events/hooks';
+import { buildAllChatEntries, formatChatTimestamp } from '@/features/events/chatList';
+import {
+  useAllChatsList,
+  useEventOverviewRows,
+  useMyFriendships,
+} from '@/features/events/hooks';
+
 import { useNavbarContext } from './NavbarContext';
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+    <div
+      className="px-3 py-6 text-center text-sm"
+      style={{ color: 'var(--color-text-secondary)' }}
+    >
       {label}
     </div>
   );
 }
 
+function ChatListAvatar({
+  chat,
+}: {
+  chat: {
+    mode: string;
+    title: string;
+    coverImage?: string | null;
+    otherAvatar?: string | null;
+    otherUsername?: string | null;
+  };
+}) {
+  if (chat.mode === 'group') {
+    return chat.coverImage ? (
+      <img
+        src={chat.coverImage}
+        alt={chat.title}
+        className="h-12 w-16 shrink-0 object-cover"
+      />
+    ) : (
+      <div
+        className="flex h-12 w-16 shrink-0 items-center justify-center"
+        style={{ background: '#FAECE7', color: '#D85A30' }}
+      >
+        <Users className="h-4 w-4" />
+      </div>
+    );
+  }
+
+  return (
+    <UserAvatar
+      src={chat.otherAvatar}
+      username={chat.otherUsername || chat.title}
+      size="md"
+    />
+  );
+}
+
 export function AllChatsList() {
-  const { isAllChatsSidebarOpen, setIsAllChatsSidebarOpen, isAuthenticated } = useNavbarContext();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isAllChatsSidebarOpen, setIsAllChatsSidebarOpen, isAuthenticated } =
+    useNavbarContext();
   const { openChat } = useChatDrawer();
   const { data, isLoading } = useAllChatsList(isAuthenticated && isAllChatsSidebarOpen);
+  const { data: friendships, isLoading: friendshipsLoading } = useMyFriendships(
+    isAuthenticated && isAllChatsSidebarOpen,
+  );
+  const { data: eventOverviewRows, isLoading: eventOverviewLoading } =
+    useEventOverviewRows(isAuthenticated && isAllChatsSidebarOpen);
 
-  const managementGroupChats = data?.data.management_group ?? [];
-  const managementChats = data?.data.management ?? [];
-  const networkChats = data?.data.network ?? [];
+  const chatEntries = useMemo(
+    () =>
+      buildAllChatEntries({
+        response: data?.data,
+        friendships: friendships?.accepted,
+        eventOverviewRows: eventOverviewRows || [],
+        currentUserId: user?.id,
+        currentUsername: user?.username,
+      }),
+    [data?.data, eventOverviewRows, friendships?.accepted, user?.id, user?.username],
+  );
+  const managementChats = chatEntries.filter((chat) => chat.section === 'management');
+  const networkChats = chatEntries.filter((chat) => chat.section === 'network');
+  const sections = [
+    { label: 'Management', chats: managementChats },
+    { label: 'Network', chats: networkChats },
+  ];
+  const isListLoading = isLoading || friendshipsLoading || eventOverviewLoading;
 
-  const handleOpenPrivateConversation = (chat: {
-    conversation_id: number;
-    event_id: number | null;
-    event_title: string | null;
-    other_username: string | null;
-  }) => {
+  const handleOpenChat = (chat: (typeof chatEntries)[number]) => {
     openChat({
-      title: chat.event_title || (chat.other_username ? `Chat with ${chat.other_username}` : 'Chat'),
-      mode: 'private',
-      eventId: chat.event_id ?? undefined,
-      conversationId: chat.conversation_id,
-    });
-    setIsAllChatsSidebarOpen(false);
-  };
-
-  const handleOpenGroupConversation = (chat: { event_id: number; event_title: string }) => {
-    openChat({
-      title: chat.event_title || 'Event Group Chat',
-      mode: 'group',
-      eventId: chat.event_id,
+      title: chat.title,
+      mode: chat.mode === 'direct' ? 'direct' : chat.mode,
+      eventId: chat.eventId,
+      conversationId: chat.conversationId,
+      targetUsername: chat.targetUsername,
     });
     setIsAllChatsSidebarOpen(false);
   };
@@ -58,125 +117,103 @@ export function AllChatsList() {
       )}
 
       <aside
-        className={`fixed right-0 top-16 z-[60] flex h-[calc(100vh-4rem)] w-[26rem] max-w-[92vw] flex-col border-l border-gray-200 bg-white p-4 transition-transform duration-200 ${isAllChatsSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed right-0 top-16 z-[60] flex h-[calc(100vh-4rem)] w-[26rem] max-w-[92vw] flex-col transition-transform duration-200 ${isAllChatsSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{
+          background: '#fff8f1',
+        }}
       >
-        <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">All Chats</h2>
-            <p className="text-sm text-gray-600">
-              Management + network conversations
-            </p>
-          </div>
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setIsAllChatsSidebarOpen(false);
+              navigate('/chats');
+            }}
+            className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em]"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            Open page
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             aria-label="Collapse all chats sidebar"
             onClick={() => setIsAllChatsSidebarOpen(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="flex h-8 w-8 items-center justify-center"
+            style={{ color: 'var(--color-text-secondary)' }}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-          <section>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">Management</p>
-            <div className="space-y-2">
-              {isLoading ? <EmptyState label="Loading management chats..." /> : null}
-              {!isLoading && managementGroupChats.length === 0 && managementChats.length === 0 ? (
-                <EmptyState label="No management chats yet." />
-              ) : null}
-              {managementGroupChats.map((chat) => (
-                <button
-                  key={`management-group-${chat.event_id}`}
-                  type="button"
-                  onClick={() => handleOpenGroupConversation(chat)}
-                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-left transition-colors hover:bg-gray-50"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-base font-medium text-gray-900">
-                        {chat.event_title || 'Event Group Chat'}
-                      </div>
-                      <div className="mt-1 text-sm text-gray-600">
-                        group chat • event #{chat.event_id}
-                      </div>
-                    </div>
-                    <MessageSquare className="mt-1 h-4 w-4 shrink-0 text-gray-500" />
-                  </div>
-                </button>
-              ))}
-              {managementChats.map((chat) => (
-                <button
-                  key={`management-${chat.conversation_id}`}
-                  type="button"
-                  onClick={() => handleOpenPrivateConversation(chat)}
-                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-left transition-colors hover:bg-gray-50"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-base font-medium text-gray-900">
-                        {chat.event_title || 'Event Chat'}
-                      </div>
-                      <div className="mt-1 text-sm text-gray-600">
-                        event #{chat.event_id} • convo #{chat.conversation_id}
-                      </div>
-                    </div>
-                    <MessageSquare className="mt-1 h-4 w-4 shrink-0 text-gray-500" />
-                  </div>
-                  {chat.other_username ? (
-                    <div className="mt-3">
-                      <Hostname
-                        username={chat.other_username}
-                        avatarSrc={chat.other_avatar || undefined}
-                        mode="normal"
-                        sx={{ '& .MuiTypography-root': { fontSize: '0.85rem' } }}
-                      />
-                    </div>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </section>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-1">
+          {isListLoading ? <EmptyState label="Loading chats..." /> : null}
+          {!isListLoading && chatEntries.length === 0 ? (
+            <EmptyState label="No chats yet." />
+          ) : null}
 
-          <section>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-600">Network</p>
-            <div className="space-y-2">
-              {isLoading ? <EmptyState label="Loading network chats..." /> : null}
-              {!isLoading && networkChats.length === 0 ? (
-                <EmptyState label="No network chats yet." />
-              ) : null}
-              {networkChats.map((chat) => (
-                <button
-                  key={`network-${chat.conversation_id}`}
-                  type="button"
-                  onClick={() => handleOpenPrivateConversation(chat)}
-                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-left transition-colors hover:bg-gray-50"
+          {sections.map((section) =>
+            section.chats.length ? (
+              <section key={section.label}>
+                <p
+                  className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.16em]"
+                  style={{ color: 'var(--color-text-secondary)' }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-base font-medium text-gray-900">
-                        {chat.other_username || 'Direct Chat'}
+                  {section.label}
+                </p>
+                <div>
+                  {section.chats.map((chat) => (
+                    <button
+                      key={chat.id}
+                      type="button"
+                      onClick={() => handleOpenChat(chat)}
+                      className="w-full px-2 py-2 text-left transition-colors"
+                      style={{
+                        background: chat.isPlaceholder
+                          ? 'rgba(0,0,0,0.02)'
+                          : 'transparent',
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChatListAvatar chat={chat} />
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <div
+                              className="truncate text-[13px] font-semibold"
+                              style={{
+                                fontFamily: 'Syne, sans-serif',
+                                color: 'var(--color-text-primary)',
+                              }}
+                            >
+                              {chat.title}
+                            </div>
+                            <div
+                              className="shrink-0 text-[11px]"
+                              style={{ color: 'var(--color-text-secondary)' }}
+                            >
+                              {formatChatTimestamp(chat.updatedAt)}
+                            </div>
+                          </div>
+                          <div
+                            className="mt-0.5 truncate text-[11px]"
+                            style={{ color: 'var(--color-text-secondary)' }}
+                          >
+                            {chat.subtitle}
+                          </div>
+                        </div>
+
+                        <MessageCircle
+                          className="h-4 w-4 shrink-0"
+                          style={{ color: 'var(--color-text-secondary)' }}
+                        />
                       </div>
-                      <div className="mt-1 text-sm text-gray-600">
-                        user #{chat.other_user_id} • convo #{chat.conversation_id}
-                      </div>
-                    </div>
-                    <MessageSquare className="mt-1 h-4 w-4 shrink-0 text-gray-500" />
-                  </div>
-                  {chat.other_username ? (
-                    <div className="mt-3">
-                      <Hostname
-                        username={chat.other_username}
-                        avatarSrc={chat.other_avatar || undefined}
-                        mode="normal"
-                        sx={{ '& .MuiTypography-root': { fontSize: '0.85rem' } }}
-                      />
-                    </div>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </section>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : null,
+          )}
         </div>
       </aside>
     </>

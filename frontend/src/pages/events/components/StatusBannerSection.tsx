@@ -32,6 +32,7 @@ export const StatusBannerSection = ({
   const collapsedOccurrences = currentOccurrence ? [currentOccurrence] : [];
   const occurrencesToDisplay = occurrencesExpanded ? occurrences : collapsedOccurrences;
 
+  return null;
   return (
     <Box sx={{ mb: 4, position: 'relative', zIndex: 25 }}>
       {/* Top Row: Back Button (Left) | Status/Actions (Right) */}

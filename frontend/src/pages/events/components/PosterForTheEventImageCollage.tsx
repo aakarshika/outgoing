@@ -29,7 +29,7 @@ export const PosterForTheEventImageCollage = ({ imageUrl, title }: PosterProps) 
       <Box
         sx={{
           width: '100%',
-          height: '350px',
+          height: '100%',
           position: 'absolute',
           padding: 4,
           bgcolor: SCRAPBOOK_PAPER,
@@ -74,56 +74,6 @@ export const PosterForTheEventImageCollage = ({ imageUrl, title }: PosterProps) 
         </Box>
       </Box>
 
-      {/* Subtle Scrapbook Tags/Overlays */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 40,
-          left: 20,
-          bgcolor: 'rgba(251, 191, 36, 0.8)', // subtle amber
-          border: SCRAPBOOK_BORDER,
-          px: 2,
-          py: 0.5,
-          transform: 'rotate(-10deg)',
-          zIndex: 20,
-          boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Typography
-          sx={{
-            fontFamily: '"Permanent Marker", cursive',
-            fontSize: '1rem',
-            color: '#333',
-          }}
-        >
-          THE EVENT!
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 40,
-          right: 30,
-          bgcolor: 'rgba(239, 68, 68, 0.8)', // subtle red
-          border: SCRAPBOOK_BORDER,
-          px: 2,
-          py: 0.5,
-          transform: 'rotate(5deg)',
-          zIndex: 20,
-          boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Typography
-          sx={{
-            fontFamily: '"Permanent Marker", cursive',
-            fontSize: '0.9rem',
-            color: '#fff',
-          }}
-        >
-          JOIN US!
-        </Typography>
-      </Box>
     </Box>
   );
 };

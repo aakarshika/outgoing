@@ -19,7 +19,7 @@ export const TicketsSection = ({
   handleOneClickBuy: (tierId: number, quantity: number) => void;
   clearTicketformTrigger?: number;
 }) => {
-  const isEventActive = !['draft', 'completed', 'closed'].includes(
+  const isEventActive = !['draft', 'completed', 'closed', 'live'].includes(
     event.lifecycle_state,
   );
 
@@ -27,9 +27,29 @@ export const TicketsSection = ({
   const [showStubs, setShowStubs] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
+  if (!isEventActive && !hasPurchasedTickets)
+    return (<>
+      <Typography
+        variant="h6"
+        sx={{
+          fontFamily: '"Caveat"',
+          mb: 2,
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          color: 'rgb(216, 90, 48)',
+        }}
+      >
+        {event.lifecycle_state === 'live' ?
+         'The event is live. Highlights are coming!' : event.lifecycle_state === 'draft' ?
+         'DRAFT DRAFT DRAFT! ' : 
+         'The event is over now, be sure to check us out again!'}
+      </Typography>
+    </>);
+
+
   return (
     <>
-      <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+      {/* <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" /> */}
       <Typography
         variant="h6"
         sx={{

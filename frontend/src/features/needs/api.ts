@@ -91,6 +91,13 @@ export async function fetchMyVendorOpportunities() {
   return data;
 }
 
+export async function fetchAllOpenOpportunities() {
+  const { data } = await client.get<VendorOpportunityListResponse>(
+    '/needs/opportunities/all/',
+  );
+  return data;
+}
+
 export async function fetchMyPotentialOpportunities() {
   const { data } = await client.get<VendorOpportunityListResponse>(
     '/needs/opportunities/potential/',

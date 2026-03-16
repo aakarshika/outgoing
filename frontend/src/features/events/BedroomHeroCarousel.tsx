@@ -171,7 +171,7 @@ const CustomCardCarouselWrapper = ({
           transformOrigin: 'top center',
           transform: isFocused ? 'scale(1.1) rotate(0deg)' : `rotate(${rotation}deg)`,
           transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          '& > *': { width: '100%',  m: 0 },
+          '& > *': { width: '100%', m: 0 },
           '&:hover': {
             transform: `rotate(${rotationhover}deg)`,
           },

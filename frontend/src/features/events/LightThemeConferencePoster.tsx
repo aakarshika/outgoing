@@ -1,17 +1,14 @@
 import { EventListItem } from '@/types/events';
 import { Box, Typography, Stack, keyframes } from '@mui/material';
+import { MessageSquare, ArrowDown, Mic, Circle, Square } from 'lucide-react';
 import {
-  MessageSquare,
-  ArrowDown,
-  Mic,
-  Circle,
-  Square
-} from 'lucide-react';
-import { MainInfoTimeLocationBox, OnlineTimeLocationBox } from './EventItemUIComponents';
+  MainInfoTimeLocationBox,
+  OnlineTimeLocationBox,
+} from './EventItemUIComponents';
 
 /**
  * LightThemeConferencePoster
- * 
+ *
  * A high-fidelity, light-themed reproduction of the "Online conference" poster.
  * Uses a soft gray and purple palette with vibrant green/teal accents.
  * Just UI, no data.
@@ -84,8 +81,28 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
           <MessageSquare size={40} color="#059669" fill="#059669" />
         </Box>
       </Box>
-      <Box sx={{ position: 'absolute', top: 10, right: 10, width: 12, height: 12, borderTop: '2px solid white', borderRight: '2px solid white' }} />
-      <Box sx={{ position: 'absolute', bottom: 10, left: 10, width: 12, height: 12, borderBottom: '2px solid white', borderLeft: '2px solid white' }} />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          width: 12,
+          height: 12,
+          borderTop: '2px solid white',
+          borderRight: '2px solid white',
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          width: 12,
+          height: 12,
+          borderBottom: '2px solid white',
+          borderLeft: '2px solid white',
+        }}
+      />
 
       {/* Main Center Content */}
       <Box
@@ -103,18 +120,47 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
           '&::after': {
             content: '""',
             position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             border: '2px solid rgba(255,255,255,0.3)',
-            m: 1
+            m: 1,
           },
-
         }}
       >
         {/* Corner Brackets */}
-        <Box sx={{ position: 'absolute', top: 10, left: 10, width: 12, height: 12, borderTop: '2px solid white', borderLeft: '2px solid white' }} />
-        <Box sx={{ position: 'absolute', bottom: 10, right: 10, width: 12, height: 12, borderBottom: '2px solid white', borderRight: '2px solid white' }} />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            width: 12,
+            height: 12,
+            borderTop: '2px solid white',
+            borderLeft: '2px solid white',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 10,
+            right: 10,
+            width: 12,
+            height: 12,
+            borderBottom: '2px solid white',
+            borderRight: '2px solid white',
+          }}
+        />
 
-        <Typography sx={{ letterSpacing: '0.2em', fontWeight: 700, color: '#6d28d9', fontSize: '0.9rem' }}>
+        <Typography
+          sx={{
+            letterSpacing: '0.2em',
+            fontWeight: 700,
+            color: '#6d28d9',
+            fontSize: '0.9rem',
+          }}
+        >
           «{event?.title}»
         </Typography>
 
@@ -122,24 +168,64 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#4c1d95' }}>
             @ host_name
           </Typography>
-          <Typography sx={{ color: '#5b21b6', fontSize: '0.75rem', lineHeight: 1.4, mt: 1, maxWidth: '100%' }}>
+          <Typography
+            sx={{
+              color: '#5b21b6',
+              fontSize: '0.75rem',
+              lineHeight: 1.4,
+              mt: 1,
+              maxWidth: '100%',
+            }}
+          >
             {event?.description}
           </Typography>
         </Box>
 
-
-        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.08)', pt: 2 }}>
+        <Box
+          sx={{
+            mt: 'auto',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderTop: '1px solid rgba(0,0,0,0.08)',
+            pt: 2,
+          }}
+        >
           <OnlineTimeLocationBox />
         </Box>
       </Box>
 
       {/* Side Decorations (Floating) */}
-      <Box sx={{ position: 'absolute', top: '15%', right: '10%', display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '15%',
+          right: '10%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
         {/* Circular patterns */}
         <Box sx={{ position: 'relative', width: 80, height: 80 }}>
           <Circle size={80} color="#a78bfa" strokeWidth={1} />
-          <Circle size={64} color="#a78bfa" strokeWidth={0.5} style={{ position: 'absolute', top: 8, left: 8 }} />
-          <Box sx={{ position: 'absolute', top: '30%', right: -15, width: 40, height: 12, bgcolor: '#c084fc', opacity: 0.6 }} />
+          <Circle
+            size={64}
+            color="#a78bfa"
+            strokeWidth={0.5}
+            style={{ position: 'absolute', top: 8, left: 8 }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '30%',
+              right: -15,
+              width: 40,
+              height: 12,
+              bgcolor: '#c084fc',
+              opacity: 0.6,
+            }}
+          />
         </Box>
 
         {/* Abstract squares */}
@@ -151,23 +237,30 @@ export const LightThemeConferencePoster = ({ event }: { event: EventListItem }) 
       </Box>
       {/* Microphone Icon */}
       <Box sx={{ position: 'absolute', bottom: '15%', right: '15%', zIndex: 4 }}>
-        <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-
-
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           <Box sx={{ animation: `${float} 5s ease-in-out infinite` }}>
             <Mic size={48} color="#10b981" strokeWidth={1.5} />
           </Box>
-          <Box sx={{
-            position: 'absolute',
-            bottom: -8,
-            left: '50%',
-            width: 52,
-            height: 6,
-            bgcolor: '#10b981',
-            borderRadius: '50%',
-            filter: 'blur(4px)',
-            animation: `${shadowBehavior} 5s ease-in-out infinite`,
-          }} />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -8,
+              left: '50%',
+              width: 52,
+              height: 6,
+              bgcolor: '#10b981',
+              borderRadius: '50%',
+              filter: 'blur(4px)',
+              animation: `${shadowBehavior} 5s ease-in-out infinite`,
+            }}
+          />
         </Box>
       </Box>
     </Box>

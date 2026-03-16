@@ -38,8 +38,8 @@ const iconSizeClass = {
 
 export interface ComicButtonProps
   extends
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof comicButtonVariants> {
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof comicButtonVariants> {
   asChild?: boolean;
   Icon?: React.ElementType;
   iconProps?: React.SVGProps<SVGSVGElement> & { className?: string };
@@ -151,8 +151,7 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
               shape === 'rounded' && 'rounded-md',
               'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
             )}
-          >
-          </span>
+          ></span>
 
           <span
             className={cn(
@@ -163,9 +162,9 @@ const ComicButton = React.forwardRef<HTMLButtonElement, ComicButtonProps>(
               shape === 'round' && 'rounded-full',
               shape === 'rounded' && 'rounded-md',
               'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
-              (isTransparent
+              isTransparent
                 ? 'bg-white/20 backdrop-blur-md'
-                : 'bg-[var(--accent-color)]'),
+                : 'bg-[var(--accent-color)]',
             )}
           >
             {iconContent}

@@ -22,6 +22,7 @@ class NeedApplicationSerializer(serializers.ModelSerializer):
             "id",
             "vendor_name",
             "need_title",
+            "need_id",
             "event_title",
             "event_id",
             "service",

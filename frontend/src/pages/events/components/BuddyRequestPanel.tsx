@@ -51,7 +51,9 @@ export const BuddyRequestPanel: React.FC<BuddyRequestPanelProps> = ({
       return;
     }
 
-    setRequestMessage(defaultMessages[Math.floor(Math.random() * defaultMessages.length)]);
+    setRequestMessage(
+      defaultMessages[Math.floor(Math.random() * defaultMessages.length)],
+    );
   }, [friendship?.request_message, friendship?.status, targetUsername]);
 
   const handleSend = () => {
@@ -86,7 +88,9 @@ export const BuddyRequestPanel: React.FC<BuddyRequestPanelProps> = ({
           toast.success(response.message);
         },
         onError: (error: any) => {
-          toast.error(error?.response?.data?.message || 'Failed to update buddy request');
+          toast.error(
+            error?.response?.data?.message || 'Failed to update buddy request',
+          );
         },
       },
     );
@@ -96,7 +100,9 @@ export const BuddyRequestPanel: React.FC<BuddyRequestPanelProps> = ({
 
   return (
     <Box>
-      <Typography sx={{ mb: 2, color: '#64748b', fontSize: compact ? '0.9rem' : '1rem' }}>
+      <Typography
+        sx={{ mb: 2, color: '#64748b', fontSize: compact ? '0.9rem' : '1rem' }}
+      >
         {isFriendshipStatusLoading
           ? 'Checking buddy status...'
           : isIncomingPending
@@ -135,7 +141,9 @@ export const BuddyRequestPanel: React.FC<BuddyRequestPanelProps> = ({
         />
       )}
 
-      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+      <Box
+        sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}
+      >
         {onClose ? (
           <Button onClick={onClose} disabled={actionInFlight}>
             Close

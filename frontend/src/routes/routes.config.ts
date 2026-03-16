@@ -17,8 +17,23 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/highlights',
+    componentName: 'Highlights',
+    isPublic: true,
+  },
+  {
+    path: '/homerenewed',
+    componentName: 'HomeRenewed',
+    isPublic: true,
+  },
+  {
     path: '/alerts',
     componentName: 'Alerts',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats',
+    componentName: 'Chats',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
@@ -29,6 +44,16 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/events/create',
     componentName: 'CreateEvent',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/manage',
+    componentName: 'PlanningWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/events/:id/manage',
+    componentName: 'PlanningWorkspace',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
@@ -64,6 +89,11 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/calendar',
     componentName: 'Calendar',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/managing/:tab?',
+    componentName: 'Managing',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
@@ -122,6 +152,16 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/browse',
     componentName: 'BrowseFeed',
+    isPublic: true,
+  },
+  {
+    path: '/search',
+    componentName: 'Search',
+    isPublic: true,
+  },
+  {
+    path: '/network',
+    componentName: 'YourNetwork',
     isPublic: true,
   },
 ];

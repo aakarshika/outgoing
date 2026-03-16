@@ -38,8 +38,8 @@ const iconSizeClass = {
 
 export interface ComicSinkButtonProps
   extends
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof comicButtonVariants> {
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof comicButtonVariants> {
   asChild?: boolean;
   Icon?: React.ElementType;
   iconProps?: React.SVGProps<SVGSVGElement> & { className?: string };
@@ -146,12 +146,14 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
           {iconContent}
           {textContent != null && <span className="leading-none">{textContent}</span>}
         </span>
-        <span className={cn(
-          "absolute inset-0 transition-shadow duration-150 ease-out",
-          shape === 'square' && 'rounded-none',
-          shape === 'round' && 'rounded-full',
-          shape === 'rounded' && 'rounded-md',
-        )}>
+        <span
+          className={cn(
+            'absolute inset-0 transition-shadow duration-150 ease-out',
+            shape === 'square' && 'rounded-none',
+            shape === 'round' && 'rounded-full',
+            shape === 'rounded' && 'rounded-md',
+          )}
+        >
           {/* Shadow layer: stays at (0,0) */}
           <span
             aria-hidden
@@ -165,8 +167,7 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
               // 'border-2 border-[var(--comic-color)] bg-[var(--comic-color)]',
               'border-2 border-[var(--glow-color)] bg-[var(--glow-color)]',
             )}
-          >
-          </span>
+          ></span>
 
           {/* Front layer: sinks from (0,0) to (depthX, depthY) */}
           <span
@@ -181,10 +182,10 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
               // "group-hover:shadow-[inset_4px_4px_16px_2px_var(--glow-color)]",
               // 'border-2 border-[var(--comic-color)] text-[var(--comic-color)]',
               // 'group-hover:border-[1px] group-hover:border-[var(--glow-color)]',
-              "group-hover:shadow-[inset_4px_4px_16px_2px_var(--glow-color)]",
-              (isTransparent
+              'group-hover:shadow-[inset_4px_4px_16px_2px_var(--glow-color)]',
+              isTransparent
                 ? 'bg-white/20 backdrop-blur-md'
-                : 'bg-[var(--accent-color)]'),
+                : 'bg-[var(--accent-color)]',
             )}
           >
             {iconContent}
@@ -198,7 +199,10 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
     if (asChild && React.isValidElement(children)) {
       return (
         <Comp
-          className={cn(comicButtonVariants({ variant, size, shape, className }), 'overflow-hidden')}
+          className={cn(
+            comicButtonVariants({ variant, size, shape, className }),
+            'overflow-hidden',
+          )}
           ref={ref}
           style={dynamicStyles}
           {...props}
@@ -212,7 +216,10 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
 
     return (
       <Comp
-        className={cn(comicButtonVariants({ variant, size, shape, className }), 'overflow-hidden')}
+        className={cn(
+          comicButtonVariants({ variant, size, shape, className }),
+          'overflow-hidden',
+        )}
         ref={ref}
         style={dynamicStyles}
         {...props}

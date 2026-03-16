@@ -1,0 +1,330 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .ws{font-family:'DM Sans',sans-serif;background:var(--color-background-tertiary);}
+
+  .ws-nav{display:flex;align-items:center;gap:12px;padding:1rem 1.5rem;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);}
+  .ws-back{font-size:18px;color:var(--color-text-secondary);cursor:pointer;}
+  .ws-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#D85A30;}
+  .ws-event-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--color-text-primary);margin-left:4px;}
+  .ws-status{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .status-pill{font-size:11px;font-weight:500;padding:4px 12px;border-radius:999px;}
+  .status-draft{background:#FAEEDA;color:#854F0B;}
+  .status-live{background:#EAF3DE;color:#3B6D11;}
+  .btn-publish{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 18px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;}
+
+  .ws-progress{background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:1rem 1.5rem;}
+  .progress-steps{display:flex;gap:0;align-items:center;}
+  .pstep{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;}
+  .pstep-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+  .pstep-dot.done{background:#EAF3DE;color:#3B6D11;}
+  .pstep-dot.active{background:#D85A30;color:#fff;}
+  .pstep-dot.todo{background:var(--color-background-secondary);color:var(--color-text-secondary);}
+  .pstep-label.done{color:#3B6D11;}
+  .pstep-label.active{color:#D85A30;font-weight:700;}
+  .pstep-label.todo{color:var(--color-text-secondary);}
+  .pstep-line{flex:1;height:1px;background:var(--color-border-tertiary);margin:0 8px;min-width:16px;}
+
+  .ws-body{max-width:960px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;}
+  .ws-main{display:flex;flex-direction:column;gap:1.25rem;}
+  .ws-side{display:flex;flex-direction:column;gap:1.25rem;}
+
+  .ws-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+  .ws-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .ws-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--color-text-primary);}
+  .ws-card-action{font-size:12px;color:#D85A30;font-weight:500;cursor:pointer;}
+  .ws-card-body{padding:14px 16px;}
+
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .detail-field{display:flex;flex-direction:column;gap:4px;}
+  .detail-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-secondary);}
+  .detail-val{font-size:14px;color:var(--color-text-primary);font-weight:500;}
+  .detail-val-muted{font-size:13px;color:var(--color-text-secondary);}
+
+  .ticket-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .ticket-row:last-child{border-bottom:none;padding-bottom:0;}
+  .ticket-name{font-size:13px;font-weight:500;color:var(--color-text-primary);min-width:90px;}
+  .ticket-price{font-size:13px;color:var(--color-text-secondary);min-width:50px;}
+  .ticket-bar-wrap{flex:1;height:6px;background:var(--color-background-secondary);border-radius:999px;overflow:hidden;}
+  .ticket-bar{height:6px;border-radius:999px;background:#D85A30;}
+  .ticket-count{font-size:12px;color:var(--color-text-secondary);min-width:60px;text-align:right;}
+  .ticket-add{display:flex;align-items:center;gap:6px;font-size:13px;color:#D85A30;font-weight:500;cursor:pointer;padding-top:10px;}
+
+  .needs-list{display:flex;flex-direction:column;gap:8px;}
+  .need-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;display:flex;align-items:center;gap:10px;}
+  .need-card.open{border-left:3px solid #EF9F27;}
+  .need-card.pending{border-left:3px solid #378ADD;}
+  .need-card.filled{border-left:3px solid #1D9E75;}
+  .need-icon{width:36px;height:36px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .need-body{flex:1;}
+  .need-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+  .need-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+  .need-right{text-align:right;flex-shrink:0;}
+  .need-status{font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;}
+  .ns-open{background:#FAEEDA;color:#854F0B;}
+  .ns-pending{background:#E6F1FB;color:#185FA5;}
+  .ns-filled{background:#EAF3DE;color:#3B6D11;}
+  .need-reward{font-size:12px;color:var(--color-text-secondary);margin-top:3px;}
+  .need-add{display:flex;align-items:center;gap:6px;font-size:13px;color:#D85A30;font-weight:500;cursor:pointer;padding-top:10px;}
+
+  .checklist{display:flex;flex-direction:column;gap:6px;}
+  .check-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .check-item:last-child{border-bottom:none;}
+  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--color-border-secondary);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;}
+  .check-box.done{background:#1D9E75;border-color:#1D9E75;}
+  .check-box.warn{border-color:#E24B4A;}
+  .check-tick{width:8px;height:8px;border-radius:1px;}
+  .check-label{font-size:13px;color:var(--color-text-primary);line-height:1.4;}
+  .check-label.done{color:var(--color-text-secondary);text-decoration:line-through;}
+  .check-label.warn{color:#A32D2D;}
+  .check-due{font-size:10px;color:var(--color-text-secondary);margin-top:2px;}
+  .check-due.warn{color:#E24B4A;}
+
+  .vendor-search{display:flex;align-items:center;gap:8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;cursor:text;}
+  .vendor-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+  .vendor-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .vendor-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0;}
+  .vendor-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+  .vendor-tag{font-size:10px;color:var(--color-text-secondary);}
+  .vendor-cta{margin-left:auto;font-size:11px;font-weight:500;padding:4px 10px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer;}
+  .vendor-cta.assign{border-color:#D85A30;color:#D85A30;}
+  .vendor-meta{font-size:11px;color:var(--color-text-secondary);}
+
+  .tier-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-secondary);margin:10px 0 6px;}
+
+  .metric-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;}
+  .metric-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;}
+  .metric-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--color-text-primary);}
+
+  .chat-fab{display:flex;align-items:center;justify-content:flex-end;padding:1rem 1.5rem 0;}
+  .chat-btn{display:flex;align-items:center;gap:8px;background:#D85A30;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+  .chat-badge{background:#fff;color:#D85A30;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+
+  .coorg-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+  .coorg-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;cursor:pointer;}
+
+  .msg-list{display:flex;flex-direction:column;gap:8px;}
+  .msg{display:flex;gap:8px;align-items:flex-start;}
+  .msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#fff;flex-shrink:0;}
+  .msg-bubble{background:var(--color-background-secondary);border-radius:0 var(--border-radius-md) var(--border-radius-md) var(--border-radius-md);padding:7px 10px;font-size:12px;color:var(--color-text-primary);max-width:200px;line-height:1.45;}
+  .msg-sys{background:#EAF3DE;border-radius:var(--border-radius-md);padding:6px 10px;font-size:11px;color:#27500A;text-align:center;width:100%;}
+</style>
+
+<div class="ws">
+  <div class="ws-nav">
+    <span class="ws-back">&#8592;</span>
+    <div class="ws-logo">outgoing</div>
+    <div class="ws-event-name">Rooftop Vinyl Night</div>
+    <div class="ws-status">
+      <span class="status-pill status-draft">Draft</span>
+      <button class="btn-publish">Publish event</button>
+    </div>
+  </div>
+
+  <div class="ws-progress">
+    <div class="progress-steps">
+      <div class="pstep"><div class="pstep-dot done">&#10003;</div><span class="pstep-label done">Details set</span></div>
+      <div class="pstep-line"></div>
+      <div class="pstep"><div class="pstep-dot done">&#10003;</div><span class="pstep-label done">Tickets configured</span></div>
+      <div class="pstep-line"></div>
+      <div class="pstep"><div class="pstep-dot active">2</div><span class="pstep-label active">Needs being filled</span></div>
+      <div class="pstep-line"></div>
+      <div class="pstep"><div class="pstep-dot todo">4</div><span class="pstep-label todo">Ready to go</span></div>
+    </div>
+  </div>
+
+  <div class="ws-body">
+    <div class="ws-main">
+
+      <div class="ws-card">
+        <div class="ws-card-head">
+          <div class="ws-card-title">Event details</div>
+          <div class="ws-card-action">Edit</div>
+        </div>
+        <div class="ws-card-body">
+          <div class="detail-grid">
+            <div class="detail-field"><div class="detail-label">Date & time</div><div class="detail-val">Sat 15 Mar · 8:00 PM</div></div>
+            <div class="detail-field"><div class="detail-label">Location</div><div class="detail-val">Indiranagar Social, Bengaluru</div></div>
+            <div class="detail-field"><div class="detail-label">Category</div><div class="detail-val">Music</div></div>
+            <div class="detail-field"><div class="detail-label">Format</div><div class="detail-val">In person · One-time</div></div>
+            <div class="detail-field" style="grid-column:1/-1;"><div class="detail-label">Description</div><div class="detail-val-muted">An evening of curated vinyl under the stars. BYOB welcome. Capacity capped at 60.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-card">
+        <div class="ws-card-head">
+          <div class="ws-card-title">Tickets</div>
+          <div class="ws-card-action">+ Add type</div>
+        </div>
+        <div class="ws-card-body">
+          <div class="metric-row">
+            <div class="metric"><div class="metric-label">Total sold</div><div class="metric-val">34</div></div>
+            <div class="metric"><div class="metric-label">Revenue</div><div class="metric-val">&#8377;9,450</div></div>
+          </div>
+          <div class="ticket-row">
+            <div class="ticket-name">Early Bird</div>
+            <div class="ticket-price">&#8377;250</div>
+            <div class="ticket-bar-wrap"><div class="ticket-bar" style="width:100%;"></div></div>
+            <div class="ticket-count">20 / 20 sold</div>
+          </div>
+          <div class="ticket-row">
+            <div class="ticket-name">Standard</div>
+            <div class="ticket-price">&#8377;350</div>
+            <div class="ticket-bar-wrap"><div class="ticket-bar" style="width:70%;"></div></div>
+            <div class="ticket-count">14 / 20 sold</div>
+          </div>
+          <div class="ticket-row">
+            <div class="ticket-name">Contributor</div>
+            <div class="ticket-price">Free</div>
+            <div class="ticket-bar-wrap"><div class="ticket-bar" style="width:0%;background:#1D9E75;"></div></div>
+            <div class="ticket-count">0 / 5 filled</div>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--color-text-secondary);">Min. threshold: 20 attendees · <span style="color:#3B6D11;font-weight:500;">Reached ✓</span></div>
+        </div>
+      </div>
+
+      <div class="ws-card">
+        <div class="ws-card-head">
+          <div class="ws-card-title">Needs board</div>
+          <div class="ws-card-action">Find vendors</div>
+        </div>
+        <div class="ws-card-body">
+          <div class="needs-list">
+            <div class="need-card filled">
+              <div class="need-icon" style="background:#EAF3DE;">&#127911;</div>
+              <div class="need-body">
+                <div class="need-title">DJ / Music</div>
+                <div class="need-sub">Karan Mehta · confirmed</div>
+              </div>
+              <div class="need-right">
+                <span class="need-status ns-filled">Filled ✓</span>
+                <div class="need-reward">Free entry</div>
+              </div>
+            </div>
+            <div class="need-card pending">
+              <div class="need-icon" style="background:#E6F1FB;">&#128247;</div>
+              <div class="need-body">
+                <div class="need-title">Photographer</div>
+                <div class="need-sub">3 cover letters waiting</div>
+              </div>
+              <div class="need-right">
+                <span class="need-status ns-pending">3 pending</span>
+                <div class="need-reward">40% off ticket</div>
+              </div>
+            </div>
+            <div class="need-card open">
+              <div class="need-icon" style="background:#FAEEDA;">&#128266;</div>
+              <div class="need-body">
+                <div class="need-title">Someone to bring speakers</div>
+                <div class="need-sub">No applicants yet</div>
+              </div>
+              <div class="need-right">
+                <span class="need-status ns-open">Open</span>
+                <div class="need-reward">&#8377;200 reimbursed</div>
+              </div>
+            </div>
+          </div>
+          <div class="need-add">&#43; Add a need</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ws-side">
+
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-title">Pre-event checklist</div></div>
+        <div class="ws-card-body">
+          <div class="checklist">
+            <div class="check-item">
+              <div class="check-box done"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 4l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none"/></svg></div>
+              <div><div class="check-label done">Event details complete</div></div>
+            </div>
+            <div class="check-item">
+              <div class="check-box done"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 4l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none"/></svg></div>
+              <div><div class="check-label done">Tickets published</div></div>
+            </div>
+            <div class="check-item">
+              <div class="check-box done"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 4l2 2 4-4" stroke="#fff" stroke-width="1.5" fill="none"/></svg></div>
+              <div><div class="check-label done">DJ slot filled</div></div>
+            </div>
+            <div class="check-item">
+              <div class="check-box"></div>
+              <div><div class="check-label">Photographer slot filled</div><div class="check-due">3 applications to review</div></div>
+            </div>
+            <div class="check-item">
+              <div class="check-box warn"></div>
+              <div><div class="check-label warn">Speakers still needed</div><div class="check-due warn">48h before event</div></div>
+            </div>
+            <div class="check-item">
+              <div class="check-box"></div>
+              <div><div class="check-label">Add cover photo</div><div class="check-due">Recommended</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-title">Find vendors & friends</div></div>
+        <div class="ws-card-body">
+          <div class="vendor-search">&#128269; Find a DJ, ask Karan to bring...</div>
+          <div class="tier-label">Your people</div>
+          <div class="vendor-card">
+            <div class="vendor-top">
+              <div class="vendor-av" style="background:#534AB7;">K</div>
+              <div><div class="vendor-name">Karan Mehta</div><div class="vendor-tag">Music buddy · brought sound to 2 events</div></div>
+              <button class="vendor-cta assign">Assign</button>
+            </div>
+          </div>
+          <div class="vendor-card">
+            <div class="vendor-top">
+              <div class="vendor-av" style="background:#1D9E75;">P</div>
+              <div><div class="vendor-name">Priya Nair</div><div class="vendor-tag">Art buddy · photographer at 3 events</div></div>
+              <button class="vendor-cta assign">Assign</button>
+            </div>
+          </div>
+          <div class="tier-label">Community</div>
+          <div class="vendor-card">
+            <div class="vendor-top">
+              <div class="vendor-av" style="background:#D85A30;">R</div>
+              <div><div class="vendor-name">Rohan DJ</div><div class="vendor-tag">DJ · contributed to 8 events on Outgoing</div></div>
+              <button class="vendor-cta">Invite</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-card">
+        <div class="ws-card-head">
+          <div class="ws-card-title">Co-organiser chat</div>
+          <div style="display:flex;gap:6px;">
+            <div class="coorg-av" style="background:#D85A30;">P</div>
+            <div class="coorg-av" style="background:#534AB7;">A</div>
+          </div>
+        </div>
+        <div class="ws-card-body">
+          <div class="msg-list">
+            <div style="display:flex;justify-content:center;"><div class="msg-sys">Karan confirmed the DJ slot ✓</div></div>
+            <div class="msg">
+              <div class="msg-av" style="background:#534AB7;">A</div>
+              <div class="msg-bubble">3 photog applications came in, you seen them?</div>
+            </div>
+            <div class="msg" style="flex-direction:row-reverse;">
+              <div class="msg-av" style="background:#D85A30;">P</div>
+              <div class="msg-bubble" style="border-radius:var(--border-radius-md) 0 var(--border-radius-md) var(--border-radius-md);">Checking now — the Priya one looks good</div>
+            </div>
+            <div style="display:flex;justify-content:center;"><div class="msg-sys">34 tickets sold · ₹9,450 collected</div></div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+            <input style="flex:1;padding:8px 12px;border:0.5px solid var(--color-border-secondary);border-radius:999px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);" placeholder="Message the team..." />
+            <div style="width:32px;height:32px;border-radius:50%;background:#D85A30;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;cursor:pointer;">&#8593;</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

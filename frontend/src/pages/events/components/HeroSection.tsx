@@ -1,50 +1,30 @@
-import { Box, Chip, Collapse, Grid, Paper, Typography } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { Box, Grid, Typography } from '@mui/material';
+import { useMemo } from 'react';
 
-import {
-  getCategoryTheme,
-  resolveCategorySlug,
-} from '@/features/events/CategoricalBackground';
-import { EventLifecycleState } from '@/types/events';
+import { CheckInMemo } from '@/components/ui/CheckInMemo';
+import { resolveCategorySlug } from '@/features/events/CategoricalBackground';
 
 import { HeroNegativeStripGallery } from './HeroNegativeStripGallery';
+import { HeroSideDetailsPanel } from './HeroSideDetailsPanel';
 import { PosterForTheEventImageCollage } from './PosterForTheEventImageCollage';
-import { WashiTape } from './scrapbookHelpers';
 import { TinyHostCard } from './TinyHostCard';
-import { WhenWhereCard } from './WhenWhereCard';
-import { CheckInMemo } from '@/components/ui/CheckInMemo';
 
-const LIFECYCLE_LABELS: Record<EventLifecycleState, string> = {
-  draft: 'Draft',
-  published: 'Published',
-  at_risk: 'At Risk',
-  postponed: 'Postponed',
-  event_ready: 'Event Ready',
-  live: 'Live',
-  cancelled: 'Cancelled',
-  completed: 'Completed',
-};
 export const HeroSection = ({
   event,
-  isAuthenticated,
-  navigate,
-  toggleInterest,
+  isHost,
   highlights = [],
   occurrences = [],
   displayNeedsCount = 0,
   displayNeeds = [],
 }: {
   event: any;
-  isAuthenticated: boolean;
-  navigate: any;
-  toggleInterest: any;
+  isHost: boolean;
   highlights?: any[];
   occurrences?: any[];
   displayNeedsCount?: number;
   displayNeeds?: any[];
 }) => {
   const categorySlug = resolveCategorySlug(event.category);
-  const categoryTheme = getCategoryTheme(event.category);
 
   // Unique list of all images for the gallery
   const galleryImages = useMemo(() => {
@@ -84,11 +64,6 @@ export const HeroSection = ({
                 transition: 'all 0.4s ease',
               }}
             >
-              <WashiTape
-                color={categoryTheme.tape}
-                rotate={categorySlug === 'comedy' ? '10deg' : '3deg'}
-              />
-
               {/* Event Name */}
               <Box
                 sx={{
@@ -117,7 +92,7 @@ export const HeroSection = ({
               </Box>
             </Box>
 
-            <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" />
+            {/* <WashiTape color="rgba(22, 163, 74, 0.3)" rotate="-2deg" /> */}
             {/* <Typography variant="h6" sx={{ fontFamily: '"Permanent Marker"', mb: 2 }}>
           The Details
         </Typography> */}
@@ -153,80 +128,79 @@ export const HeroSection = ({
                 allChips={event.features}
               />
             </Box>
-
           </Box>
         </Grid>
 
-        {/* Right Half - Event Image Section */}
+        {/* Right Half - Event Image + Quick Details */}
         <Grid
           size={{ xs: 12, md: 7 }}
           sx={{
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'center',
-            position: 'relative',
           }}
         >
-          <Box
-            sx={{
-              width: '100%',
-              minHeight: { xs: 300, md: 450 },
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-            }}
-          >
-            <Box
-              sx={{
-                width: '100%',
-                height: { xs: 200, md: 200 },
-                position: 'absolute',
-                bgcolor: 'black',
-                opacity: 0.14,
-                WebkitMaskImage: "url('/assets/go-symbol.png')",
-                maskImage: "url('/assets/go-symbol.png')",
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-              }}
-            />
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              position: 'absolute',
-            }}
-          >
-            {event.lifecycle_state === 'draft' ||
-              event.lifecycle_state === 'published' ? (
+          <Box sx={{ width: '100%' }}>
+            {event.cover_image ? (
               <Box
                 sx={{
                   width: '100%',
+                  minHeight: { xs: 300, md: 450 },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
                 }}
               >
-                <PosterForTheEventImageCollage
-                  imageUrl={event.cover_image}
-                  title={event.title}
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: { xs: 200, md: 200 },
+                    position: 'absolute',
+                    bgcolor: 'black',
+                    opacity: 0.14,
+                    WebkitMaskImage: "url('/assets/go-symbol.png')",
+                    maskImage: "url('/assets/go-symbol.png')",
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskPosition: 'center',
+                    WebkitMaskSize: 'contain',
+                    maskSize: 'contain',
+                  }}
                 />
+                <Box
+                  sx={{
+                    width: '100%',
+                    position: 'absolute',
+                  }}
+                >
+                  {event.lifecycle_state === 'draft' ||
+                  event.lifecycle_state === 'published' ? (
+                    <Box sx={{ width: '100%' }}>
+                      <PosterForTheEventImageCollage
+                        imageUrl={event.cover_image}
+                        title={event.title}
+                      />
+                    </Box>
+                  ) : (
+                    <Box sx={{ width: '100%' }}>
+                      <HeroNegativeStripGallery
+                        images={galleryImages}
+                        title={event.title}
+                        host={event.host}
+                        categorySlug={event.category?.slug}
+                      />
+                    </Box>
+                  )}
+                </Box>
               </Box>
-            ) : (
-              <Box sx={{ width: '100%' }}>
-                <HeroNegativeStripGallery
-                  images={galleryImages}
-                  title={event.title}
-                  host={event.host}
-                  categorySlug={event.category?.slug}
-                />
-              </Box>
-            )}
+            ) : null}
+
+            <HeroSideDetailsPanel event={event} />
           </Box>
         </Grid>
       </Grid>
-
     </>
   );
 };

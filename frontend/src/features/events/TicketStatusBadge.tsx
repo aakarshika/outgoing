@@ -17,12 +17,12 @@ export const TicketStatusBadge = ({
   highlighted,
   variant = 'default',
   rightAligned = false,
-  userTicketCount ,
+  userTicketCount,
   sx = {},
 }: TicketStatusBadgeProps) => {
   if (!capacity) return null;
 
-  const isLarge =  (userTicketCount && userTicketCount > 0);
+  const isLarge = userTicketCount && userTicketCount > 0;
   const soldCopy = `${ticketCount || 0}/${capacity}${isLarge ? ' Sold' : ''}`;
   const ticketCopy =
     isLarge && typeof userTicketCount === 'number'
@@ -57,17 +57,17 @@ export const TicketStatusBadge = ({
       {isLarge ? (
         <Box>
           {/* {ticketCopy && ( */}
-            <Typography
-              sx={{
-                fontSize: '0.75rem',
-                fontWeight: 'bold',
-                fontFamily: '"Caveat", cursive',
-                letterSpacing: '0.3px',
-                lineHeight: 1.05,
-              }}
-            >
-              {ticketCopy}
-            </Typography>
+          <Typography
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              fontFamily: '"Caveat", cursive',
+              letterSpacing: '0.3px',
+              lineHeight: 1.05,
+            }}
+          >
+            {ticketCopy}
+          </Typography>
           <Typography
             sx={{
               fontSize: '0.78rem',
@@ -95,5 +95,38 @@ export const TicketStatusBadge = ({
         </Typography>
       )}
     </Box>
+  );
+};
+
+
+
+export const TicketStatusBadgeSimple = ({
+  ticketCount,
+  capacity,
+  highlighted,
+  variant = 'default',
+  rightAligned = false,
+  userTicketCount,
+  sx = {},
+}: TicketStatusBadgeProps) => {
+  if (!capacity) return null;
+
+  const isLarge = false;
+  const soldCopy = `${ticketCount || 0} going`;
+
+  return (
+    <Box
+              sx={{
+                px: 1,
+                py: 0.45,
+                borderRadius: '999px',
+                backgroundColor: '#EAF3DE',
+                color: '#3B6D11',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              {soldCopy}
+            </Box>
   );
 };

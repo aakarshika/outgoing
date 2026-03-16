@@ -4,6 +4,7 @@ import type { ApiResponse } from './events';
 
 export interface NeedApplication {
   id: number;
+  need_id: number;
   vendor_name: string;
   need_title?: string;
   event_title?: string;

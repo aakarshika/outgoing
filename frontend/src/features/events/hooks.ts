@@ -5,44 +5,54 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EventLifecycleState } from '@/types/events';
 
 import {
+  addDirectMessage,
   addEventHighlight,
   addEventReview,
   addHighlightComment,
   addHostVendorMessage,
+  addPrivateMessage,
   addReviewComment,
   cancelTicket,
   createEventSeries,
   deleteEvent,
   deleteEventReview,
+  fetchAllChatsList,
   fetchCarouselEvents,
   fetchCategories,
+  fetchDirectMessages,
   fetchEvent,
   fetchEventAttendees,
   fetchEventAutocomplete,
   fetchEventHighlights,
   fetchEventLifecycleHistory,
+  fetchEventOverviewRows,
   fetchEventSeriesDetail,
   fetchEventSeriesList,
   fetchEventSeriesOccurrences,
-  fetchEventStory,
   fetchFeaturedEvent,
-  fetchAllChatsList,
   fetchFeed,
+  fetchFriendRequestStatus,
   fetchHighlightComments,
   fetchHighlightsFeed,
   fetchHostVendorMessages,
   fetchIconicHostsFeed,
   fetchMyEvents,
+  fetchMyFriendships,
   fetchMyInterestedEvents,
   fetchMyTickets,
+  fetchNetworkActivity,
+  fetchNetworkPeople,
+  fetchPrivateMessages,
   fetchRecentlyViewed,
   fetchReviewComments,
   fetchTopVendorsFeed,
   fetchTrendingHighlights,
   fetchUpcomingFeed,
   generateEventSeriesOccurrences,
+  getOrCreatePrivateConversation,
   purchaseTicket,
   recordEventView,
+  sendFriendRequest,
   toggleHighlightLike,
   toggleInterest,
   toggleReviewLike,
@@ -50,15 +60,8 @@ import {
   updateEventReview,
   updateEventSeries,
   updateEventTicketTiers,
-  updateTicket,
-  fetchPrivateMessages,
-  addPrivateMessage,
-  getOrCreatePrivateConversation,
-  fetchDirectMessages,
-  addDirectMessage,
-  fetchFriendRequestStatus,
-  sendFriendRequest,
   updateFriendRequest,
+  updateTicket,
 } from './api';
 
 export function useFeed(params: {
@@ -72,12 +75,19 @@ export function useFeed(params: {
   lng?: number;
   radius_km?: number;
   featured?: boolean;
+  lifecycle_states?: EventLifecycleState[];
+  start_time_gte?: string;
+  start_time_lte?: string;
   page?: number;
   page_size?: number;
 }) {
   return useQuery({
     queryKey: ['feed', params],
     queryFn: () => fetchFeed(params),
+    retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -265,6 +275,7 @@ export function useUpdateTicketTiers() {
         refund_percentage?: number;
         description?: string;
         admits?: number;
+        max_passes_per_ticket?: number;
       }>;
       updateSeries?: boolean;
     }) => updateEventTicketTiers(eventId, tiers, updateSeries),
@@ -637,6 +648,15 @@ export function useAllChatsList(enabled = true) {
   });
 }
 
+export function useEventOverviewRows(enabled = true) {
+  return useQuery({
+    queryKey: ['event-overview-rows'],
+    queryFn: fetchEventOverviewRows,
+    enabled,
+    refetchInterval: 30000,
+  });
+}
+
 export function useAddDirectMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -669,13 +689,45 @@ export function useSendFriendRequest() {
     }) => sendFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
+        queryKey: [
+          'friend-request-status',
+          variables.eventId,
+          variables.targetUsername,
+        ],
       });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
     },
   });
 }
 
-export function useFriendRequestStatus(eventId?: number, targetUsername?: string | null) {
+export function useMyFriendships(enabled = true) {
+  return useQuery({
+    queryKey: ['my-friendships'],
+    queryFn: () => fetchMyFriendships(),
+    enabled,
+  });
+}
+
+export function useNetworkPeople(enabled = true) {
+  return useQuery({
+    queryKey: ['network-people'],
+    queryFn: () => fetchNetworkPeople(),
+    enabled,
+  });
+}
+
+export function useNetworkActivity(enabled = true) {
+  return useQuery({
+    queryKey: ['network-activity'],
+    queryFn: () => fetchNetworkActivity(),
+    enabled,
+  });
+}
+
+export function useFriendRequestStatus(
+  eventId?: number,
+  targetUsername?: string | null,
+) {
   return useQuery({
     queryKey: ['friend-request-status', eventId, targetUsername],
     queryFn: () =>
@@ -700,8 +752,13 @@ export function useUpdateFriendRequest() {
     }) => updateFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['friend-request-status', variables.eventId, variables.targetUsername],
+        queryKey: [
+          'friend-request-status',
+          variables.eventId,
+          variables.targetUsername,
+        ],
       });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
     },
   });
 }

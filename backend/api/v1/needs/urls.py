@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    AllOpenOpportunitiesView,
     EventNeedsView,
     MyNeedApplicationsView,
     MyNeedInvitesView,
@@ -32,6 +33,11 @@ urlpatterns = [
     ),
     path("applications/my/", MyNeedApplicationsView.as_view(), name="my_applications"),
     path("invites/my/", MyNeedInvitesView.as_view(), name="my_invites"),
+    path(
+        "opportunities/all/",
+        AllOpenOpportunitiesView.as_view(),
+        name="all_opportunities",
+    ),
     path(
         "opportunities/my/",
         MyVendorOpportunitiesView.as_view(),

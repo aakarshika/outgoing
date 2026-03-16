@@ -1,0 +1,547 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .br{font-family:'DM Sans',sans-serif;background:var(--color-background-tertiary);min-height:100vh;}
+
+  /* ── NAV ── */
+  .br-nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);}
+  .br-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#D85A30;}
+  .br-search{flex:1;max-width:420px;margin:0 1.5rem;display:flex;align-items:center;gap:8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--color-text-secondary);cursor:text;}
+  .br-loc{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;}
+  .br-loc-dot{width:8px;height:8px;border-radius:50%;background:#D85A30;flex-shrink:0;}
+
+  /* ══════════════════════════════════════
+     UNIFIED FILTER RAIL
+  ══════════════════════════════════════ */
+  .filter-rail{
+    background:var(--color-background-primary);
+    border-bottom:0.5px solid var(--color-border-tertiary);
+    position:sticky;top:0;z-index:50;
+  }
+
+  /* Row 1 — main mode tabs + quick filters + category pills */
+  .filter-rail-row{
+    display:flex;align-items:stretch;
+    overflow-x:auto;scrollbar-width:none;
+    gap:0;padding:0;
+    /* subtle gradient fade on right */
+    -webkit-mask:linear-gradient(to right,#000 85%,transparent 100%);
+    mask:linear-gradient(to right,#000 85%,transparent 100%);
+  }
+  .filter-rail-row::-webkit-scrollbar{display:none;}
+
+  /* Section divider inside rail */
+  .rail-divider{
+    width:1px;background:var(--color-border-tertiary);
+    align-self:stretch;margin:8px 4px;flex-shrink:0;
+  }
+
+  /* ── MAIN TABS (Tonight, Trending, Free…) ── */
+  .main-tabs{display:flex;align-items:stretch;gap:0;flex-shrink:0;}
+  .main-tab{
+    display:flex;align-items:center;gap:6px;
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+    padding:0 18px;height:48px;
+    border-bottom:2.5px solid transparent;
+    color:var(--color-text-secondary);
+    cursor:pointer;white-space:nowrap;
+    transition:color .15s,border-color .15s;
+    position:relative;flex-shrink:0;
+  }
+  .main-tab:hover{color:var(--color-text-primary);}
+  .main-tab.active{color:#D85A30;border-bottom-color:#D85A30;}
+  .main-tab-icon{font-size:14px;line-height:1;}
+  .main-tab-badge{
+    font-size:9px;font-weight:700;
+    background:#D85A30;color:#fff;
+    border-radius:999px;padding:1px 5px;
+    line-height:1.5;
+  }
+
+  /* ── QUICK FILTER PILLS (in-person, free, with-friends) ── */
+  .quick-filters{display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0;}
+  .qf{
+    font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+    padding:5px 12px;border-radius:999px;
+    border:1.5px solid var(--color-border-secondary);
+    background:var(--color-background-primary);
+    color:var(--color-text-secondary);
+    cursor:pointer;white-space:nowrap;
+    transition:all .15s;
+    display:flex;align-items:center;gap:5px;
+  }
+  .qf:hover{border-color:var(--color-text-secondary);color:var(--color-text-primary);}
+  .qf.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff;}
+  /* Override for light mode */
+  @media (prefers-color-scheme:light){.qf.on{background:#111;border-color:#111;color:#fff;}}
+  .qf-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+  /* ── CATEGORY PILLS — visually distinct from quick filters ── */
+  .cat-pills{display:flex;align-items:center;gap:5px;padding:0 10px;flex-shrink:0;}
+  .cat-label{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--color-text-secondary);opacity:.5;
+    white-space:nowrap;padding:0 4px;
+  }
+  .cat{
+    font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+    padding:4px 11px;border-radius:6px; /* square-ish, distinguishes from round quick filters */
+    border:1.5px solid var(--color-border-tertiary);
+    background:var(--color-background-secondary);
+    color:var(--color-text-secondary);
+    cursor:pointer;white-space:nowrap;
+    transition:all .15s;
+    display:flex;align-items:center;gap:5px;
+  }
+  .cat:hover{border-color:var(--color-border-secondary);color:var(--color-text-primary);}
+  .cat.on{background:#D85A30;border-color:#D85A30;color:#fff;}
+  .cat-emoji{font-size:12px;line-height:1;}
+
+  /* ── FILTER DROPDOWN BUTTONS (Date, Price, Distance) ── */
+  .filter-dropdowns{display:flex;align-items:center;gap:6px;padding:4px 12px;flex-shrink:0;}
+  .fdd{
+    font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+    padding:5px 11px;border-radius:999px;
+    border:1.5px solid var(--color-border-secondary);
+    background:var(--color-background-primary);
+    color:var(--color-text-secondary);
+    cursor:pointer;white-space:nowrap;
+    display:flex;align-items:center;gap:5px;
+    transition:all .15s;
+  }
+  .fdd:hover{border-color:var(--color-text-secondary);color:var(--color-text-primary);}
+  .fdd.on{border-color:#D85A30;color:#D85A30;}
+  .fdd-arrow{font-size:9px;opacity:.6;}
+
+  /* ── CONTEXTUAL PANEL (shown per active tab) ── */
+  .ctx-panel{
+    border-top:0.5px solid var(--color-border-tertiary);
+    background:var(--color-background-secondary);
+    padding:10px 1.5rem;
+    display:flex;align-items:center;gap:8px;
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .ctx-panel::-webkit-scrollbar{display:none;}
+  .ctx-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-secondary);opacity:.55;white-space:nowrap;margin-right:2px;}
+  .ctx-btn{
+    font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+    padding:5px 12px;border-radius:999px;
+    border:1.5px solid var(--color-border-tertiary);
+    background:var(--color-background-primary);
+    color:var(--color-text-secondary);
+    cursor:pointer;white-space:nowrap;
+    display:flex;align-items:center;gap:5px;
+    transition:all .15s;
+  }
+  .ctx-btn:hover{border-color:var(--color-border-secondary);color:var(--color-text-primary);}
+  .ctx-btn.on{background:#D85A30;border-color:#D85A30;color:#fff;}
+  .ctx-btn.on2{background:#1D9E75;border-color:#1D9E75;color:#fff;}
+
+  /* ══════════════════════════════════════
+     BODY
+  ══════════════════════════════════════ */
+  .br-body{max-width:960px;margin:0 auto;padding:1.5rem;}
+
+  .br-section-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-secondary);margin-bottom:10px;margin-top:1.5rem;}
+  .br-section-label:first-child{margin-top:0;}
+
+  .ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:1.5rem;}
+
+  .ev{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;}
+  .ev.online{border-left:3px solid #1D9E75;}
+  .ev.inperson{border-left:3px solid #D85A30;}
+
+  .ev-img{height:100px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+  .ev-body{padding:11px 13px;display:flex;flex-direction:column;gap:5px;flex:1;}
+
+  .ev-toprow{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+  .ev-cat{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);}
+  .ev-mode{font-size:10px;font-weight:500;padding:2px 7px;border-radius:999px;flex-shrink:0;}
+  .ev-mode-ip{background:#FAECE7;color:#712B13;}
+  .ev-mode-on{background:#E1F5EE;color:#085041;}
+
+  .ev-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);line-height:1.3;}
+  .ev-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.45;}
+
+  .ev-known{display:flex;align-items:center;gap:5px;font-size:11px;color:#3C3489;font-weight:500;}
+  .ev-known-dot{width:6px;height:6px;border-radius:50%;background:#7F77DD;flex-shrink:0;}
+
+  .ev-needs{background:#FAEEDA;border-radius:6px;padding:6px 9px;font-size:11px;color:#633806;line-height:1.4;}
+  .ev-needs strong{font-weight:500;color:#412402;}
+
+  .ev-buddies{display:flex;align-items:center;gap:5px;}
+  .ev-faces{display:flex;}
+  .ev-face{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--color-background-primary);display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:500;margin-left:-5px;}
+  .ev-face:first-child{margin-left:0;}
+  .ev-buddy-txt{font-size:11px;color:var(--color-text-secondary);}
+
+  .ev-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px;border-top:0.5px solid var(--color-border-tertiary);}
+  .ev-date{font-size:11px;color:var(--color-text-secondary);}
+  .ev-going{font-size:11px;color:#3B6D11;background:#EAF3DE;padding:2px 7px;border-radius:999px;}
+  .ev-price{font-size:12px;font-weight:500;color:var(--color-text-primary);}
+  .ev-free{font-size:12px;font-weight:500;color:#3B6D11;}
+  .ev-discount{font-size:11px;font-weight:500;color:#854F0B;background:#FAEEDA;padding:2px 7px;border-radius:999px;}
+
+  .chip-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-left:3px solid #EF9F27;border-radius:var(--border-radius-lg);padding:12px 14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+  .chip-icon{width:40px;height:40px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .chip-body{flex:1;}
+  .chip-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:3px;}
+  .chip-sub{font-size:11px;color:var(--color-text-secondary);line-height:1.4;}
+  .chip-known{font-size:11px;color:#3C3489;font-weight:500;margin-top:4px;display:flex;align-items:center;gap:4px;}
+  .chip-known-dot{width:5px;height:5px;border-radius:50%;background:#7F77DD;}
+  .chip-right{text-align:right;flex-shrink:0;}
+  .chip-reward{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#BA7517;}
+  .chip-reward-label{font-size:10px;color:var(--color-text-secondary);}
+  .chip-repeat{font-size:10px;font-weight:500;color:#3B6D11;background:#EAF3DE;padding:2px 7px;border-radius:999px;margin-top:4px;display:inline-block;}
+
+  .net-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  .net-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .net-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;}
+  .net-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+  .net-context{font-size:11px;color:var(--color-text-secondary);}
+  .net-going-to{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;}
+  .net-going-to strong{color:var(--color-text-primary);font-weight:500;}
+  .net-join-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 14px;border-radius:999px;border:0.5px solid #D85A30;background:transparent;color:#D85A30;cursor:pointer;}
+
+  .trending-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:999px;}
+
+  /* ── Contextual panels per tab ── */
+  .ctx-panel[data-tab]{display:none;}
+  .ctx-panel.visible{display:flex;}
+</style>
+
+<div class="br">
+  <!-- NAV -->
+  <nav class="br-nav">
+    <div class="br-logo">outgoing</div>
+    <div class="br-search">&#128269; Search events, hosts, vendors...</div>
+    <div class="br-loc"><div class="br-loc-dot"></div> Bengaluru &#8964;</div>
+  </nav>
+
+  <!-- UNIFIED FILTER RAIL -->
+  <div class="filter-rail">
+
+    <!-- ROW 1: main tabs | quick filters | divider | categories | divider | dropdowns -->
+    <div class="filter-rail-row" id="filterRailRow">
+
+      <!-- MAIN TABS -->
+      <div class="main-tabs" id="mainTabs">
+        <div class="main-tab active" data-tab="tonight">
+          <span class="main-tab-icon">🌙</span> Tonight
+        </div>
+        <div class="main-tab" data-tab="trending">
+          <span class="main-tab-icon">🔥</span> Trending
+          <span class="main-tab-badge">12</span>
+        </div>
+        <div class="main-tab" data-tab="free">
+          <span class="main-tab-icon">🎉</span> Free &amp; Cheap
+        </div>
+        <div class="main-tab" data-tab="chipin">
+          <span class="main-tab-icon">🤝</span> Chip in
+        </div>
+        <div class="main-tab" data-tab="online">
+          <span class="main-tab-icon">💻</span> Online
+        </div>
+        <div class="main-tab" data-tab="network">
+          <span class="main-tab-icon">👥</span> My Network
+          <span class="main-tab-badge">3</span>
+        </div>
+      </div>
+
+      <div class="rail-divider"></div>
+
+      <!-- QUICK FILTERS -->
+      <div class="quick-filters">
+        <div class="qf on"><div class="qf-dot" style="background:#D85A30;"></div>In person</div>
+        <div class="qf">💸 Free</div>
+        <div class="qf">🧑‍🤝‍🧑 With friends</div>
+        <div class="qf">⚡ Tonight only</div>
+      </div>
+
+      <div class="rail-divider"></div>
+
+      <!-- CATEGORIES — visually distinct (square corners) -->
+      <div class="cat-pills">
+        <span class="cat-label">Category</span>
+        <div class="cat on"><span class="cat-emoji">🎵</span> Music</div>
+        <div class="cat"><span class="cat-emoji">🍻</span> Food &amp; Drinks</div>
+        <div class="cat"><span class="cat-emoji">🌿</span> Outdoors</div>
+        <div class="cat"><span class="cat-emoji">🎨</span> Arts</div>
+        <div class="cat"><span class="cat-emoji">💡</span> Tech</div>
+        <div class="cat"><span class="cat-emoji">🏃</span> Sports</div>
+        <div class="cat"><span class="cat-emoji">😂</span> Comedy</div>
+        <div class="cat"><span class="cat-emoji">🧘</span> Wellness</div>
+        <div class="cat"><span class="cat-emoji">🛠️</span> Workshop</div>
+      </div>
+
+      <div class="rail-divider"></div>
+
+      <!-- DROPDOWN FILTERS -->
+      <div class="filter-dropdowns">
+        <button class="fdd on">📅 Tonight <span class="fdd-arrow">▾</span></button>
+        <button class="fdd">💰 Any price <span class="fdd-arrow">▾</span></button>
+        <button class="fdd">📍 Distance <span class="fdd-arrow">▾</span></button>
+      </div>
+
+    </div><!-- /filter-rail-row -->
+
+    <!-- ROW 2: contextual quick filters PER active tab -->
+    <!-- Tonight panel -->
+    <div class="ctx-panel visible" data-tab="tonight">
+      <span class="ctx-label">Tonight</span>
+      <div class="ctx-btn on">This evening</div>
+      <div class="ctx-btn">Late night (11pm+)</div>
+      <div class="ctx-btn">Last-minute open spots</div>
+      <div class="ctx-btn on2">Near me (&lt;5km)</div>
+      <div class="ctx-btn">Outdoor only</div>
+      <div class="ctx-btn">Sold out? Waitlist</div>
+    </div>
+    <!-- Trending panel -->
+    <div class="ctx-panel" data-tab="trending">
+      <span class="ctx-label">Trending</span>
+      <div class="ctx-btn on">🔥 Hot right now</div>
+      <div class="ctx-btn">📈 Rising fast</div>
+      <div class="ctx-btn">⭐ Top rated</div>
+      <div class="ctx-btn">💬 Most talked about</div>
+      <div class="ctx-btn">🎟️ Selling out</div>
+    </div>
+    <!-- Free panel -->
+    <div class="ctx-panel" data-tab="free">
+      <span class="ctx-label">Free &amp; Cheap</span>
+      <div class="ctx-btn on">🎉 Completely free</div>
+      <div class="ctx-btn">Under ₹200</div>
+      <div class="ctx-btn">Under ₹500</div>
+      <div class="ctx-btn">🏷️ Discount available</div>
+      <div class="ctx-btn">Chip-in welcome</div>
+    </div>
+    <!-- Chip in panel -->
+    <div class="ctx-panel" data-tab="chipin">
+      <span class="ctx-label">Chip in</span>
+      <div class="ctx-btn on">All needs</div>
+      <div class="ctx-btn">🎵 DJ / Music</div>
+      <div class="ctx-btn">📷 Photography</div>
+      <div class="ctx-btn">🍳 Food / Catering</div>
+      <div class="ctx-btn">🎬 Video</div>
+      <div class="ctx-btn">💰 Get paid</div>
+      <div class="ctx-btn">🎟️ Free entry</div>
+    </div>
+    <!-- Online panel -->
+    <div class="ctx-panel" data-tab="online">
+      <span class="ctx-label">Online</span>
+      <div class="ctx-btn on">Live now</div>
+      <div class="ctx-btn">🎙️ Talk / Webinar</div>
+      <div class="ctx-btn">🎮 Gaming</div>
+      <div class="ctx-btn">🎓 Workshop</div>
+      <div class="ctx-btn">Watch party</div>
+      <div class="ctx-btn">Recording available</div>
+    </div>
+    <!-- Network panel -->
+    <div class="ctx-panel" data-tab="network">
+      <span class="ctx-label">My Network</span>
+      <div class="ctx-btn on">All buddies</div>
+      <div class="ctx-btn">Going tonight</div>
+      <div class="ctx-btn">Interested</div>
+      <div class="ctx-btn">Hosting</div>
+      <div class="ctx-btn">New connections</div>
+    </div>
+
+  </div><!-- /filter-rail -->
+
+  <!-- BODY -->
+  <div class="br-body">
+    <div class="br-section-label">Your picks for tonight — Music · In person</div>
+    <div class="ev-grid">
+
+      <div class="ev inperson">
+        <div class="ev-img" style="background:#FFF0E8;">🎸</div>
+        <div class="ev-body">
+          <div class="ev-toprow"><div class="ev-cat">Music</div><span class="ev-mode ev-mode-ip">In person</span></div>
+          <div class="ev-title">Indie Night at Koramangala Social</div>
+          <div class="ev-desc">3 local bands, rooftop, unlimited starters for first 20.</div>
+          <div class="ev-known"><div class="ev-known-dot"></div> Rahul + 2 others going</div>
+          <div class="ev-buddies">
+            <div class="ev-faces">
+              <div class="ev-face" style="background:#D85A30;">R</div>
+              <div class="ev-face" style="background:#534AB7;">A</div>
+            </div>
+            <div class="ev-buddy-txt">Rahul &amp; Aditi going</div>
+          </div>
+          <div class="ev-foot"><span class="ev-date">Tonight · 8pm</span><span class="ev-price">₹350</span></div>
+        </div>
+      </div>
+
+      <div class="ev inperson">
+        <div class="ev-body">
+          <div class="ev-toprow"><div class="ev-cat">Food &amp; Drinks</div><span class="ev-mode ev-mode-ip">In person</span></div>
+          <div class="ev-title">Rooftop Supper Club — Monsoon Edition</div>
+          <div class="ev-desc">6-course meal, live music, candlelight. Limited to 30 guests.</div>
+          <div class="ev-known"><div class="ev-known-dot"></div> Hosted by Pinky · Nani is catering</div>
+          <div class="ev-foot"><span class="ev-date">Sat · 7pm</span><span class="ev-price">₹1,200</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="br-section-label">Trending in Bengaluru tonight</div>
+    <div class="ev-grid">
+
+      <div class="ev inperson">
+        <div class="ev-img" style="background:#EEEDFE;">🎭</div>
+        <div class="ev-body">
+          <div class="ev-toprow">
+            <div class="ev-cat">Comedy</div>
+            <span class="ev-mode ev-mode-ip">In person</span>
+          </div>
+          <div class="ev-title">Open Mic Comedy Night</div>
+          <div class="ev-desc">10 comedians, 2 hours, one bar tab. Come heckle responsibly.</div>
+          <div class="ev-buddies">
+            <div class="ev-faces">
+              <div class="ev-face" style="background:#1D9E75;">S</div>
+            </div>
+            <div class="ev-buddy-txt">Sneha going</div>
+          </div>
+          <div class="ev-foot"><span class="ev-date">Tonight · 9pm</span><span class="ev-price">₹200</span></div>
+        </div>
+      </div>
+
+      <div class="ev inperson">
+        <div class="ev-img" style="background:#E1F5EE;">🚴</div>
+        <div class="ev-body">
+          <div class="ev-toprow"><div class="ev-cat">Outdoors</div><span class="ev-mode ev-mode-ip">In person</span></div>
+          <div class="ev-title">Midnight Cycling — Nandi Hills Loop</div>
+          <div class="ev-desc">Leave at 1am, watch sunrise from the top. Cycles available on rent.</div>
+          <div class="ev-foot"><span class="ev-date">Tonight · 1am</span><span class="ev-free">Free</span></div>
+        </div>
+      </div>
+
+      <div class="ev inperson">
+        <div class="ev-body">
+          <div class="ev-toprow"><div class="ev-cat">Arts</div><span class="ev-mode ev-mode-ip">In person</span></div>
+          <div class="ev-title">Graffiti Workshop — HSR Layout</div>
+          <div class="ev-desc">Learn spray techniques from a street artist. Wear clothes you don't care about.</div>
+          <div class="ev-needs"><strong>Needs someone to bring chart paper</strong> — ₹150 reimbursed</div>
+          <div class="ev-foot"><span class="ev-date">Sat · 11am</span><span class="ev-discount">Discount available</span></div>
+        </div>
+      </div>
+
+      <div class="ev inperson">
+        <div class="ev-img" style="background:#FAEEDA;">🍢</div>
+        <div class="ev-body">
+          <div class="ev-toprow"><div class="ev-cat">Food &amp; Drinks</div><span class="ev-mode ev-mode-ip">In person</span></div>
+          <div class="ev-title">Street Food Crawl — VV Puram</div>
+          <div class="ev-desc">10 stalls, one guide, unlimited tastings. Meet at Gandhi Bazaar gate.</div>
+          <div class="ev-buddies">
+            <div class="ev-faces">
+              <div class="ev-face" style="background:#D85A30;">R</div>
+              <div class="ev-face" style="background:#D4537E;">P</div>
+              <div class="ev-face" style="background:#534AB7;">K</div>
+            </div>
+            <div class="ev-buddy-txt">3 buddies going</div>
+          </div>
+          <div class="ev-foot"><span class="ev-date">Sun · 6pm</span><span class="ev-price">₹399</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--color-background-primary);border-top:0.5px solid var(--color-border-tertiary);padding:1.5rem;margin-top:0;">
+  <div style="max-width:960px;margin:0 auto;">
+    <div class="br-section-label" style="margin-top:0;">Chip in — earn or get in cheaper</div>
+    <div class="chip-card">
+      <div class="chip-icon" style="background:#FAEEDA;">🎧</div>
+      <div class="chip-body">
+        <div class="chip-title">Rooftop Vinyl Night needs a DJ</div>
+        <div class="chip-sub">Sat · Indiranagar · 8pm · 1 slot open</div>
+        <div class="chip-known"><div class="chip-known-dot"></div> Hosted by Pinky — you've attended before</div>
+        <span class="chip-repeat">You DJ'd here before ✓</span>
+      </div>
+      <div class="chip-right">
+        <div class="chip-reward">Free in</div>
+        <div class="chip-reward-label">if you fill it</div>
+      </div>
+    </div>
+    <div class="chip-card">
+      <div class="chip-icon" style="background:#E1F5EE;">🍳</div>
+      <div class="chip-body">
+        <div class="chip-title">Backyard Potluck needs a caterer</div>
+        <div class="chip-sub">Sun · Jayanagar · 1pm · 1 slot open</div>
+      </div>
+      <div class="chip-right">
+        <div class="chip-reward">₹800</div>
+        <div class="chip-reward-label">upon delivery</div>
+      </div>
+    </div>
+    <div class="chip-card">
+      <div class="chip-icon" style="background:#EEEDFE;">📷</div>
+      <div class="chip-body">
+        <div class="chip-title">Skate Demo needs a photographer</div>
+        <div class="chip-sub">Sat · Cubbon Park · 10am · 2 slots open</div>
+      </div>
+      <div class="chip-right">
+        <div class="chip-reward">40% off</div>
+        <div class="chip-reward-label">ticket discount</div>
+      </div>
+    </div>
+
+    <div class="br-section-label">My Network — what your buddies are doing</div>
+    <div class="net-card">
+      <div class="net-top">
+        <div class="net-avatar" style="background:#D85A30;">R</div>
+        <div><div class="net-name">Rahul Mehta</div><div class="net-context">Tech buddy · met at Anthill Hackathon</div></div>
+      </div>
+      <div class="net-going-to">Going to <strong>Indie Night at Koramangala Social</strong> tonight</div>
+      <button class="net-join-btn">Join Rahul ↗</button>
+    </div>
+    <div class="net-card">
+      <div class="net-top">
+        <div class="net-avatar" style="background:#534AB7;">A</div>
+        <div><div class="net-name">Aditi Sharma</div><div class="net-context">Art buddy · met at Cubbon Reads</div></div>
+      </div>
+      <div class="net-going-to">Interested in <strong>Graffiti Workshop — HSR Layout</strong> · Sat 11am</div>
+      <button class="net-join-btn">Go together ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Main tab switching ──
+  const tabs = document.querySelectorAll('.main-tab');
+  const panels = document.querySelectorAll('.ctx-panel[data-tab]');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const key = tab.dataset.tab;
+      panels.forEach(p => {
+        p.classList.toggle('visible', p.dataset.tab === key);
+      });
+    });
+  });
+
+  // ── Toggle quick filters ──
+  document.querySelectorAll('.qf').forEach(b => {
+    b.addEventListener('click', () => b.classList.toggle('on'));
+  });
+
+  // ── Toggle category pills (single select) ──
+  document.querySelectorAll('.cat').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.cat').forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+    });
+  });
+
+  // ── Toggle ctx buttons (multi) ──
+  document.querySelectorAll('.ctx-btn').forEach(b => {
+    b.addEventListener('click', () => b.classList.toggle('on'));
+  });
+
+  // ── Toggle dropdown filters ──
+  document.querySelectorAll('.fdd').forEach(b => {
+    b.addEventListener('click', () => b.classList.toggle('on'));
+  });
+</script>

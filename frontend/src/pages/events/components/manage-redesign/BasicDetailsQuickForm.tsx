@@ -80,7 +80,7 @@ export const BasicDetailsQuickForm: React.FC<BasicDetailsQuickFormProps> = ({
           style={{ backgroundColor: 'transparent' }}
         />
       )}
-      
+
       <div>
         <div className="flex justify-between items-center mb-1">
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">

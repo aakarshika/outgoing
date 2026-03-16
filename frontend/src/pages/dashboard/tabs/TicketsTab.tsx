@@ -156,7 +156,6 @@ export function TicketsTab() {
                       />
                     </div>
                   </div>
-
                 </div>
               </div>
 
@@ -189,43 +188,43 @@ export function TicketsTab() {
                 </div>
               </div>
 
-                  <div
-                    className="absolute inset-0  flex flex-col items-center justify-end cursor-pointer "
-                    onClick={() => setManagingTicket(ticket)}
+              <div
+                className="absolute inset-0  flex flex-col items-center justify-end cursor-pointer "
+                onClick={() => setManagingTicket(ticket)}
+              >
+                <div className="flex gap-2 mt-4 justify-between">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (eventId) navigate(`/events/${eventId}`);
+                    }}
+                    className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
+                    style={{
+                      fontFamily: '"Permanent Marker", cursive',
+                      boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                    }}
                   >
-                    <div className="flex gap-2 mt-4 justify-between">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (eventId) navigate(`/events/${eventId}`);
-                        }}
-                        className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
-                        style={{
-                          fontFamily: '"Permanent Marker", cursive',
-                          boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-                        }}
-                      >
-                        EVENT PAGE
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setManagingTicket(ticket);
-                        }}
-                        className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1"
-                        style={{
-                          fontFamily: '"Permanent Marker", cursive',
-                          boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-                        }}
-                      >
-                        MANAGE TICKET
-                      </button>
-                    </div>
-                  </div>
+                    EVENT PAGE
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setManagingTicket(ticket);
+                    }}
+                    className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap text-center flex-1"
+                    style={{
+                      fontFamily: '"Permanent Marker", cursive',
+                      boxShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    MANAGE TICKET
+                  </button>
+                </div>
+              </div>
             </div>
           );
         })}

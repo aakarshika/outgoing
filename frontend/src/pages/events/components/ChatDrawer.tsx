@@ -1,6 +1,5 @@
 import {
   Box,
-  Drawer,
   IconButton,
   InputBase,
   Paper,
@@ -8,19 +7,29 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { Send, X, Minimize2, Maximize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Send, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import {
-  useAddHostVendorMessage,
+  buildChatTimeline,
+  buildUserChatActivities,
+  findFriendshipForUserChat,
+} from '@/features/events/chatTimeline';
+import {
   useAddDirectMessage,
+  useAddHostVendorMessage,
   useAddPrivateMessage,
   useDirectMessages,
+  useEventOverviewRows,
   useHostVendorMessages,
+  useMyFriendships,
+  useNetworkActivity,
+  useNetworkPeople,
   usePrivateMessages,
 } from '@/features/events/hooks';
+
 import { BuddyRequestPanel } from './BuddyRequestPanel';
 
 // --- Compact Message Item Component ---
@@ -90,6 +99,27 @@ const MessageItem = ({ message }: { message: any }) => {
   );
 };
 
+const ActivityItem = ({ label }: { label: string }) => {
+  return (
+    <Box sx={{ py: 0.75, display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.7,
+          borderRadius: '999px',
+          bgcolor: 'rgba(0,0,0,0.05)',
+          color: '#666',
+          fontSize: '0.72rem',
+          textAlign: 'center',
+          maxWidth: '85%',
+        }}
+      >
+        {label}
+      </Box>
+    </Box>
+  );
+};
+
 interface ChatDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -111,21 +141,22 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Hooks for Group Chat
   const { data: groupMessagesResponse } = useHostVendorMessages(
-    mode === 'group' && eventId ? eventId : undefined
+    mode === 'group' && eventId ? eventId : 0,
   );
   const addGroupMessage = useAddHostVendorMessage();
 
   // Hooks for Private Chat
   const { data: privateMessagesResponse } = usePrivateMessages(
-    mode === 'private' && conversationId ? conversationId : undefined
+    mode === 'private' && conversationId ? conversationId : undefined,
   );
   const addPrivateMessage = useAddPrivateMessage();
   const { data: directMessagesResponse } = useDirectMessages(
-    mode === 'direct' && targetUsername ? targetUsername : undefined
+    mode === 'direct' && targetUsername ? targetUsername : undefined,
   );
   const addDirectMessage = useAddDirectMessage();
 
@@ -141,6 +172,31 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       : mode === 'direct'
         ? addDirectMessage.isPending
         : addPrivateMessage.isPending;
+  const isUserUserChat = !!targetUsername && (mode === 'direct' || mode === 'private');
+  const { data: friendships } = useMyFriendships(isUserUserChat);
+  const { data: networkPeople } = useNetworkPeople(isUserUserChat);
+  const { data: networkActivity } = useNetworkActivity(isUserUserChat);
+  const { data: eventOverviewRows } = useEventOverviewRows(isUserUserChat);
+  const friendship = isUserUserChat
+    ? findFriendshipForUserChat(
+        friendships?.accepted || [],
+        user?.username,
+        targetUsername,
+      )
+    : null;
+  const timelineItems = buildChatTimeline({
+    messages: messages || [],
+    activities: isUserUserChat
+      ? buildUserChatActivities({
+          currentUserId: user?.id,
+          targetUsername,
+          friendship,
+          networkPeople,
+          networkActivity: networkActivity?.activity || [],
+          eventOverviewRows: eventOverviewRows || [],
+        })
+      : [],
+  });
 
   const [messageText, setMessageText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -162,7 +218,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       targetUsername,
       messageCount: messages?.length ?? 0,
     });
-  }, [conversationId, eventId, isMinimized, isMobile, isOpen, messages?.length, mode, targetUsername]);
+  }, [
+    conversationId,
+    eventId,
+    isMinimized,
+    isMobile,
+    isOpen,
+    messages?.length,
+    mode,
+    targetUsername,
+  ]);
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -176,17 +241,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     if (mode === 'group' && eventId) {
       addGroupMessage.mutate(
         { eventId, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     } else if (mode === 'direct' && targetUsername) {
       addDirectMessage.mutate(
         { targetUsername, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     } else if (mode === 'private' && conversationId) {
       addPrivateMessage.mutate(
         { conversationId, payload: { text: messageText } },
-        { onSuccess: () => setMessageText('') }
+        { onSuccess: () => setMessageText('') },
       );
     }
   };
@@ -219,25 +284,35 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             maxWidth: '180px',
           }}
         >
-          {title}  
+          {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {!isMobile && (
-            <IconButton onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }} size="small">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMinimized(!isMinimized);
+              }}
+              size="small"
+            >
               {isMinimized ? <Maximize2 size={18} /> : <Minimize2 size={18} />}
             </IconButton>
           )}
-          <IconButton onClick={(e) => { e.stopPropagation(); onClose(); }} size="small">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            size="small"
+          >
             <X size={18} />
           </IconButton>
         </Box>
       </Box>
       <Box sx={{ p: 1, fontSize: '0.75rem', color: '#666', textAlign: 'center' }}>
-
-      {isMobile ? '(Mobile)' : '(Web)'}
-          {isMinimized? ' (Minimized)' : '(Maximized)'}
-{isOpen ? '(Open)' : '(Closed)'}
-
+        {isMobile ? '(Mobile)' : '(Web)'}
+        {isMinimized ? ' (Minimized)' : '(Maximized)'}
+        {isOpen ? '(Open)' : '(Closed)'}
       </Box>
       {!isMinimized && (
         <>
@@ -264,16 +339,34 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             }}
             className="no-scrollbar"
           >
-            {messages?.length === 0 ? (
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-                <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.2rem', textAlign: 'center' }}>
+            {timelineItems.length === 0 ? (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.5,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: '"Caveat", cursive',
+                    fontSize: '1.2rem',
+                    textAlign: 'center',
+                  }}
+                >
                   {mode === 'direct' ? 'Say hii' : 'No messages yet...'}
                 </Typography>
               </Box>
             ) : (
-              messages?.map((message: any) => (
-                <MessageItem key={message.id} message={message} />
-              ))
+              timelineItems.map((item, index) =>
+                item.type === 'activity' ? (
+                  <ActivityItem key={`${item.id}-${index}`} label={item.label} />
+                ) : (
+                  <MessageItem key={`${item.id}-${index}`} message={item.message} />
+                ),
+              )
             )}
           </Box>
 
@@ -291,7 +384,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
               }}
             >
               <InputBase
-                sx={{ ml: 1, flex: 1, fontFamily: '"Caveat", cursive', fontSize: '1rem' }}
+                sx={{
+                  ml: 1,
+                  flex: 1,
+                  fontFamily: '"Caveat", cursive',
+                  fontSize: '1rem',
+                }}
                 placeholder="Type..."
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
@@ -326,14 +424,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           flexDirection: 'column',
           zIndex: 100000,
           transition: 'height 0.3s ease',
-        }}
-        PaperProps={{
-          sx: {
-            height: '80vh',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 100000,
-          },
         }}
       >
         {content}

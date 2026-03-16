@@ -1025,7 +1025,9 @@ class FriendshipSerializer(serializers.ModelSerializer):
         source="request_sender.username",
         read_only=True,
     )
-    met_at_event_title = serializers.CharField(source="met_at_event.title", read_only=True)
+    met_at_event_title = serializers.CharField(
+        source="met_at_event.title", read_only=True, allow_null=True
+    )
 
     class Meta:
         model = Friendship

@@ -284,7 +284,7 @@ export function ManageNeedsTab({
                   </h3>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span
-                      className={`px-2 py-0.5 border-2 border-gray-800 text-xs font-bold ${(need.status === 'open' || !need.status || need.status === "pending") ? 'bg-green-200 text-green-900' : 'bg-gray-200 text-gray-900'}`}
+                      className={`px-2 py-0.5 border-2 border-gray-800 text-xs font-bold ${need.status === 'open' || !need.status || need.status === 'pending' ? 'bg-green-200 text-green-900' : 'bg-gray-200 text-gray-900'}`}
                       style={{ fontFamily: '"Permanent Marker", cursive' }}
                     >
                       {need.status.toUpperCase()}
@@ -336,7 +336,9 @@ export function ManageNeedsTab({
                       Applicants
                     </span>
                   </div>
-                  {(need.status === 'open' || !need.status || need.status === "pending") && (
+                  {(need.status === 'open' ||
+                    !need.status ||
+                    need.status === 'pending') && (
                     <Link
                       to={`/vendors?eventId=${eventId}&needId=${need.id}&category=${encodeURIComponent(
                         need.category,
@@ -419,29 +421,32 @@ export function ManageNeedsTab({
                           )}
                         </div>
 
-                        {app.status === 'pending' && (need.status === 'open' || !need.status || need.status === "pending") && (
-                          <div className="flex flex-col gap-2 shrink-0">
-                            <Button
-                              size="sm"
-                              className="bg-green-400 hover:bg-green-500 text-gray-900 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
-                              style={{ fontFamily: '"Permanent Marker", cursive' }}
-                              onClick={() => handleReview(app.id, 'accepted')}
-                              disabled={reviewApplicationMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" /> ACCEPT
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-white hover:bg-red-100 text-red-600 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
-                              style={{ fontFamily: '"Permanent Marker", cursive' }}
-                              onClick={() => handleReview(app.id, 'rejected')}
-                              disabled={reviewApplicationMutation.isPending}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" /> REJECT
-                            </Button>
-                          </div>
-                        )}
+                        {app.status === 'pending' &&
+                          (need.status === 'open' ||
+                            !need.status ||
+                            need.status === 'pending') && (
+                            <div className="flex flex-col gap-2 shrink-0">
+                              <Button
+                                size="sm"
+                                className="bg-green-400 hover:bg-green-500 text-gray-900 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
+                                style={{ fontFamily: '"Permanent Marker", cursive' }}
+                                onClick={() => handleReview(app.id, 'accepted')}
+                                disabled={reviewApplicationMutation.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" /> ACCEPT
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-white hover:bg-red-100 text-red-600 border-2 border-gray-800 shadow-[1px_2px_0px_#333] font-bold hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all"
+                                style={{ fontFamily: '"Permanent Marker", cursive' }}
+                                onClick={() => handleReview(app.id, 'rejected')}
+                                disabled={reviewApplicationMutation.isPending}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" /> REJECT
+                              </Button>
+                            </div>
+                          )}
                       </div>
                     ))}
                   </div>

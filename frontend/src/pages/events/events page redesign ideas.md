@@ -4,7 +4,7 @@ To create a "Teenage Scrapbook" aesthetic using Material UI (MUI), we need to br
 Here is the theme definition and visual strategy for your EventDetailPage.tsx.
 
 1. The Design Concept: "Digital Junk Journal"
-The goal is to make the page feel like a physical notebook. We will use MUI’s Box and Paper components but override them with "handmade" CSS properties.
+   The goal is to make the page feel like a physical notebook. We will use MUI’s Box and Paper components but override them with "handmade" CSS properties.
 
 The "Paper" Base: Instead of flat white backgrounds, we use a subtle grain texture or a "lined paper" SVG pattern.
 
@@ -13,48 +13,46 @@ The "Tape" & "Stickers": Use MUI Chips and Badges with skewed transforms (rotate
 The "Ink": Use a combination of a clean Sans-Serif (for readability) and a playful, handwritten-style font for headers.
 
 2. The Color Palette (Lifecycle-Based)
-The theme will shift its "accent" color based on the eventStatus.
+   The theme will shift its "accent" color based on the eventStatus.
 
-Status	Aesthetic Vibe	Primary Color (MUI Palette)
-Draft	Pencil Sketch / Blueprint	Grey[500]
-Ticketing	Bright "Coming Soon" Flyer	Primary.Main (Electric Blue)
-Live	Neon / High Energy	Success.Main (Vibrant Green)
-Completed	Nostalgic / Golden Hour	Warning.Light (Soft Amber)
-Cancelled	Crossed out / Red Ink	Error.Main (Crimson)
-3. MUI Theme Configuration
+Status Aesthetic Vibe Primary Color (MUI Palette)
+Draft Pencil Sketch / Blueprint Grey[500]
+Ticketing Bright "Coming Soon" Flyer Primary.Main (Electric Blue)
+Live Neon / High Energy Success.Main (Vibrant Green)
+Completed Nostalgic / Golden Hour Warning.Light (Soft Amber)
+Cancelled Crossed out / Red Ink Error.Main (Crimson) 3. MUI Theme Configuration
 You can drop this into your ThemeProvider. It overrides the default Paper to give it that "torn edge" or "taped-on" look.
 
 TypeScript
 import { createTheme } from '@mui/material/styles';
 
 export const scrapbookTheme = createTheme({
-  typography: {
-    fontFamily: '"Inter", "serif", cursive',
-    h1: { fontFamily: '"serif", cursive', transform: 'rotate(-1deg)' },
-    h2: { fontFamily: '"serif", cursive' },
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          boxShadow: '2px 4px 10px rgba(0,0,0,0.1)',
-          borderRadius: '2px', // Sharper corners like cut paper
-          border: '1px solid rgba(0,0,0,0.05)',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: '4px',
-          fontWeight: 'bold',
-          textTransform: 'uppercase',
-        },
-      },
-    },
-  },
-});
-4. Visual Layout Strategy
+typography: {
+fontFamily: '"Inter", "serif", cursive',
+h1: { fontFamily: '"serif", cursive', transform: 'rotate(-1deg)' },
+h2: { fontFamily: '"serif", cursive' },
+},
+components: {
+MuiPaper: {
+styleOverrides: {
+root: {
+boxShadow: '2px 4px 10px rgba(0,0,0,0.1)',
+borderRadius: '2px', // Sharper corners like cut paper
+border: '1px solid rgba(0,0,0,0.05)',
+},
+},
+},
+MuiChip: {
+styleOverrides: {
+root: {
+borderRadius: '4px',
+fontWeight: 'bold',
+textTransform: 'uppercase',
+},
+},
+},
+},
+}); 4. Visual Layout Strategy
 The "Stacked" Media Gallery
 Instead of a standard flat carousel, we will style the Media Gallery to look like a pile of Polaroid photos.
 
@@ -75,14 +73,14 @@ UI Detail: Each item in the grid has a random rotation between −3deg and 3deg.
 Review Feed: Comments look like "Sticky Notes" (Post-its) with different pastel colors (yellow, pink, blue).
 
 5. Component Logic Structure
-Your EventDetailPage.tsx will serve as the "Scrapbook Binder" that renders different "Pages" based on status.
+   Your EventDetailPage.tsx will serve as the "Scrapbook Binder" that renders different "Pages" based on status.
 
 TypeScript
 const EventDetailPage = ({ status, isHost }) => {
-  return (
-    <ThemeProvider theme={scrapbookTheme}>
-      <Box sx={{ p: 3, background: '#f4f1ea' /* Newsprint/Paper color */ }}>
-        
+return (
+<ThemeProvider theme={scrapbookTheme}>
+<Box sx={{ p: 3, background: '#f4f1ea' /* Newsprint/Paper color */ }}>
+
         {/* 1. Navigation: Taped to the top left */}
         <TopBar isHost={isHost} />
 
@@ -103,7 +101,8 @@ const EventDetailPage = ({ status, isHost }) => {
         <FloatingActionButtons />
       </Box>
     </ThemeProvider>
-  );
+
+);
 };
 Would you like me to start by designing the "Ticket Purchase" section to look like vintage perforated ticket stubs, or should we focus on the "Highlights Grid" Polaroid look first?
 
@@ -114,7 +113,7 @@ Gemini said
 Let’s blend that rugged, DIY scrapbook aesthetic with the clean functionality of Material UI. We’ll use MUI Paper as our base and apply custom CSS "surgical strikes" to get that tactile, handmade feel.
 
 1. The "Ticket Stubs" (Ticketing Status)
-Instead of a standard list, we’ll design these to look like vintage, perforated ticket stubs that have been "taped" onto the page.
+   Instead of a standard list, we’ll design these to look like vintage, perforated ticket stubs that have been "taped" onto the page.
 
 Visual Mechanics:
 The "Stub" Shape: Use a Paper component with a ::before or ::after pseudo-element to create the semi-circle "punched" notches on the sides.
@@ -125,26 +124,28 @@ The Tape: A semi-transparent Box at the top to simulate frosted Scotch tape.
 
 TypeScript
 const TicketStub = ({ type, price }) => (
-  <Paper 
-    elevation={3} 
-    sx={{ 
+<Paper
+elevation={3}
+sx={{
       p: 0, mb: 2, display: 'flex', position: 'relative', overflow: 'visible',
       background: '#fff9e6', // Aged paper color
       border: '1px solid #e0d8c0',
       transform: 'rotate(-1.5deg)', // Hand-placed look
     }}
-  >
+
+>
+
     {/* The "Tape" Effect */}
-    <Box sx={{ 
-      position: 'absolute', top: -10, left: '40%', width: 60, height: 25, 
-      bgcolor: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(2px)', 
-      border: '1px solid rgba(0,0,0,0.05)', transform: 'rotate(2deg)' 
+    <Box sx={{
+      position: 'absolute', top: -10, left: '40%', width: 60, height: 25,
+      bgcolor: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(2px)',
+      border: '1px solid rgba(0,0,0,0.05)', transform: 'rotate(2deg)'
     }} />
 
     {/* Price Section (The "Stub") */}
-    <Box sx={{ 
-      p: 2, borderRight: '2px dashed #ccc', display: 'flex', 
-      flexDirection: 'column', justifyContent: 'center', alignItems: 'center' 
+    <Box sx={{
+      p: 2, borderRight: '2px dashed #ccc', display: 'flex',
+      flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
     }}>
       <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>ADMIT ONE</Typography>
       <Typography variant="h5" sx={{ fontFamily: '"serif"', color: 'primary.main' }}>${price}</Typography>
@@ -156,6 +157,7 @@ const TicketStub = ({ type, price }) => (
       <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>No Refunds • Rain or Shine</Typography>
       <Button variant="contained" size="small" sx={{ mt: 1, borderRadius: 0 }}>Buy Now</Button>
     </Box>
+
   </Paper>
 );
 2. The "Polaroid Highlights" (Live & Completed Status)
@@ -164,49 +166,47 @@ For the community-shared media, we’ll ditch the rigid grid and create a scatte
 Visual Mechanics:
 Polaroid Frame: High-contrast white borders with a wide bottom margin for the "caption."
 
-Scattered Layout: We’ll use a simple helper function to give each image a random rotation between −4 
+Scattered Layout: We’ll use a simple helper function to give each image a random rotation between −4
 ∘
-  and +4 
+and +4
 ∘
- .
+.
 
 Community Captions: Handwritten fonts for the text snippets.
 
 TypeScript
 const PolaroidHighlight = ({ image, caption, user }) => {
-  // Random rotation for that "thrown on the table" look
-  const rotation = React.useMemo(() => (Math.random() * 8 - 4).toFixed(1), []);
+// Random rotation for that "thrown on the table" look
+const rotation = React.useMemo(() => (Math.random() \* 8 - 4).toFixed(1), []);
 
-  return (
-    <Box sx={{ 
-      p: 1.5, pb: 4, bgcolor: 'white', boxShadow: 3, 
+return (
+<Box sx={{
+      p: 1.5, pb: 4, bgcolor: 'white', boxShadow: 3,
       transform: `rotate(${rotation}deg)`,
       transition: 'transform 0.3s ease',
       '&:hover': { transform: 'scale(1.05) rotate(0deg)', zIndex: 10, cursor: 'pointer' },
       maxWidth: 280, border: '1px solid #efefef'
     }}>
-      <Box 
-        component="img" 
-        src={image} 
-        sx={{ width: '100%', height: 200, objectFit: 'cover', mb: 1 }} 
-      />
-      <Typography 
-        sx={{ 
-          fontFamily: '"serif", cursive', 
-          fontSize: '1.1rem', 
+<Box
+component="img"
+src={image}
+sx={{ width: '100%', height: 200, objectFit: 'cover', mb: 1 }}
+/>
+<Typography
+sx={{
+          fontFamily: '"serif", cursive',
+          fontSize: '1.1rem',
           color: '#333',
           textAlign: 'center'
-        }}
-      >
-        "{caption}"
-      </Typography>
-      <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 1, color: 'grey.500' }}>
-        — @{user}
-      </Typography>
-    </Box>
-  );
-};
-3. The "Highlight Composer" (Floating Interaction)
+        }} >
+"{caption}"
+</Typography>
+<Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 1, color: 'grey.500' }}>
+— @{user}
+</Typography>
+</Box>
+);
+}; 3. The "Highlight Composer" (Floating Interaction)
 To stick with the theme, the "Add Highlight" button shouldn't be a standard FAB. It should look like a sticker or a patch sewn onto the corner of the screen.
 
 Design: A circular button with a "jagged" edge (using a clip-path: polygon(...)) and a Secondary color that pops against the paper background.
@@ -227,7 +227,7 @@ That is a brilliant way to distinguish between "Professional Needs" (the Vendors
 Here is how we can implement these two distinct styles using Material UI components with custom CSS overrides.
 
 1. The "Classified Ads" (Vendor Needs Section)
-We’ll style this section to look like a snippet of a newspaper. It uses a multi-column layout with high-contrast, serif typography and a "newsprint" texture.
+   We’ll style this section to look like a snippet of a newspaper. It uses a multi-column layout with high-contrast, serif typography and a "newsprint" texture.
 
 Visual Mechanics:
 Typography: We use a heavy Serif font for the "Help Wanted" header and a condensed font for the details.
@@ -238,9 +238,9 @@ The Interaction: The "Apply" button looks like a hand-drawn circle or a bold sta
 
 TypeScript
 const VendorNeedAd = ({ service, description }) => (
-  <Paper
-    elevation={0}
-    sx={{
+<Paper
+elevation={0}
+sx={{
       p: 2,
       mb: 2,
       backgroundColor: '#fdfdfd',
@@ -249,24 +249,26 @@ const VendorNeedAd = ({ service, description }) => (
       outline: '3px solid #fdfdfd', // Creates a "double line" border effect
       maxWidth: 300,
     }}
-  >
-    <Typography variant="h6" sx={{ 
-      fontFamily: '"Playfair Display", serif', 
-      fontWeight: 900, 
+
+>
+
+    <Typography variant="h6" sx={{
+      fontFamily: '"Playfair Display", serif',
+      fontWeight: 900,
       textTransform: 'uppercase',
       borderBottom: '2px solid #333',
-      mb: 1 
+      mb: 1
     }}>
       Help Wanted: {service}
     </Typography>
     <Typography variant="body2" sx={{ fontFamily: '"Georgia", serif', fontStyle: 'italic', mb: 2 }}>
       {description}
     </Typography>
-    <Button 
-      variant="outlined" 
-      sx={{ 
-        borderRadius: 0, 
-        borderColor: '#333', 
+    <Button
+      variant="outlined"
+      sx={{
+        borderRadius: 0,
+        borderColor: '#333',
         color: '#333',
         fontWeight: 'bold',
         '&:hover': { bgcolor: '#333', color: '#fff' }
@@ -274,6 +276,7 @@ const VendorNeedAd = ({ service, description }) => (
     >
       SEND INQUIRY →
     </Button>
+
   </Paper>
 );
 2. The "Sticky Note" Feed (Review & Feedback Section)
@@ -288,10 +291,10 @@ Handwriting: The comment text uses your handwritten font ("serif" or "Caveat").
 
 TypeScript
 const ReviewPostIt = ({ username, rating, comment, color = '#fff740' }) => {
-  const rotation = React.useMemo(() => (Math.random() * 6 - 3).toFixed(1), []);
+const rotation = React.useMemo(() => (Math.random() \* 6 - 3).toFixed(1), []);
 
-  return (
-    <Box sx={{
+return (
+<Box sx={{
       width: 240,
       minHeight: 240,
       p: 3,
@@ -303,31 +306,31 @@ const ReviewPostIt = ({ username, rating, comment, color = '#fff740' }) => {
       position: 'relative',
       '&:hover': { zIndex: 5, transform: 'scale(1.05)' }
     }}>
-      {/* The "Pin" or "Tape" at the top */}
-      <Box sx={{ 
-        position: 'absolute', top: -5, left: '50%', width: 40, height: 15, 
-        bgcolor: 'rgba(0,0,0,0.1)', borderRadius: '2px' 
+{/_ The "Pin" or "Tape" at the top _/}
+<Box sx={{
+        position: 'absolute', top: -5, left: '50%', width: 40, height: 15,
+        bgcolor: 'rgba(0,0,0,0.1)', borderRadius: '2px'
       }} />
-      
+
       <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>@{username}</Typography>
-      
+
       {/* Star Rating as handwritten Xs or Stars */}
       <Typography sx={{ my: 1, color: '#d4af37' }}>
         {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
       </Typography>
 
-      <Typography sx={{ 
-        fontFamily: '"Caveat", cursive', 
-        fontSize: '1.4rem', 
+      <Typography sx={{
+        fontFamily: '"Caveat", cursive',
+        fontSize: '1.4rem',
         lineHeight: 1.1,
-        color: '#222' 
+        color: '#222'
       }}>
         {comment}
       </Typography>
     </Box>
-  );
-};
-3. The Composition Strategy
+
+);
+}; 3. The Composition Strategy
 To make this look "stunning" and not just messy, use the MUI Grid with varying offsets:
 
 Top Section: Clean header with the "Washi Tape" badges.
@@ -342,7 +345,7 @@ A Final "Scrapbook" Detail: The Background
 Instead of a flat grey background, use a CSS pattern to simulate a corkboard or grid paper:
 
 CSS
-/* Add this to your main container SX */
+/_ Add this to your main container SX _/
 sx={{
   backgroundColor: '#e5e5f7',
   opacity: 0.8,

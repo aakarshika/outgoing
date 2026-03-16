@@ -122,7 +122,7 @@ export function MyServicesTab() {
                         onClick={() => navigate(`/services/${service.id}`)}
                       />
 
-                    <ComicButton 
+                      <ComicButton
                         type="button"
                         onClick={() => navigate(`/services/${service.id}/edit`)}
                         color="#1e3a5f"
@@ -130,8 +130,7 @@ export function MyServicesTab() {
                         label="Edit Service"
                         className="absolute -top-3 -right-3 transform rotate-5"
                         Icon={Edit2}
-                      >
-                      </ComicButton>
+                      ></ComicButton>
                     </div>
                   </Box>
                 </div>

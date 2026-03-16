@@ -11,10 +11,7 @@ import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { useAuth } from '@/features/auth/hooks';
-import {
-  CategoricalBackground,
-  getCategoryTheme,
-} from '@/features/events/CategoricalBackground';
+import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
   useDeleteEventReview,
   useEvent,
@@ -22,26 +19,21 @@ import {
   useEventStory,
   usePurchaseTicket,
   useRecordEventView,
-  useToggleInterest,
 } from '@/features/events/hooks';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import { useBackground } from '@/theme/BackgroundProvider';
 
+import { GenericFeedSection } from '../home/sections/FeedSections';
 import { AttendingList } from './components/AttendingList';
-import { InkNotebookChat } from './components/InkNotebookChat';
-import { DetailsSection } from './components/DetailsSection';
 import { HeroSection } from './components/HeroSection';
+import { InkNotebookChat } from './components/InkNotebookChat';
 import { MemoryBoxSection } from './components/MemoryBoxSection';
 import { ReviewsSection } from './components/ReviewsSection';
 import { getDaysAgo } from './components/scrapbookHelpers';
 import { ServicesSection } from './components/ServicesSection';
-import { StatusBannerSection } from './components/StatusBannerSection';
 import { TicketsSection } from './components/TicketsSection';
-import { WhenWhereCard } from './components/WhenWhereCard';
-import { GenericFeedSection } from '../home/sections/FeedSections';
-
 
 // --- Main Page Component ---
 
@@ -55,7 +47,6 @@ export default function EventDetailPageNew() {
   const { data: needsResponse } = useEventNeeds(Number(id));
   const { data: myServicesResponse } = useMyServices({ enabled: !!isAuthenticated });
   const purchaseTicket = usePurchaseTicket();
-  const toggleInterest = useToggleInterest();
   const { data: storyResponse } = useEventStory(Number(id));
   const recordView = useRecordEventView(Number(id));
   const { data: occurrencesResponse } = useEventSeriesOccurrences(
@@ -90,8 +81,8 @@ export default function EventDetailPageNew() {
 
   const deleteReview = useDeleteEventReview();
 
-  const event = eventResponse?.data;
-  const story = storyResponse?.data;
+  const event: any = eventResponse?.data;
+  const story: any = storyResponse?.data;
   const needs = needsResponse?.data || [];
   const occurrences = useMemo(() => {
     return (occurrencesResponse?.data || []).sort(
@@ -290,89 +281,80 @@ export default function EventDetailPageNew() {
     }
   };
 
+  const isEventOver = !['published', 'draft', 'postponed', 'event_ready'].includes(
+    event.lifecycle_state,
+  );
+
   return (
     <ThemeProvider theme={scrapbookTheme}>
-
+      <Box
+        sx={{
+          minHeight: '100vh',
+          color: 'inherit',
+          transition: 'all 0.5s ease',
+        }}
+      >
         <Box
           sx={{
-            minHeight: '100vh',
-            p: { xs: 2, sm: 4, md: 8 },
-            color: 'inherit',
-            transition: 'all 0.5s ease',
+            maxWidth: '1000px',
+            mx: 'auto',
+            position: 'relative',
+            '&::before, &::after': {
+              content: '""',
+              position: 'absolute',
+              zIndex: 0,
+              bottom: '25px',
+              width: '40%',
+              height: '20px',
+              boxShadow: '0 25px 20px rgba(0,0,0,0.4)',
+              transition: 'all 0.3s ease',
+            },
+            '&::before': { left: '12px', transform: 'rotate(-4deg)' },
+            '&::after': { right: '12px', transform: 'rotate(4deg)' },
           }}
         >
-          <Box
+          <CategoricalBackground
+            category={event?.category}
             sx={{
-              maxWidth: '1000px',
-              mx: 'auto',
+              width: '100%',
+              height: '100%',
               position: 'relative',
-              '&::before, &::after': {
-                content: '""',
-                position: 'absolute',
-                zIndex: 0,
-                bottom: '25px',
-                width: '40%',
-                height: '20px',
-                boxShadow: '0 25px 20px rgba(0,0,0,0.4)',
-                transition: 'all 0.3s ease',
-              },
-              '&::before': { left: '12px', transform: 'rotate(-4deg)' },
-              '&::after': { right: '12px', transform: 'rotate(4deg)' },
+              zIndex: 1,
+              p: { xs: 2, sm: 4, md: 6 },
+              boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+              borderRadius: '4px',
+              overflow: 'visible',
             }}
           >
-            <CategoricalBackground
-              category={event?.category}
-              sx={{
-                width: '100%',
-                height: '100%',
-                position: 'relative',
-                zIndex: 1,
-                p: { xs: 2, sm: 4, md: 6 },
-                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                borderRadius: '4px',
-                overflow: 'visible',
-              }}
-            >
-              {/* Section 1: Status Banner & Top Bar */}
-              <StatusBannerSection
-                event={event}
-                isHost={isHost}
-                isAuthenticated={isAuthenticated}
-                navigate={navigate}
-                toggleInterest={toggleInterest}
-                occurrences={occurrences}
-              />
+            {/* Section 1: Hero — Image + Important Details */}
+            <HeroSection
+              event={event}
+              isHost={isHost}
+              highlights={highlights}
+              occurrences={occurrences}
+              displayNeedsCount={displayNeeds.length}
+              displayNeeds={displayNeeds}
+            />
 
-              {/* Section 2: Hero — Image + Important Details */}
-              <HeroSection
-                event={event}
-                isAuthenticated={isAuthenticated}
-                navigate={navigate}
-                toggleInterest={toggleInterest}
-                highlights={highlights}
-                occurrences={occurrences}
-                displayNeedsCount={displayNeeds.length}
-                displayNeeds={displayNeeds}
-              />
-
-              {/* Section 3: Content — Details + Tickets/Attendance */}
-              <Grid container spacing={6}>
-                {/* Right Column: Tickets, Attendance, Services */}
-                <Grid
-                  size={{ xs: 12, md: 6 }}
-                  sx={{ display: 'flex', flexDirection: 'column' }}
-                >
-                  <Box id="tickets">
-                    <TicketsSection
-                      event={event}
-                      purchaseTicket={purchaseTicket}
-                      handleBuyTicket={handleBuyTicket}
-                      handleOneClickBuy={handleOneClickBuy}
-                      clearTicketformTrigger={clearTicketformTrigger}
-                    />
-                  </Box>
-                </Grid>
+            {/* Section 2: Content — Details + Tickets/Attendance */}
+            <Grid container spacing={6}>
+              {/* Right Column: Tickets, Attendance, Services */}
+              <Grid
+                size={{ xs: 12, md: 6 }}
+                sx={{ display: 'flex', flexDirection: 'column' }}
+              >
+                <Box id="tickets">
+                  <TicketsSection
+                    event={event}
+                    purchaseTicket={purchaseTicket}
+                    handleBuyTicket={handleBuyTicket}
+                    handleOneClickBuy={handleOneClickBuy}
+                    clearTicketformTrigger={clearTicketformTrigger}
+                  />
+                </Box>
               </Grid>
+            </Grid>
+            {
               <Box id="services">
                 <ServicesSection
                   event={event}
@@ -384,20 +366,25 @@ export default function EventDetailPageNew() {
                   highlights={highlights}
                 />
               </Box>
-              {/* Section 4: Attending List */}
-              <Box id="attending">
-                <AttendingList attendees={event?.attendees || []} />
-              </Box>
-
-              <InkNotebookChat
-                eventId={event.id}
-                eventHostUsername={event.host.username}
-                participatingVendors={event.participating_vendors}
-                canAccessChat={canAccessEventChat}
+            }
+            {/* Section 4: Attending List */}
+            <Box id="attending">
+              <AttendingList
+                isEventOver={isEventOver}
+                attendees={event?.attendees || []}
               />
+            </Box>
 
-              {/* Section 5: Memory Box */}
-              <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
+            <InkNotebookChat
+              eventId={event.id}
+              eventHostUsername={event.host.username}
+              participatingVendors={event.participating_vendors}
+              canAccessChat={canAccessEventChat}
+            />
+
+            {/* Section 5: Memory Box */}
+            <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
+              {canAccessEventChat && (
                 <Box id="highlights">
                   <MemoryBoxSection
                     event={event}
@@ -405,121 +392,122 @@ export default function EventDetailPageNew() {
                     setIsHighlightOpen={setIsHighlightOpen}
                   />
                 </Box>
+              )}
 
-                {/* Section 6: Reviews */}
-                <Box id="reviews">
-                  <ReviewsSection
-                    isHost={isHost}
-                    reviews={reviews}
-                    currentUser={user}
-                    userHasPurchased={event?.user_has_ticket || false}
-                    setIsReviewOpen={(open) => {
-                      setEditReviewData(null);
-                      setIsReviewOpen(open);
-                    }}
-                    onEditReview={(review) => {
-                      setEditReviewData(review);
-                      setIsReviewOpen(true);
-                    }}
-                    onDeleteReview={(reviewId) => {
-                      deleteReview.mutate(reviewId, {
-                        onSuccess: () => toast.success('Review deleted successfully.'),
-                        onError: () => toast.error('Failed to delete review.'),
-                      });
-                    }}
-                  />
-                </Box>
+              {/* Section 6: Reviews */}
+              <Box id="reviews">
+                <ReviewsSection
+                  isHost={isHost}
+                  reviews={reviews}
+                  currentUser={user}
+                  userHasPurchased={event?.user_has_ticket || false}
+                  setIsReviewOpen={(open) => {
+                    setEditReviewData(null);
+                    setIsReviewOpen(open);
+                  }}
+                  onEditReview={(review) => {
+                    setEditReviewData(review);
+                    setIsReviewOpen(true);
+                  }}
+                  onDeleteReview={(reviewId) => {
+                    deleteReview.mutate(reviewId, {
+                      onSuccess: () => toast.success('Review deleted successfully.'),
+                      onError: () => toast.error('Failed to delete review.'),
+                    });
+                  }}
+                />
               </Box>
-            </CategoricalBackground>
-          </Box>
+            </Box>
+          </CategoricalBackground>
+        </Box>
 
-          <Box
-            sx={{
-              maxWidth: '1000px',
-              mx: 'auto',
-              mt: { xs: 4, sm: 5, md: 6 },
-            }}
-          >
-            <GenericFeedSection
-              title="Check out these Events too! "
-              params={{ sort: 'trending' }}
-              viewAllPath="/browse?sort=trending&title=Trending Events"
-              forceShowHeader={true}
-            />
-          </Box>
-
-          {/* Modals from original logic */}
-          {selectedNeed && (
-            <ApplyToNeedModal
-              isOpen={isApplyModalOpen}
-              onClose={() => {
-                setIsApplyModalOpen(false);
-                setTimeout(() => setSelectedNeed(null), 200);
-              }}
-              needId={selectedNeed.id}
-              needTitle={selectedNeed.title}
-            />
-          )}
-          <HighlightComposer
-            eventId={Number(id)}
-            isOpen={isHighlightOpen}
-            onOpenChange={setIsHighlightOpen}
-          />
-          {event && (
-            <ReviewComposer
-              eventId={Number(id)}
-              eventName={event.title}
-              participatingVendors={event.participating_vendors}
-              isOpen={isReviewOpen}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setTimeout(() => setEditReviewData(null), 200);
-                }
-                setIsReviewOpen(open);
-              }}
-              initialData={editReviewData}
-            />
-          )}
-          <TicketingServiceModal
-            isOpen={isTicketingModalOpen}
-            onClose={() => {
-              setIsTicketingModalOpen(false);
-              setSelectedQuantity(null);
-            }}
-            event={event}
-            user={user}
-            selectedQuantity={selectedQuantity}
-            selectedTierId={selectedTierId}
-            onSuccess={handleTicketingSuccess}
-          />
-
-          <TicketConfirmationModal
-            isOpen={!!confirmedTicket}
-            onClose={() => {
-              setConfirmedTicket(null);
-              setSelectedQuantity(null);
-            }}
-            eventTitle={event?.title || ''}
-            ticketType={confirmedTicket?.type || ''}
-            price={confirmedTicket?.price || '0'}
-            needsAadharVerification={confirmedTicket?.needsAadharVerification}
-          />
-          <QuickBuyPopup
-            isOpen={!!quickBuyData}
-            onClose={() => {
-              setQuickBuyData(null);
-              setOneClickStatus('idle');
-              setSelectedQuantity(null);
-            }}
-            event={event}
-            tierId={quickBuyData?.tierId ?? null}
-            quantity={quickBuyData?.quantity || 1}
-            user={user}
-            status={oneClickStatus}
-            onConfirm={handleQuickBuyConfirm}
+        <Box
+          sx={{
+            maxWidth: '1000px',
+            mx: 'auto',
+            pt: 16,
+            mt: { xs: 4, sm: 5, md: 6 },
+          }}
+        >
+          <GenericFeedSection
+            title="These might be of your interest too..."
+            params={{ sort: 'trending' }}
+            viewAllPath="/browse?sort=trending&title=Trending Events"
+            forceShowHeader={true}
           />
         </Box>
 
+        {/* Modals from original logic */}
+        {selectedNeed && (
+          <ApplyToNeedModal
+            isOpen={isApplyModalOpen}
+            onClose={() => {
+              setIsApplyModalOpen(false);
+              setTimeout(() => setSelectedNeed(null), 200);
+            }}
+            needId={selectedNeed.id}
+            needTitle={selectedNeed.title}
+          />
+        )}
+        <HighlightComposer
+          eventId={Number(id)}
+          isOpen={isHighlightOpen}
+          onOpenChange={setIsHighlightOpen}
+        />
+        {event && (
+          <ReviewComposer
+            eventId={Number(id)}
+            eventName={event.title}
+            participatingVendors={event.participating_vendors}
+            isOpen={isReviewOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setTimeout(() => setEditReviewData(null), 200);
+              }
+              setIsReviewOpen(open);
+            }}
+            initialData={editReviewData}
+          />
+        )}
+        <TicketingServiceModal
+          isOpen={isTicketingModalOpen}
+          onClose={() => {
+            setIsTicketingModalOpen(false);
+            setSelectedQuantity(null);
+          }}
+          event={event}
+          user={user}
+          selectedQuantity={selectedQuantity}
+          selectedTierId={selectedTierId}
+          onSuccess={handleTicketingSuccess}
+        />
+
+        <TicketConfirmationModal
+          isOpen={!!confirmedTicket}
+          onClose={() => {
+            setConfirmedTicket(null);
+            setSelectedQuantity(null);
+          }}
+          eventTitle={event?.title || ''}
+          ticketType={confirmedTicket?.type || ''}
+          price={confirmedTicket?.price || '0'}
+          needsAadharVerification={confirmedTicket?.needsAadharVerification}
+        />
+        <QuickBuyPopup
+          isOpen={!!quickBuyData}
+          onClose={() => {
+            setQuickBuyData(null);
+            setOneClickStatus('idle');
+            setSelectedQuantity(null);
+          }}
+          event={event}
+          tierId={quickBuyData?.tierId ?? null}
+          quantity={quickBuyData?.quantity || 1}
+          user={user}
+          status={oneClickStatus}
+          onConfirm={handleQuickBuyConfirm}
+        />
+      </Box>
     </ThemeProvider>
   );
 }

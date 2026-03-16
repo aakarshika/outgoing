@@ -139,24 +139,9 @@ export const TinyHostCard = ({
                   <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>
                     {need.category}
                   </span>{' '}
-                  by
-                  <span
-                    style={{
-                      fontWeight: 'bolder',
-                      fontFamily: '"Permanent Marker"',
-                      fontSize: '1.2rem',
-                      color: '#333',
-                      marginLeft: '0.5rem',
-                    }}
-                  >
-                    @{need.assigned_vendor_name || 'Vendor_name'}
-                    {/* //replace with hostname later */}
-                  </span>
                 </>
               }
               sx={{
-                bgcolor: '#d1fae5',
-                border: `0px solid #10b981`,
                 color: '#065f46',
                 fontWeight: 600,
                 fontSize: '0.8rem',
@@ -171,18 +156,20 @@ export const TinyHostCard = ({
               }}
             />
           ))}
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              color: 'text.secondary',
-              mb: 2,
-            }}
-          >
-            and
-          </Typography>
+          {displayNeeds?.length && allChips?.length && (
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: '"Caveat", cursive',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                color: 'text.secondary',
+                mb: 2,
+              }}
+            >
+              and
+            </Typography>
+          )}
           {allChips?.map((feature: any, idx: number) => (
             <Chip
               key={feature.name}

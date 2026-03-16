@@ -243,7 +243,9 @@ export function QuickCreateEventModal({
           queryClient.invalidateQueries({ queryKey: ['myEvents'] });
           handleClose();
           const mode = advancedOptions ? 'advanced' : 'quick';
-          navigate(`/events/${result.data.id}/host-event-management/basic-details?mode=${mode}`);
+          navigate(
+            `/events/${result.data.id}/host-event-management/basic-details?mode=${mode}`,
+          );
         }
         return result.data;
       }
@@ -356,103 +358,139 @@ export function QuickCreateEventModal({
       case 0:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Tell us about your event</div>
-             <BasicDetailsQuickForm
-                {...{
-                  ...bprops,
-                  coverPreview: null,
-                  handleCoverChange: () => {},
-                  description: '', // Not needed in step 0
-                  setDescription: () => {},
-                  stepMode: "names"
-                }}
-             />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Tell us about your event
+            </div>
+            <BasicDetailsQuickForm
+              {...{
+                ...bprops,
+                coverPreview: null,
+                handleCoverChange: () => {},
+                description: '', // Not needed in step 0
+                setDescription: () => {},
+                stepMode: 'names',
+              }}
+            />
           </div>
         );
       case 1:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Add a photo & description</div>
-             <BasicDetailsQuickForm
-                {...{
-                  ...bprops,
-                  stepMode: "photo-desc"
-                }}
-             />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Add a photo & description
+            </div>
+            <BasicDetailsQuickForm
+              {...{
+                ...bprops,
+                stepMode: 'photo-desc',
+              }}
+            />
           </div>
         );
       case 2:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Is it online?</div>
-             <WhenAndWhereQuickForm
-                {...{
-                  ...wprops,
-                  stepMode: "online-toggle"
-                }}
-             />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Is it online?
+            </div>
+            <WhenAndWhereQuickForm
+              {...{
+                ...wprops,
+                stepMode: 'online-toggle',
+              }}
+            />
           </div>
         );
       case 3:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Add some features</div>
-             <EventFeaturesQuickForm {...eprops} />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Add some features
+            </div>
+            <EventFeaturesQuickForm {...eprops} />
           </div>
         );
       case 4:
         return (
           <div className="flex flex-col items-center justify-center space-y-6 py-12 animate-in zoom-in duration-500">
-             <div className="text-6xl">✨</div>
-             <div className="text-3xl font-bold text-center" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                You are ready to plan your event!
-             </div>
-             <div className="text-gray-600 text-center max-w-sm">
-                We've saved your draft. Now let's finalize the details.
-             </div>
+            <div className="text-6xl">✨</div>
+            <div
+              className="text-3xl font-bold text-center"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              You are ready to plan your event!
+            </div>
+            <div className="text-gray-600 text-center max-w-sm">
+              We've saved your draft. Now let's finalize the details.
+            </div>
           </div>
         );
       case 5:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Location & Time</div>
-             <WhenAndWhereQuickForm
-                {...{
-                  ...wprops,
-                  stepMode: "full"
-                }}
-             />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Location & Time
+            </div>
+            <WhenAndWhereQuickForm
+              {...{
+                ...wprops,
+                stepMode: 'full',
+              }}
+            />
           </div>
         );
       case 6:
         return (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-300">
-             <div className="text-2xl font-bold mb-4" style={{ fontFamily: '"Permanent Marker", cursive' }}>Capacity & Tickets</div>
-             <TicketsAndCapacityQuickForm {...tprops} />
+            <div
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Capacity & Tickets
+            </div>
+            <TicketsAndCapacityQuickForm {...tprops} />
           </div>
         );
       case 7:
         return (
           <div className="space-y-8 py-8 animate-in slide-in-from-bottom duration-300">
-             <div className="text-3xl font-bold text-center mb-8" style={{ fontFamily: '"Permanent Marker", cursive' }}>
-                Ready to go?
-             </div>
-             <div className="grid grid-cols-1 gap-4">
-                <Button
-                  onClick={() => submitEvent('published')}
-                  className="h-20 text-xl bg-[#AF90F9] hover:bg-[#9A72F8] text-black border-2 border-gray-800 shadow-[4px_4px_0px_#333]"
-                  style={{ fontFamily: '"Permanent Marker", cursive' }}
-                >
-                  Publish Now
-                </Button>
-                <Button
-                  onClick={() => submitEvent('draft')}
-                  className="h-20 text-xl bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-800 shadow-[4px_4px_0px_#333]"
-                  style={{ fontFamily: '"Permanent Marker", cursive' }}
-                >
-                  Finish Preparing
-                </Button>
-             </div>
+            <div
+              className="text-3xl font-bold text-center mb-8"
+              style={{ fontFamily: '"Permanent Marker", cursive' }}
+            >
+              Ready to go?
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <Button
+                onClick={() => submitEvent('published')}
+                className="h-20 text-xl bg-[#AF90F9] hover:bg-[#9A72F8] text-black border-2 border-gray-800 shadow-[4px_4px_0px_#333]"
+                style={{ fontFamily: '"Permanent Marker", cursive' }}
+              >
+                Publish Now
+              </Button>
+              <Button
+                onClick={() => submitEvent('draft')}
+                className="h-20 text-xl bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-800 shadow-[4px_4px_0px_#333]"
+                style={{ fontFamily: '"Permanent Marker", cursive' }}
+              >
+                Finish Preparing
+              </Button>
+            </div>
           </div>
         );
       default:
@@ -460,11 +498,11 @@ export function QuickCreateEventModal({
     }
   };
 
-
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className={`border-none bg-[#f4f2f9ff] shadow-none ${isMobile ? 'inset-0 w-screen h-screen max-w-none rounded-none' : 'max-w-4xl w-[95vw]'}`}>
+      <DialogContent
+        className={`border-none bg-[#f4f2f9ff] shadow-none ${isMobile ? 'inset-0 w-screen h-screen max-w-none rounded-none' : 'max-w-4xl w-[95vw]'}`}
+      >
         <form id="quick-create-form" className="h-full flex flex-col">
           <DialogHeader className="sr-only">
             <DialogTitle>Create New Event</DialogTitle>
@@ -476,9 +514,7 @@ export function QuickCreateEventModal({
           <div className="flex-1 overflow-y-auto px-4 py-6 hide-scrollbar">
             {isMobile ? (
               <div className="min-h-full flex flex-col">
-                <div className="flex-1">
-                  {renderStep()}
-                </div>
+                <div className="flex-1">{renderStep()}</div>
               </div>
             ) : (
               <>
@@ -515,7 +551,9 @@ export function QuickCreateEventModal({
             )}
           </div>
 
-          <div className={`px-4 py-4 border-t-2 border-gray-200 flex ${isMobile ? 'justify-between' : 'justify-end gap-3'}`}>
+          <div
+            className={`px-4 py-4 border-t-2 border-gray-200 flex ${isMobile ? 'justify-between' : 'justify-end gap-3'}`}
+          >
             {isMobile ? (
               <>
                 {currentStep > 0 && currentStep !== 4 && (
@@ -533,11 +571,17 @@ export function QuickCreateEventModal({
                   <Button
                     type="button"
                     onClick={handleNext}
-                    disabled={isSubmitting || (currentStep === 0 && (!title || !category))}
+                    disabled={
+                      isSubmitting || (currentStep === 0 && (!title || !category))
+                    }
                     className="ml-auto bg-[#AF90F9] text-black border-2 border-gray-800 font-bold px-8 shadow-[2px_2px_0px_#333]"
                     style={{ fontFamily: '"Permanent Marker", cursive' }}
                   >
-                    {isSubmitting ? 'Saving...' : currentStep === 4 ? 'Continue' : 'Next'}
+                    {isSubmitting
+                      ? 'Saving...'
+                      : currentStep === 4
+                        ? 'Continue'
+                        : 'Next'}
                   </Button>
                 )}
               </>

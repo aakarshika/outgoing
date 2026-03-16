@@ -29,6 +29,7 @@ from apps.events.models import (
     EventPrivateMessage,
     Friendship,
 )
+from apps.needs.models import EventNeed
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
 
@@ -1299,3 +1300,306 @@ class EventFriendshipRequestCreateView(APIView):
             data=FriendshipSerializer(friendship).data,
             message="Buddy request accepted",
         )
+
+
+class MyFriendshipsView(APIView):
+    """List current user's friendships: accepted buddies and pending requests."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses={200: FriendshipSerializer(many=True)})
+    def get(self, request):
+        user = request.user
+        qs = (
+            Friendship.objects.filter(Q(user1=user) | Q(user2=user))
+            .select_related("user1", "user2", "request_sender", "met_at_event")
+            .order_by("-updated_at")
+        )
+        accepted = []
+        pending_incoming = []
+        pending_outgoing = []
+        for f in qs:
+            data = FriendshipSerializer(f, context={"request": request}).data
+            if f.status == Friendship.STATUS_ACCEPTED:
+                accepted.append(data)
+            elif f.status == Friendship.STATUS_PENDING:
+                if f.request_sender_id == user.id:
+                    pending_outgoing.append(data)
+                else:
+                    pending_incoming.append(data)
+        return success_response(
+            data={
+                "accepted": accepted,
+                "pending_incoming": pending_incoming,
+                "pending_outgoing": pending_outgoing,
+            }
+        )
+
+
+def _network_person(user, request, event_id=None, event_title=None):
+    """Build a minimal person dict for network responses."""
+    profile = getattr(user, "profile", None)
+    avatar = None
+    if profile and profile.avatar:
+        avatar = request.build_absolute_uri(profile.avatar.url) if request else profile.avatar.url
+    out = {
+        "id": user.id,
+        "username": user.username,
+        "first_name": getattr(user, "first_name", "") or "",
+        "last_name": getattr(user, "last_name", "") or "",
+        "avatar": avatar,
+    }
+    if event_id is not None:
+        out["event_id"] = event_id
+    if event_title:
+        out["event_title"] = event_title
+    return out
+
+
+class MyNetworkPeopleView(APIView):
+    """
+    List people in the current user's network:
+    - friends: accepted friendships (buddies)
+    - went_to_events_with: people who had a used ticket to the same event(s) as me (excluding friends)
+    - hosts_met: hosts of events I attended (used ticket)
+    - vendors_met: vendors assigned to needs at events I attended
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # Event IDs where I have a used ticket
+        my_used_event_ids = set(
+            Ticket.objects.filter(goer=user, status="used")
+            .values_list("event_id", flat=True)
+            .distinct()
+        )
+        # Friend user IDs (other side of accepted friendships)
+        friend_ids = set()
+        friends_data = []
+        for f in Friendship.objects.filter(
+            (Q(user1=user) | Q(user2=user)),
+            status=Friendship.STATUS_ACCEPTED,
+        ).select_related("user1", "user2", "met_at_event"):
+            other = f.user2 if f.user1_id == user.id else f.user1
+            friend_ids.add(other.id)
+            event_id = f.met_at_event_id if f.met_at_event_id else None
+            event_title = f.met_at_event.title if f.met_at_event else None
+            friends_data.append(_network_person(other, request, event_id=event_id, event_title=event_title))
+
+        # Went to events with: same event, used ticket, not me, not already a friend
+        went_with_data = []
+        seen_went_with = set()
+        if my_used_event_ids:
+            other_tickets = (
+                Ticket.objects.filter(
+                    event_id__in=my_used_event_ids,
+                    status="used",
+                )
+                .exclude(goer=user)
+                .exclude(goer_id__in=friend_ids)
+                .select_related("goer", "event")
+            )
+            for tick in other_tickets:
+                if tick.goer_id in seen_went_with:
+                    continue
+                seen_went_with.add(tick.goer_id)
+                went_with_data.append(
+                    _network_person(
+                        tick.goer,
+                        request,
+                        event_id=tick.event_id,
+                        event_title=tick.event.title,
+                    )
+                )
+
+        # Hosts of events I attended
+        hosts_met_data = []
+        seen_hosts = set()
+        if my_used_event_ids:
+            events_with_host = Event.objects.filter(
+                id__in=my_used_event_ids,
+            ).exclude(host=user).select_related("host")
+            for ev in events_with_host:
+                if ev.host_id in seen_hosts:
+                    continue
+                seen_hosts.add(ev.host_id)
+                hosts_met_data.append(
+                    _network_person(ev.host, request, event_id=ev.id, event_title=ev.title)
+                )
+
+        # Vendors assigned to needs at events I attended
+        vendors_met_data = []
+        seen_vendors = set()
+        if my_used_event_ids:
+            needs = EventNeed.objects.filter(
+                event_id__in=my_used_event_ids,
+                assigned_vendor__isnull=False,
+            ).exclude(assigned_vendor=user).select_related("assigned_vendor", "event")
+            for need in needs:
+                vid = need.assigned_vendor_id
+                if vid in seen_vendors:
+                    continue
+                seen_vendors.add(vid)
+                vendors_met_data.append(
+                    _network_person(
+                        need.assigned_vendor,
+                        request,
+                        event_id=need.event_id,
+                        event_title=need.event.title,
+                    )
+                )
+
+        return success_response(
+            data={
+                "friends": friends_data,
+                "went_to_events_with": went_with_data,
+                "hosts_met": hosts_met_data,
+                "vendors_met": vendors_met_data,
+            }
+        )
+
+
+def _network_activity_actor(user):
+    """Minimal actor dict for network activity."""
+    return {
+        "id": user.id,
+        "username": user.username,
+        "first_name": getattr(user, "first_name", "") or "",
+        "last_name": getattr(user, "last_name", "") or "",
+    }
+
+
+def _event_subtitle(event):
+    """Build a short event subtitle: e.g. 'Sat · 8:00 PM · Indiranagar'."""
+    start = event.start_time
+    if timezone.is_naive(start):
+        start = timezone.make_aware(start)
+    time_str = start.strftime("%a · %I:%M %p")
+    location = (event.location_name or "").strip() or "TBD"
+    return f"{time_str} · {location}"
+
+
+class MyNetworkActivityView(APIView):
+    """
+    List recent activity from the current user's network for 'The network is not static':
+    - hosting: someone in my network is hosting an event (published)
+    - going: someone in my network has a ticket (active or used) to an event
+    - interested: someone in my network marked interest in an event
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        my_used_event_ids = set(
+            Ticket.objects.filter(goer=user, status="used")
+            .values_list("event_id", flat=True)
+            .distinct()
+        )
+        friend_ids = set()
+        for f in Friendship.objects.filter(
+            (Q(user1=user) | Q(user2=user)),
+            status=Friendship.STATUS_ACCEPTED,
+        ):
+            other_id = f.user2_id if f.user1_id == user.id else f.user1_id
+            friend_ids.add(other_id)
+        went_with_ids = set()
+        if my_used_event_ids:
+            went_with_ids = set(
+                Ticket.objects.filter(
+                    event_id__in=my_used_event_ids,
+                    status="used",
+                )
+                .exclude(goer=user)
+                .exclude(goer_id__in=friend_ids)
+                .values_list("goer_id", flat=True)
+                .distinct()
+            )
+        hosts_met_ids = set()
+        vendors_met_ids = set()
+        if my_used_event_ids:
+            hosts_met_ids = set(
+                Event.objects.filter(id__in=my_used_event_ids)
+                .exclude(host=user)
+                .values_list("host_id", flat=True)
+                .distinct()
+            )
+            vendors_met_ids = set(
+                EventNeed.objects.filter(
+                    event_id__in=my_used_event_ids,
+                    assigned_vendor__isnull=False,
+                )
+                .values_list("assigned_vendor_id", flat=True)
+                .distinct()
+            )
+        network_user_ids = friend_ids | went_with_ids | hosts_met_ids | vendors_met_ids
+        network_user_ids.discard(user.id)
+
+        activity_items = []
+        limit = 20
+
+        # Hosting: events hosted by someone in network (published), ordered by created_at
+        hosting_events = (
+            Event.objects.filter(
+                host_id__in=network_user_ids,
+                status="published",
+            )
+            .select_related("host")
+            .order_by("-created_at")[:limit]
+        )
+        for event in hosting_events:
+            activity_items.append({
+                "kind": "hosting",
+                "actor": _network_activity_actor(event.host),
+                "event_id": event.id,
+                "event_title": event.title,
+                "event_subtitle": _event_subtitle(event),
+                "happened_at": event.created_at.isoformat(),
+            })
+
+        # Going: tickets (active or used) where goer is in network, event published
+        going_tickets = (
+            Ticket.objects.filter(
+                goer_id__in=network_user_ids,
+                status__in=["active", "used"],
+            )
+            .select_related("goer", "event")
+            .filter(event__status="published")
+            .order_by("-purchased_at")[:limit * 2]
+        )
+        for tick in going_tickets:
+            when = tick.used_at or tick.purchased_at
+            if when:
+                activity_items.append({
+                    "kind": "going",
+                    "actor": _network_activity_actor(tick.goer),
+                    "event_id": tick.event_id,
+                    "event_title": tick.event.title,
+                    "event_subtitle": _event_subtitle(tick.event),
+                    "happened_at": when.isoformat() if hasattr(when, "isoformat") else str(when),
+                })
+
+        # Interested: EventInterest where user in network
+        interests = (
+            EventInterest.objects.filter(user_id__in=network_user_ids)
+            .select_related("user", "event")
+            .order_by("-created_at")[:limit]
+        )
+        for interest in interests:
+            if interest.event.status != "published":
+                continue
+            activity_items.append({
+                "kind": "interested",
+                "actor": _network_activity_actor(interest.user),
+                "event_id": interest.event_id,
+                "event_title": interest.event.title,
+                "event_subtitle": _event_subtitle(interest.event),
+                "happened_at": interest.created_at.isoformat(),
+            })
+
+        activity_items.sort(key=lambda x: x["happened_at"], reverse=True)
+        activity_items = activity_items[:limit]
+
+        return success_response(data={"activity": activity_items})

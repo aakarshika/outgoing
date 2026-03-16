@@ -1,0 +1,291 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .nd{font-family:'DM Sans',sans-serif;background:var(--color-background-tertiary);padding:1.5rem;max-width:780px;margin:0 auto;}
+
+  .nd-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;}
+  .nd-back{font-size:14px;color:var(--color-text-secondary);cursor:pointer;}
+  .nd-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--color-text-primary);}
+  .nd-event-tag{font-size:12px;color:var(--color-text-secondary);margin-left:auto;}
+
+  .section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:1.25rem;overflow:hidden;}
+  .section-head{padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;}
+  .section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;}
+  .section-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;background:#FCEBEB;color:#A32D2D;}
+  .section-badge.opt{background:#EAF3DE;color:#3B6D11;}
+  .section-body{padding:16px;}
+
+  .field-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-secondary);margin-bottom:6px;}
+  .field-hint{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;font-style:italic;}
+  .field-input{width:100%;padding:10px 13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);margin-bottom:12px;}
+  .field-input:focus{outline:none;border-color:#D85A30;}
+  .field-textarea{width:100%;padding:10px 13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);resize:vertical;min-height:72px;margin-bottom:8px;}
+  .field-textarea:focus{outline:none;border-color:#D85A30;}
+
+  .suggest-box{background:#F1EFE8;border-radius:var(--border-radius-md);padding:10px 13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+  .suggest-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+  .suggest-text{font-size:13px;color:#444441;line-height:1.5;flex:1;}
+  .suggest-use{font-size:11px;font-weight:500;color:#D85A30;cursor:pointer;margin-top:4px;display:inline-block;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+
+  .role-chip{padding:8px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:13px;font-weight:500;color:var(--color-text-primary);cursor:pointer;text-align:center;background:var(--color-background-primary);}
+  .role-chip.on{background:#FAECE7;border-color:#D85A30;color:#712B13;}
+
+  .comp-input-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .comp-prefix{font-size:14px;font-weight:500;color:var(--color-text-secondary);}
+  .comp-input{width:120px;padding:10px 13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:var(--color-text-primary);background:var(--color-background-primary);}
+  .comp-input:focus{outline:none;border-color:#D85A30;}
+  .comp-hint{font-size:12px;color:var(--color-text-secondary);}
+
+  .comp-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .comp-divider-line{flex:1;height:0.5px;background:var(--color-border-tertiary);}
+  .comp-divider-label{font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:0.07em;}
+
+  .comp-option{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
+  .comp-option.selected{border-color:#D85A30;background:#FAECE7;}
+  .comp-option.selected2{border-color:#1D9E75;background:#E1F5EE;}
+  .comp-option.selected3{border-color:#534AB7;background:#EEEDFE;}
+  .comp-radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--color-border-secondary);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;}
+  .comp-radio.on{border-color:#D85A30;background:#D85A30;}
+  .comp-radio.on2{border-color:#1D9E75;background:#1D9E75;}
+  .comp-radio.on3{border-color:#534AB7;background:#534AB7;}
+  .comp-radio-dot{width:6px;height:6px;border-radius:50%;background:#fff;}
+  .comp-option-body{flex:1;}
+  .comp-option-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px;}
+  .comp-option-title.coral{color:#712B13;}
+  .comp-option-title.teal{color:#085041;}
+  .comp-option-title.purple{color:#26215C;}
+  .comp-option-sub{font-size:11px;color:var(--color-text-secondary);line-height:1.4;}
+  .comp-option-tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;display:inline-block;margin-top:4px;}
+  .tag-coral{background:#FAECE7;color:#712B13;}
+  .tag-teal{background:#E1F5EE;color:#085041;}
+  .tag-purple{background:#EEEDFE;color:#26215C;}
+  .tag-amber{background:#FAEEDA;color:#854F0B;}
+
+  .multi-select-note{font-size:12px;color:var(--color-text-secondary);font-style:italic;margin-bottom:12px;}
+
+  .cancel-option{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
+  .cancel-option.selected{border-color:#D85A30;background:#FAECE7;}
+  .cancel-option-body{flex:1;}
+  .cancel-option-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+  .cancel-option-desc{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.4;}
+  .risk-tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;display:inline-block;margin-top:4px;}
+  .risk-low{background:#EAF3DE;color:#3B6D11;}
+  .risk-med{background:#FAEEDA;color:#854F0B;}
+  .risk-high{background:#FCEBEB;color:#A32D2D;}
+
+  .generated-sentence{background:#FAEEDA;border-radius:var(--border-radius-md);padding:12px 14px;margin-top:4px;}
+  .gen-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#854F0B;margin-bottom:6px;}
+  .gen-text{font-size:13px;color:#412402;line-height:1.6;}
+  .gen-edit{font-size:11px;font-weight:500;color:#D85A30;cursor:pointer;margin-top:6px;display:inline-block;}
+
+  .threshold-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .threshold-input{width:90px;padding:9px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--color-text-primary);background:var(--color-background-primary);}
+  .threshold-label{font-size:13px;color:var(--color-text-secondary);}
+  .threshold-current{font-size:12px;color:#3B6D11;background:#EAF3DE;padding:3px 10px;border-radius:999px;}
+
+  .deadline-row{display:flex;align-items:center;gap:12px;margin-top:10px;}
+
+  .footer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.5rem;}
+  .btn-save{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:13px;border-radius:999px;border:1.5px solid var(--color-border-primary);background:transparent;color:var(--color-text-primary);cursor:pointer;text-align:center;}
+  .btn-post{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:13px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;text-align:center;}
+</style>
+
+<div class="nd">
+
+  <div class="nd-header">
+    <span class="nd-back">&#8592; Needs board</span>
+    <div class="nd-title">Add a need</div>
+    <div class="nd-event-tag">Rooftop Vinyl Night · 15 Mar</div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">What do you need?</div>
+    </div>
+    <div class="section-body">
+      <div class="field-label">Role type</div>
+      <div class="three-col" style="margin-bottom:14px;">
+        <div class="role-chip">&#127911; DJ / Music</div>
+        <div class="role-chip on">&#128247; Photography</div>
+        <div class="role-chip">&#127869; Food & Catering</div>
+        <div class="role-chip">&#128266; Equipment</div>
+        <div class="role-chip">&#127968; Venue</div>
+        <div class="role-chip">&#128101; Staffing</div>
+      </div>
+
+      <div class="field-label">Describe exactly what you need</div>
+      <div class="field-hint">Be specific — a good description gets better applicants.</div>
+      <textarea class="field-textarea" placeholder="e.g. Need someone to photograph the event from 7pm to 11pm. Should be comfortable shooting in low light, candid crowd shots and a few portraits of performers.">Need someone to photograph the event from 7pm–11pm. Comfortable with low-light, candid crowd shots, and a few performer portraits. Edited gallery to be shared within 48 hours.</textarea>
+
+      <div class="suggest-box">
+        <span class="suggest-icon">&#9997;</span>
+        <div>
+          <div class="suggest-text">Looking for a photographer for Rooftop Vinyl Night on 15 Mar, 7–11pm. Must be comfortable with low-light and candid shooting. Edited gallery expected within 48 hours of the event.</div>
+          <span class="suggest-use">Use this wording &#8594;</span>
+        </div>
+      </div>
+
+      <div class="field-label">Number of slots</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <input class="field-input" style="width:80px;margin-bottom:0;" value="1" />
+        <span class="field-hint" style="margin-bottom:0;">slot(s) available for this role</span>
+      </div>
+
+      <div class="field-label" style="margin-bottom:6px;">Fill deadline</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input class="field-input" style="width:160px;margin-bottom:0;" value="12 Mar 2026" />
+        <span class="field-hint" style="margin-bottom:0;">3 days before event — recommended</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Compensation</div>
+    </div>
+    <div class="section-body">
+
+      <div class="field-label">What is this role worth to you?</div>
+      <div class="comp-input-row">
+        <span class="comp-prefix">&#8377;</span>
+        <input class="comp-input" value="350" />
+        <span class="comp-hint">Standard ticket price is &#8377;350</span>
+      </div>
+
+      <div class="comp-divider">
+        <div class="comp-divider-line"></div>
+        <div class="comp-divider-label">Choose how to offer this — vendor picks what works for them</div>
+        <div class="comp-divider-line"></div>
+      </div>
+
+      <div class="multi-select-note">Select all options you're willing to offer. The vendor will choose one.</div>
+
+      <div class="comp-option selected">
+        <div class="comp-radio on"><div class="comp-radio-dot"></div></div>
+        <div class="comp-option-body">
+          <div class="comp-option-title coral">Free entry</div>
+          <div class="comp-option-sub">Vendor gets a free ticket (value &#8377;350). Exact match — cleanest option.</div>
+          <span class="comp-option-tag tag-coral">Ticket value = &#8377;350 · Full cover</span>
+        </div>
+      </div>
+
+      <div class="comp-option selected2">
+        <div class="comp-radio on2"><div class="comp-radio-dot"></div></div>
+        <div class="comp-option-body">
+          <div class="comp-option-title teal">&#8377;350 cash payment</div>
+          <div class="comp-option-sub">Vendor doesn't attend — gets paid directly after the event. Good for professionals not interested in coming.</div>
+          <span class="comp-option-tag tag-teal">Cash · Paid post-event</span>
+        </div>
+      </div>
+
+      <div class="comp-option">
+        <div class="comp-radio"></div>
+        <div class="comp-option-body">
+          <div class="comp-option-title">40% discount on ticket</div>
+          <div class="comp-option-sub">Vendor pays &#8377;210 instead of &#8377;350. Useful if you want them to have some skin in the game.</div>
+          <span class="comp-option-tag tag-amber">Vendor pays &#8377;210 · You save &#8377;140</span>
+        </div>
+      </div>
+
+      <div class="comp-option selected3">
+        <div class="comp-radio on3"><div class="comp-radio-dot"></div></div>
+        <div class="comp-option-body">
+          <div class="comp-option-title purple">Free entry + &#8377;0 cash</div>
+          <div class="comp-option-sub">Compensation exactly matches ticket price — no cash surplus in this case. If you increase the value above &#8377;350, a cash top-up will appear here.</div>
+          <span class="comp-option-tag tag-purple">Currently: Free entry only</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">
+        Event thresholds
+        <span class="section-badge opt">For this need</span>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field-label">Minimum ticket sales for event to happen</div>
+      <div class="threshold-row">
+        <input class="threshold-input" value="20" />
+        <span class="threshold-label">tickets minimum</span>
+        <span class="threshold-current">Currently at 34 &#10003;</span>
+      </div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:16px;">If this threshold isn't reached before the deadline, the event may be cancelled. This affects what vendors are owed.</div>
+
+      <div class="field-label">Decision deadline</div>
+      <div class="deadline-row">
+        <input class="field-input" style="width:160px;margin-bottom:0;" value="13 Mar 2026" />
+        <span style="font-size:12px;color:var(--color-text-secondary);">By this date, if threshold isn't met, you must cancel or proceed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">
+        If the event is cancelled
+        <span class="section-badge">Required</span>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="field-label" style="margin-bottom:8px;">What happens to this vendor if the event doesn't happen?</div>
+
+      <div class="cancel-option selected">
+        <div class="comp-radio on"><div class="comp-radio-dot"></div></div>
+        <div class="cancel-option-body">
+          <div class="cancel-option-title">Full compensation regardless</div>
+          <div class="cancel-option-desc">Vendor receives their full agreed compensation even if the event is cancelled. You carry the risk.</div>
+          <span class="risk-tag risk-low">Low risk for vendor</span>
+        </div>
+      </div>
+
+      <div class="cancel-option">
+        <div class="comp-radio"></div>
+        <div class="cancel-option-body">
+          <div class="cancel-option-title">Partial compensation — kill fee</div>
+          <div class="cancel-option-desc">Vendor receives a fixed amount for their time and preparation. You specify the amount below.</div>
+          <span class="risk-tag risk-med">Medium risk for vendor</span>
+        </div>
+      </div>
+
+      <div class="cancel-option">
+        <div class="comp-radio"></div>
+        <div class="cancel-option-body">
+          <div class="cancel-option-title">Compensation only if cancelled within 48h of event</div>
+          <div class="cancel-option-desc">Vendor is protected only if you cancel late. Early cancellation = no compensation.</div>
+          <span class="risk-tag risk-med">Medium risk for vendor</span>
+        </div>
+      </div>
+
+      <div class="cancel-option">
+        <div class="comp-radio"></div>
+        <div class="cancel-option-body">
+          <div class="cancel-option-title">No compensation if cancelled</div>
+          <div class="cancel-option-desc">Vendor accepts full risk. Should only be used for casual, friend-level arrangements.</div>
+          <span class="risk-tag risk-high">Vendor bears full risk</span>
+        </div>
+      </div>
+
+      <div class="generated-sentence">
+        <div class="gen-label">&#128196; Auto-generated condition shown to vendor</div>
+        <div class="gen-text">If Rooftop Vinyl Night is cancelled for any reason, the photographer will receive their full agreed compensation of &#8377;350 regardless of when the cancellation occurs. If the event does not reach the minimum threshold of 20 tickets by 13 Mar 2026, the same condition applies.</div>
+        <span class="gen-edit">Edit this wording &#8594;</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-btns">
+    <div class="btn-save">Save as draft</div>
+    <div class="btn-post">Post this need</div>
+  </div>
+
+</div>

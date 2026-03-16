@@ -132,7 +132,7 @@ export const HostCard = ({
             }}
           >
             published
-            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
