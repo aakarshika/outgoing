@@ -32,7 +32,13 @@ function getCategoryIcon(categoryName: string | undefined | null) {
   return '✨';
 }
 
-export function SmallEventCard({ event }: { event: EventListItem }) {
+export function SmallEventCard({
+  event,
+  sx,
+}: {
+  event: EventListItem;
+  sx?: any;
+}) {
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
   const hostInitial = event.host.first_name?.[0] || event.host.username[0] || '?';
   const engagementCount = Math.max(event.ticket_count, event.interest_count);
@@ -42,19 +48,19 @@ export function SmallEventCard({ event }: { event: EventListItem }) {
       component={Link}
       to={`/events/${event.id}`}
       sx={{
-        minWidth: { xs: 250, sm: 220 },
-        maxWidth: 260,
         borderRadius: '22px',
         overflow: 'hidden',
         border: '1px solid rgba(143, 105, 66, 0.16)',
         background: 'rgba(255,255,255,0.86)',
         boxShadow: '0 18px 44px rgba(108, 71, 33, 0.08)',
-        flexShrink: 0,
         cursor: 'pointer',
         textDecoration: 'none',
         color: 'inherit',
         display: 'block',
+        width: '100%',
+        height: '100%',
         '&:hover': { boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)' },
+        ...(Array.isArray(sx) ? sx : [sx]),
       }}
     >
       <Box

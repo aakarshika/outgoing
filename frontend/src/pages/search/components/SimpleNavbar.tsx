@@ -125,7 +125,12 @@ export function SimpleNavbar({
     [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
-      : []),
+      : [
+          [
+            { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
+            { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
+          ],
+        ]),
   ];
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {
@@ -356,26 +361,7 @@ export function SimpleNavbar({
               minWidth: 0,
             }}
           >
-            {isMobile && !isAuthenticated && location.pathname !== '/signin' && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-                onClick={() => navigate(`/signin`)}
-              >
-                <UserIcon size={14} /> Sign In
-              </Button>
-            )}
-            {isMobile && !isAuthenticated && location.pathname !== '/signup' && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-                onClick={() => navigate(`/signup`)}
-              >
-                <UserPlus size={14} /> Sign Up
-              </Button>
-            )}
+            {/* Auth buttons removed from main row on mobile, now in menu */}
             {isAuthenticated ? (
               <>
                 {isMobile && isVendor && isNotOnManagePage && eventId && (
@@ -527,6 +513,16 @@ export function SimpleNavbar({
                       if (item.action === 'logout') {
                         closeMenuPopover();
                         logout();
+                        return;
+                      }
+                      if (item.action === 'signin') {
+                        closeMenuPopover();
+                        navigate('/signin');
+                        return;
+                      }
+                      if (item.action === 'signup') {
+                        closeMenuPopover();
+                        navigate('/signup');
                         return;
                       }
                       if (!item.to) {
