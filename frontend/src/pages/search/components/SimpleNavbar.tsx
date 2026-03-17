@@ -85,8 +85,7 @@ export function SimpleNavbar({
     isAuthenticated &&
     !!user &&
     !!event &&
-    (event.user_is_vendor ||
-      !!(event.user_applications && event.user_applications.length > 0));
+    !!(event.user_applications && event.user_applications.length > 0);
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);

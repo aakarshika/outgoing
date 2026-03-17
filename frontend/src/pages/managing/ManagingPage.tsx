@@ -979,9 +979,9 @@ function buildHostedVendorLines(event: EventDetail) {
         : 'Vendor payout placeholder',
       amount: parseMoney(
         vendor?.proposed_price ??
-          vendor?.price_agreed ??
-          vendor?.price_paid ??
-          vendor?.amount,
+        vendor?.price_agreed ??
+        vendor?.price_paid ??
+        vendor?.amount,
       ),
     }))
     .filter((line) => line.amount > 0);
@@ -1983,8 +1983,8 @@ function ServiceApplicationCard({
                 />
               ) : null}
               {eventPriceLabel &&
-              (event.lifecycle_state === 'published' ||
-                event.lifecycle_state === 'live') ? (
+                (event.lifecycle_state === 'published' ||
+                  event.lifecycle_state === 'live') ? (
                 <PriceBadge
                   price={eventPriceLabel}
                   variant="landscape"
@@ -2438,10 +2438,10 @@ function ServiceApplicationCard({
 
 const VALID_TABS: ManagingTab[] = [
   'managing',
-  'earnings',
-  'hosting',
   'attending',
+  'hosting',
   'services',
+  'earnings',
 ];
 
 export default function ManagingPage() {
@@ -2638,8 +2638,8 @@ export default function ManagingPage() {
 
   const dayFiltered = selectedDateKey
     ? typeFiltered.filter(
-        (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
-      )
+      (item) => toDateKey(new Date(item.eventTime)) === selectedDateKey,
+    )
     : typeFiltered;
 
   const upcomingItems = dayFiltered.filter((item) => !item.isPast);
@@ -2742,25 +2742,25 @@ export default function ManagingPage() {
     const detachedGroup =
       detachedApplications.length > 0
         ? [
-            {
-              id: 'detached-applications',
-              title: 'Applications without a linked service',
-              category: 'Unlinked',
-              portfolio_image: null,
-              is_active: true,
-              location_city: 'Needs relinking',
-              created_at:
-                detachedApplications[0]?.created_at || new Date().toISOString(),
-              base_price: null,
-              applications: detachedApplications.map((application) => ({
-                ...application,
-                eventDetail: application.event_id
-                  ? eventDetailsById.get(application.event_id)
-                  : undefined,
-              })),
-              isDetached: true,
-            },
-          ]
+          {
+            id: 'detached-applications',
+            title: 'Applications without a linked service',
+            category: 'Unlinked',
+            portfolio_image: null,
+            is_active: true,
+            location_city: 'Needs relinking',
+            created_at:
+              detachedApplications[0]?.created_at || new Date().toISOString(),
+            base_price: null,
+            applications: detachedApplications.map((application) => ({
+              ...application,
+              eventDetail: application.event_id
+                ? eventDetailsById.get(application.event_id)
+                : undefined,
+            })),
+            isDetached: true,
+          },
+        ]
         : [];
 
     return [...linkedGroups, ...detachedGroup].sort(
@@ -2814,48 +2814,14 @@ export default function ManagingPage() {
             }}
           >
             <Stack spacing={2}>
-              <Stack spacing={0.75}>
-                <Typography
-                  sx={{
-                    fontFamily: 'Syne, sans-serif',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(66, 50, 28, 0.62)',
-                  }}
-                >
-                  Your events
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: 'Syne, sans-serif',
-                    fontSize: { xs: 26, sm: 32 },
-                    fontWeight: 800,
-                    letterSpacing: '-0.04em',
-                    color: '#2B2118',
-                  }}
-                >
-                  {tab === 'managing'
-                    ? 'Managing'
-                    : tab === 'earnings'
-                      ? 'Earnings'
-                      : tab === 'hosting'
-                        ? 'Hosting'
-                        : tab === 'attending'
-                          ? 'Attending'
-                          : 'Services'}
-                </Typography>
-              </Stack>
-
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {(
                   [
-                    { key: 'managing', label: 'Managing' },
+                    { key: 'managing', label: 'Upcoming Events' },
                     { key: 'earnings', label: 'Earnings' },
-                    { key: 'hosting', label: 'Hosting' },
-                    { key: 'attending', label: 'Attending' },
-                    { key: 'services', label: 'Services' },
+                    { key: 'hosting', label: 'My Events' },
+                    { key: 'attending', label: 'My Tickets' },
+                    { key: 'services', label: 'My Services' },
                   ] as const
                 ).map((pageTab) => (
                   <Chip
@@ -3076,9 +3042,9 @@ export default function ManagingPage() {
                               }),
                               ...(!day.isToday &&
                                 isSelected && {
-                                  background: '#FAECE7',
-                                  color: '#7C2D12',
-                                }),
+                                background: '#FAECE7',
+                                color: '#7C2D12',
+                              }),
                               ...(!day.isToday && day.inMonth && { color: '#2B2118' }),
                               ...(!day.isToday &&
                                 !day.inMonth && { color: 'rgba(66, 50, 28, 0.28)' }),

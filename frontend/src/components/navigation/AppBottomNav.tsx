@@ -119,7 +119,7 @@ export function AppBottomNav() {
                 )}
                 style={{
                   fontFamily: 'Syne, sans-serif',
-                  background: isActive ? '#D85A30' : 'var(--color-background-primary)',
+                  background: isActive ? '#D85A30' : '#F9F9F9',
                   borderColor: isActive ? '#D85A30' : 'var(--color-border-tertiary)',
                   boxShadow: isActive ? '0 10px 22px rgba(216, 90, 48, 0.24)' : 'none',
                 }}

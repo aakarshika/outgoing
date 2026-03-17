@@ -160,7 +160,7 @@ function ChatMessageBubble({ message }: { message: any }) {
             px: 1.5,
             py: 1.2,
             borderRadius: isMine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
-            background: isMine ? '#D85A30' : 'var(--color-background-primary)',
+            background: isMine ? '#D85A30' : '#F9F9F9',
             color: isMine ? '#fff' : 'var(--color-text-primary)',
             border: isMine ? 'none' : '0.5px solid var(--color-border-tertiary)',
             boxShadow: isMine
@@ -326,23 +326,23 @@ function ChatThread({
     chat.section === 'network' && !!(chat.targetUsername || chat.otherUsername);
   const friendship = isUserUserChat
     ? findFriendshipForUserChat(
-        friendships,
-        currentUsername,
-        chat.targetUsername || chat.otherUsername,
-      )
+      friendships,
+      currentUsername,
+      chat.targetUsername || chat.otherUsername,
+    )
     : null;
   const timelineItems = isUserUserChat
     ? buildChatTimeline({
-        messages,
-        activities: buildUserChatActivities({
-          currentUserId,
-          targetUsername: chat.targetUsername || chat.otherUsername,
-          friendship,
-          networkPeople,
-          networkActivity,
-          eventOverviewRows,
-        }),
-      })
+      messages,
+      activities: buildUserChatActivities({
+        currentUserId,
+        targetUsername: chat.targetUsername || chat.otherUsername,
+        friendship,
+        networkPeople,
+        networkActivity,
+        eventOverviewRows,
+      }),
+    })
     : buildChatTimeline({ messages });
 
   const navigate = useNavigate();
@@ -544,7 +544,7 @@ function ChatThread({
             alignItems: 'flex-end',
             gap: 1,
             borderRadius: '24px',
-            background: 'var(--color-background-primary)',
+            background: '#F9F9F9',
             border: '0.5px solid var(--color-border-tertiary)',
             px: 1.5,
             py: 0.8,

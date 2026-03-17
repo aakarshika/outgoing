@@ -147,7 +147,7 @@ function EventCard({
   return (
     <Box
       sx={{
-        background: 'var(--color-background-primary)',
+        background: '#F9F9F9',
         border: '0.5px solid var(--color-border-tertiary)',
         borderRadius: '24px',
         overflow: 'hidden',
@@ -241,7 +241,7 @@ function ThingsToDoCard({
   return (
     <Box
       sx={{
-        background: 'var(--color-background-primary)',
+        background: '#F9F9F9',
         border: '0.5px solid var(--color-border-tertiary)',
         borderLeft: `3px solid ${isOnline ? '#1D9E75' : '#D85A30'}`,
         borderRadius: '24px',
@@ -558,7 +558,7 @@ export default function GuestLandingPage() {
   }, []);
 
   return (
-    <Box sx={{ background: '--var(--color-background-primary)' }}>
+    <Box sx={{ background: '--#F9F9F9' }}>
       <Box
         sx={{
           background: '#D85A30',
@@ -718,7 +718,7 @@ export default function GuestLandingPage() {
                 px: 1,
                 py: 2.75,
                 border: '0.5px solid var(--color-border-tertiary)',
-                background: 'var(--color-background-primary)',
+                background: '#F9F9F9',
                 color: 'var(--color-text-primary)',
                 fontSize: 14,
               }}
@@ -793,7 +793,7 @@ export default function GuestLandingPage() {
               sx={{
                 borderRadius: '999px',
                 background:
-                  activeFilter === chip ? '#D85A30' : 'var(--color-background-primary)',
+                  activeFilter === chip ? '#D85A30' : '#F9F9F9',
                 color: activeFilter === chip ? '#fff' : 'var(--color-text-primary)',
                 border:
                   activeFilter === chip
@@ -936,7 +936,7 @@ export default function GuestLandingPage() {
                 key={city.name}
                 onClick={() => navigate('/search')}
                 sx={{
-                  background: 'var(--color-background-primary)',
+                  background: '#F9F9F9',
                   border: '0.5px solid var(--color-border-tertiary)',
                   borderRadius: '24px',
                   p: 2,
@@ -983,7 +983,7 @@ export default function GuestLandingPage() {
             <Box
               key={card.title}
               sx={{
-                background: 'var(--color-background-primary)',
+                background: '#F9F9F9',
                 border: '0.5px solid var(--color-border-tertiary)',
                 borderRadius: '24px',
                 p: 2.5,

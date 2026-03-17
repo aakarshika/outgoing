@@ -8,6 +8,7 @@ export function Footer() {
 
   const currentYear = new Date().getFullYear();
 
+  return null;
   return (
     <Box
       component="footer"

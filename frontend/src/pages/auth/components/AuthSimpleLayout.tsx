@@ -385,7 +385,7 @@ export function AuthSimpleLayout({
       sx={{
         minHeight: '100vh',
         background:
-          'linear-gradient(180deg, var(--color-background-primary) 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
+          'linear-gradient(180deg, #F9F9F9 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
       }}
     >
       <Container maxWidth={false} sx={{ maxWidth: 1200 }}>

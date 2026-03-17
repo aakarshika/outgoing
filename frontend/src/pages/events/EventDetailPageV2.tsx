@@ -163,40 +163,6 @@ export default function EventDetailPageV2() {
     }
   }, [event, setBackgroundComponent, themeVariant]);
 
-  useEffect(() => {
-    const handleScroll = (e: any) => {
-      const sectionId = e.detail;
-      const element = document.getElementById(sectionId);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-    };
-
-    const handleGlobalClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest('a');
-      if (anchor && anchor.hash && anchor.origin === window.location.origin) {
-        const sectionId = anchor.hash.replace('#', '');
-        window.dispatchEvent(new CustomEvent('section-scroll', { detail: sectionId }));
-      }
-    };
-
-    window.addEventListener('section-scroll', handleScroll as any);
-    document.addEventListener('click', handleGlobalClick);
-
-    if (location.hash) {
-      const id = location.hash.replace('#', '');
-      window.dispatchEvent(new CustomEvent('section-scroll', { detail: id }));
-    }
-
-    return () => {
-      window.removeEventListener('section-scroll', handleScroll as any);
-      document.removeEventListener('click', handleGlobalClick);
-    };
-  }, [location.hash, event]);
-
   const reviews = useMemo(() => {
     const baseReviews = story?.reviews || event?.reviews || [];
     return baseReviews.map((rev: any) => ({

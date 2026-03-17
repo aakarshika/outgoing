@@ -9,13 +9,15 @@ import {
   LinearProgress,
   MenuItem,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Check, MessageCircle, Plus, Search } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import {
@@ -48,11 +50,13 @@ import { compressImage } from '@/utils/image';
 
 import { type EventFeature, FEATURE_ITEMS } from './manage/ManageDetailsSection';
 
-const progressSteps = [
-  { label: 'Details set', status: 'done', value: 'check' },
-  { label: 'Tickets configured', status: 'done', value: 'check' },
-  { label: 'Needs being filled', status: 'active', value: '2' },
-  { label: 'Ready to go', status: 'todo', value: '4' },
+type ManageTab = 'details' | 'needs';
+
+const createWorkspaceSteps = [
+  { label: 'Details set' },
+  { label: 'Tickets configured' },
+  { label: 'Needs being filled' },
+  { label: 'Ready to go' },
 ] as const;
 
 const eventDetails = [
@@ -213,7 +217,7 @@ function inputSx() {
   return {
     '& .MuiOutlinedInput-root': {
       borderRadius: '16px',
-      background: 'var(--color-background-primary)',
+      background: '#F9F9F9',
     },
   };
 }
@@ -258,7 +262,7 @@ function WorkspaceCard({
     <Box
       sx={{
         mt: 1.5,
-        background: 'rgb(255, 253, 251)',
+        background: '#f9f9f9',
         border: '0.5px solid var(--color-border-tertiary)',
         borderRadius: '24px',
         overflow: 'hidden',
@@ -269,30 +273,32 @@ function WorkspaceCard({
         alignItems="center"
         justifyContent="space-between"
         sx={{
-          px: 2,
-          py: 1.5,
+          px: 2.5,
+          py: 1.75,
           borderBottom: '0.5px solid var(--color-border-tertiary)',
         }}
       >
-        <Typography
+        {/* <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
             fontSize: 14,
-            fontWeight: 700,
+            fontWeight: 800,
             color: 'var(--color-text-primary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
           }}
         >
           {title}
-        </Typography>
+        </Typography> */}
         {typeof action === 'string' ? (
-          <Typography sx={{ fontSize: 12, color: '#D85A30', fontWeight: 500 }}>
+          <Typography sx={{ fontSize: 12, color: '#D85A30', fontWeight: 600 }}>
             {action}
           </Typography>
         ) : (
           action || null
         )}
       </Stack>
-      <Box sx={{ p: 2 }}>{children}</Box>
+      <Box sx={{ p: 2.5 }}>{children}</Box>
     </Box>
   );
 }
@@ -1301,15 +1307,15 @@ function EventDetailsOverlay({
   const [durationHours, setDurationHours] = useState(
     event.start_time && event.end_time
       ? String(
-          Math.max(
-            1,
-            Math.round(
-              (new Date(event.end_time).getTime() -
-                new Date(event.start_time).getTime()) /
-                (1000 * 60 * 60),
-            ),
+        Math.max(
+          1,
+          Math.round(
+            (new Date(event.end_time).getTime() -
+              new Date(event.start_time).getTime()) /
+            (1000 * 60 * 60),
           ),
-        )
+        ),
+      )
       : '2',
   );
   const [locationMode, setLocationMode] = useState<'offline' | 'online'>(
@@ -1525,7 +1531,7 @@ function EventDetailsOverlay({
                     background:
                       locationMode === 'offline'
                         ? '#FAECE7'
-                        : 'var(--color-background-primary)',
+                        : '#f9f9f9',
                     color:
                       locationMode === 'offline'
                         ? '#712B13'
@@ -1544,7 +1550,7 @@ function EventDetailsOverlay({
                     background:
                       locationMode === 'online'
                         ? '#E1F5EE'
-                        : 'var(--color-background-primary)',
+                        : '#f9f9f9',
                     color:
                       locationMode === 'online'
                         ? '#085041'
@@ -1676,8 +1682,26 @@ function FeaturesOverlay({
   onSave: (features: EditableFeature[]) => Promise<void>;
 }) {
   const [features, setFeatures] = useState<EditableFeature[]>(initialFeatures);
-  const [selected, setSelected] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  const toggleFeature = (name: string) => {
+    setFeatures((current) => {
+      const exists = current.some((f) => f.name === name);
+      if (exists) {
+        return current.filter((f) => f.name !== name);
+      } else {
+        return [...current, { name, tag: 'additional', outsourced: false }];
+      }
+    });
+  };
+
+  const toggleOutsourced = (name: string) => {
+    setFeatures((current) =>
+      current.map((f) =>
+        f.name === name ? { ...f, outsourced: !f.outsourced } : f
+      )
+    );
+  };
 
   return (
     <Box
@@ -1690,137 +1714,114 @@ function FeaturesOverlay({
         p: { xs: 2, md: 3 },
       }}
     >
-      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+      <Box sx={{ maxWidth: 820, mx: 'auto' }}>
         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
           <Box
             onClick={onClose}
             sx={{
               fontSize: 14,
-              color: 'var(--color-text-secondary)',
+              color: '#fff',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
             }}
           >
-            ← Features
+            ← Back
           </Box>
           <Typography
-            sx={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800 }}
+            sx={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: '#fff' }}
           >
             Add the things people will care about
           </Typography>
         </Stack>
+
         <WorkspaceCard title="Features">
           <Typography
             sx={{
               fontSize: 13,
-              display: 'none',
               color: 'var(--color-text-secondary)',
-              mb: 2,
+              mb: 3,
             }}
           >
-            Keep this simple. Pick from the dropdown, add the feature, and mark it if
-            you expect it to be outsourced later.
+            Pick the features that best describe your event. Mark them as outsourced if you'll need help managing them later.
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
-            <TextField
-              select
-              label="Add a feature"
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              fullWidth
-              sx={inputSx()}
-            >
-              {FEATURE_ITEMS.filter(
-                (item) => !features.some((feature) => feature.name === item.name),
-              ).map((item) => (
-                <MenuItem key={item.name} value={item.name}>
-                  {item.emoji} {item.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button
-              variant="contained"
-              onClick={() => {
-                if (!selected) return;
-                setFeatures([
-                  ...features,
-                  { name: selected, tag: 'additional', outsourced: false },
-                ]);
-                setSelected('');
-              }}
-              sx={{
-                borderRadius: '999px',
-                px: 2.5,
-                textTransform: 'none',
-                background: '#D85A30',
-                boxShadow: 'none',
-              }}
-            >
-              Add feature
-            </Button>
-          </Stack>
 
-          <Stack spacing={1}>
-            {features.map((feature) => (
-              <Box
-                key={feature.name}
-                sx={{
-                  border: '0.5px solid var(--color-border-tertiary)',
-                  borderRadius: '16px',
-                  p: 1.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: 'var(--color-text-primary)',
-                    flex: 1,
-                  }}
-                >
-                  {feature.name}
-                </Typography>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Checkbox
-                    checked={!!feature.outsourced}
-                    onChange={(e) =>
-                      setFeatures((current) =>
-                        current.map((item) =>
-                          item.name === feature.name
-                            ? { ...item, outsourced: e.target.checked }
-                            : item,
-                        ),
-                      )
-                    }
-                  />
-                  <Typography
-                    sx={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
+              gap: 2,
+              mb: 4
+            }}
+          >
+            {FEATURE_ITEMS.map((item) => {
+              const selectedFeature = features.find((f) => f.name === item.name);
+              const isSelected = !!selectedFeature;
+              return (
+                <Stack key={item.name} spacing={1}>
+                  <Box
+                    onClick={() => toggleFeature(item.name)}
+                    sx={{
+                      height: 80,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 0.5,
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: isSelected ? '#FAECE7' : 'var(--color-background-secondary)',
+                      border: '2px solid',
+                      borderColor: isSelected ? '#D85A30' : 'transparent',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                        borderColor: isSelected ? '#D85A30' : 'var(--color-border-tertiary)'
+                      }
+                    }}
                   >
-                    I need it outsourced
-                  </Typography>
+                    <Typography sx={{ fontSize: 24 }}>{item.emoji}</Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: isSelected ? '#712B13' : 'var(--color-text-primary)',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
+                  </Box>
+                  {isSelected && (
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      alignItems="center"
+                      onClick={() => toggleOutsourced(item.name)}
+                      sx={{ cursor: 'pointer', px: 0.5 }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={!!selectedFeature.outsourced}
+                        sx={{ p: 0, color: '#D85A30', '&.Mui-checked': { color: '#D85A30' } }}
+                      />
+                      <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        Outsource
+                      </Typography>
+                    </Stack>
+                  )}
                 </Stack>
-                <Button
-                  variant="text"
-                  onClick={() =>
-                    setFeatures((current) =>
-                      current.filter((item) => item.name !== feature.name),
-                    )
-                  }
-                  sx={{ textTransform: 'none', color: '#D85A30' }}
-                >
-                  Remove
-                </Button>
-              </Box>
-            ))}
-          </Stack>
+              );
+            })}
+          </Box>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 3 }}>
             <Button
               variant="outlined"
               onClick={onClose}
-              sx={{ borderRadius: '999px', py: 1.35, textTransform: 'none' }}
+              sx={{ borderRadius: '999px', py: 1.35, textTransform: 'none', fontWeight: 600 }}
             >
               Cancel
             </Button>
@@ -1839,12 +1840,15 @@ function FeaturesOverlay({
               sx={{
                 borderRadius: '999px',
                 py: 1.35,
+                px: 4,
                 textTransform: 'none',
+                fontWeight: 700,
                 background: '#D85A30',
                 boxShadow: 'none',
+                '&:hover': { background: '#BF4E29', boxShadow: 'none' }
               }}
             >
-              {isSaving ? 'Saving features…' : 'Save features'}
+              {isSaving ? 'Saving...' : 'Save changes'}
             </Button>
           </Stack>
         </WorkspaceCard>
@@ -1869,16 +1873,16 @@ function TicketsOverlay({
     initialTiers.length > 0
       ? initialTiers
       : [
-          {
-            name: 'General Admission',
-            price: 0,
-            admits: 1,
-            max_passes_per_ticket: 6,
-            capacity: '',
-            description: '',
-            refund_percentage: 100,
-          },
-        ],
+        {
+          name: 'General Admission',
+          price: 0,
+          admits: 1,
+          max_passes_per_ticket: 6,
+          capacity: '',
+          description: '',
+          refund_percentage: 100,
+        },
+      ],
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -2069,12 +2073,12 @@ function TicketsOverlay({
                               current.map((item, currentIndex) =>
                                 currentIndex === index
                                   ? {
-                                      ...item,
-                                      capacity:
-                                        e.target.value === ''
-                                          ? ''
-                                          : Number(e.target.value),
-                                    }
+                                    ...item,
+                                    capacity:
+                                      e.target.value === ''
+                                        ? ''
+                                        : Number(e.target.value),
+                                  }
                                   : item,
                               ),
                             )
@@ -2095,9 +2099,9 @@ function TicketsOverlay({
                               current.map((item, currentIndex) =>
                                 currentIndex === index
                                   ? {
-                                      ...item,
-                                      refund_percentage: Number(e.target.value) || 0,
-                                    }
+                                    ...item,
+                                    refund_percentage: Number(e.target.value) || 0,
+                                  }
                                   : item,
                               ),
                             )
@@ -2781,7 +2785,7 @@ function CreateWorkspaceLanding({
         sx={{
           px: { xs: 2, md: 3 },
           py: 2.5,
-          background: 'var(--color-background-primary)',
+          background: '#f9f9f9',
           borderBottom: '0.5px solid var(--color-border-tertiary)',
         }}
       >
@@ -2819,7 +2823,7 @@ function CreateWorkspaceLanding({
 
       <Box sx={{ px: { xs: 2, md: 3 }, py: 2.5 }}>
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ mb: 2 }}>
-          {progressSteps.map((step, index) => (
+          {createWorkspaceSteps.map((step, index) => (
             <Box
               key={step.label}
               sx={{
@@ -2828,7 +2832,7 @@ function CreateWorkspaceLanding({
                 py: 1.2,
                 borderRadius: '18px',
                 border: '0.5px solid var(--color-border-tertiary)',
-                background: index === 0 ? '#fffdf9' : 'var(--color-background-primary)',
+                background: index === 0 ? '#fffdf9' : '#f9f9f9',
               }}
             >
               <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
@@ -2911,6 +2915,7 @@ function CreateWorkspaceLanding({
 
 export default function PlanningWorkspacePage() {
   const { id } = useParams<{ id?: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -2918,6 +2923,14 @@ export default function PlanningWorkspacePage() {
   const { openChat } = useChatDrawer();
   const eventId = Number(id || 0);
   const isCreateMode = !id;
+  const pathSegments = useMemo(
+    () => location.pathname.split('/').filter(Boolean),
+    [location.pathname],
+  );
+  const manageSegmentIndex = pathSegments.lastIndexOf('manage');
+  const routeTab =
+    manageSegmentIndex >= 0 ? pathSegments[manageSegmentIndex + 1] : undefined;
+  const activeTab: ManageTab = routeTab === 'needs' ? 'needs' : 'details';
   const [isAddNeedOpen, setIsAddNeedOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
@@ -2929,6 +2942,7 @@ export default function PlanningWorkspacePage() {
   );
   const [editingNeed, setEditingNeed] = useState<EventNeed | null>(null);
   const [reviewingNeedId, setReviewingNeedId] = useState<number | null>(null);
+  const [expandedNeedId, setExpandedNeedId] = useState<number | null>(null);
   const [actionDialog, setActionDialog] = useState<NeedActionDialogState | null>(null);
 
   const {
@@ -2980,6 +2994,12 @@ export default function PlanningWorkspacePage() {
   }, [event, isEventLoading, navigate, user]);
 
   useEffect(() => {
+    if (isCreateMode || !id) return;
+    if (routeTab === 'details' || routeTab === 'needs') return;
+    navigate(`/events/${id}/manage/details`, { replace: true });
+  }, [id, isCreateMode, navigate, routeTab]);
+
+  useEffect(() => {
     if (!event?.features) return;
     setOutsourcedFeatures((current) => {
       const next = { ...current };
@@ -2996,22 +3016,21 @@ export default function PlanningWorkspacePage() {
   const activeProgressIndex = lifecycle.step;
   const detailRows = event
     ? [
-        { label: 'Date & time', value: formatDateLabel(event.start_time) },
-        {
-          label: 'Location',
-          value:
-            event.location_address === 'Online Event'
-              ? 'Online event'
-              : event.location_name || 'Location TBD',
-        },
-        { label: 'Category', value: event.category?.name || 'Uncategorized' },
-        {
-          label: 'Format',
-          value: `${
-            event.location_address === 'Online Event' ? 'Online' : 'In person'
+      { label: 'Date & time', value: formatDateLabel(event.start_time) },
+      {
+        label: 'Location',
+        value:
+          event.location_address === 'Online Event'
+            ? 'Online event'
+            : event.location_name || 'Location TBD',
+      },
+      { label: 'Category', value: event.category?.name || 'Uncategorized' },
+      {
+        label: 'Format',
+        value: `${event.location_address === 'Online Event' ? 'Online' : 'In person'
           } · One-time`,
-        },
-      ]
+      },
+    ]
     : eventDetails;
 
   const editableFeatures: EditableFeature[] = (event?.features || []).map(
@@ -3057,6 +3076,21 @@ export default function PlanningWorkspacePage() {
   const completedChecklistCount = checklistItems.filter(
     (item) => item.status === 'done',
   ).length;
+  const assignedVendors = useMemo(() => {
+    const accepted = eventNeeds.flatMap((need) =>
+      (need.applications || []).filter(
+        (application) => application.status === 'accepted',
+      ),
+    );
+    return accepted.filter(
+      (application, index, list) =>
+        list.findIndex(
+          (entry) =>
+            (entry.vendor_id || entry.vendor_name) ===
+            (application.vendor_id || application.vendor_name),
+        ) === index,
+    );
+  }, [eventNeeds]);
 
   const handleSaveDetails = async (payload: {
     title: string;
@@ -3392,211 +3426,136 @@ export default function PlanningWorkspacePage() {
 
   return (
     <Box sx={{ minHeight: '100vh', background: 'var(--color-background-tertiary)' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: { xs: 2, md: 3 },
-          py: 2,
-          background: 'var(--color-background-primary)',
-          borderBottom: '0.5px solid var(--color-border-tertiary)',
-        }}
-      >
-        <Box
-          onClick={() => navigate(-1)}
-          sx={{
-            color: 'var(--color-text-secondary)',
-            cursor: 'pointer',
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          <ArrowLeft size={18} />
-        </Box>
-        <Typography
-          sx={{
-            fontFamily: 'Syne, sans-serif',
-            fontWeight: 800,
-            fontSize: 18,
-            color: '#D85A30',
-          }}
-        >
-          outgoing
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: 'Syne, sans-serif',
-            fontSize: 15,
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            maxWidth: { xs: '120px', sm: '300px', md: '500px' },
-          }}
-        >
-          {event.title}
-        </Typography>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto' }}>
-          <Chip
-            label={lifecycle.label}
-            sx={{
-              background: lifecycle.background,
-              color: lifecycle.color,
-              fontSize: 11,
-              fontWeight: 500,
-            }}
-          />
-          <Button
-            variant="contained"
-            sx={{
-              borderRadius: '999px',
-              px: 2.25,
-              py: 0.85,
-              textTransform: 'none',
-              fontSize: 13,
-              background: '#D85A30',
-              boxShadow: 'none',
-            }}
-          >
-            Publish event
-          </Button>
-        </Stack>
-      </Box>
+
 
       <Box
         sx={{
-          background: 'var(--color-background-primary)',
+          background: '#f9f9f9',
           borderBottom: '0.5px solid var(--color-border-tertiary)',
           px: { xs: 2, md: 3 },
-          py: 2,
+          py: 1,
         }}
       >
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1}
+        <Tabs
+          value={activeTab}
+          onChange={(_, nextTab: ManageTab) =>
+            navigate(`/events/${eventId}/manage/${nextTab}`)
+          }
+          variant="scrollable"
+          allowScrollButtonsMobile
           sx={{
-            overflowX: 'auto',
-            pb: 1,
-            '&::-webkit-scrollbar': { display: 'none' },
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#D85A30',
+              height: 3,
+              borderRadius: '8px 8px 0 0',
+            },
           }}
         >
-          {progressSteps.map((step, index) => (
-            <Stack
-              key={step.label}
-              direction="row"
-              alignItems="center"
-              spacing={1}
-              sx={{ flexShrink: 0 }}
-            >
-              <Stack direction="row" alignItems="center" spacing={0.75}>
-                <Box
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    background:
-                      index < activeProgressIndex
-                        ? '#EAF3DE'
-                        : index === activeProgressIndex
-                          ? '#D85A30'
-                          : 'var(--color-background-secondary)',
-                    color:
-                      index < activeProgressIndex
-                        ? '#3B6D11'
-                        : index === activeProgressIndex
-                          ? '#fff'
-                          : 'var(--color-text-secondary)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {index < activeProgressIndex ? <Check size={11} /> : step.value}
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    fontWeight: index === activeProgressIndex ? 700 : 500,
-                    whiteSpace: 'nowrap',
-                    color:
-                      index < activeProgressIndex
-                        ? '#3B6D11'
-                        : index === activeProgressIndex
-                          ? '#D85A30'
-                          : 'var(--color-text-secondary)',
-                  }}
-                >
-                  {step.label}
-                </Typography>
-              </Stack>
-              {index < progressSteps.length - 1 ? (
-                <Box
-                  sx={{
-                    width: { xs: 16, sm: 24, md: 40 },
-                    height: '1px',
-                    background: 'var(--color-border-tertiary)',
-                    flexShrink: 0,
-                  }}
-                />
-              ) : null}
-            </Stack>
-          ))}
-        </Stack>
+          <Tab
+            value="details"
+            label="Event details"
+            sx={{
+              minHeight: 44,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          />
+          <Tab
+            value="needs"
+            label="Needs"
+            sx={{
+              minHeight: 44,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          />
+        </Tabs>
       </Box>
 
       <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 3 }, py: 3 }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 300px' },
-            gap: 3,
-          }}
-        >
-          <Stack spacing={2.5}>
-            <WorkspaceCard title="Event details" action="Edit">
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 1.25,
-                }}
-              >
-                {detailRows.map((item) => (
-                  <Stack key={item.label} spacing={0.5}>
-                    <Typography
-                      sx={{
-                        fontSize: 10,
-                        fontWeight: 500,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.07em',
-                        color: 'var(--color-text-secondary)',
-                      }}
-                    >
-                      {item.label}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 14,
-                        color: 'var(--color-text-primary)',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {item.value}
-                    </Typography>
-                  </Stack>
-                ))}
-                <Stack spacing={0.5} sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}>
+        {activeTab === 'details' ? (
+          <Stack spacing={0}>
+            <WorkspaceCard title="Event details">
+              <Stack spacing={1}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                    gap: 3,
+                  }}
+                >
+                  {[
+                    {
+                      label: 'Date & time',
+                      value: detailRows.find(i => i.label === 'Date & time')?.value || formatDateLabel(event.start_time),
+                      icon: <span className="text-lg">📅</span>
+                    },
+                    {
+                      label: 'Location',
+                      value: detailRows.find(i => i.label === 'Location')?.value || event.location_name || 'Location TBD',
+                      icon: <span className="text-lg">📍</span>
+                    },
+                    {
+                      label: 'Category',
+                      value: detailRows.find(i => i.label === 'Category')?.value || event.category?.name || 'Category TBD',
+                      icon: <span className="text-lg">🏷️</span>
+                    },
+                    {
+                      label: 'Format',
+                      value: detailRows.find(i => i.label === 'Format')?.value || (event.location_address === 'Online Event' ? 'Online' : 'In person'),
+                      icon: <span className="text-lg">✨</span>
+                    },
+                  ].map((item) => (
+                    <Stack key={item.label} direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'var(--color-background-secondary)',
+                          border: '0.5px solid var(--color-border-tertiary)'
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Stack spacing={0.25}>
+                        <Typography
+                          sx={{
+                            fontFamily: 'Syne, sans-serif',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.07em',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: 14,
+                            color: 'var(--color-text-primary)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {item.value}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  ))}
+                </Box>
+
+                <Stack spacing={0.75}>
                   <Typography
                     sx={{
+                      fontFamily: 'Syne, sans-serif',
                       fontSize: 10,
-                      fontWeight: 500,
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: '0.07em',
                       color: 'var(--color-text-secondary)',
@@ -3606,77 +3565,111 @@ export default function PlanningWorkspacePage() {
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: 13,
-                      display: 'none',
+                      fontSize: 14,
                       color: 'var(--color-text-secondary)',
+                      lineHeight: 1.6,
                     }}
                   >
                     {event.description ||
                       'Add a description that tells people exactly what the event is, why it matters, and what they should expect.'}
                   </Typography>
                 </Stack>
-              </Box>
-              <Button
-                variant="outlined"
-                onClick={() => setIsDetailsOpen(true)}
-                sx={{ mt: 2, borderRadius: '999px', textTransform: 'none' }}
-              >
-                Edit details
-              </Button>
-            </WorkspaceCard>
 
-            <WorkspaceCard title="Features" action="Edit">
-              <Typography
-                sx={{
-                  fontSize: 13,
-                  display: 'none',
-                  color: 'var(--color-text-secondary)',
-                  mb: 1.5,
-                }}
-              >
-                Features are fast signals. People scan them to understand what the event
-                includes before they commit.
-              </Typography>
-              <Stack direction="row" flexWrap="wrap" useFlexGap gap={1}>
-                {editableFeatures.length > 0 ? (
-                  editableFeatures.map((feature) => (
-                    <Chip
-                      key={feature.name}
-                      label={
-                        feature.outsourced
-                          ? `${feature.name} · outsourced`
-                          : feature.name
-                      }
-                      sx={{
-                        background: feature.outsourced ? '#FAEEDA' : '#F1EFE8',
-                        color: feature.outsourced
-                          ? '#854F0B'
-                          : 'var(--color-text-primary)',
-                      }}
-                    />
-                  ))
-                ) : (
-                  <Typography
-                    sx={{
-                      fontSize: 13,
-                      display: 'none',
-                      color: 'var(--color-text-secondary)',
-                    }}
+                <Button
+                  variant="outlined"
+                  onClick={() => setIsDetailsOpen(true)}
+                  sx={{
+                    width: 'fit-content',
+                    borderRadius: '999px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    borderColor: 'var(--color-border-tertiary)',
+                    color: 'var(--color-text-primary)',
+                    '&:hover': {
+                      borderColor: '#D85A30',
+                      background: 'rgba(216, 90, 48, 0.04)'
+                    }
+                  }}
+                >
+                  Edit details
+                </Button>
+
+                <Box
+                  sx={{
+                    mt: 1,
+                    borderTop: '0.5px solid var(--color-border-tertiary)',
+                    pt: 2.5,
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
+                    sx={{ mb: 2 }}
                   >
-                    No features added yet.
-                  </Typography>
-                )}
+                    <Typography sx={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 800 }}>
+                      Features
+                    </Typography>
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => setIsFeaturesOpen(true)}
+                      sx={{ textTransform: 'none', color: '#D85A30', fontWeight: 600 }}
+                    >
+                      Edit features
+                    </Button>
+                  </Stack>
+                  <Stack direction="row" flexWrap="wrap" useFlexGap gap={1.5}>
+                    {editableFeatures.length > 0 ? (
+                      editableFeatures.map((feature) => {
+                        const item = FEATURE_ITEMS.find((i) => i.name === feature.name);
+                        return (
+                          <Box
+                            key={feature.name}
+                            title={feature.outsourced ? `${feature.name} (Outsourced)` : feature.name}
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: feature.outsourced ? '#FAECE7' : 'var(--color-background-secondary)',
+                              border: '0.5px solid',
+                              borderColor: feature.outsourced ? '#D85A30' : 'var(--color-border-tertiary)',
+                              fontSize: 20,
+                            }}
+                          >
+                            {item?.emoji || '✨'}
+                          </Box>
+                        );
+                      })
+                    ) : (
+                      <Typography
+                        sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                      >
+                        No features added yet.
+                      </Typography>
+                    )}
+                  </Stack>
+                </Box>
               </Stack>
-              <Button
-                variant="outlined"
-                onClick={() => setIsFeaturesOpen(true)}
-                sx={{ mt: 2, borderRadius: '999px', textTransform: 'none' }}
-              >
-                Edit features
-              </Button>
             </WorkspaceCard>
 
-            <WorkspaceCard title="Tickets" action="+ Add type">
+            <WorkspaceCard
+              title="Tickets"
+              action={
+                <Button
+                  variant="text"
+                  onClick={() => setIsTicketsOpen(true)}
+                  sx={{ textTransform: 'none', color: '#D85A30', fontWeight: 600 }}
+                >
+                  + Add ticket
+                </Button>
+              }
+            >
               <Box
                 sx={{
                   display: 'grid',
@@ -3771,11 +3764,11 @@ export default function PlanningWorkspacePage() {
                                 ? ticket.progress
                                 : ticket.capacity
                                   ? Math.min(
-                                      100,
-                                      ((event.ticket_tiers?.[index]?.sold_count || 0) /
-                                        Number(ticket.capacity)) *
-                                        100,
-                                    )
+                                    100,
+                                    ((event.ticket_tiers?.[index]?.sold_count || 0) /
+                                      Number(ticket.capacity)) *
+                                    100,
+                                  )
                                   : 0
                             }
                             sx={{
@@ -3794,7 +3787,7 @@ export default function PlanningWorkspacePage() {
                           sx={{
                             fontSize: 12,
                             color: 'var(--color-text-secondary)',
-                            minWidth: 74,
+                            minWidth: 88,
                             textAlign: 'right',
                           }}
                         >
@@ -3802,6 +3795,18 @@ export default function PlanningWorkspacePage() {
                             ? ticket.sold
                             : `${event.ticket_tiers?.[index]?.sold_count || 0} / ${ticket.capacity || '∞'} sold`}
                         </Typography>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setIsTicketsOpen(true)}
+                          sx={{
+                            borderRadius: '999px',
+                            textTransform: 'none',
+                            flexShrink: 0,
+                          }}
+                        >
+                          Edit
+                        </Button>
                       </Stack>
                     </Stack>
                   ),
@@ -3815,262 +3820,8 @@ export default function PlanningWorkspacePage() {
                   Reached ✓
                 </Box>
               </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => setIsTicketsOpen(true)}
-                sx={{ mt: 2, borderRadius: '999px', textTransform: 'none' }}
-              >
-                Manage tickets
-              </Button>
             </WorkspaceCard>
 
-            <WorkspaceCard
-              title="Needs board"
-              action={
-                <Button
-                  variant="text"
-                  onClick={() => setIsBrowseVendorsOpen(true)}
-                  sx={{ textTransform: 'none', color: '#D85A30', fontWeight: 600 }}
-                >
-                  Browse vendors
-                </Button>
-              }
-            >
-              <Typography
-                sx={{
-                  fontSize: 13,
-                  display: 'none',
-                  color: 'var(--color-text-secondary)',
-                  mb: 1.5,
-                }}
-              >
-                Needs turn fuzzy hopes into explicit agreements. The clearer the role,
-                the compensation, and the fallback plan, the less chaos the event
-                carries into its final week.
-              </Typography>
-              <Stack spacing={1}>
-                {eventNeeds.length === 0 ? (
-                  <Box
-                    sx={{
-                      border: '0.5px dashed var(--color-border-secondary)',
-                      borderRadius: '18px',
-                      p: 2,
-                      background: '#fffdfb',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        display: 'none',
-                        color: 'var(--color-text-secondary)',
-                      }}
-                    >
-                      No needs have been added yet. This board gets much more useful
-                      once the event has explicit asks instead of implied gaps.
-                    </Typography>
-                    {quickCreateNeedSeed ? (
-                      <Box
-                        sx={{
-                          mt: 1.4,
-                          p: 1.4,
-                          borderRadius: '16px',
-                          background: '#FAEEDA',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            letterSpacing: '0.08em',
-                            textTransform: 'uppercase',
-                            color: '#854F0B',
-                            mb: 0.55,
-                          }}
-                        >
-                          From quick create
-                        </Typography>
-                        <Typography
-                          sx={{ fontSize: 13, lineHeight: 1.6, color: '#5A3909' }}
-                        >
-                          "{quickCreateNeedSeed}"
-                        </Typography>
-                      </Box>
-                    ) : null}
-                  </Box>
-                ) : null}
-                {eventNeeds.map((need) => {
-                  const presentation = getNeedPresentation(need);
-                  const visuals = getNeedVisuals(need);
-                  return (
-                    <Box
-                      key={need.id}
-                      onClick={() => {
-                        setEditingNeed(need);
-                        setIsAddNeedOpen(true);
-                      }}
-                      sx={{
-                        border: '0.5px solid var(--color-border-tertiary)',
-                        borderLeft: `3px solid ${visuals.accent}`,
-                        borderRadius: '18px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 1.25,
-                        cursor: 'pointer',
-                        background: '#fffdfb',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '12px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          fontSize: 16,
-                          background: visuals.iconBg,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {visuals.icon}
-                      </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Stack
-                          direction={{ xs: 'column', md: 'row' }}
-                          spacing={1}
-                          alignItems={{ xs: 'flex-start', md: 'center' }}
-                          justifyContent="space-between"
-                        >
-                          <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
-                            {need.title}
-                          </Typography>
-                          <Chip
-                            label={presentation.statusLabel}
-                            sx={{
-                              height: 24,
-                              background: presentation.statusBg,
-                              color: presentation.statusColor,
-                              fontSize: 11,
-                              fontWeight: 600,
-                            }}
-                          />
-                        </Stack>
-                        <Typography
-                          sx={{
-                            fontSize: 11,
-                            color: 'var(--color-text-secondary)',
-                            mt: 0.35,
-                          }}
-                        >
-                          {presentation.subtitle}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: 12,
-                            color: 'var(--color-text-secondary)',
-                            lineHeight: 1.55,
-                            mt: 1,
-                          }}
-                        >
-                          {need.description}
-                        </Typography>
-                        <Stack
-                          direction={{ xs: 'row', sm: 'row' }}
-                          flexWrap="wrap"
-                          spacing={1}
-                          useFlexGap
-                          sx={{ mt: 1.25 }}
-                        >
-                          <Chip
-                            label={formatNeedReward(need)}
-                            sx={{
-                              height: 24,
-                              background: '#F1EFE8',
-                              color: 'var(--color-text-primary)',
-                              fontSize: 11,
-                            }}
-                          />
-                          {need.application_count > 0 && need.status !== 'filled' ? (
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setReviewingNeedId(need.id);
-                              }}
-                              sx={{
-                                borderRadius: '999px',
-                                textTransform: 'none',
-                                fontSize: 12,
-                              }}
-                            >
-                              Review applicants
-                            </Button>
-                          ) : null}
-                          {need.status !== 'filled' ? (
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setActionDialog({
-                                  type: 'override',
-                                  needId: need.id,
-                                  nextNeedStatus:
-                                    need.status === 'override_filled'
-                                      ? 'open'
-                                      : 'override_filled',
-                                  title:
-                                    need.status === 'override_filled'
-                                      ? 'Undo host override'
-                                      : 'Use host override',
-                                  description:
-                                    need.status === 'override_filled'
-                                      ? 'This returns the need to the normal vendor flow so applications and outreach can continue.'
-                                      : 'Use this when you will personally cover the role or handle it outside the vendor pipeline. It keeps the board honest for everyone else looking at the plan.',
-                                  confirmLabel:
-                                    need.status === 'override_filled'
-                                      ? 'Undo override'
-                                      : 'Mark as host-covered',
-                                  placeholder:
-                                    'Optional note about how this will be handled.',
-                                  targetLabel: need.title,
-                                });
-                              }}
-                              sx={{
-                                borderRadius: '999px',
-                                textTransform: 'none',
-                                fontSize: 12,
-                              }}
-                            >
-                              Host override
-                            </Button>
-                          ) : null}
-                        </Stack>
-                      </Box>
-                    </Box>
-                  );
-                })}
-              </Stack>
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={0.75}
-                sx={{ pt: 1.5, cursor: 'pointer', width: 'fit-content' }}
-                onClick={() => {
-                  setEditingNeed(null);
-                  setIsAddNeedOpen(true);
-                }}
-              >
-                <Plus size={14} color="#D85A30" />
-                <Typography sx={{ fontSize: 13, color: '#D85A30', fontWeight: 500 }}>
-                  Add a need
-                </Typography>
-              </Stack>
-            </WorkspaceCard>
-          </Stack>
-
-          <Stack spacing={2.5}>
             <WorkspaceCard
               title="Pre-event checklist"
               action={
@@ -4092,17 +3843,6 @@ export default function PlanningWorkspacePage() {
                 />
               }
             >
-              <Typography
-                sx={{
-                  fontSize: 13,
-                  display: 'none',
-                  color: 'var(--color-text-secondary)',
-                  mb: 1.25,
-                }}
-              >
-                This checklist is a live read on whether the event feels operationally
-                trustworthy, not just aesthetically complete.
-              </Typography>
               <Stack spacing={0}>
                 {checklistItems.map((item, index) => {
                   const isHighlightedMilestone =
@@ -4124,25 +3864,6 @@ export default function PlanningWorkspacePage() {
                           index < checklistItems.length - 1 && !isHighlightedMilestone
                             ? '0.5px solid var(--color-border-tertiary)'
                             : 'none',
-                        ...(isHighlightedMilestone && {
-                          background:
-                            item.status === 'done'
-                              ? 'linear-gradient(135deg, rgba(29, 158, 117, 0.12) 0%, rgba(45, 212, 191, 0.08) 100%)'
-                              : item.status === 'warn'
-                                ? 'linear-gradient(135deg, rgba(226, 75, 74, 0.08) 0%, rgba(251, 191, 36, 0.06) 100%)'
-                                : 'linear-gradient(135deg, rgba(251, 191, 36, 0.06) 0%, rgba(245, 158, 11, 0.04) 100%)',
-                          borderLeft: '3px solid',
-                          borderLeftColor:
-                            item.status === 'done'
-                              ? '#1D9E75'
-                              : item.status === 'warn'
-                                ? '#E24B4A'
-                                : '#D97706',
-                          boxShadow:
-                            item.status === 'done'
-                              ? '0 1px 2px rgba(29, 158, 117, 0.08)'
-                              : 'none',
-                        }),
                       }}
                     >
                       <Box
@@ -4163,9 +3884,7 @@ export default function PlanningWorkspacePage() {
                             item.variant === 'host'
                               ? '#2563EB'
                               : item.status === 'done'
-                                ? isHighlightedMilestone
-                                  ? 'linear-gradient(145deg, #1D9E75 0%, #2DD4BF 100%)'
-                                  : '#1D9E75'
+                                ? '#1D9E75'
                                 : 'transparent',
                           display: 'grid',
                           placeItems: 'center',
@@ -4177,353 +3896,343 @@ export default function PlanningWorkspacePage() {
                           <Check size={isHighlightedMilestone ? 12 : 10} color="#fff" />
                         ) : null}
                       </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          sx={{
-                            fontSize: isHighlightedMilestone ? 14 : 13,
-                            fontWeight: isHighlightedMilestone ? 600 : 400,
-                            lineHeight: 1.4,
-                            color:
-                              item.status === 'warn'
-                                ? '#A32D2D'
-                                : item.variant === 'host'
-                                  ? '#1E40AF'
-                                  : item.status === 'done'
-                                    ? isHighlightedMilestone
-                                      ? '#0D766E'
-                                      : 'var(--color-text-secondary)'
-                                    : 'var(--color-text-primary)',
-                            textDecoration:
-                              item.status === 'done' ? 'line-through' : 'none',
-                          }}
-                        >
-                          {item.label}
-                        </Typography>
-                        {/* <Typography
-                          sx={{
-                            fontSize: isSales ? 11 : 10,
-                            mt: 0.25,
-                            fontWeight: isSales ? 500 : 400,
-                            color:
-                              item.status === 'warn'
-                                ? '#E24B4A'
-                                : item.variant === 'host'
-                                  ? '#2563EB'
-                                  : isSales && item.status === 'done'
-                                    ? '#0F766E'
-                                    : 'var(--color-text-secondary)',
-                          }}
-                        >
-                          {item.due}
-                        </Typography> */}
-                      </Box>
-                    </Stack>
-                  );
-                })}
-              </Stack>
-            </WorkspaceCard>
-
-            <WorkspaceCard
-              title="Find vendors & friends"
-              action={
-                <Button
-                  variant="text"
-                  onClick={() => setIsBrowseVendorsOpen(true)}
-                  sx={{ textTransform: 'none', color: '#D85A30', fontWeight: 600 }}
-                >
-                  Open directory
-                </Button>
-              }
-            >
-              <Typography
-                sx={{
-                  fontSize: 13,
-                  display: 'none',
-                  color: 'var(--color-text-secondary)',
-                  mb: 1.5,
-                }}
-              >
-                Strong hosts do not wait for help to arrive by luck. They line up the
-                right person for the right gap while there is still time to recover.
-              </Typography>
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1}
-                sx={{
-                  background: 'var(--color-background-secondary)',
-                  border: '0.5px solid var(--color-border-tertiary)',
-                  borderRadius: '999px',
-                  px: 1.75,
-                  py: 1,
-                  mb: 1.5,
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
-                <Search size={14} />
-                <Typography sx={{ fontSize: 13 }}>
-                  Find a DJ, ask Karan to bring...
-                </Typography>
-              </Stack>
-
-              <Stack spacing={1.5}>
-                {vendorGroupsForWorkspace.map((group) => (
-                  <Box key={group.title}>
-                    <Typography
-                      sx={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        color: 'var(--color-text-secondary)',
-                        mb: 0.75,
-                      }}
-                    >
-                      {group.title}
-                    </Typography>
-                    <Stack spacing={1}>
-                      {group.vendors.map((vendor) => {
-                        const recommendedNeed = getRecommendedNeedForVendor(
-                          eventNeeds,
-                          vendor,
-                        );
-                        return (
-                          <Box
-                            key={vendor.name}
-                            sx={{
-                              border: '0.5px solid var(--color-border-tertiary)',
-                              borderRadius: '16px',
-                              p: 1.25,
-                            }}
-                          >
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <Avatar
-                                sx={{
-                                  width: 32,
-                                  height: 32,
-                                  fontSize: 11,
-                                  fontWeight: 500,
-                                  bgcolor: vendor.color,
-                                }}
-                              >
-                                {vendor.avatar}
-                              </Avatar>
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 13, fontWeight: 500 }}>
-                                  {vendor.name}
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    fontSize: 10,
-                                    color: 'var(--color-text-secondary)',
-                                  }}
-                                >
-                                  {vendor.tag}
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    fontSize: 11,
-                                    color: 'var(--color-text-secondary)',
-                                    mt: 0.6,
-                                    lineHeight: 1.45,
-                                  }}
-                                >
-                                  Best current use:{' '}
-                                  {recommendedNeed
-                                    ? recommendedNeed.title
-                                    : 'pick a need'}
-                                  . {vendor.blurb}
-                                </Typography>
-                              </Box>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => {
-                                  if (!recommendedNeed) return;
-                                  openVendorActionDialog(
-                                    vendor,
-                                    recommendedNeed,
-                                    'workspace',
-                                  );
-                                }}
-                                disabled={!recommendedNeed}
-                                sx={{
-                                  ml: 'auto',
-                                  minWidth: 'unset',
-                                  borderRadius: '999px',
-                                  px: 1.5,
-                                  py: 0.5,
-                                  fontSize: 11,
-                                  textTransform: 'none',
-                                  borderColor: vendor.accent
-                                    ? '#D85A30'
-                                    : 'var(--color-border-secondary)',
-                                  color: vendor.accent
-                                    ? '#D85A30'
-                                    : 'var(--color-text-primary)',
-                                }}
-                              >
-                                {vendor.action}
-                              </Button>
-                            </Stack>
-                          </Box>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
-                ))}
-              </Stack>
-            </WorkspaceCard>
-
-            <WorkspaceCard title="Co-organiser chat" action="">
-              <Stack
-                direction="row"
-                spacing={0.75}
-                sx={{ mb: 1.5, justifyContent: 'flex-end' }}
-              >
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    fontSize: 11,
-                    fontWeight: 500,
-                    bgcolor: '#D85A30',
-                  }}
-                >
-                  P
-                </Avatar>
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    fontSize: 11,
-                    fontWeight: 500,
-                    bgcolor: '#534AB7',
-                  }}
-                >
-                  A
-                </Avatar>
-              </Stack>
-              <Stack spacing={1}>
-                {chatRows.map((row, index) => {
-                  if (row.type === 'system') {
-                    return (
-                      <Box
-                        key={`${row.text}-${index}`}
-                        sx={{ display: 'flex', justifyContent: 'center' }}
-                      >
-                        <Box
-                          sx={{
-                            background: '#EAF3DE',
-                            borderRadius: '16px',
-                            px: 1.25,
-                            py: 0.75,
-                            fontSize: 11,
-                            color: '#27500A',
-                            textAlign: 'center',
-                            width: '100%',
-                          }}
-                        >
-                          {row.text}
-                        </Box>
-                      </Box>
-                    );
-                  }
-
-                  const outgoing = row.type === 'outgoing';
-                  return (
-                    <Stack
-                      key={`${row.text}-${index}`}
-                      direction={outgoing ? 'row-reverse' : 'row'}
-                      spacing={1}
-                      alignItems="flex-start"
-                    >
-                      <Avatar
+                      <Typography
                         sx={{
-                          width: 26,
-                          height: 26,
-                          fontSize: 9,
-                          fontWeight: 500,
-                          bgcolor: row.color,
+                          fontSize: isHighlightedMilestone ? 14 : 13,
+                          fontWeight: isHighlightedMilestone ? 600 : 400,
+                          lineHeight: 1.4,
+                          color:
+                            item.status === 'warn'
+                              ? '#A32D2D'
+                              : item.variant === 'host'
+                                ? '#1E40AF'
+                                : item.status === 'done'
+                                  ? 'var(--color-text-secondary)'
+                                  : 'var(--color-text-primary)',
+                          textDecoration:
+                            item.status === 'done' ? 'line-through' : 'none',
                         }}
                       >
-                        {row.avatar}
-                      </Avatar>
-                      <Box
-                        sx={{
-                          background: 'var(--color-background-secondary)',
-                          borderRadius: outgoing
-                            ? '16px 0 16px 16px'
-                            : '0 16px 16px 16px',
-                          px: 1.25,
-                          py: 0.9,
-                          fontSize: 12,
-                          color: 'var(--color-text-primary)',
-                          lineHeight: 1.45,
-                          maxWidth: 200,
-                        }}
-                      >
-                        {row.text}
-                      </Box>
+                        {item.label}
+                      </Typography>
                     </Stack>
                   );
                 })}
               </Stack>
             </WorkspaceCard>
           </Stack>
-        </Box>
+        ) : (
+          <Stack spacing={2.25}>
+            {assignedVendors.length > 0 ? (
+              <WorkspaceCard
+                title="Co-organizers chat"
+                action={
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<MessageCircle size={14} />}
+                    onClick={() =>
+                      openChat({
+                        title: 'HostVendorGroupChat',
+                        mode: 'group',
+                        eventId,
+                      })
+                    }
+                    sx={{
+                      borderRadius: '999px',
+                      textTransform: 'none',
+                      background: '#D85A30',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    Open chat
+                  </Button>
+                }
+              >
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {assignedVendors.map((application) => (
+                    <Chip
+                      key={application.id}
+                      avatar={
+                        <Avatar>
+                          {(application.vendor_name || '?').slice(0, 1).toUpperCase()}
+                        </Avatar>
+                      }
+                      label={application.vendor_name}
+                      sx={{ background: '#F1EFE8' }}
+                    />
+                  ))}
+                </Stack>
+              </WorkspaceCard>
+            ) : null}
 
-        <Stack direction="row" justifyContent="flex-end" sx={{ pt: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<MessageCircle size={14} />}
-            onClick={() =>
-              openChat({
-                title: 'HostVendorGroupChat',
-                mode: 'group',
-                eventId,
-              })
-            }
-            sx={{
-              borderRadius: '999px',
-              px: 2.25,
-              py: 1.2,
-              textTransform: 'none',
-              fontSize: 13,
-              fontWeight: 500,
-              background: '#D85A30',
-              boxShadow: 'none',
-            }}
-          >
-            Open chat
-            <Box
-              component="span"
-              sx={{
-                ml: 0.75,
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                background: '#fff',
-                color: '#D85A30',
-                display: 'grid',
-                placeItems: 'center',
-                fontSize: 10,
-                fontWeight: 700,
-              }}
+            <WorkspaceCard
+              title="Needs board"
+              action={
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    setEditingNeed(null);
+                    setIsAddNeedOpen(true);
+                  }}
+                  sx={{ textTransform: 'none', color: '#D85A30', fontWeight: 600 }}
+                >
+                  + Add need
+                </Button>
+              }
             >
-              2
-            </Box>
-          </Button>
-        </Stack>
+              <Stack spacing={1.2}>
+                {eventNeeds.length === 0 ? (
+                  <Box
+                    sx={{
+                      border: '0.5px dashed var(--color-border-secondary)',
+                      borderRadius: '18px',
+                      p: 2,
+                      background: '#fffdfb',
+                    }}
+                  >
+                    <Typography
+                      sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                    >
+                      No needs have been added yet.
+                    </Typography>
+                    {quickCreateNeedSeed ? (
+                      <Typography sx={{ mt: 1, fontSize: 12, color: '#5A3909' }}>
+                        Quick create seed: "{quickCreateNeedSeed}"
+                      </Typography>
+                    ) : null}
+                  </Box>
+                ) : null}
 
-        <Stack direction="row" justifyContent="center" sx={{ pt: 2 }}>
-          <Button
-            variant="outlined"
-            sx={{ borderRadius: '999px', textTransform: 'none' }}
-          >
-            Duplicate/Recurring event
-          </Button>
-        </Stack>
+                {eventNeeds.map((need) => {
+                  const presentation = getNeedPresentation(need);
+                  const visuals = getNeedVisuals(need);
+                  const isExpanded = expandedNeedId === need.id;
+                  const acceptedApplications = (need.applications || []).filter(
+                    (application) => application.status === 'accepted',
+                  );
+                  return (
+                    <Box
+                      key={need.id}
+                      sx={{
+                        border: '0.5px solid var(--color-border-tertiary)',
+                        borderLeft: `3px solid ${visuals.accent}`,
+                        borderRadius: '18px',
+                        background: '#fffdfb',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        onClick={() =>
+                          setExpandedNeedId((current) =>
+                            current === need.id ? null : need.id,
+                          )
+                        }
+                        sx={{
+                          p: 1.5,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Stack spacing={1.1}>
+                          <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            spacing={1}
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                            justifyContent="space-between"
+                          >
+                            <Stack direction="row" spacing={1.1} alignItems="center">
+                              <Box
+                                sx={{
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: '11px',
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  fontSize: 15,
+                                  background: visuals.iconBg,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {visuals.icon}
+                              </Box>
+                              <Box>
+                                <Typography
+                                  sx={{
+                                    fontSize: 11,
+                                    color: 'var(--color-text-secondary)',
+                                  }}
+                                >
+                                  {need.category}
+                                </Typography>
+                                <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
+                                  {need.title}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                            <Stack direction="row" spacing={0.8} alignItems="center">
+                              <Chip
+                                label={`${need.application_count || 0} applications`}
+                                sx={{ height: 24, fontSize: 11, background: '#F1EFE8' }}
+                              />
+                              <Chip
+                                label={presentation.statusLabel.toLowerCase()}
+                                sx={{
+                                  height: 24,
+                                  background: presentation.statusBg,
+                                  color: presentation.statusColor,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                }}
+                              />
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setEditingNeed(need);
+                                  setIsAddNeedOpen(true);
+                                }}
+                                sx={{ borderRadius: '999px', textTransform: 'none' }}
+                              >
+                                Edit
+                              </Button>
+                            </Stack>
+                          </Stack>
+
+                          {acceptedApplications.length > 0 ? (
+                            <Stack
+                              direction="row"
+                              spacing={0.8}
+                              flexWrap="wrap"
+                              useFlexGap
+                            >
+                              {acceptedApplications.map((application) => (
+                                <Chip
+                                  key={application.id}
+                                  avatar={
+                                    <Avatar>
+                                      {(application.vendor_name || '?')
+                                        .slice(0, 1)
+                                        .toUpperCase()}
+                                    </Avatar>
+                                  }
+                                  label={application.vendor_name}
+                                  sx={{
+                                    height: 26,
+                                    fontSize: 12,
+                                    background: '#EAF3DE',
+                                  }}
+                                />
+                              ))}
+                            </Stack>
+                          ) : null}
+                        </Stack>
+                      </Box>
+
+                      {isExpanded && need.application_count > 0 ? (
+                        <Box
+                          sx={{
+                            px: 1.5,
+                            pb: 1.5,
+                            borderTop: '0.5px solid var(--color-border-tertiary)',
+                            background: '#f9f9f9',
+                          }}
+                        >
+                          <Stack spacing={1} sx={{ pt: 1.2 }}>
+                            {(need.applications || []).map((application) => (
+                              <Box
+                                key={application.id}
+                                sx={{
+                                  border: '0.5px solid var(--color-border-tertiary)',
+                                  borderRadius: '14px',
+                                  p: 1.15,
+                                }}
+                              >
+                                <Stack spacing={0.9}>
+                                  <Stack
+                                    direction={{ xs: 'column', sm: 'row' }}
+                                    justifyContent="space-between"
+                                    spacing={0.75}
+                                  >
+                                    <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                                      {application.vendor_name}
+                                    </Typography>
+                                    <Chip
+                                      label={application.status}
+                                      size="small"
+                                      sx={{
+                                        width: 'fit-content',
+                                        textTransform: 'capitalize',
+                                      }}
+                                    />
+                                  </Stack>
+                                  <Typography
+                                    sx={{
+                                      fontSize: 12,
+                                      color: 'var(--color-text-secondary)',
+                                    }}
+                                  >
+                                    {application.message ||
+                                      application.cover_letter ||
+                                      'No cover letter provided.'}
+                                  </Typography>
+                                  {application.status === 'pending' ? (
+                                    <Stack direction="row" spacing={0.8}>
+                                      <Button
+                                        size="small"
+                                        variant="contained"
+                                        onClick={async () => {
+                                          await reviewNeedApplicationMutation.mutateAsync(
+                                            {
+                                              applicationId: application.id,
+                                              status: 'accepted',
+                                            },
+                                          );
+                                          toast.success('Application accepted');
+                                        }}
+                                        sx={{
+                                          textTransform: 'none',
+                                          borderRadius: '999px',
+                                          background: '#1D9E75',
+                                          boxShadow: 'none',
+                                        }}
+                                      >
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={async () => {
+                                          await reviewNeedApplicationMutation.mutateAsync(
+                                            {
+                                              applicationId: application.id,
+                                              status: 'rejected',
+                                            },
+                                          );
+                                          toast.success('Application rejected');
+                                        }}
+                                        sx={{
+                                          textTransform: 'none',
+                                          borderRadius: '999px',
+                                        }}
+                                      >
+                                        Reject
+                                      </Button>
+                                    </Stack>
+                                  ) : null}
+                                </Stack>
+                              </Box>
+                            ))}
+                          </Stack>
+                        </Box>
+                      ) : null}
+                    </Box>
+                  );
+                })}
+              </Stack>
+            </WorkspaceCard>
+          </Stack>
+        )}
       </Container>
 
       {isDetailsOpen ? (

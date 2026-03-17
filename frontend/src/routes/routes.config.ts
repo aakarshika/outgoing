@@ -52,7 +52,7 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
-    path: '/events/:id/manage',
+    path: '/events/:id/manage/*',
     componentName: 'PlanningWorkspace',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
