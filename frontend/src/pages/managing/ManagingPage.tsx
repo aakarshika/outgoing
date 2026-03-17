@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   Collapse,
@@ -531,7 +532,7 @@ function ManagingEventCard({
             {item.kind === 'hosting' ? (
               <Box
                 component={Link}
-                to={`/events/${event.id}/manage`}
+                to={`/events/${event.id}/host-event-management`}
                 onClick={(event) => event.stopPropagation()}
                 sx={{
                   px: 1.15,
@@ -592,11 +593,17 @@ function CompactManagingEventCard({
   const date = new Date(item.eventTime);
   const categoryTheme = getCategoryTheme(item.event?.category ?? undefined);
   const checklistTone = getChecklistTone(nextChecklistItem?.status);
+  const eventId = item.event?.id;
+  const manageRoute =
+    item.kind === 'hosting'
+      ? `/events/${eventId}/host-event-management`
+      : `/events/${eventId}/service-event-management`;
+  const viewRoute = `/events-new/${eventId}`;
   const sharedSx = {
     display: 'flex',
     alignItems: 'stretch',
-    gap: 1.25,
-    p: 1.25,
+    gap: { xs: 1, sm: 1.25 },
+    p: { xs: 1, sm: 1.25 },
     width: '100%',
     borderRadius: '24px',
     background: 'rgba(255,255,255,0.88)',
@@ -617,9 +624,9 @@ function CompactManagingEventCard({
     <>
       <Box
         sx={{
-          minWidth: 48,
-          px: 0.85,
-          py: 0.8,
+          minWidth: { xs: 40, sm: 48 },
+          px: { xs: 0.6, sm: 0.85 },
+          py: { xs: 0.6, sm: 0.8 },
           borderRadius: '16px',
           background: '#FAECE7',
           textAlign: 'center',
@@ -627,7 +634,7 @@ function CompactManagingEventCard({
       >
         <Typography
           sx={{
-            fontSize: 10,
+            fontSize: { xs: 9, sm: 10 },
             fontWeight: 700,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
@@ -641,7 +648,7 @@ function CompactManagingEventCard({
         <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
-            fontSize: 19,
+            fontSize: { xs: 16, sm: 19 },
             fontWeight: 800,
             color: '#D85A30',
             lineHeight: 1,
@@ -662,7 +669,7 @@ function CompactManagingEventCard({
         >
           <Typography
             sx={{
-              fontSize: 10,
+              fontSize: { xs: 9, sm: 10 },
               fontWeight: 700,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -673,10 +680,10 @@ function CompactManagingEventCard({
           </Typography>
           <Box
             sx={{
-              px: 0.9,
-              py: 0.3,
+              px: { xs: 0.7, sm: 0.9 },
+              py: { xs: 0.25, sm: 0.3 },
               borderRadius: '999px',
-              fontSize: 10,
+              fontSize: { xs: 9, sm: 10 },
               fontWeight: 700,
               color: item.isPast ? '#7c2d12' : '#166534',
               backgroundColor: item.isPast ? '#FDE7D8' : '#DCFCE7',
@@ -692,7 +699,7 @@ function CompactManagingEventCard({
           sx={{
             mt: 0.4,
             fontFamily: 'Syne, sans-serif',
-            fontSize: 16,
+            fontSize: { xs: 14, sm: 16 },
             lineHeight: 1.2,
             fontWeight: 700,
             color: '#2B2118',
@@ -703,8 +710,8 @@ function CompactManagingEventCard({
 
         <Typography
           sx={{
-            mt: 0.45,
-            fontSize: 12.5,
+            mt: { xs: 0.35, sm: 0.45 },
+            fontSize: { xs: 11, sm: 12.5 },
             color: 'rgba(66, 50, 28, 0.68)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -717,7 +724,7 @@ function CompactManagingEventCard({
         {nextChecklistItem ? (
           <Box
             sx={{
-              mt: 0.45,
+              mt: { xs: 0.35, sm: 0.45 },
               px: 0.8,
               py: 0.45,
               borderRadius: '12px',
@@ -728,7 +735,7 @@ function CompactManagingEventCard({
           >
             <Typography
               sx={{
-                fontSize: 11.5,
+                fontSize: { xs: 10, sm: 11.5 },
                 fontWeight: 700,
                 color: checklistTone.color,
                 whiteSpace: 'nowrap',
@@ -742,11 +749,12 @@ function CompactManagingEventCard({
         ) : null}
       </Box>
       <Stack
-        alignItems="flex-end"
+        alignItems={{ xs: 'center', sm: 'flex-end' }}
         justifyContent="space-between"
         sx={{
           flexShrink: 0,
-          minWidth: { xs: 0, sm: 96 },
+          minWidth: { xs: 70, sm: 96 },
+          gap: { xs: 0.8, sm: 0 },
         }}
       >
         <Chip
@@ -755,14 +763,74 @@ function CompactManagingEventCard({
             bgcolor: style.bg,
             color: style.color,
             fontWeight: 700,
+            height: { xs: 24, sm: 32 },
+            '.MuiChip-label': {
+              px: { xs: 0.8, sm: 1.1 },
+              fontSize: { xs: 10, sm: 12 },
+            },
           }}
         />
-        {onClick ? (
+        {(item.kind === 'hosting' || item.kind === 'vendor_application') && onClick ? (
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              mt: { xs: 0, sm: 0.9 },
+              flexWrap: 'nowrap',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Box
+              component="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (eventId) window.location.href = manageRoute;
+              }}
+              sx={{
+                width: { xs: 28, sm: 30 },
+                height: { xs: 28, sm: 30 },
+                borderRadius: '999px',
+                display: 'grid',
+                placeItems: 'center',
+                background: '#F7EADF',
+                color: '#7C3E1D',
+                border: 'none',
+                cursor: 'pointer',
+                '&:hover': { background: '#E8D5C4' },
+              }}
+              title="Manage Event"
+            >
+              <Edit2 size={14} />
+            </Box>
+            <Box
+              component="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (eventId) window.location.href = viewRoute;
+              }}
+              sx={{
+                width: { xs: 28, sm: 30 },
+                height: { xs: 28, sm: 30 },
+                borderRadius: '999px',
+                display: 'grid',
+                placeItems: 'center',
+                background: '#F7EADF',
+                color: '#7C3E1D',
+                border: 'none',
+                cursor: 'pointer',
+                '&:hover': { background: '#E8D5C4' },
+              }}
+              title="View Event"
+            >
+              <ExternalLink size={14} />
+            </Box>
+          </Stack>
+        ) : onClick ? (
           <Box
             sx={{
               mt: { xs: 0.9, sm: 0 },
-              width: 30,
-              height: 30,
+              width: { xs: 28, sm: 30 },
+              height: { xs: 28, sm: 30 },
               borderRadius: '999px',
               display: 'grid',
               placeItems: 'center',
@@ -770,7 +838,7 @@ function CompactManagingEventCard({
               color: '#7C3E1D',
             }}
           >
-            <ChevronDown size={18} />
+            <ChevronDown size={16} />
           </Box>
         ) : null}
       </Stack>
@@ -1785,14 +1853,52 @@ function ServiceApplicationsRow({
               p: 1.2,
             }}
           >
-            <Stack spacing={1.2}>
-              {service.applications.map((application) => (
-                <ServiceApplicationCard
-                  key={application.id}
-                  application={application}
-                />
-              ))}
-            </Stack>
+            {service.applications.length === 0 ? (
+              <Stack
+                spacing={1.2}
+                alignItems="center"
+                justifyContent="center"
+                sx={{ py: { xs: 2.5, sm: 3.5 }, textAlign: 'center' }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: 'Syne, sans-serif',
+                    fontSize: { xs: 16, sm: 18 },
+                    fontWeight: 700,
+                    color: '#2B2118',
+                  }}
+                >
+                  No applications sent with this service yet
+                </Typography>
+                <Button
+                  component={Link}
+                  to="/search?tab=chip-in"
+                  variant="contained"
+                  sx={{
+                    minHeight: 46,
+                    px: { xs: 2.5, sm: 3.5 },
+                    borderRadius: '14px',
+                    fontWeight: 800,
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
+                    background: '#D85A30',
+                    color: '#fff',
+                    '&:hover': { background: '#BC4A25' },
+                  }}
+                >
+                  Find Opportunities
+                </Button>
+              </Stack>
+            ) : (
+              <Stack spacing={1.2}>
+                {service.applications.map((application) => (
+                  <ServiceApplicationCard
+                    key={application.id}
+                    application={application}
+                  />
+                ))}
+              </Stack>
+            )}
           </Box>
         </Box>
       </Collapse>
@@ -1827,7 +1933,7 @@ function ServiceApplicationCard({
         {event ? (
           <Box
             component={Link}
-            to={`/events/${application.event_id}`}
+            to={`/events-new/${application.event_id}`}
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
@@ -2110,7 +2216,7 @@ function ServiceApplicationCard({
               {application.event_id ? (
                 <Chip
                   component={Link}
-                  to={`/events/${application.event_id}`}
+                  to={`/events-new/${application.event_id}`}
                   clickable
                   icon={<ExternalLink size={14} />}
                   label="Open event"
@@ -2434,7 +2540,7 @@ export default function ManagingPage() {
           subtitle: isPast ? 'Hosted event' : 'Upcoming hosted event',
           location: detail.location_name || 'Location TBD',
           eventTime: detail.start_time,
-          route: `/events/${eventId}`,
+          route: `/events-new/${eventId}`,
           isPast,
         });
       }
@@ -2450,7 +2556,7 @@ export default function ManagingPage() {
           subtitle: 'Service request for this event',
           location: detail.location_name || 'Location TBD',
           eventTime: detail.start_time,
-          route: `/events/${eventId}`,
+          route: `/events-new/${eventId}`,
           isPast,
         });
       }
@@ -2466,7 +2572,7 @@ export default function ManagingPage() {
           subtitle: 'You applied to service this event',
           location: detail.location_name || 'Location TBD',
           eventTime: detail.start_time,
-          route: `/events/${eventId}`,
+          route: `/events-new/${eventId}`,
           isPast,
         });
       }
@@ -2731,7 +2837,7 @@ export default function ManagingPage() {
                   }}
                 >
                   {tab === 'managing'
-                    ? 'Upcoming Events'
+                    ? 'Managing'
                     : tab === 'earnings'
                       ? 'Earnings'
                       : tab === 'hosting'
@@ -2773,38 +2879,6 @@ export default function ManagingPage() {
                 ))}
               </Stack>
 
-              {tab === 'managing' ? (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {(
-                    [
-                      { key: 'all', label: 'All' },
-                      { key: 'hosting', label: 'Hosting' },
-                      { key: 'vendor', label: 'Servicing' },
-                    ] as const
-                  ).map((tabFilter) => (
-                    <Chip
-                      key={tabFilter.key}
-                      label={tabFilter.label}
-                      onClick={() => setFilter(tabFilter.key)}
-                      sx={{
-                        height: 34,
-                        borderRadius: '999px',
-                        bgcolor:
-                          filter === tabFilter.key
-                            ? '#D85A30'
-                            : 'rgba(255,255,255,0.9)',
-                        color: filter === tabFilter.key ? '#fff' : '#4A3827',
-                        border:
-                          filter === tabFilter.key
-                            ? 'none'
-                            : '1px solid rgba(143, 105, 66, 0.14)',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    />
-                  ))}
-                </Stack>
-              ) : null}
             </Stack>
           </Box>
 
@@ -2819,12 +2893,12 @@ export default function ManagingPage() {
                 <Box
                   sx={{
                     display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', lg: '1.3fr 0.7fr' },
-                    gap: 3,
+                    gridTemplateColumns: '1fr',
+                    gap: 2,
                     alignItems: 'start',
                   }}
                 >
-                  <Box>
+                  <Box sx={{ order: 3 }}>
                     <Typography
                       sx={{
                         fontFamily: 'Syne, sans-serif',
@@ -2868,10 +2942,11 @@ export default function ManagingPage() {
 
                   <Box
                     sx={{
+                      order: 1,
                       borderRadius: '24px',
                       background: 'rgba(255,255,255,0.92)',
                       border: '1px solid rgba(143, 105, 66, 0.12)',
-                      p: 2,
+                      p: { xs: 1.5, sm: 2 },
                       boxShadow: '0 8px 28px rgba(108, 71, 33, 0.06)',
                     }}
                   >
@@ -2885,7 +2960,7 @@ export default function ManagingPage() {
                         <Typography
                           sx={{
                             fontFamily: 'Syne, sans-serif',
-                            fontSize: 15,
+                            fontSize: { xs: 14, sm: 15 },
                             fontWeight: 800,
                             color: '#2B2118',
                           }}
@@ -2894,7 +2969,7 @@ export default function ManagingPage() {
                         </Typography>
                         {selectedDateKey ? (
                           <Typography
-                            sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.68)' }}
+                            sx={{ fontSize: { xs: 10, sm: 11 }, color: 'rgba(66, 50, 28, 0.68)' }}
                           >
                             Showing {formatCalendarSelection(selectedDateKey)}
                           </Typography>
@@ -2960,7 +3035,7 @@ export default function ManagingPage() {
                         <Typography
                           key={day}
                           sx={{
-                            fontSize: 10,
+                            fontSize: { xs: 9, sm: 10 },
                             fontWeight: 700,
                             color: 'rgba(66, 50, 28, 0.48)',
                             py: 0.5,
@@ -3018,7 +3093,7 @@ export default function ManagingPage() {
                           >
                             <Typography
                               sx={{
-                                fontSize: 11,
+                                fontSize: { xs: 10, sm: 11 },
                                 fontWeight: day.isToday ? 800 : 500,
                                 lineHeight: 1,
                               }}
@@ -3100,6 +3175,43 @@ export default function ManagingPage() {
                       ) : null}
                     </Stack>
                   </Box>
+
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ order: 2 }}
+                  >
+                    {(
+                      [
+                        { key: 'all', label: 'All' },
+                        { key: 'hosting', label: 'Hosting' },
+                        { key: 'vendor', label: 'Service' },
+                      ] as const
+                    ).map((tabFilter) => (
+                      <Chip
+                        key={tabFilter.key}
+                        label={tabFilter.label}
+                        onClick={() => setFilter(tabFilter.key)}
+                        sx={{
+                          height: 34,
+                          borderRadius: '999px',
+                          bgcolor:
+                            filter === tabFilter.key
+                              ? '#D85A30'
+                              : 'rgba(255,255,255,0.9)',
+                          color: filter === tabFilter.key ? '#fff' : '#4A3827',
+                          border:
+                            filter === tabFilter.key
+                              ? 'none'
+                              : '1px solid rgba(143, 105, 66, 0.14)',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      />
+                    ))}
+                  </Stack>
                 </Box>
               </Box>
             </>
@@ -3236,8 +3348,8 @@ export default function ManagingPage() {
                   pb: 0.5,
                   scrollbarWidth: 'thin',
                   '& > *': {
-                    flex: { xs: '0 0 220px', md: '1 1 0' },
-                    minWidth: 0,
+                    flex: { xs: '1 1 0', md: '1 1 0' },
+                    minWidth: { xs: 180, sm: 200 },
                   },
                 }}
               >
@@ -3352,8 +3464,8 @@ export default function ManagingPage() {
                   pb: 0.5,
                   scrollbarWidth: 'thin',
                   '& > *': {
-                    flex: { xs: '0 0 220px', md: '1 1 0' },
-                    minWidth: 0,
+                    flex: { xs: '1 1 0', md: '1 1 0' },
+                    minWidth: { xs: 180, sm: 200 },
                   },
                 }}
               >

@@ -188,7 +188,8 @@ export function NormalHighlightsModule({
                     sx={{
                       position: 'absolute',
                       inset: '0 0 0 0',
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
+                      background:
+                        'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'flex-end',
@@ -211,7 +212,9 @@ export function NormalHighlightsModule({
                       {text}
                     </Typography>
                     {author && (
-                      <Typography sx={{ fontSize: 10, opacity: 0.8, letterSpacing: '0.02em' }}>
+                      <Typography
+                        sx={{ fontSize: 10, opacity: 0.8, letterSpacing: '0.02em' }}
+                      >
                         By {author}
                       </Typography>
                     )}

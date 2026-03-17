@@ -33,10 +33,12 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: document.title,
-        url: window.location.href,
-      }).catch(console.error);
+      navigator
+        .share({
+          title: document.title,
+          url: window.location.href,
+        })
+        .catch(console.error);
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
@@ -66,7 +68,7 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
           fontFamily: '"Syne", sans-serif',
         }}
       >
-        {isEventOver ? "Who went" : "Who's going"}
+        {isEventOver ? 'Who went' : "Who's going"}
       </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
@@ -201,39 +203,65 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
             width: 320,
             maxHeight: 450,
             borderRadius: '24px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow:
+              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             overflow: 'hidden',
-          }
+          },
         }}
       >
         <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
             <User size={20} /> All Attendees
           </Typography>
-          <Box className="custom-scrollbar" sx={{ spaceY: 2, maxHeight: 300, overflowY: 'auto', pr: 1 }}>
+          <Box
+            className="custom-scrollbar"
+            sx={{ spaceY: 2, maxHeight: 300, overflowY: 'auto', pr: 1 }}
+          >
             {attendees.map((attendee: any, idx: number) => (
-              <Box 
+              <Box
                 key={`${attendee.username}-${idx}`}
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 2,
                   p: 1,
                   borderRadius: '12px',
                   transition: 'background 0.2s',
                   textDecoration: 'none',
                   color: 'inherit',
-                  '&:hover': { bgcolor: '#f9fafb' }
+                  '&:hover': { bgcolor: '#f9fafb' },
                 }}
                 component="a"
                 href={`/profile/${attendee.username}`}
               >
-                <UserAvatar src={attendee.avatar} username={attendee.username} size="md" />
+                <UserAvatar
+                  src={attendee.avatar}
+                  username={attendee.username}
+                  size="md"
+                />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827', noWrap: true }}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      color: '#111827',
+                      noWrap: true,
+                    }}
+                  >
                     {attendee.name || attendee.username}
                   </Typography>
-                  <Typography sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}>
+                  <Typography
+                    sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}
+                  >
                     @{attendee.username}
                   </Typography>
                 </Box>
@@ -241,7 +269,15 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
                   <BadgeCheck size={18} className="text-blue-500 shrink-0" />
                 )}
                 {!attendee.is_verified && (
-                   <Box sx={{ h: 2, w: 2, borderRadius: '50%', bgcolor: 'green-500', shrink: 0 }} />
+                  <Box
+                    sx={{
+                      h: 2,
+                      w: 2,
+                      borderRadius: '50%',
+                      bgcolor: 'green-500',
+                      shrink: 0,
+                    }}
+                  />
                 )}
               </Box>
             ))}
@@ -273,5 +309,3 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
     </Box>
   );
 }
-
-

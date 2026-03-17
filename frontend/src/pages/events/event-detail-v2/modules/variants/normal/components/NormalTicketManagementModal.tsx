@@ -70,8 +70,17 @@ export function NormalTicketManagementModal({
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: 20, fontWeight: 700 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 1,
+          }}
+        >
+          <Typography
+            sx={{ fontFamily: '"Syne", sans-serif', fontSize: 20, fontWeight: 700 }}
+          >
             My Ticket
           </Typography>
           <IconButton onClick={onClose}>
@@ -83,14 +92,23 @@ export function NormalTicketManagementModal({
           Ticket {activeIndex + 1} of {tickets.length}
         </Typography>
 
-        <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2, bgcolor: '#f9fafb' }}>
+        <Box
+          sx={{
+            p: 2,
+            border: '1px solid #e5e7eb',
+            borderRadius: 2,
+            bgcolor: '#f9fafb',
+          }}
+        >
           <Typography sx={{ fontSize: 12, color: '#6b7280' }}>Event</Typography>
           <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#111827', mb: 1 }}>
             {currentTicket.event_summary?.title}
           </Typography>
 
           <Typography sx={{ fontSize: 12, color: '#6b7280' }}>Tier</Typography>
-          <Typography sx={{ fontSize: 14, color: '#111827', mb: 1 }}>{currentTicket.ticket_type}</Typography>
+          <Typography sx={{ fontSize: 14, color: '#111827', mb: 1 }}>
+            {currentTicket.ticket_type}
+          </Typography>
 
           <Typography sx={{ fontSize: 12, color: '#6b7280' }}>Guest name</Typography>
           <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
@@ -112,14 +130,25 @@ export function NormalTicketManagementModal({
 
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
             {qrValue ? (
-              <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#fff', borderRadius: 1.5 }}>
+              <Box
+                sx={{ textAlign: 'center', p: 1, bgcolor: '#fff', borderRadius: 1.5 }}
+              >
                 <QRCodeSVG value={qrValue} size={136} includeMargin={true} />
-                <Typography sx={{ mt: 1, fontSize: 11, fontFamily: 'monospace', color: '#374151' }}>
+                <Typography
+                  sx={{
+                    mt: 1,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    color: '#374151',
+                  }}
+                >
                   {currentTicket.barcode || 'QR'}
                 </Typography>
               </Box>
             ) : (
-              <Typography sx={{ fontSize: 12, color: '#6b7280' }}>QR pending</Typography>
+              <Typography sx={{ fontSize: 12, color: '#6b7280' }}>
+                QR pending
+              </Typography>
             )}
           </Box>
         </Box>
@@ -130,7 +159,9 @@ export function NormalTicketManagementModal({
             variant="outlined"
             startIcon={<Copy size={14} />}
             onClick={async () => {
-              await navigator.clipboard.writeText(currentTicket.barcode || qrValue || '');
+              await navigator.clipboard.writeText(
+                currentTicket.barcode || qrValue || '',
+              );
               toast.success('Code copied');
             }}
             sx={{ textTransform: 'none' }}
@@ -160,7 +191,9 @@ export function NormalTicketManagementModal({
               <ChevronLeft size={18} />
             </IconButton>
             <IconButton
-              onClick={() => setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))}
+              onClick={() =>
+                setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
+              }
               disabled={activeIndex >= tickets.length - 1}
             >
               <ChevronRight size={18} />

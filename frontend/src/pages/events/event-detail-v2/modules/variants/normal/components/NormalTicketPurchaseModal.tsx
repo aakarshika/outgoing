@@ -59,7 +59,9 @@ export function NormalTicketPurchaseModal({
         Array.from({ length: s.quantity }).map((_, idx) => ({
           tier_id: s.tierId,
           guest_name:
-            idx === 0 && user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '',
+            idx === 0 && user
+              ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+              : '',
           is_18_plus: true,
         })),
       );
@@ -74,7 +76,9 @@ export function NormalTicketPurchaseModal({
       Array.from({ length: initialCount }).map((_, idx) => ({
         tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
         guest_name:
-          idx === 0 && user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '',
+          idx === 0 && user
+            ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+            : '',
         is_18_plus: true,
       })),
     );
@@ -106,7 +110,8 @@ export function NormalTicketPurchaseModal({
       if (nextCount === prev.length) return prev;
       if (nextCount < prev.length) return prev.slice(0, nextCount);
 
-      const seedTier = prev[0]?.tier_id || selectedTierId || event.ticket_tiers?.[0]?.id || null;
+      const seedTier =
+        prev[0]?.tier_id || selectedTierId || event.ticket_tiers?.[0]?.id || null;
       const appended = Array.from({ length: nextCount - prev.length }).map(() => ({
         tier_id: seedTier,
         guest_name: '',
@@ -143,10 +148,24 @@ export function NormalTicketPurchaseModal({
   if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onClose={purchaseTicket.isPending ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={purchaseTicket.isPending ? undefined : onClose}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography sx={{ fontFamily: '"Syne", sans-serif', fontSize: 20, fontWeight: 700 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Typography
+            sx={{ fontFamily: '"Syne", sans-serif', fontSize: 20, fontWeight: 700 }}
+          >
             Get Tickets
           </Typography>
           <IconButton onClick={onClose} disabled={purchaseTicket.isPending}>
@@ -155,22 +174,40 @@ export function NormalTicketPurchaseModal({
         </Box>
 
         <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2, mb: 2 }}>
-          <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 1 }}>How many tickets</Typography>
+          <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 1 }}>
+            How many tickets
+          </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <IconButton onClick={() => updateCount(-1)} disabled={ticketCount <= 1}>
               <Minus size={16} />
             </IconButton>
-            <Typography sx={{ minWidth: 24, textAlign: 'center', fontWeight: 700 }}>{ticketCount}</Typography>
+            <Typography sx={{ minWidth: 24, textAlign: 'center', fontWeight: 700 }}>
+              {ticketCount}
+            </Typography>
             <IconButton onClick={() => updateCount(1)} disabled={ticketCount >= 10}>
               <Plus size={16} />
             </IconButton>
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: 320, overflowY: 'auto', pr: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            maxHeight: 320,
+            overflowY: 'auto',
+            pr: 0.5,
+          }}
+        >
           {guests.map((guest, idx) => (
-            <Box key={idx} sx={{ p: 1.5, border: '1px solid #e5e7eb', borderRadius: 2 }}>
-              <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 1 }}>Guest {idx + 1}</Typography>
+            <Box
+              key={idx}
+              sx={{ p: 1.5, border: '1px solid #e5e7eb', borderRadius: 2 }}
+            >
+              <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 1 }}>
+                Guest {idx + 1}
+              </Typography>
               <TextField
                 size="small"
                 fullWidth
@@ -199,11 +236,15 @@ export function NormalTicketPurchaseModal({
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
           <Typography sx={{ fontSize: 14, color: '#6b7280' }}>Subtotal</Typography>
-          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>${subtotal.toFixed(2)}</Typography>
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            ${subtotal.toFixed(2)}
+          </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography sx={{ fontSize: 14, color: '#6b7280' }}>Service fee</Typography>
-          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>${serviceFee.toFixed(2)}</Typography>
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            ${serviceFee.toFixed(2)}
+          </Typography>
         </Box>
 
         <Button

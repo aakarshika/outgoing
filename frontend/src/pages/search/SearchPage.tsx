@@ -25,7 +25,6 @@ import type {
 import {
   buildClearFiltersSearchParams,
   buildDateSearchParams,
-  buildLocationSearchParams,
   buildTabSearchParams,
   filterEvents,
   filterOpportunities,
@@ -46,17 +45,17 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
-  const normalizedSearchParams = useMemo(
-    () => normalizeSearchPageParams(searchParams),
-    [searchParams],
-  );
+  const normalizedSearchParams = useMemo(() => {
+    const params = normalizeSearchPageParams(searchParams);
+    params.delete('radius_miles');
+    return params;
+  }, [searchParams]);
 
   const tab = (normalizedSearchParams.get('tab') as SearchTabId) || 'trending';
   const search = normalizedSearchParams.get('search') || '';
   const location = normalizedSearchParams.get('location') || '';
   const lat = normalizedSearchParams.get('lat');
   const lng = normalizedSearchParams.get('lng');
-  const radiusMiles = normalizedSearchParams.get('radius_miles');
   const selectedDate = normalizedSearchParams.get('date') || '';
   const selectedWhenParam = normalizedSearchParams.get('when') || '';
   const selectedCategoriesParam = normalizedSearchParams.get('categories') || '';
@@ -121,10 +120,6 @@ export default function SearchPage() {
     return ['published', 'event_ready', 'live'];
   }, [tab]);
 
-  const parsedRadiusKm = radiusMiles
-    ? Math.round(Number(radiusMiles) * 1.60934) || undefined
-    : undefined;
-
   const feedSort = getFeedSort(tab);
   const isOnlineTab = tab === 'online';
 
@@ -133,7 +128,6 @@ export default function SearchPage() {
     location: isOnlineTab ? undefined : lat && lng ? undefined : location || undefined,
     lat: isOnlineTab ? undefined : lat ? Number(lat) : undefined,
     lng: isOnlineTab ? undefined : lng ? Number(lng) : undefined,
-    radius_km: isOnlineTab ? undefined : parsedRadiusKm,
     online: isOnlineTab ? true : undefined,
     sort: feedSort,
     lifecycle_states: trendingLifecycleStates,
@@ -283,7 +277,6 @@ export default function SearchPage() {
         selectedCategories={selectedCategories}
         selectedRoles={selectedRoles}
         categories={categories}
-        radiusMiles={radiusMiles}
         onTabChange={setTab}
         onToggleWhen={(value) =>
           updateListParam(
@@ -329,14 +322,6 @@ export default function SearchPage() {
           setSearchParams(buildClearFiltersSearchParams(normalizedSearchParams), {
             replace: true,
           })
-        }
-        onClearLocation={() =>
-          setSearchParams(
-            buildLocationSearchParams(normalizedSearchParams, { location: '' }),
-            {
-              replace: true,
-            },
-          )
         }
         stickyTop={74}
       />

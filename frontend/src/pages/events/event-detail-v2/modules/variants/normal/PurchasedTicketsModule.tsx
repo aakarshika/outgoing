@@ -25,20 +25,24 @@ export function PurchasedTicketsModule({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Box sx={{ 
-        p: 2.5, 
-        bgcolor: '#f8fafc', 
-        borderRadius: '16px', 
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-      }}>
+      <Box
+        sx={{
+          p: 2.5,
+          bgcolor: '#f8fafc',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <Box sx={{ 
-            p: 1, 
-            bgcolor: '#dcfce7', 
-            borderRadius: '10px',
-            color: '#15803d'
-          }}>
+          <Box
+            sx={{
+              p: 1,
+              bgcolor: '#dcfce7',
+              borderRadius: '10px',
+              color: '#15803d',
+            }}
+          >
             <Ticket size={20} />
           </Box>
           <Box>
@@ -46,7 +50,8 @@ export function PurchasedTicketsModule({
               Your Tickets
             </Typography>
             <Typography sx={{ fontSize: 12, color: '#64748b' }}>
-              You have {userTickets.length} purchased ticket{userTickets.length > 1 ? 's' : ''}
+              You have {userTickets.length} purchased ticket
+              {userTickets.length > 1 ? 's' : ''}
             </Typography>
           </Box>
         </Box>
@@ -57,8 +62,7 @@ export function PurchasedTicketsModule({
             const validTickets = tickets.filter((t) => t.status !== 'cancelled');
             const primaryTicket = validTickets[0] || tickets[0];
             if (!primaryTicket) return null;
-            
-            
+
             return (
               <Box
                 key={type}
@@ -76,8 +80,8 @@ export function PurchasedTicketsModule({
                   '&:hover': {
                     borderColor: THEME_ORANGE,
                     transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  },
                 }}
               >
                 <Box>
@@ -85,12 +89,14 @@ export function PurchasedTicketsModule({
                     {type}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ 
-                      width: 6, 
-                      height: 6, 
-                      borderRadius: '50%', 
-                      bgcolor: '#22c55e' 
-                    }} />
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        bgcolor: '#22c55e',
+                      }}
+                    />
                     <Typography sx={{ fontSize: 12, color: '#64748b' }}>
                       {validTickets.length > 0
                         ? `${validTickets.length} Ticket${validTickets.length > 1 ? 's' : ''} • Valid`
@@ -98,18 +104,18 @@ export function PurchasedTicketsModule({
                     </Typography>
                   </Box>
                 </Box>
-                <Button 
+                <Button
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     onViewTicket(primaryTicket.id);
                   }}
-                  sx={{ 
-                    textTransform: 'none', 
-                    fontSize: 12, 
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: 12,
                     fontWeight: 600,
                     color: THEME_ORANGE,
-                    '&:hover': { bgcolor: 'transparent', opacity: 0.8 }
+                    '&:hover': { bgcolor: 'transparent', opacity: 0.8 },
                   }}
                 >
                   View Details

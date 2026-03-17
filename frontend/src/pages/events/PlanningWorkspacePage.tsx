@@ -2931,8 +2931,6 @@ export default function PlanningWorkspacePage() {
   const [reviewingNeedId, setReviewingNeedId] = useState<number | null>(null);
   const [actionDialog, setActionDialog] = useState<NeedActionDialogState | null>(null);
 
-
-
   const {
     data: eventResponse,
     isLoading: isEventLoading,
@@ -2945,7 +2943,9 @@ export default function PlanningWorkspacePage() {
   useEffect(() => {
     const editNeedId = searchParams.get('editNeedId');
     if (editNeedId && needsResponse?.data) {
-      const need = needsResponse.data.find((n: EventNeed) => n.id === Number(editNeedId));
+      const need = needsResponse.data.find(
+        (n: EventNeed) => n.id === Number(editNeedId),
+      );
       if (need) {
         setEditingNeed(need);
         setIsAddNeedOpen(true);
@@ -3733,8 +3733,15 @@ export default function PlanningWorkspacePage() {
                         '&:last-of-type': { borderBottom: 'none', pb: 0 },
                       }}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                        <Typography sx={{ fontSize: 13, fontWeight: 700, minWidth: { sm: 90 } }}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                      >
+                        <Typography
+                          sx={{ fontSize: 13, fontWeight: 700, minWidth: { sm: 90 } }}
+                        >
                           {ticket.name}
                         </Typography>
                         <Typography
@@ -3750,7 +3757,12 @@ export default function PlanningWorkspacePage() {
                             : ''}
                         </Typography>
                       </Stack>
-                      <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%', flex: 1 }}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ width: '100%', flex: 1 }}
+                      >
                         <Box sx={{ flex: 1 }}>
                           <LinearProgress
                             variant="determinate"
@@ -3986,7 +3998,11 @@ export default function PlanningWorkspacePage() {
                                 event.stopPropagation();
                                 setReviewingNeedId(need.id);
                               }}
-                              sx={{ borderRadius: '999px', textTransform: 'none', fontSize: 12 }}
+                              sx={{
+                                borderRadius: '999px',
+                                textTransform: 'none',
+                                fontSize: 12,
+                              }}
                             >
                               Review applicants
                             </Button>
@@ -4021,7 +4037,11 @@ export default function PlanningWorkspacePage() {
                                   targetLabel: need.title,
                                 });
                               }}
-                              sx={{ borderRadius: '999px', textTransform: 'none', fontSize: 12 }}
+                              sx={{
+                                borderRadius: '999px',
+                                textTransform: 'none',
+                                fontSize: 12,
+                              }}
                             >
                               Host override
                             </Button>

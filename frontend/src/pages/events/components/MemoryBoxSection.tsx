@@ -24,8 +24,9 @@ export const MemoryBoxSection = ({
   event: any;
   canUpload?: boolean;
 }) => {
-    const canUploadHighlights =
-      canUpload ?? !(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published');
+  const canUploadHighlights =
+    canUpload ??
+    !(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published');
 
   const navigate = useNavigate();
   const { id } = useParams();

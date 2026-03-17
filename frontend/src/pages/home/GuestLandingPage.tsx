@@ -450,29 +450,49 @@ function SectionHeader({
   );
 }
 
+function HorizontalScrollRow({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1.75,
+        overflowX: 'auto',
+        pb: 1,
+        scrollSnapType: 'x proximity',
+        WebkitOverflowScrolling: 'touch',
+        '&::-webkit-scrollbar': {
+          height: 8,
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(120, 94, 60, 0.18)',
+          borderRadius: '999px',
+        },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
 export default function GuestLandingPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterChip>('This weekend');
-  const [hasNearbySectionInView, setHasNearbySectionInView] = useState(false);
   const [heroAnimationData, setHeroAnimationData] = useState<object | null>(null);
   const nearbySectionRef = useRef<HTMLDivElement | null>(null);
   const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
   const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
-    sort: 'trending',
-    page_size: 4,
+    sort: 'trending'
   });
   const { data: onlineResponse, isLoading: loadingOnline } = useFeed({
     online: true,
-    sort: 'upcoming',
-    page_size: 4,
+    sort: 'upcoming'
   });
   const { data: discoverResponse, isLoading: loadingDiscover } = useFeed({
     sort: activeFilter === 'Tonight' ? 'upcoming' : 'trending',
     online: activeFilter === 'Contributor spots open' ? undefined : false,
-    weekend: activeFilter === 'This weekend' ? true : undefined,
-    page_size: 4,
+    weekend: activeFilter === 'This weekend' ? true : undefined
   });
 
   const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]).slice(0, 4);
@@ -537,119 +557,8 @@ export default function GuestLandingPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const section = nearbySectionRef.current;
-
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setHasNearbySectionInView(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2,
-        rootMargin: '-72px 0px 0px 0px',
-      },
-    );
-
-    observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <Box sx={{ background: '--var(--color-background-primary)' }}>
-      {false && (
-        <Box
-          component="header"
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 40,
-            // backgroundColor: 'var(--color-background-primary)',
-          }}
-        >
-          <Container
-            maxWidth={false}
-            sx={{
-              maxWidth: 1240,
-              background: hasNearbySectionInView
-                ? 'rgba(255, 233, 205, 0.7)'
-                : '#D85A30',
-              transition: 'background-color 1000ms ease',
-              px: { xs: 1.5, sm: 3 },
-              py: 1.25,
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: { xs: 0.75, sm: 1.5 },
-                flexWrap: 'nowrap',
-                minWidth: 0,
-              }}
-            >
-              <Box
-                onClick={() => navigate('/')}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  pr: 0.5,
-                  minWidth: 0,
-                }}
-              >
-                <Typography
-                  sx={{
-                    mt: 2,
-                    fontFamily: 'Syne, sans-serif',
-                    fontWeight: 800,
-                    fontSize: { xs: 24, sm: 32 },
-                    letterSpacing: '-0.03em',
-                    color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
-                    transition: 'color 180ms ease',
-                    whiteSpace: 'nowrap',
-                    maxWidth: 580,
-                    mx: 'auto',
-                    lineHeight: 1.65,
-                  }}
-                >
-                  <span className="">
-                    <strong>out</strong>
-                  </span>
-                  <Box
-                    component="span"
-                    aria-label="go"
-                    role="img"
-                    sx={{
-                      display: 'inline-block',
-                      width: { xs: 30, md: 36 },
-                      height: { xs: 30, md: 35 },
-                      // pt: 7,
-                      // mx: 0.5,
-                      transform: 'translateY(10px)',
-                      backgroundColor: 'currentColor',
-                      maskImage: "url('/assets/go-symbol.png')",
-                      maskRepeat: 'no-repeat',
-                      maskPosition: 'center',
-                      maskSize: 'contain',
-                      WebkitMaskImage: "url('/assets/go-symbol.png')",
-                      WebkitMaskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center',
-                      WebkitMaskSize: 'contain',
-                    }}
-                  />
-                  {''}
-                  <strong>ing</strong>
-                </Typography>
-              </Box>
-            </Box>
-          </Container>
-        </Box>
-      )}
-
       <Box
         sx={{
           background: '#D85A30',
@@ -835,35 +744,41 @@ export default function GuestLandingPage() {
         <SectionHeader
           label="Near you"
           title="Events happening in your city"
-          description="Baltimore · This weekend"
+          description="This weekend"
         />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: 1.75,
-          }}
-        >
+        <HorizontalScrollRow>
           {nearbyEvents.map((event) => (
-            <SmallEventCard key={event.id} event={event} />
+            <Box
+              key={event.id}
+              sx={{
+                flex: '0 0 clamp(220px, 28vw, 280px)',
+                minWidth: 0,
+                scrollSnapAlign: 'start',
+              }}
+            >
+              <SmallEventCard event={event} />
+            </Box>
           ))}
-        </Box>
+        </HorizontalScrollRow>
       </Container>
 
       <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
         <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
           <SectionHeader label="Join from anywhere" title="Events happening online" />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {onlineEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <Box
+                key={event.id}
+                sx={{
+                  flex: '0 0 clamp(220px, 28vw, 280px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <EventCard event={event} />
+              </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         </Container>
       </Box>
 
@@ -894,21 +809,23 @@ export default function GuestLandingPage() {
             <CircularProgress sx={{ color: '#D85A30' }} />
           </Box>
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {discoverEvents.map((event) => (
-              <ThingsToDoCard
+              <Box
                 key={event.id}
-                event={event}
-                showNeedCallout={activeFilter === 'Contributor spots open'}
-              />
+                sx={{
+                  flex: '0 0 clamp(240px, 32vw, 320px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <ThingsToDoCard
+                  event={event}
+                  showNeedCallout={activeFilter === 'Contributor spots open'}
+                />
+              </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         )}
       </Container>
 

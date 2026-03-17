@@ -1,6 +1,9 @@
 import { Box, Typography } from '@mui/material';
 
-export const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+export const LIFECYCLE_CONFIG: Record<
+  string,
+  { label: string; color: string; bg: string }
+> = {
   draft: { label: 'Draft', color: '#64748b', bg: '#f1f5f9' },
   published: { label: 'Published', color: '#2563eb', bg: '#dbeafe' },
   at_risk: { label: 'At Risk', color: '#d97706', bg: '#fef3c7' },

@@ -111,7 +111,8 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           </Box>
         </Grid>
       </Grid>
-      {!capabilities.showServiceShoutoutOnly || event.participating_vendors?.length > 0 ? (
+      {!capabilities.showServiceShoutoutOnly ||
+      event.participating_vendors?.length > 0 ? (
         <Box id="services">
           <ComicServicesModule
             event={event}
@@ -245,7 +246,9 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
                 event={event}
                 highlights={highlights}
                 canUpload={capabilities.canUploadHighlights}
-                showPublishedPlaceholder={capabilities.showPublishedHighlightsPlaceholder}
+                showPublishedPlaceholder={
+                  capabilities.showPublishedHighlightsPlaceholder
+                }
                 onOpenComposer={viewModel.onOpenHighlightComposer}
               />
               <NormalDivider />

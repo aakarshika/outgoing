@@ -13,11 +13,7 @@ export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) =>
 
   return (
     <div className="mt-12 mb-8">
-      <AttendeeStack 
-        attendees={attendees} 
-        isEventOver={isEventOver} 
-        variant="comic"
-      />
+      <AttendeeStack attendees={attendees} isEventOver={isEventOver} variant="comic" />
     </div>
   );
 };

@@ -65,10 +65,9 @@ export function SimpleNavbar({
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
   const isMobile = useMediaQuery('(max-width:767px)');
-  const eventMatch = matchPath(
-    { path: '/events/:id/*', end: false },
-    location.pathname,
-  );
+  const eventMatch =
+    matchPath({ path: '/events/:id/*', end: false }, location.pathname) ||
+    matchPath({ path: '/events-new/:id/*', end: false }, location.pathname);
   const eventId = eventMatch?.params?.id;
   const { data: eventResponse } = useEvent(Number(eventId));
   const { data: categoriesResponse } = useCategories();
@@ -86,7 +85,8 @@ export function SimpleNavbar({
     isAuthenticated &&
     !!user &&
     !!event &&
-    !!(event.user_applications && event.user_applications.length > 0);
+    (event.user_is_vendor ||
+      !!(event.user_applications && event.user_applications.length > 0));
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
@@ -95,23 +95,17 @@ export function SimpleNavbar({
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const hostingAndServicesItems: MenuItem[] = [];
-  if (hasHostedEvents) {
-    hostingAndServicesItems.push({ label: 'Hosting', to: '/managing', Icon: Speech });
-  }
-  if (hasServices) {
-    hostingAndServicesItems.push({
-      label: 'Servicing',
-      to: '/managing/services',
-      Icon: Monitor,
-    });
-  }
-  if (hasTickets) {
-    hostingAndServicesItems.push({
-      label: 'My Tickets',
-      to: '/managing/attending',
-      Icon: Ticket,
-    });
-  }
+  hostingAndServicesItems.push({ label: 'My Events', to: '/managing', Icon: Speech });
+  hostingAndServicesItems.push({
+    label: 'My Services',
+    to: '/managing/services',
+    Icon: Monitor,
+  });
+  hostingAndServicesItems.push({
+    label: 'My Ticket',
+    to: '/managing/attending',
+    Icon: Ticket,
+  });
 
   const menuGroups: MenuItem[][] = [
     [
@@ -497,7 +491,7 @@ export function SimpleNavbar({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {user.first_name && user.last_name 
+                    {user.first_name && user.last_name
                       ? `${user.first_name} ${user.last_name}`
                       : user.username}
                   </Typography>

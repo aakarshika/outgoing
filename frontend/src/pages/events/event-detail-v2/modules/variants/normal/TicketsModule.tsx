@@ -160,12 +160,12 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
 
       {hasPurchased && (
         <Box sx={{ mb: 3 }}>
-          <PurchasedTicketsModule 
-            userTickets={event.user_tickets} 
+          <PurchasedTicketsModule
+            userTickets={event.user_tickets}
             ticketTiers={tiers}
             onViewTicket={onViewTicket}
           />
-          
+
           {capabilities.showTicketPurchase && (
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               <Button
@@ -187,137 +187,141 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
 
       {capabilities.showTicketPurchase && (!hasPurchased || showStubs) && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {tiers.map((tier: any, idx: number) => {
-          const isSoldOut = tier.sold_out || tier.capacity <= (tier.sold_count || 0);
-          const price =
-            tier.price === 0 || tier.price === '0' || tier.price === 'Free'
-              ? 'Free'
-              : `₹${tier.price}`;
-          const isFree = price === 'Free';
-          const { bg, icon } = getTierColors(idx);
-          const currentQty = quantities[tier.id] || 0;
-          const leftCount = tier.capacity - (tier.sold_count || 0);
+          {tiers.map((tier: any, idx: number) => {
+            const isSoldOut = tier.sold_out || tier.capacity <= (tier.sold_count || 0);
+            const price =
+              tier.price === 0 || tier.price === '0' || tier.price === 'Free'
+                ? 'Free'
+                : `₹${tier.price}`;
+            const isFree = price === 'Free';
+            const { bg, icon } = getTierColors(idx);
+            const currentQty = quantities[tier.id] || 0;
+            const leftCount = tier.capacity - (tier.sold_count || 0);
 
-          return (
-            <Box
-              key={tier.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                p: '12px',
-                bgcolor: '#fff',
-                borderRadius: '14px',
-                border: '0.5px solid #e5e7eb',
-                opacity: isSoldOut ? 0.4 : 1,
-                filter: isSoldOut ? 'grayscale(1)' : 'none',
-                pointerEvents: isSoldOut ? 'none' : 'auto',
-                position: 'relative',
-              }}
-            >
-              {/* Thumbnail */}
+            return (
               <Box
+                key={tier.id}
                 sx={{
-                  width: 46,
-                  height: 46,
-                  minWidth: 46,
-                  borderRadius: '10px',
-                  bgcolor: bg,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'transform 0.2s',
-                  '&:hover': { transform: 'scale(1.05)' },
+                  gap: 1.5,
+                  p: '12px',
+                  bgcolor: '#fff',
+                  borderRadius: '14px',
+                  border: '0.5px solid #e5e7eb',
+                  opacity: isSoldOut ? 0.4 : 1,
+                  filter: isSoldOut ? 'grayscale(1)' : 'none',
+                  pointerEvents: isSoldOut ? 'none' : 'auto',
+                  position: 'relative',
                 }}
               >
-                <TicketIcon color={icon} />
-              </Box>
-
-              {/* Middle Section */}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
-                  noWrap
-                  sx={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#000',
-                    lineHeight: 1.2,
-                    mb: 0.25,
-                  }}
-                >
-                  {tier.name}
-                </Typography>
+                {/* Thumbnail */}
                 <Box
                   sx={{
+                    width: 46,
+                    height: 46,
+                    minWidth: 46,
+                    borderRadius: '10px',
+                    bgcolor: bg,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 0.5,
-                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.05)' },
                   }}
                 >
+                  <TicketIcon color={icon} />
+                </Box>
+
+                {/* Middle Section */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
+                    noWrap
                     sx={{
-                      fontSize: 10,
-                      color: isSoldOut ? '#ef4444' : '#6b7280',
-                      fontWeight: 400,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: '#000',
+                      lineHeight: 1.2,
+                      mb: 0.25,
                     }}
                   >
-                    {isSoldOut ? 'Sold out' : `${leftCount} left`}
+                    {tier.name}
                   </Typography>
-                  {tier.sales_end_date && (
-                    <>
-                      <Typography sx={{ fontSize: 10, color: '#9ca3af' }}>·</Typography>
-                      <Typography sx={{ fontSize: 10, color: '#6b7280' }}>
-                        Ends{' '}
-                        {new Date(tier.sales_end_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </Typography>
-                    </>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 10,
+                        color: isSoldOut ? '#ef4444' : '#6b7280',
+                        fontWeight: 400,
+                      }}
+                    >
+                      {isSoldOut ? 'Sold out' : `${leftCount} left`}
+                    </Typography>
+                    {tier.sales_end_date && (
+                      <>
+                        <Typography sx={{ fontSize: 10, color: '#9ca3af' }}>
+                          ·
+                        </Typography>
+                        <Typography sx={{ fontSize: 10, color: '#6b7280' }}>
+                          Ends{' '}
+                          {new Date(tier.sales_end_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
+                  {tier.name?.toLowerCase().includes('contributor') && (
+                    <Typography
+                      sx={{ fontSize: 9, color: '#b45309', mt: 0.5, fontWeight: 500 }}
+                    >
+                      Chip in and get in free
+                    </Typography>
                   )}
                 </Box>
-                {tier.name?.toLowerCase().includes('contributor') && (
-                  <Typography
-                    sx={{ fontSize: 9, color: '#b45309', mt: 0.5, fontWeight: 500 }}
-                  >
-                    Chip in and get in free
-                  </Typography>
-                )}
-              </Box>
 
-              {/* Right Column */}
-              {!isSoldOut && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    gap: 0.5,
-                  }}
-                >
-                  <Typography
+                {/* Right Column */}
+                {!isSoldOut && (
+                  <Box
                     sx={{
-                      fontSize: 18,
-                      fontWeight: 500,
-                      color: isFree ? '#1D9E75' : '#D85A30',
-                      lineHeight: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: 0.5,
                     }}
                   >
-                    {price}
-                  </Typography>
-                  <Stepper
-                    value={currentQty}
-                    onIncrement={() => handleUpdateQty(tier.id, 1, Math.min(leftCount, 10))}
-                    onDecrement={() => handleUpdateQty(tier.id, -1, 10)}
-                  />
-                </Box>
-              )}
-            </Box>
-          );
-        })}
-      </Box>
-    )}
+                    <Typography
+                      sx={{
+                        fontSize: 18,
+                        fontWeight: 500,
+                        color: isFree ? '#1D9E75' : '#D85A30',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {price}
+                    </Typography>
+                    <Stepper
+                      value={currentQty}
+                      onIncrement={() =>
+                        handleUpdateQty(tier.id, 1, Math.min(leftCount, 10))
+                      }
+                      onDecrement={() => handleUpdateQty(tier.id, -1, 10)}
+                    />
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      )}
 
       {/* Get Ticket Button - Static at the bottom of the list */}
       {capabilities.showTicketPurchase && (!hasPurchased || showStubs) && (

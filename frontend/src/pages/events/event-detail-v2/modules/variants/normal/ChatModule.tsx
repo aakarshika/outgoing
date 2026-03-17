@@ -3,7 +3,10 @@ import { Send, Plus } from 'lucide-react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { useHostVendorMessages, useAddHostVendorMessage } from '@/features/events/hooks';
+import {
+  useHostVendorMessages,
+  useAddHostVendorMessage,
+} from '@/features/events/hooks';
 
 interface NormalChatModuleProps {
   event: any;
@@ -22,7 +25,10 @@ const AVATAR_COLORS = [
 
 export function NormalChatModule({ event, canAccessEventChat }: NormalChatModuleProps) {
   const eventId = event?.id;
-  const { data: messagesResponse, isLoading } = useHostVendorMessages(eventId, !!eventId && canAccessEventChat);
+  const { data: messagesResponse, isLoading } = useHostVendorMessages(
+    eventId,
+    !!eventId && canAccessEventChat,
+  );
   const addMessageMutation = useAddHostVendorMessage();
 
   const [messageText, setMessageText] = useState('');
@@ -37,9 +43,11 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
     const groups: any[] = [];
     messages.forEach((msg: any, idx: number) => {
       const prevMsg = messages[idx - 1];
-      const isNewGroup = !prevMsg || 
-                        prevMsg.sender_id !== msg.sender_id || 
-                        (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 60000);
+      const isNewGroup =
+        !prevMsg ||
+        prevMsg.sender_id !== msg.sender_id ||
+        new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() >
+          60000;
 
       if (isNewGroup) {
         groups.push({
@@ -47,7 +55,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
           sender_name: msg.sender_name || msg.sender_username || 'Anonymous',
           sender_avatar: msg.sender_avatar,
           sender_role: msg.sender_role,
-          messages: [msg]
+          messages: [msg],
         });
       } else {
         groups[groups.length - 1].messages.push(msg);
@@ -73,7 +81,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
         onSuccess: () => {
           setMessageText('');
         },
-      }
+      },
     );
   };
 
@@ -138,11 +146,19 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                 },
               }}
             />
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary, #111)' }}>
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--color-text-primary, #111)',
+              }}
+            >
               Live chat
             </Typography>
           </Box>
-          <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}>
+          <Typography
+            sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}
+          >
             {/* Mocking online count */}
             {Math.floor(Math.random() * 5) + 8} here
           </Typography>
@@ -182,9 +198,13 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
             </Typography>
           ) : (
             groupedMessages.map((group, groupIdx) => {
-              const colorIdx = group.sender_id ? (typeof group.sender_id === 'number' ? group.sender_id : group.sender_id.length) : groupIdx;
+              const colorIdx = group.sender_id
+                ? typeof group.sender_id === 'number'
+                  ? group.sender_id
+                  : group.sender_id.length
+                : groupIdx;
               const color = AVATAR_COLORS[colorIdx % AVATAR_COLORS.length];
-              
+
               return (
                 <Box key={groupIdx} sx={{ display: 'flex', gap: 1, mt: 1 }}>
                   <Box
@@ -203,16 +223,29 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                       src={group.sender_avatar}
                       username={group.sender_name}
                       size="xs"
-                      sx={{ 
-                        width: 28, 
+                      sx={{
+                        width: 28,
                         height: 28,
                         bgcolor: 'transparent',
                         color: 'inherit',
                       }}
                     />
                   </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, maxWidth: '80%' }}>
-                    <Typography sx={{ fontSize: 10, color: 'var(--color-text-secondary, #6b7280)', px: 0.5 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.25,
+                      maxWidth: '80%',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 10,
+                        color: 'var(--color-text-secondary, #6b7280)',
+                        px: 0.5,
+                      }}
+                    >
                       {group.sender_name}
                     </Typography>
                     {group.messages.map((msg: any, msgIdx: number) => {
@@ -263,16 +296,27 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                               size="small"
                               sx={{
                                 p: '1px 6px',
-                                border: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
+                                border:
+                                  '0.5px solid var(--color-border-tertiary, #e5e7eb)',
                                 borderRadius: '20px',
                                 bgcolor: 'var(--color-background-primary, #fff)',
-                                '&:hover': { bgcolor: 'var(--color-background-secondary, #f3f4f6)' },
+                                '&:hover': {
+                                  bgcolor: 'var(--color-background-secondary, #f3f4f6)',
+                                },
                               }}
                             >
                               <Plus size={10} />
                             </IconButton>
-                            <Typography sx={{ fontSize: 9, color: 'var(--color-text-tertiary, #9ca3af)' }}>
-                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <Typography
+                              sx={{
+                                fontSize: 9,
+                                color: 'var(--color-text-tertiary, #9ca3af)',
+                              }}
+                            >
+                              {new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </Typography>
                           </Box>
                         </Box>
@@ -285,7 +329,6 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
           )}
           <div ref={messagesEndRef} />
         </Box>
-
 
         {/* Input */}
         <Box
@@ -325,7 +368,10 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
               width: 30,
               height: 30,
               '&:hover': { bgcolor: '#166534' },
-              '&.Mui-disabled': { bgcolor: 'var(--color-background-tertiary, #e5e7eb)', color: '#9ca3af' },
+              '&.Mui-disabled': {
+                bgcolor: 'var(--color-background-tertiary, #e5e7eb)',
+                color: '#9ca3af',
+              },
             }}
           >
             {addMessageMutation.isPending ? (
@@ -339,4 +385,3 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
     </Box>
   );
 }
-

@@ -62,8 +62,8 @@ export function NormalSaveToggleModule({
           {disabled
             ? 'Saving opens once the event is published'
             : isSaved
-            ? "You'll get a reminder 24h before"
-            : 'Get reminded before it starts'}
+              ? "You'll get a reminder 24h before"
+              : 'Get reminded before it starts'}
         </Typography>
       )}
     </Box>

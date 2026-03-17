@@ -1,5 +1,4 @@
 import { LocateFixed, MapPin, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { useNavbarContext } from './NavbarContext';
 
@@ -14,7 +13,6 @@ export const SearchBarSimple = () => {
     nearYouEnabled,
     nearYouName,
     locationSearch,
-    radiusMiles,
     locationDropdownOpen,
     toggleNearYou,
     setShowLocationSuggestions,
@@ -23,14 +21,7 @@ export const SearchBarSimple = () => {
     locationSuggestions,
     handleLocationSuggestionClick,
     clearLocationSelection,
-    setRadiusMiles,
-    navigateToSearch,
   } = useNavbarContext();
-  const [radiusInput, setRadiusInput] = useState(String(radiusMiles));
-
-  useEffect(() => {
-    setRadiusInput(String(radiusMiles));
-  }, [radiusMiles]);
 
   return (
     <div className="sm:relative min-w-0 flex-1 bg-white">
@@ -63,21 +54,22 @@ export const SearchBarSimple = () => {
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex hidden md:flex   h-10 items-center justify-between gap-2 rounded-full bg-white px-3 text-sm  transition-colors "
+            className="hidden h-10 items-center justify-between gap-2 rounded-full border border-[rgba(120,94,60,0.16)] bg-[#fffaf3] px-3 text-sm text-[var(--color-text-primary)] shadow-[0_6px_18px_rgba(74,53,33,0.06)] transition-colors hover:border-[rgba(216,90,48,0.3)] md:flex"
           >
             <span className="flex items-center gap-2 truncate">
-              <MapPin size={14} className="shrink-0" />
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FAECE7] text-[#D85A30]">
+                <MapPin size={14} className="shrink-0" />
+              </span>
               <span className="truncate">
                 {nearYouEnabled
                   ? nearYouName || 'Near you'
-                  : locationSearch || 'Location'}
+                  : locationSearch || 'Anywhere'}
               </span>
             </span>
-            <span className="shrink-0 text-xs">{radiusMiles} mi</span>
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-[calc(100%+8px)] z-[70] sm:w-[360px] rounded-2xl bg-white p-3 shadow-[0px_4px_10px_rgba(0,0,0,0.1)]">
+            <div className="absolute left-2 right-2 top-[calc(100%+8px)] z-[70] rounded-3xl border border-[rgba(120,94,60,0.14)] bg-[#fffaf3] p-3 shadow-[0_18px_40px_rgba(74,53,33,0.14)] sm:left-auto sm:right-0 sm:w-[360px]">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -85,13 +77,22 @@ export const SearchBarSimple = () => {
                   toggleNearYou();
                   setLocationDropdownOpen(false);
                 }}
-                className="mb-3 flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left text-sm text-[var(--color-text-primary)]"
+                className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-[rgba(29,158,117,0.16)] bg-[#f3fbf8] px-3 py-3 text-left text-sm text-[var(--color-text-primary)]"
               >
-                <LocateFixed
-                  size={16}
-                  className={nearYouEnabled ? 'text-[#D85A30]' : ''}
-                />
-                <span>Use current location</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D9E75]">
+                  <LocateFixed
+                    size={16}
+                    className={nearYouEnabled ? 'text-[#1D9E75]' : ''}
+                  />
+                </span>
+                <span className="flex flex-col">
+                  <span>Use current location</span>
+                  <span className="text-xs text-[var(--color-text-secondary)]">
+                    {nearYouEnabled
+                      ? nearYouName || 'Using your location'
+                      : 'Find events nearby automatically'}
+                  </span>
+                </span>
               </button>
 
               <div className="relative">
@@ -109,11 +110,11 @@ export const SearchBarSimple = () => {
                     setTimeout(() => setShowLocationSuggestions(false), 200)
                   }
                   placeholder="City or address..."
-                  className="h-10 w-full rounded-xl bg-white px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                  className="h-11 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-3 text-sm text-[var(--color-text-primary)] outline-none"
                 />
 
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute left-0 bg-white right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl ">
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
                     {locationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}
@@ -124,7 +125,7 @@ export const SearchBarSimple = () => {
                           setShowLocationSuggestions(false);
                           setLocationDropdownOpen(false);
                         }}
-                        className="flex w-full bg-white items-start gap-2 border-b border-white px-3 py-2 text-left last:border-b-0 hover:bg-white"
+                        className="flex w-full items-start gap-2 border-b border-[rgba(120,94,60,0.1)] bg-white px-3 py-3 text-left last:border-b-0 hover:bg-[#fff6e8]"
                       >
                         <Search
                           size={14}
@@ -139,46 +140,13 @@ export const SearchBarSimple = () => {
                 )}
               </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <label className="text-xs text-[var(--color-text-secondary)]">
-                  Radius
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={radiusInput}
-                  onChange={(e) => {
-                    const nextValue = e.target.value;
-                    setRadiusInput(nextValue);
-                    const value = parseInt(nextValue, 10);
-                    if (!Number.isNaN(value) && value > 0) {
-                      setRadiusMiles(value);
-                      if (locationSearch.trim()) {
-                        navigateToSearch({ nextRadiusMiles: value });
-                      }
-                    }
-                  }}
-                  onBlur={() => {
-                    const value = parseInt(radiusInput, 10);
-                    if (Number.isNaN(value) || value < 1) {
-                      setRadiusInput(String(radiusMiles));
-                    }
-                  }}
-                  className="h-8 w-20 rounded-lg bg-white px-2 text-sm text-[var(--color-text-primary)] outline-none"
-                />
-                <span className="text-xs text-[var(--color-text-secondary)]">
-                  miles
-                </span>
-              </div>
-
               <button
                 type="button"
                 onClick={() => {
                   clearLocationSelection();
                   setLocationDropdownOpen(false);
                 }}
-                className="mt-3 bg-gray-100 w-full rounded-xl  px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-gray-200"
+                className="mt-3 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-3 py-2.5 text-sm text-[var(--color-text-secondary)] hover:bg-[#faf4ec]"
               >
                 Clear location
               </button>

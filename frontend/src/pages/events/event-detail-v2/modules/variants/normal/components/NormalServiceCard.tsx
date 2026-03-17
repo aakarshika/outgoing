@@ -64,7 +64,9 @@ export function NormalServiceCard({
     'free',
   );
   const [message, setMessage] = useState('');
-  const [localApplicationStatus, setLocalApplicationStatus] = useState<string | null>(null);
+  const [localApplicationStatus, setLocalApplicationStatus] = useState<string | null>(
+    null,
+  );
 
   const userApplication = event?.user_applications?.find(
     (app: any) => app.need_id === need.id,
@@ -491,7 +493,8 @@ export function NormalServiceCard({
                   fontSize: 11,
                   bgcolor: selectedComp === 'free' ? '#FAECE7' : '#fff',
                   color: selectedComp === 'free' ? '#712B13' : '#374151',
-                  border: selectedComp === 'free' ? '1px solid #D85A30' : '1px solid #e5e7eb',
+                  border:
+                    selectedComp === 'free' ? '1px solid #D85A30' : '1px solid #e5e7eb',
                 }}
               />
               <Chip
@@ -502,7 +505,10 @@ export function NormalServiceCard({
                   fontSize: 11,
                   bgcolor: selectedComp === 'discount' ? '#FAECE7' : '#fff',
                   color: selectedComp === 'discount' ? '#712B13' : '#374151',
-                  border: selectedComp === 'discount' ? '1px solid #D85A30' : '1px solid #e5e7eb',
+                  border:
+                    selectedComp === 'discount'
+                      ? '1px solid #D85A30'
+                      : '1px solid #e5e7eb',
                 }}
               />
               <Chip
@@ -513,7 +519,8 @@ export function NormalServiceCard({
                   fontSize: 11,
                   bgcolor: selectedComp === 'cash' ? '#FAECE7' : '#fff',
                   color: selectedComp === 'cash' ? '#712B13' : '#374151',
-                  border: selectedComp === 'cash' ? '1px solid #D85A30' : '1px solid #e5e7eb',
+                  border:
+                    selectedComp === 'cash' ? '1px solid #D85A30' : '1px solid #e5e7eb',
                 }}
               />
             </Stack>

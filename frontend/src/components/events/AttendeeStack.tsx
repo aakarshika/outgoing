@@ -13,11 +13,11 @@ interface AttendeeStackProps {
   variant?: 'comic' | 'normal';
 }
 
-export const AttendeeStack = ({ 
-  attendees, 
-  isEventOver, 
+export const AttendeeStack = ({
+  attendees,
+  isEventOver,
   className,
-  variant = 'normal'
+  variant = 'normal',
 }: AttendeeStackProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const openPopover = Boolean(anchorEl);
@@ -40,10 +40,12 @@ export const AttendeeStack = ({
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: document.title,
-        url: window.location.href,
-      }).catch(console.error);
+      navigator
+        .share({
+          title: document.title,
+          url: window.location.href,
+        })
+        .catch(console.error);
     } else {
       // Fallback for browsers that don't support share API
       navigator.clipboard.writeText(window.location.href);
@@ -54,17 +56,28 @@ export const AttendeeStack = ({
   const isComic = variant === 'comic';
 
   return (
-    <div className={cn("flex flex-col w-full", isComic ? "items-center" : "items-start", className)}>
+    <div
+      className={cn(
+        'flex flex-col w-full',
+        isComic ? 'items-center' : 'items-start',
+        className,
+      )}
+    >
       {/* Section Heading */}
-      <div className={cn("w-full flex items-center mb-6", isComic ? "justify-center" : "justify-start")}>
+      <div
+        className={cn(
+          'w-full flex items-center mb-6',
+          isComic ? 'justify-center' : 'justify-start',
+        )}
+      >
         <h3
           className={cn(
-            "text-base font-bold text-gray-800 mr-4 whitespace-nowrap",
-            isComic ? "text-xl" : "text-sm uppercase tracking-wider"
+            'text-base font-bold text-gray-800 mr-4 whitespace-nowrap',
+            isComic ? 'text-xl' : 'text-sm uppercase tracking-wider',
           )}
           style={{ fontFamily: isComic ? '"Inter", sans-serif' : 'inherit' }}
         >
-          {isEventOver ? "Who Went" : "Who's Going"}
+          {isEventOver ? 'Who Went' : "Who's Going"}
         </h3>
         {isComic && <div className="h-[1px] flex-1 bg-gray-200" />}
       </div>
@@ -74,7 +87,7 @@ export const AttendeeStack = ({
         {/* Avatar Stack */}
         <div className="flex -space-x-4 items-center shrink-0">
           {displayAttendees.map((attendee, index) => (
-            <div 
+            <div
               key={`${attendee.username}-${index}`}
               className="relative cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:z-20 group"
               style={{ zIndex: MAX_DISPLAY - index }}
@@ -93,15 +106,15 @@ export const AttendeeStack = ({
 
           {/* Counter Bubble */}
           {remainingCount > 0 && (
-            <div 
+            <div
               className="relative z-0 cursor-pointer transition-all duration-200 hover:-translate-y-1"
               onClick={handleOpenPopover}
             >
-              <div 
-                 className={cn(
-                   "rounded-full border-[3px] border-white shadow-md bg-white flex items-center justify-center text-gray-600 font-bold select-none ring-1 ring-black/5",
-                   "h-12 w-12 text-sm"
-                 )}
+              <div
+                className={cn(
+                  'rounded-full border-[3px] border-white shadow-md bg-white flex items-center justify-center text-gray-600 font-bold select-none ring-1 ring-black/5',
+                  'h-12 w-12 text-sm',
+                )}
               >
                 +{remainingCount}
               </div>
@@ -112,7 +125,12 @@ export const AttendeeStack = ({
 
       {/* Action Button Below */}
       {!isEventOver && (
-        <div className={cn("w-full mt-6 flex", isComic ? "justify-center" : "justify-start")}>
+        <div
+          className={cn(
+            'w-full mt-6 flex',
+            isComic ? 'justify-center' : 'justify-start',
+          )}
+        >
           <Button
             onClick={handleShare}
             variant="outlined"
@@ -129,7 +147,7 @@ export const AttendeeStack = ({
               '&:hover': {
                 borderColor: '#d1d5db',
                 bgcolor: '#f9fafb',
-              }
+              },
             }}
           >
             Invite Friends
@@ -156,35 +174,58 @@ export const AttendeeStack = ({
             width: 320,
             maxHeight: 450,
             borderRadius: '24px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow:
+              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             overflow: 'hidden',
-          }
+          },
         }}
       >
         <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
             <User size={20} /> All Attendees
           </Typography>
           <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {attendees.map((attendee, idx) => (
-              <Box 
+              <Box
                 key={`${attendee.username}-${idx}`}
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 2,
                   p: 1,
                   borderRadius: '12px',
                   transition: 'background 0.2s',
-                  '&:hover': { bgcolor: '#f9fafb' }
+                  '&:hover': { bgcolor: '#f9fafb' },
                 }}
               >
-                <UserAvatar src={attendee.avatar} username={attendee.username} size="md" />
+                <UserAvatar
+                  src={attendee.avatar}
+                  username={attendee.username}
+                  size="md"
+                />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827', noWrap: true }}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      color: '#111827',
+                      noWrap: true,
+                    }}
+                  >
                     {attendee.name || attendee.username}
                   </Typography>
-                  <Typography sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}>
+                  <Typography
+                    sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}
+                  >
                     @{attendee.username}
                   </Typography>
                 </Box>
@@ -192,7 +233,7 @@ export const AttendeeStack = ({
                   <BadgeCheck size={18} className="text-blue-500 shrink-0" />
                 )}
                 {!attendee.is_verified && (
-                   <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                  <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
                 )}
               </Box>
             ))}

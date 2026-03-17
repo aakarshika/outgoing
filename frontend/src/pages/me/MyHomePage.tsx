@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Lightbulb, MapPin, Sparkle } from 'lucide-react';
+import { ArrowRight, Lightbulb, Sparkle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,6 @@ import client from '@/api/client';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
 import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
-import { fetchFeed } from '@/features/events/api';
 import { fetchEvent } from '@/features/events/api';
 import { useFeed, useMyInterestedEvents } from '@/features/events/hooks';
 import {
@@ -107,36 +106,48 @@ function SectionHeading({
   eyebrow,
   title,
   description,
+  action,
 }: {
   eyebrow: string;
   title: string;
   description?: string;
+  action?: React.ReactNode;
 }) {
   return (
-    <Stack spacing={0.75}>
-      <Typography
-        sx={{
-          fontFamily: 'Syne, sans-serif',
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'rgba(66, 50, 28, 0.62)',
-        }}
+    <Stack spacing={0.75} sx={{ position: 'relative' }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        spacing={2}
       >
-        {eyebrow}
-      </Typography>
-      <Typography
-        sx={{
-          fontFamily: 'Syne, sans-serif',
-          fontSize: { xs: 24, sm: 28 },
-          fontWeight: 800,
-          letterSpacing: '-0.04em',
-          color: '#2B2118',
-        }}
-      >
-        {title}
-      </Typography>
+        <Stack spacing={0.75}>
+          <Typography
+            sx={{
+              fontFamily: 'Syne, sans-serif',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(66, 50, 28, 0.62)',
+            }}
+          >
+            {eyebrow}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: 'Syne, sans-serif',
+              fontSize: { xs: 24, sm: 28 },
+              fontWeight: 800,
+              letterSpacing: '-0.04em',
+              color: '#2B2118',
+            }}
+          >
+            {title}
+          </Typography>
+        </Stack>
+        {action && <Box sx={{ pt: 1 }}>{action}</Box>}
+      </Stack>
       {description ? (
         <Typography
           sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)', maxWidth: 560 }}
@@ -420,31 +431,12 @@ export default function MyHomePage() {
     return `/search?${params.toString()}`;
   }, [locationQuery]);
 
-  const { data: nearbyTrendingResponse } = useQuery({
-    queryKey: ['my-home', 'trending-nearby', locationQuery],
-    enabled: Boolean(locationQuery),
-    queryFn: () =>
-      fetchFeed({
-        sort: 'trending',
-        location: locationQuery,
-        lifecycle_states: trendingLifecycleStates,
-        page_size: 120,
-      }),
-  });
-
   const trendingEvents = useMemo(
     () =>
       ((trendingResponse?.data || []) as EventListItem[]).filter(
         (event) => !!event.start_time && isCurrentOrUpcomingEvent(event),
       ),
     [trendingResponse],
-  );
-  const nearbyTrendingEvents = useMemo(
-    () =>
-      ((nearbyTrendingResponse?.data || []) as EventListItem[]).filter(
-        (event) => !!event.start_time && isCurrentOrUpcomingEvent(event),
-      ),
-    [nearbyTrendingResponse],
   );
   const nextEvent = trendingEvents[0];
   const nextEventCountdown = getCountdownParts(nextEvent?.start_time);
@@ -512,7 +504,7 @@ export default function MyHomePage() {
   const weekendFeedTitle = hasUpcomingEvents
     ? 'A sharper feed for your next yes'
     : 'Your first yes starts here';
-  const baseTrendingEvents = locationQuery ? nearbyTrendingEvents : trendingEvents;
+  const baseTrendingEvents = trendingEvents;
 
   const filteredTrendingEvents = useMemo(() => {
     if (selectedTrendingFilters.length === 0) {
@@ -667,7 +659,7 @@ export default function MyHomePage() {
                   >
                     <Stack spacing={2.5}>
                       <Chip
-                        label={nextEvent ? 'Trending now' : 'No event yet'}
+                        label={nextEvent ? 'Upcoming next' : 'No event yet'}
                         sx={{
                           width: 'fit-content',
                           bgcolor: 'rgba(255,255,255,0.16)',
@@ -847,87 +839,10 @@ export default function MyHomePage() {
           <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, md: 4 } }}>
             <Stack spacing={4}>
               <Box>
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  justifyContent="space-between"
-                  alignItems={{ xs: 'flex-start', md: 'center' }}
-                  spacing={2}
-                  sx={{ mb: 2 }}
-                >
-                  <Stack spacing={0.75}>
-                    <Box
-                      sx={{
-                        display: 'inline-flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 0.5,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          fontFamily: 'Syne, sans-serif',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          color: 'rgba(66, 50, 28, 0.62)',
-                        }}
-                      >
-                        Trending around
-                        <Typography
-                          sx={{
-                            display: 'inline-flex',
-                            gap: 0.5,
-                            fontFamily: 'Syne, sans-serif',
-                            fontSize: 14,
-                            fontWeight: 700,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            color: 'rgba(66, 50, 28, 0.62)',
-                          }}
-                        >
-                          <MapPin size={18} color="rgb(255, 148, 86)" /> {locationLabel}
-                        </Typography>
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontFamily: 'Syne, sans-serif',
-                        fontSize: { xs: 24, sm: 28 },
-                        fontWeight: 800,
-                        letterSpacing: '-0.04em',
-                        color: '#2B2118',
-                      }}
-                    >
-                      {weekendFeedTitle}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {trendingFeedFilters.map((filter) => (
-                      <Chip
-                        key={filter.id}
-                        label={filter.label}
-                        onClick={() => toggleTrendingFilter(filter.id)}
-                        sx={{
-                          height: 34,
-                          borderRadius: '999px',
-                          bgcolor: selectedTrendingFilters.includes(filter.id)
-                            ? '#D85A30'
-                            : 'rgba(255,255,255,0.9)',
-                          color: selectedTrendingFilters.includes(filter.id)
-                            ? '#fff'
-                            : '#4A3827',
-                          border: selectedTrendingFilters.includes(filter.id)
-                            ? 'none'
-                            : '1px solid rgba(143, 105, 66, 0.14)',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      />
-                    ))}
+                <SectionHeading
+                  eyebrow="Trending events"
+                  title={weekendFeedTitle}
+                  action={
                     <Chip
                       component={Link}
                       to={allTrendingSearchHref}
@@ -961,23 +876,53 @@ export default function MyHomePage() {
                         },
                       }}
                     />
+                  }
+                />
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mt: 2, mb: 2 }}
+                >
+                  {trendingFeedFilters.map((filter) => (
                     <Chip
-                      label="Clear"
-                      onClick={clearTrendingFilters}
+                      key={filter.id}
+                      label={filter.label}
+                      onClick={() => toggleTrendingFilter(filter.id)}
                       sx={{
                         height: 34,
                         borderRadius: '999px',
-                        bgcolor: 'rgba(255, 244, 227, 0.92)',
-                        color: '#B45309',
-                        border: '1px dashed rgba(180, 83, 9, 0.38)',
+                        bgcolor: selectedTrendingFilters.includes(filter.id)
+                          ? '#D85A30'
+                          : 'rgba(255,255,255,0.9)',
+                        color: selectedTrendingFilters.includes(filter.id)
+                          ? '#fff'
+                          : '#4A3827',
+                        border: selectedTrendingFilters.includes(filter.id)
+                          ? 'none'
+                          : '1px solid rgba(143, 105, 66, 0.14)',
                         fontWeight: 700,
                         cursor: 'pointer',
-                        '&:hover': {
-                          bgcolor: 'rgba(255, 237, 213, 0.98)',
-                        },
                       }}
                     />
-                  </Stack>
+                  ))}
+                  <Chip
+                    label="Clear"
+                    onClick={clearTrendingFilters}
+                    sx={{
+                      height: 34,
+                      borderRadius: '999px',
+                      bgcolor: 'rgba(255, 244, 227, 0.92)',
+                      color: '#B45309',
+                      border: '1px dashed rgba(180, 83, 9, 0.38)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 237, 213, 0.98)',
+                      },
+                    }}
+                  />
                 </Stack>
                 <Box
                   sx={{
@@ -1025,8 +970,39 @@ export default function MyHomePage() {
                   <SectionHeading
                     eyebrow="Chip in"
                     title="Earn your way into the room"
+                    action={
+                      <Button
+                        component={Link}
+                        to="/search?tab=chip-in"
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          borderRadius: '999px',
+                          borderColor: 'rgba(143, 105, 66, 0.3)',
+                          color: '#2B2118',
+                          '&:hover': {
+                            borderColor: '#EF9F27',
+                            bgcolor: 'rgba(239, 159, 39, 0.06)',
+                          },
+                        }}
+                      >
+                        View all
+                      </Button>
+                    }
                   />
-                  <Stack spacing={1.5} sx={{ mt: 2 }}>
+                  <Box
+                    sx={{
+                      mt: 2,
+                      display: 'flex',
+                      gap: 2,
+                      overflowX: 'auto',
+                      pb: 1,
+                      scrollbarWidth: 'none',
+                      '&::-webkit-scrollbar': { display: 'none' },
+                    }}
+                  >
                     {contributionEventCards.length > 0
                       ? contributionEventCards.map((eventCard) => {
                           const eventDetail = eventDetailByEventId.get(
@@ -1034,40 +1010,21 @@ export default function MyHomePage() {
                           );
                           if (!eventDetail) return null;
                           return (
-                            <EventCardWithAllNeeds
-                              key={eventCard.eventId}
-                              event={eventDetail}
-                              opportunities={eventCard.opportunities}
-                              matchedNeedIds={matchedOpportunityNeedIds}
-                              onCreateService={openQuickCreateService}
-                              onClick={() => navigate(`/events-new/${eventCard.eventId}`)}
-                            />
+                            <Box key={eventCard.eventId} sx={{ minWidth: 320 }}>
+                              <EventCardWithAllNeeds
+                                event={eventDetail}
+                                opportunities={eventCard.opportunities}
+                                matchedNeedIds={matchedOpportunityNeedIds}
+                                onCreateService={openQuickCreateService}
+                                onClick={() =>
+                                  navigate(`/events-new/${eventCard.eventId}`)
+                                }
+                              />
+                            </Box>
                           );
                         })
                       : null}
-                    {contributionEventCards.length > 0 && (
-                      <Box sx={{ pt: 0.5 }}>
-                        <Button
-                          component={Link}
-                          to="/search?tab=chip-in"
-                          variant="outlined"
-                          size="medium"
-                          sx={{
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            borderColor: 'rgba(143, 105, 66, 0.3)',
-                            color: '#2B2118',
-                            '&:hover': {
-                              borderColor: '#EF9F27',
-                              bgcolor: 'rgba(239, 159, 39, 0.06)',
-                            },
-                          }}
-                        >
-                          Browse all
-                        </Button>
-                      </Box>
-                    )}
-                  </Stack>
+                  </Box>
                 </Box>
 
                 <Box sx={{ minWidth: 0 }}>
@@ -1088,7 +1045,8 @@ export default function MyHomePage() {
                         key={group.name}
                         spacing={1}
                         alignItems="center"
-                        sx={{ minWidth: 78 }}
+                        sx={{ minWidth: 78, cursor: 'pointer' }}
+                        onClick={() => navigate('/network')}
                       >
                         <Box
                           sx={{
@@ -1105,6 +1063,11 @@ export default function MyHomePage() {
                             boxShadow: group.active
                               ? '0 0 0 5px rgba(216,90,48,0.08)'
                               : 'none',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              transform: 'scale(1.05)',
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                            },
                           }}
                         >
                           {group.icon}

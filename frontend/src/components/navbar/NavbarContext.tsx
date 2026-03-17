@@ -201,7 +201,6 @@ export function useNavbarData() {
     const params = normalizeSearchPageParams(new URLSearchParams(location.search));
     const nextSearch = params.get('search') || '';
     const nextLocation = params.get('location') || '';
-    const nextRadius = Number(params.get('radius_miles'));
     const lat = params.get('lat');
     const lng = params.get('lng');
 
@@ -225,22 +224,15 @@ export function useNavbarData() {
         clearStoredSearchLocation();
       }
     }
-
-    // Sync radius from URL when the URL changes, but don't re-run on local radius edits.
-    if (!Number.isNaN(nextRadius) && nextRadius > 0) {
-      setRadiusMiles(nextRadius);
-    }
-  }, [location.pathname, location.search, nearYouEnabled, setRadiusMiles]);
+  }, [location.pathname, location.search, nearYouEnabled]);
 
   const buildSearchPageParams = ({
     nextSearch = search,
     nextLocation = locationSearch,
-    nextRadiusMiles = radiusMiles,
     nextCoords = nearYouEnabled && coords ? coords : null,
   }: {
     nextSearch?: string;
     nextLocation?: string;
-    nextRadiusMiles?: number;
     nextCoords?: { lat: number | string; lng: number | string } | null;
   } = {}) => {
     const params = location.pathname.startsWith('/search')
@@ -259,7 +251,7 @@ export function useNavbarData() {
     const trimmedLocation = nextLocation.trim();
     if (trimmedLocation) {
       params.set('location', trimmedLocation);
-      params.set('radius_miles', String(nextRadiusMiles));
+      params.delete('radius_miles');
 
       if (nextCoords) {
         params.set('lat', String(nextCoords.lat));
@@ -351,7 +343,9 @@ export function useNavbarData() {
     if (nearYouEnabled) {
       toggleNearYou();
     }
-    navigateToSearch({ nextLocation: '' });
+    if (location.pathname.startsWith('/search')) {
+      navigateToSearch({ nextLocation: '' });
+    }
   };
 
   const { hostingEvents, vendorEvents, attendeeEvents } = useMemo(() => {

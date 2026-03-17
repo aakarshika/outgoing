@@ -32,10 +32,8 @@ export function NormalServicesModule({
     enabled: isAuthenticated,
   });
 
-  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] =
-    useState(false);
-  const [quickCreateServiceCategory, setQuickCreateServiceCategory] =
-    useState('');
+  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
+  const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
 
   const openQuickCreateService = (category?: string) => {
     if (!isAuthenticated) {

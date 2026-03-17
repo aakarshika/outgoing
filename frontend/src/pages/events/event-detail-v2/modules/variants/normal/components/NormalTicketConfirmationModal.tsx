@@ -23,7 +23,14 @@ export function NormalTicketConfirmationModal({
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
           <CheckCircle2 size={44} color="#16a34a" />
           <Typography
             sx={{
@@ -46,13 +53,19 @@ export function NormalTicketConfirmationModal({
               bgcolor: '#f9fafb',
             }}
           >
-            <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 0.5 }}>Event</Typography>
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#111827', mb: 1.5 }}>
+            <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 0.5 }}>
+              Event
+            </Typography>
+            <Typography
+              sx={{ fontSize: 15, fontWeight: 600, color: '#111827', mb: 1.5 }}
+            >
               {eventTitle}
             </Typography>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography sx={{ fontSize: 13, color: '#6b7280' }}>{ticketType} access</Typography>
+              <Typography sx={{ fontSize: 13, color: '#6b7280' }}>
+                {ticketType} access
+              </Typography>
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: '#D85A30' }}>
                 ${price}
               </Typography>

@@ -87,58 +87,54 @@ export function AppBottomNav() {
           className="grid grid-cols-4 gap-2 p-2 sm:p-2.5 mx-auto max-w-[1040px]"
           style={{ background: 'var(--color-background-secondary)' }}
         >
-            {navItems.map(({ key, label, Icon, to, guestTo, match }) => {
-              const isActive = match(location.pathname);
-              const target = isAuthenticated ? to : guestTo || to;
+          {navItems.map(({ key, label, Icon, to, guestTo, match }) => {
+            const isActive = match(location.pathname);
+            const target = isAuthenticated ? to : guestTo || to;
 
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  aria-label={label}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => {
-                    if (key === 'highlights') {
-                      // Open highlight feed viewer starting from first trending highlight
-                      if (!loadingTrending && trendingHighlights.length > 0) {
-                        setSelectedHighlightId(trendingHighlights[0].id);
-                        setIsHighlightViewerOpen(true);
-                      } else {
-                        setPendingOpenHighlight(true);
-                      }
-                      return;
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-label={label}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={() => {
+                  if (key === 'highlights') {
+                    // Open highlight feed viewer starting from first trending highlight
+                    if (!loadingTrending && trendingHighlights.length > 0) {
+                      setSelectedHighlightId(trendingHighlights[0].id);
+                      setIsHighlightViewerOpen(true);
+                    } else {
+                      setPendingOpenHighlight(true);
                     }
+                    return;
+                  }
 
-                    navigate(target);
-                  }}
+                  navigate(target);
+                }}
+                className={cn(
+                  'relative flex h-14 items-center justify-center rounded-[22px]  transition-all duration-200',
+                  isActive
+                    ? 'text-white'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                )}
+                style={{
+                  fontFamily: 'Syne, sans-serif',
+                  background: isActive ? '#D85A30' : 'var(--color-background-primary)',
+                  borderColor: isActive ? '#D85A30' : 'var(--color-border-tertiary)',
+                  boxShadow: isActive ? '0 10px 22px rgba(216, 90, 48, 0.24)' : 'none',
+                }}
+              >
+                <Icon className="h-5 w-5" strokeWidth={2.3} />
+                <span
                   className={cn(
-                    'relative flex h-14 items-center justify-center rounded-[22px]  transition-all duration-200',
-                    isActive
-                      ? 'text-white'
-                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                    'pointer-events-none absolute bottom-1.5 h-1 w-6 rounded-full transition-opacity duration-200',
+                    isActive ? 'opacity-100' : 'opacity-0',
                   )}
-                  style={{
-                    fontFamily: 'Syne, sans-serif',
-                    background: isActive
-                      ? '#D85A30'
-                      : 'var(--color-background-primary)',
-                    borderColor: isActive ? '#D85A30' : 'var(--color-border-tertiary)',
-                    boxShadow: isActive
-                      ? '0 10px 22px rgba(216, 90, 48, 0.24)'
-                      : 'none',
-                  }}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={2.3} />
-                  <span
-                    className={cn(
-                      'pointer-events-none absolute bottom-1.5 h-1 w-6 rounded-full transition-opacity duration-200',
-                      isActive ? 'opacity-100' : 'opacity-0',
-                    )}
-                    style={{ background: 'rgba(255,255,255,0.72)' }}
-                  />
-                </button>
-              );
-            })}
+                  style={{ background: 'rgba(255,255,255,0.72)' }}
+                />
+              </button>
+            );
+          })}
         </div>
       </div>
 

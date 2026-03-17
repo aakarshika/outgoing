@@ -21,7 +21,8 @@ export function NormalReviewsModule({
   const hostReviews = event.host_reviews || reviews || [];
   const hasUserReview = hostReviews.some(
     (review: any) =>
-      review.reviewer_username === currentUsername || review.username === currentUsername,
+      review.reviewer_username === currentUsername ||
+      review.username === currentUsername,
   );
   const canLeaveReview = canWriteReview && event.user_has_ticket && !hasUserReview;
 
