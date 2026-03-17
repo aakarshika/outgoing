@@ -41,12 +41,12 @@ export default function SignupSimple() {
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: 'shika_a',
-      email: 'shika_a@outgoing.com',
-      firstName: 'Shika',
-      lastName: 'Artist',
-      phoneNumber: '555-0199',
-      password: 'password123',
+      username: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      password: '',
     },
   });
 

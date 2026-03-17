@@ -38,8 +38,8 @@ export default function LoginSimple() {
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: 'shika_a',
-      password: 'password123',
+      username: localStorage.getItem('last_username') || '',
+      password: localStorage.getItem('last_password') || '',
     },
   });
 
@@ -51,6 +51,10 @@ export default function LoginSimple() {
       });
 
       if (res.success) {
+        // Save credentials for autopopulation
+        localStorage.setItem('last_username', values.username);
+        localStorage.setItem('last_password', values.password);
+
         login(res.data.access, res.data.refresh, res.data.user);
         toast.success('Welcome back!');
         navigate('/');
