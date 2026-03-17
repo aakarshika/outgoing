@@ -707,28 +707,6 @@ export default function GuestLandingPage() {
         </Container>
       </Box>
 
-      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
-        <SectionHeader label="Explore by interest" title="Popular categories" />
-        <Stack direction="row" flexWrap="wrap" gap={1.25}>
-          {categoryChips.map((chip) => (
-            <Chip
-              key={chip.label}
-              label={`${chip.icon} ${chip.label}`}
-              onClick={() => navigate('/search')}
-              sx={{
-                borderRadius: '999px',
-                px: 1,
-                py: 2.75,
-                border: '0.5px solid var(--color-border-tertiary)',
-                background: '#F9F9F9',
-                color: 'var(--color-text-primary)',
-                fontSize: 14,
-              }}
-            />
-          ))}
-        </Stack>
-      </Container>
-
       <Box
         sx={{
           height: '0.5px',
@@ -762,6 +740,28 @@ export default function GuestLandingPage() {
             </Box>
           ))}
         </HorizontalScrollRow>
+      </Container>
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader label="Explore by interest" title="Popular categories" />
+        <Stack direction="row" flexWrap="wrap" gap={1.25}>
+          {categoryChips.map((chip) => (
+            <Chip
+              key={chip.label}
+              label={`${chip.icon} ${chip.label}`}
+              onClick={() => navigate('/search')}
+              sx={{
+                borderRadius: '999px',
+                px: 1,
+                py: 2.75,
+                border: '0.5px solid var(--color-border-tertiary)',
+                background: '#F9F9F9',
+                color: 'var(--color-text-primary)',
+                fontSize: 14,
+              }}
+            />
+          ))}
+        </Stack>
       </Container>
 
       <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
