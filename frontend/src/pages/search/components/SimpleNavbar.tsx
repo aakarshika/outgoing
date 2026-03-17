@@ -159,12 +159,14 @@ export function SimpleNavbar({
     [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
-      : [
-          [
-            { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
-            { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
-          ],
-        ]),
+      : !isMobile
+        ? [
+            [
+              { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
+              { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
+            ],
+          ]
+        : []),
   ];
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {

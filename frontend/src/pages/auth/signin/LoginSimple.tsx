@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -33,6 +33,8 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginSimple() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/';
   const { login } = useAuth();
 
   const form = useForm<LoginValues>({
@@ -53,7 +55,7 @@ export default function LoginSimple() {
       if (res.success) {
         login(res.data.access, res.data.refresh, res.data.user);
         toast.success('Welcome back!');
-        navigate('/');
+        navigate(redirectTo);
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };

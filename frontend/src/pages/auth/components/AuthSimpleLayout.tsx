@@ -1,7 +1,7 @@
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
 import { Box, Button, Chip, Container, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 type AuthHighlight = {
   icon: ReactNode;
@@ -84,6 +84,12 @@ function AuthFormPanel({
   | 'alternateLinkTo'
   | 'children'
 >) {
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
+  const finalAlternateLink = redirectTo
+    ? `${alternateLinkTo}?redirectTo=${encodeURIComponent(redirectTo)}`
+    : alternateLinkTo;
+
   return (
     <Box
       sx={{
@@ -170,7 +176,7 @@ function AuthFormPanel({
           {alternatePrompt}{' '}
           <Box
             component={RouterLink}
-            to={alternateLinkTo}
+            to={finalAlternateLink}
             sx={{
               color: '#D85A30',
               fontSize: 20,

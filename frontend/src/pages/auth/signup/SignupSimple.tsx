@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -36,6 +36,8 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 export default function SignupSimple() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/';
   const { login } = useAuth();
 
   const form = useForm<SignupValues>({
@@ -64,7 +66,7 @@ export default function SignupSimple() {
       if (res.success) {
         login(res.data.access, res.data.refresh, res.data.user);
         toast.success('Account created successfully!');
-        navigate('/');
+        navigate(redirectTo);
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
