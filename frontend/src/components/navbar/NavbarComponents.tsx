@@ -273,7 +273,7 @@ export const CreateEventButton = ({
         if (type === 'event') setIsQuickCreateOpen(true);
         else if (type === 'service') navigate('/vendors/create');
         else if (type === 'manage-event')
-          navigate(`/events/${eventId}/host-event-management`);
+          navigate(`/events/${eventId}/manage`);
         else if (type === 'manage-service')
           navigate(`/events/${eventId}/service-event-management`);
         else if (type === 'signin') navigate('/signin');

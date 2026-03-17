@@ -198,7 +198,7 @@ export function TicketsTab() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (eventId) navigate(`/events/${eventId}`);
+                      if (eventId) navigate(`/events-new/${eventId}`);
                     }}
                     className="text-[0.65rem] font-bold px-3 py-1.5 border-2 border-gray-800 bg-blue-300 text-gray-900 transition-colors hover:bg-blue-400 whitespace-nowrap text-center flex-1"
                     style={{
@@ -236,17 +236,17 @@ export function TicketsTab() {
         tickets={
           managingTicket
             ? sortedTickets.filter(
-                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-              )
+              (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+            )
             : []
         }
         initialIndex={
           managingTicket
             ? sortedTickets
-                .filter(
-                  (t: any) => t.event_summary.id === managingTicket.event_summary.id,
-                )
-                .findIndex((t: any) => t.id === managingTicket.id)
+              .filter(
+                (t: any) => t.event_summary.id === managingTicket.event_summary.id,
+              )
+              .findIndex((t: any) => t.id === managingTicket.id)
             : 0
         }
       />

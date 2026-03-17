@@ -90,7 +90,7 @@ export function EventCard({
   const needRewardValue = opportunity?.budget_max || opportunity?.budget_min;
   const needsCtaLabel = opportunity
     ? getOpportunityCardState(opportunity, hasMatchingService, myApplication?.status)
-        .chipLabel
+      .chipLabel
     : null;
   const isLandscape = variant === 'landscape';
   const imageHeight = isLandscape ? '100%' : 120;
@@ -1443,7 +1443,7 @@ function EventCardNeedActionPanel({
                 else navigate(`/vendors/create?category=${opportunity.category}`);
                 return;
               }
-              navigate(`/events/${opportunity.event_id}`);
+              navigate(`/events-new/${opportunity.event_id}`);
             }}
             variant="outlined"
             size="small"

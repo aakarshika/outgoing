@@ -23,15 +23,15 @@ import { useMyServices } from '@/features/vendors/hooks';
 import type { VendorOpportunity } from '@/types/needs';
 
 const CRITICALITY_STYLES: Record<string, { border: string; text: string; bg: string }> =
-  {
-    essential: { border: '#dc2626', text: '#dc2626', bg: 'rgba(220, 38, 38, 0.06)' },
-    non_substitutable: {
-      border: '#ea580c',
-      text: '#ea580c',
-      bg: 'rgba(234, 88, 12, 0.06)',
-    },
-    replaceable: { border: '#2563eb', text: '#2563eb', bg: 'rgba(37, 99, 235, 0.06)' },
-  };
+{
+  essential: { border: '#dc2626', text: '#dc2626', bg: 'rgba(220, 38, 38, 0.06)' },
+  non_substitutable: {
+    border: '#ea580c',
+    text: '#ea580c',
+    bg: 'rgba(234, 88, 12, 0.06)',
+  },
+  replaceable: { border: '#2563eb', text: '#2563eb', bg: 'rgba(37, 99, 235, 0.06)' },
+};
 
 const CRITICALITY_LABELS: Record<string, string> = {
   essential: 'Essential',
@@ -150,7 +150,7 @@ function NeedCard({ opportunity, isPotential = false, onApply }: NeedCardProps) 
         >
           <Typography
             component={Link}
-            to={`/events/${opportunity.event_id}`}
+            to={`/events-new/${opportunity.event_id}`}
             sx={{
               fontSize: '0.75rem',
               fontFamily: 'serif',
@@ -384,14 +384,14 @@ export function OpportunitiesTab() {
   const filterItems = (items: VendorOpportunity[]) =>
     query
       ? items.filter((o) => {
-          const normalized = query.toLowerCase();
-          return (
-            o.need_title.toLowerCase().includes(normalized) ||
-            o.event_title.toLowerCase().includes(normalized) ||
-            o.category.toLowerCase().includes(normalized) ||
-            o.event_location_name.toLowerCase().includes(normalized)
-          );
-        })
+        const normalized = query.toLowerCase();
+        return (
+          o.need_title.toLowerCase().includes(normalized) ||
+          o.event_title.toLowerCase().includes(normalized) ||
+          o.category.toLowerCase().includes(normalized) ||
+          o.event_location_name.toLowerCase().includes(normalized)
+        );
+      })
       : items;
 
   const filteredRelevant = filterItems(opportunities);

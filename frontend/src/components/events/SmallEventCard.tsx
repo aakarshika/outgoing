@@ -40,7 +40,7 @@ export function SmallEventCard({ event }: { event: EventListItem }) {
   return (
     <Box
       component={Link}
-      to={`/events/${event.id}`}
+      to={`/events-new/${event.id}`}
       sx={{
         minWidth: { xs: 250, sm: 220 },
         maxWidth: 260,

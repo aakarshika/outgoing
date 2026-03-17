@@ -172,7 +172,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-        'Planning is underway. More details are coming soon.',
+      'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -240,7 +240,7 @@ export function SimpleNavbar({
         navigate(`/events/${result.data.id}/manage`);
       } else {
         toast.success('Event posted');
-        navigate(`/events/${result.data.id}`);
+        navigate(`/events-new/${result.data.id}`);
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Could not create this event');
@@ -384,7 +384,7 @@ export function SimpleNavbar({
                     variant="ghost"
                     className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#e6fafa] hover:text-[#008a8a]"
                     onClick={() =>
-                      navigate(`/events/${eventId}/service-event-management`)
+                      navigate(`/managing/services`)
                     }
                   >
                     <Pencil size={14} /> Service

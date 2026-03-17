@@ -65,7 +65,7 @@ export const shareTicket = async ({
     const guestName = ticket.guest_name || 'Guest';
     const eventTitle = event.title || 'Event';
     const shareSubject = `Ticket for ${eventTitle}`;
-    const eventUrl = `${window.location.origin}/events/${event.slug || event.id}`;
+    const eventUrl = `${window.location.origin}/events-new/${event.slug || event.id}`;
     const shareText = `Here is ${guestName}'s ticket for ${eventTitle}.\n\nView Event: ${eventUrl}`;
 
     // Clean filename

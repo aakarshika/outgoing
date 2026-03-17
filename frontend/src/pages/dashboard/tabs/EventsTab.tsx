@@ -128,7 +128,7 @@ function EventCardRow({
         </span>
         {actionsEnabled ? (
           <Link
-            to={`/events/${event.id}/host-event-management`}
+            to={`/events/${event.id}/manage`}
             className="text-[1rem] font-bold px-3 py-1 border-2 border-gray-800 bg-yellow-300 text-gray-900 transition-colors hover:bg-yellow-400 whitespace-nowrap"
             style={{
               fontFamily: '"Permanent Marker", cursive',
@@ -346,7 +346,7 @@ export function EventsTab() {
         title="No events yet"
         subtitle="Create your first event and start hosting!"
         actionLabel="Create Event"
-        actionTo="/events/create"
+        actionTo="/"
       />
     );
   }
