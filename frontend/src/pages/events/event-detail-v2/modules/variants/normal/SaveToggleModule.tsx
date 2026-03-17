@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { CalendarCheck, CalendarPlus } from 'lucide-react';
 
 interface NormalSaveToggleModuleProps {
@@ -54,8 +54,12 @@ export function NormalSaveToggleModule({
         </Typography>
       </Button>
       {isAuthenticated && (
-        <Typography sx={{ fontSize: 11, color: '#6b7280', mt: 0.75, textAlign: 'center' }}>
-          {isSaved ? "You'll get a reminder 24h before" : 'Get reminded before it starts'}
+        <Typography
+          sx={{ fontSize: 11, color: '#6b7280', mt: 0.75, textAlign: 'center' }}
+        >
+          {isSaved
+            ? "You'll get a reminder 24h before"
+            : 'Get reminded before it starts'}
         </Typography>
       )}
     </Box>

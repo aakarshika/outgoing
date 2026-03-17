@@ -1,10 +1,10 @@
 import { Box, Grid, useMediaQuery, useTheme } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+import { useToggleInterest } from '@/features/events/hooks';
 
 import { useEventDetailV2 } from './context';
-import { useToggleInterest } from '@/features/events/hooks';
 import type { ThemeVariant } from './shared/types';
-
 import { ComicGoersModule } from './variants/comic/GoersModule';
 import { ComicGroupChatModule } from './variants/comic/GroupChatModule';
 import { ComicHeroModule } from './variants/comic/HeroModule';
@@ -12,23 +12,22 @@ import { ComicHighlightsModule } from './variants/comic/HighlightsModule';
 import { ComicReviewsModule } from './variants/comic/ReviewsModule';
 import { ComicServicesModule } from './variants/comic/ServicesModule';
 import { ComicTicketsModule } from './variants/comic/TicketsModule';
-
-import { NormalNavigationModule } from './variants/normal/NavigationModule';
+import { NormalBrowseModule } from './variants/normal/BrowseModule';
+import { NormalCalendarMapModule } from './variants/normal/CalendarMapModule';
+import { NormalChatModule } from './variants/normal/ChatModule';
+import { NormalChipsModule } from './variants/normal/ChipsModule';
+import { NormalDescriptionModule } from './variants/normal/DescriptionModule';
+import { NormalDivider } from './variants/normal/Divider';
+import { NormalGoersModule } from './variants/normal/GoersModule';
 import { NormalHeroModule } from './variants/normal/HeroModule';
 import { NormalHostStripModule } from './variants/normal/HostStripModule';
-import { NormalDescriptionModule } from './variants/normal/DescriptionModule';
-import { NormalChipsModule } from './variants/normal/ChipsModule';
-import { NormalCalendarMapModule } from './variants/normal/CalendarMapModule';
-import { NormalStatusModule } from './variants/normal/StatusModule';
-import { NormalSaveToggleModule } from './variants/normal/SaveToggleModule';
-import { NormalTicketsModule } from './variants/normal/TicketsModule';
-import { NormalServicesModule } from './variants/normal/ServicesModule';
-import { NormalGoersModule } from './variants/normal/GoersModule';
-import { NormalChatModule } from './variants/normal/ChatModule';
+import { NormalNavigationModule } from './variants/normal/NavigationModule';
+import { NormalRecommendedModule } from './variants/normal/RecommendedModule';
 import { NormalReviewsModule } from './variants/normal/ReviewsModule';
-import { NormalBrowseModule } from './variants/normal/BrowseModule';
-import { NormalStickyFooterModule } from './variants/normal/StickyFooterModule';
-import { NormalDivider } from './variants/normal/Divider';
+import { NormalSaveToggleModule } from './variants/normal/SaveToggleModule';
+import { NormalServicesModule } from './variants/normal/ServicesModule';
+import { NormalStatusModule } from './variants/normal/StatusModule';
+import { NormalTicketsModule } from './variants/normal/TicketsModule';
 
 interface VariantRegistryProps {
   variant: ThemeVariant;
@@ -42,7 +41,12 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobileDevice(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+      setIsMobileDevice(
+        window.innerWidth < 768 ||
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent,
+          ),
+      );
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -65,8 +69,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     deleteReview,
     isAuthenticated,
   } = viewModel;
-
-  const openNeedsCount = displayNeeds?.filter((n: any) => n.status !== 'filled' && n.status !== 'cancelled').length || 0;
 
   const toggleInterest = useToggleInterest();
 
@@ -140,132 +142,142 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     </>
   );
 
-  const normalComponents = isMobile || isMobileDevice ? (
-    <Box sx={{ bgcolor: 'var(--color-background-tertiary, #f3f4f6)', maxWidth: 420, mx: 'auto', pb: 10 }}>
-      <Box sx={{ position: 'relative' }}>
+  const normalComponents =
+    isMobile || isMobileDevice ? (
+      <Box
+        sx={{
+          bgcolor: 'var(--color-background-tertiary, #f3f4f6)',
+          maxWidth: 420,
+          mx: 'auto',
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <NormalNavigationModule
+            event={event}
+            isAuthenticated={isAuthenticated}
+            isInterested={event.user_is_interested || false}
+            onToggleInterest={handleToggleSave}
+            onBack={() => window.history.back()}
+          />
+          <NormalHeroModule event={event} />
+        </Box>
+
+        <Box
+          sx={{
+            bgcolor: 'var(--color-background-primary, #fff)',
+            borderRadius: '20px 20px 0 0',
+            mt: -2.5,
+            position: 'relative',
+            zIndex: 2,
+            pb: 2,
+          }}
+        >
+          <NormalHostStripModule event={event} isHost={isHost} />
+
+          <NormalDivider />
+
+          <NormalDescriptionModule event={event} />
+
+          <NormalChipsModule event={event} />
+
+          <NormalCalendarMapModule event={event} />
+
+          <NormalStatusModule event={event} isHost={isHost} />
+
+          <NormalSaveToggleModule
+            event={event}
+            isAuthenticated={isAuthenticated}
+            isSaved={event.user_is_interested || false}
+            onToggle={handleToggleSave}
+          />
+
+          <NormalDivider />
+
+          <NormalTicketsModule
+            event={event}
+            handleBuyTicket={handleBuyTicket}
+            handleBuyMultiple={handleBuyMultiple}
+          />
+
+          <NormalDivider />
+
+          <NormalServicesModule
+            event={event}
+            displayNeeds={displayNeeds}
+            isAuthenticated={isAuthenticated}
+            isEventOver={isEventOver}
+          />
+
+          <NormalDivider />
+
+          <NormalGoersModule event={event} isEventOver={isEventOver} />
+
+          <NormalDivider />
+
+          <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
+
+          <NormalDivider />
+
+          <NormalReviewsModule event={event} reviews={reviews} />
+
+          <NormalDivider />
+
+          <NormalBrowseModule event={event} />
+          <NormalDivider />
+          <NormalRecommendedModule currentEventId={event.id} />
+        </Box>
+      </Box>
+    ) : (
+      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
         <NormalNavigationModule
           event={event}
           isAuthenticated={isAuthenticated}
           isInterested={event.user_is_interested || false}
+          onToggleInterest={handleToggleSave}
+          onBack={() => window.history.back()}
         />
         <NormalHeroModule event={event} />
-      </Box>
-
-      <Box sx={{ bgcolor: 'var(--color-background-primary, #fff)', borderRadius: '20px 20px 0 0', mt: -2.5, position: 'relative', zIndex: 2, pb: 2 }}>
         <NormalHostStripModule event={event} isHost={isHost} />
-        
         <NormalDivider />
-        
         <NormalDescriptionModule event={event} />
-        
         <NormalChipsModule event={event} />
-        
         <NormalCalendarMapModule event={event} />
-        
         <NormalStatusModule event={event} isHost={isHost} />
-        
         <NormalSaveToggleModule
           event={event}
           isAuthenticated={isAuthenticated}
           isSaved={event.user_is_interested || false}
           onToggle={handleToggleSave}
         />
-        
         <NormalDivider />
-        
         <NormalTicketsModule
           event={event}
           handleBuyTicket={handleBuyTicket}
           handleBuyMultiple={handleBuyMultiple}
         />
-        
         <NormalDivider />
-        
         <NormalServicesModule
           event={event}
           displayNeeds={displayNeeds}
           isAuthenticated={isAuthenticated}
           isEventOver={isEventOver}
         />
-        
         <NormalDivider />
-        
         <NormalGoersModule event={event} isEventOver={isEventOver} />
-        
         <NormalDivider />
-        
         <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
-        
         <NormalDivider />
-        
         <NormalReviewsModule event={event} reviews={reviews} />
-        
         <NormalDivider />
-        
         <NormalBrowseModule event={event} />
-        
-        <Box sx={{ height: 80 }} />
+        <NormalDivider />
+        <NormalRecommendedModule currentEventId={event.id} />
       </Box>
-
-      <NormalStickyFooterModule
-        event={event}
-        hasOpenNeeds={openNeedsCount > 0}
-        onGetTicket={() => {
-          const tier = event.ticket_tiers?.[0];
-          if (tier) handleBuyTicket(tier.id, 1);
-        }}
-        onChipIn={() => {
-          window.dispatchEvent(new CustomEvent('section-scroll', { detail: 'services' }));
-        }}
-      />
-    </Box>
-  ) : (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-      <NormalNavigationModule
-        event={event}
-        isAuthenticated={isAuthenticated}
-        isInterested={event.user_is_interested || false}
-      />
-      <NormalHeroModule event={event} />
-      <NormalHostStripModule event={event} isHost={isHost} />
-      <NormalDivider />
-      <NormalDescriptionModule event={event} />
-      <NormalChipsModule event={event} />
-      <NormalCalendarMapModule event={event} />
-      <NormalStatusModule event={event} isHost={isHost} />
-      <NormalSaveToggleModule
-        event={event}
-        isAuthenticated={isAuthenticated}
-        isSaved={event.user_is_interested || false}
-        onToggle={handleToggleSave}
-      />
-      <NormalDivider />
-      <NormalTicketsModule
-        event={event}
-        handleBuyTicket={handleBuyTicket}
-        handleBuyMultiple={handleBuyMultiple}
-      />
-      <NormalDivider />
-      <NormalServicesModule
-        event={event}
-        displayNeeds={displayNeeds}
-        isAuthenticated={isAuthenticated}
-        isEventOver={isEventOver}
-      />
-      <NormalDivider />
-      <NormalGoersModule event={event} isEventOver={isEventOver} />
-      <NormalDivider />
-      <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
-      <NormalDivider />
-      <NormalReviewsModule event={event} reviews={reviews} />
-      <NormalDivider />
-      <NormalBrowseModule event={event} />
-    </Box>
-  );
+    );
 
   if (variant === 'comic') {
     return comicComponents;
   }
-  
+
   return normalComponents;
 }

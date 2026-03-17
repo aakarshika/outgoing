@@ -18,13 +18,19 @@ interface NormalHighlightsModuleProps {
   highlights: any[];
 }
 
-export function NormalHighlightsModule({ event, highlights }: NormalHighlightsModuleProps) {
-  const textHighlights = highlights?.filter((h: any) => h.type === 'text' || !h.media_file) || [];
-  
-  // Fallback to description highlights if no explicit highlights
-  const fallbackHighlights = event.description?.split('\n').filter((l: string) => l.trim().length > 20) || [];
+export function NormalHighlightsModule({
+  event,
+  highlights,
+}: NormalHighlightsModuleProps) {
+  const textHighlights =
+    highlights?.filter((h: any) => h.type === 'text' || !h.media_file) || [];
 
-  const displayHighlights = textHighlights.length > 0 ? textHighlights : fallbackHighlights.slice(0, 3);
+  // Fallback to description highlights if no explicit highlights
+  const fallbackHighlights =
+    event.description?.split('\n').filter((l: string) => l.trim().length > 20) || [];
+
+  const displayHighlights =
+    textHighlights.length > 0 ? textHighlights : fallbackHighlights.slice(0, 3);
 
   if (displayHighlights.length === 0) return null;
 
@@ -43,9 +49,12 @@ export function NormalHighlightsModule({ event, highlights }: NormalHighlightsMo
         Highlights
       </Typography>
       {displayHighlights.map((highlight: any, idx: number) => {
-        const text = typeof highlight === 'string' ? highlight : highlight.text || highlight.content;
+        const text =
+          typeof highlight === 'string'
+            ? highlight
+            : highlight.text || highlight.content;
         const icon = HIGHLIGHT_ICONS[text?.toLowerCase().slice(0, 10)] || '✨';
-        
+
         return (
           <Box
             key={idx}

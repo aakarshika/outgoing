@@ -65,4 +65,3 @@ export const HighlightChainViewer: React.FC<HighlightChainViewerProps> = ({
     />
   );
 };
-

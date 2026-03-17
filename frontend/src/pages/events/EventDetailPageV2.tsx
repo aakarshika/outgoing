@@ -1,4 +1,4 @@
-import { Box, ThemeProvider, createTheme } from '@mui/material';
+import { Box, createTheme, ThemeProvider } from '@mui/material';
 import { Button as MuiButton, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -27,9 +27,9 @@ import { useBackground } from '@/theme/BackgroundProvider';
 
 import { GenericFeedSection } from '../home/sections/FeedSections';
 import { getDaysAgo } from './components/scrapbookHelpers';
-import { VariantRegistry } from './event-detail-v2/modules/VariantRegistry';
 import { EventDetailV2Provider } from './event-detail-v2/modules/context';
 import type { EventDetailV2ViewModel } from './event-detail-v2/modules/shared/types';
+import { VariantRegistry } from './event-detail-v2/modules/VariantRegistry';
 
 const modernTheme = createTheme({
   ...scrapbookTheme,
@@ -251,7 +251,9 @@ export default function EventDetailPageV2() {
     setIsTicketingModalOpen(true);
   };
 
-  const handleBuyMultiple = (selections: Array<{ tierId: number; quantity: number }>) => {
+  const handleBuyMultiple = (
+    selections: Array<{ tierId: number; quantity: number }>,
+  ) => {
     if (!isAuthenticated) return navigate('/signin');
     setSelectedSelections(selections);
     setSelectedTierId(null);

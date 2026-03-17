@@ -14,8 +14,8 @@ import {
 import type { EventLifecycleState, EventListItem } from '@/types/events';
 
 import { SearchResults } from './components/SearchResults';
-import { SimpleNavbar } from './components/SimpleNavbar';
 import { SearchToolbar } from './components/SearchToolbar';
+import { SimpleNavbar } from './components/SimpleNavbar';
 import type {
   FormatFilterId,
   RoleFilterId,
@@ -23,9 +23,9 @@ import type {
   WhenFilterId,
 } from './searchTypes';
 import {
-  buildLocationSearchParams,
   buildClearFiltersSearchParams,
   buildDateSearchParams,
+  buildLocationSearchParams,
   buildTabSearchParams,
   filterEvents,
   filterOpportunities,

@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { BadgeCheck, ExternalLink, MoreHorizontal } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
+
 import { UserAvatar } from '@/components/ui/UserAvatar';
 
 export interface Attendee {
@@ -19,7 +20,11 @@ interface AttendeePopoverProps {
   variant?: 'comic' | 'normal';
 }
 
-export function AttendeePopover({ attendee, children, variant = 'normal' }: AttendeePopoverProps) {
+export function AttendeePopover({
+  attendee,
+  children,
+  variant = 'normal',
+}: AttendeePopoverProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
@@ -32,17 +37,15 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
   };
 
   const displayName = attendee.name || attendee.username;
-  const truncatedBio = attendee.bio && attendee.bio.length > 100 
-    ? attendee.bio.slice(0, 100) + '...' 
-    : attendee.bio;
+  const truncatedBio =
+    attendee.bio && attendee.bio.length > 100
+      ? attendee.bio.slice(0, 100) + '...'
+      : attendee.bio;
 
   if (variant === 'comic') {
     return (
       <>
-        <Box 
-          onClick={handleClick}
-          sx={{ cursor: 'pointer', display: 'inline-block' }}
-        >
+        <Box onClick={handleClick} sx={{ cursor: 'pointer', display: 'inline-block' }}>
           {children}
         </Box>
         <Popover
@@ -86,11 +89,11 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
                 )}
               </Box>
             </Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 'bold', 
-                mb: 0.5, 
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 'bold',
+                mb: 0.5,
                 transform: 'rotate(-1deg)',
                 fontFamily: '"Permanent Marker", cursive',
                 color: '#1a1a1a',
@@ -100,25 +103,25 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
               @{attendee.username}
             </Typography>
             {attendee.name && (
-              <Typography 
-                sx={{ 
+              <Typography
+                sx={{
                   mb: 1.5,
-                  fontFamily: '"Caveat", cursive', 
+                  fontFamily: '"Caveat", cursive',
                   fontSize: '1.1rem',
-                  color: '#4b5563'
+                  color: '#4b5563',
                 }}
               >
                 {attendee.name}
               </Typography>
             )}
             {truncatedBio && (
-              <Typography 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                sx={{
+                  mb: 2,
                   fontSize: '0.8rem',
                   fontFamily: '"Caveat", cursive',
                   fontStyle: 'italic',
-                  color: '#6b7280'
+                  color: '#6b7280',
                 }}
               >
                 "{truncatedBio}"
@@ -142,12 +145,12 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
               View Profile <ExternalLink size={14} />
             </Box>
           </Box>
-          <Box 
-            sx={{ 
-              bgcolor: '#1a1a1a', 
-              color: 'white', 
-              py: 0.5, 
-              px: 1, 
+          <Box
+            sx={{
+              bgcolor: '#1a1a1a',
+              color: 'white',
+              py: 0.5,
+              px: 1,
               textAlign: 'center',
               fontFamily: '"Caveat", cursive',
               fontSize: '0.75rem',
@@ -162,10 +165,7 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
 
   return (
     <>
-      <Box 
-        onClick={handleClick}
-        sx={{ cursor: 'pointer', display: 'inline-block' }}
-      >
+      <Box onClick={handleClick} sx={{ cursor: 'pointer', display: 'inline-block' }}>
         {children}
       </Box>
       <Popover
@@ -186,26 +186,35 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
             overflow: 'hidden',
             borderRadius: '24px',
             border: 'none',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow:
+              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           },
         }}
       >
         {/* Header Background */}
-        <Box 
-          sx={{ 
-            height: 80, 
-            background: attendee.cover_photo 
-              ? `url(${attendee.cover_photo}) center/cover no-repeat` 
+        <Box
+          sx={{
+            height: 80,
+            background: attendee.cover_photo
+              ? `url(${attendee.cover_photo}) center/cover no-repeat`
               : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
             position: 'relative',
             px: 2,
             pt: 1.5,
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'flex-start'
+            alignItems: 'flex-start',
           }}
         >
-          <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '0.9rem', opacity: 0.9, textShadow: attendee.cover_photo ? '0 1px 4px rgba(0,0,0,0.4)' : 'none' }}>
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              opacity: 0.9,
+              textShadow: attendee.cover_photo ? '0 1px 4px rgba(0,0,0,0.4)' : 'none',
+            }}
+          >
             Profile
           </Typography>
           <Box sx={{ color: 'white', opacity: 0.8, cursor: 'pointer' }}>
@@ -216,21 +225,21 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
         {/* Content Area */}
         <Box sx={{ px: 3, pb: 3, pt: 0, textAlign: 'center', position: 'relative' }}>
           {/* Overlapping Avatar */}
-          <Box 
-            sx={{ 
-              marginTop: '-42px', 
-              display: 'flex', 
+          <Box
+            sx={{
+              marginTop: '-42px',
+              display: 'flex',
               justifyContent: 'center',
-              mb: 1.5
+              mb: 1.5,
             }}
           >
-            <Box 
-              sx={{ 
-                p: 0.5, 
-                bgcolor: 'white', 
+            <Box
+              sx={{
+                p: 0.5,
+                bgcolor: 'white',
                 borderRadius: '50%',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                display: 'inline-flex'
+                display: 'inline-flex',
               }}
             >
               <UserAvatar
@@ -244,18 +253,38 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
           {/* Stats Row */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, px: 1 }}>
             <Box>
-              <Typography sx={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Typography
+                sx={{
+                  fontSize: '0.7rem',
+                  color: '#9ca3af',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
                 Events
               </Typography>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}>
+              <Typography
+                sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}
+              >
                 {Math.floor(Math.random() * 50) + 10}
               </Typography>
             </Box>
             <Box>
-              <Typography sx={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Typography
+                sx={{
+                  fontSize: '0.7rem',
+                  color: '#9ca3af',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
                 Goers
               </Typography>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}>
+              <Typography
+                sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}
+              >
                 {Math.floor(Math.random() * 500) + 100}
               </Typography>
             </Box>
@@ -263,8 +292,22 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
 
           {/* User Info */}
           <Box sx={{ mb: 2.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', lineHeight: 1.2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '1.4rem',
+                  color: '#111827',
+                  lineHeight: 1.2,
+                }}
+              >
                 {displayName}
               </Typography>
               {attendee.is_verified && (
@@ -272,10 +315,14 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
               )}
             </Box>
             <Typography sx={{ fontSize: '0.9rem', color: '#6b7280', mt: 0.5 }}>
-              {attendee.headline || (attendee.bio && attendee.bio.length > 50 ? attendee.bio.slice(0, 50) + '...' : attendee.bio) || 'Product enthusiast & life explorer'}
+              {attendee.headline ||
+                (attendee.bio && attendee.bio.length > 50
+                  ? attendee.bio.slice(0, 50) + '...'
+                  : attendee.bio) ||
+                'Product enthusiast & life explorer'}
             </Typography>
           </Box>
-          
+
           <Box
             component="a"
             href={`/profile/${attendee.username}`}
@@ -294,13 +341,13 @@ export function AttendeePopover({ attendee, children, variant = 'normal' }: Atte
               fontWeight: 700,
               textDecoration: 'none',
               transition: 'all 0.2s',
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#e5e7eb',
                 transform: 'translateY(-1px)',
               },
               '&:active': {
                 transform: 'translateY(0)',
-              }
+              },
             }}
           >
             View Profile <ExternalLink size={16} />

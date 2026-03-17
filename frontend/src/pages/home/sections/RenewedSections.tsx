@@ -1,18 +1,18 @@
-import { LocateFixed, MapPin, Search } from 'lucide-react';
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { LocateFixed, MapPin, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { VendorBusinessCard } from '@/components/ui/VendorBusinessCard';
-import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import {
   useFeed,
   useTopVendorsFeed,
   useTrendingHighlights,
 } from '@/features/events/hooks';
+import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import { HeroNegativeStripGallery } from '@/pages/events/components/HeroNegativeStripGallery';
-import { searchLocation } from '@/utils/geolocation';
 import type { LocationSuggestion } from '@/utils/geolocation';
+import { searchLocation } from '@/utils/geolocation';
 import { useDebouncedValue } from '@/utils/useDebouncedValue';
 import { useNearYou } from '@/utils/useNearYou';
 

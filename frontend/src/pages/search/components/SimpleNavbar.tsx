@@ -15,14 +15,14 @@ import {
   Menu,
   MessageCircle,
   Monitor,
+  Pencil,
   PlusCircle,
   Settings,
   Speech,
   Ticket,
-  Users,
-  Pencil,
   UserIcon,
   UserPlus,
+  Users,
 } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
@@ -32,13 +32,18 @@ import {
   QuickCreateSpark,
   type QuickCreateSubmitPayload,
 } from '@/components/events/QuickCreateSpark';
-import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
+import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
-import { useCategories, useEvent, useMyEvents, useMyTickets } from '@/features/events/hooks';
+import {
+  useCategories,
+  useEvent,
+  useMyEvents,
+  useMyTickets,
+} from '@/features/events/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
 type MenuItem = {
@@ -173,7 +178,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-      'Planning is underway. More details are coming soon.',
+        'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -356,29 +361,28 @@ export function SimpleNavbar({
               minWidth: 0,
             }}
           >
-          {isMobile && !isAuthenticated && location.pathname !== '/signin' && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-              onClick={() => navigate(`/signin`)}
-            >
-              <UserIcon size={14} /> Sign In
-            </Button>
-          )}
-          {isMobile && !isAuthenticated && location.pathname !== '/signup' && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-              onClick={() => navigate(`/signup`)}
-            >
-              <UserPlus size={14} /> Sign Up
-            </Button>
-          )}
+            {isMobile && !isAuthenticated && location.pathname !== '/signin' && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
+                onClick={() => navigate(`/signin`)}
+              >
+                <UserIcon size={14} /> Sign In
+              </Button>
+            )}
+            {isMobile && !isAuthenticated && location.pathname !== '/signup' && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
+                onClick={() => navigate(`/signup`)}
+              >
+                <UserPlus size={14} /> Sign Up
+              </Button>
+            )}
             {isAuthenticated ? (
               <>
-
                 {isMobile && isVendor && isNotOnManagePage && eventId && (
                   <Button
                     type="button"

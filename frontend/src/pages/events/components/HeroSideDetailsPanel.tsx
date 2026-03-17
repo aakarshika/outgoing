@@ -298,7 +298,7 @@ export function HeroSideDetailsPanel({ event }: HeroSideDetailsPanelProps) {
             // border: '1px solid rgba(15,23,42,0.12)',
             borderRadius: 3,
             // bgcolor: 'rgba(255,255,255,0.96)',
-          boxShadow: '0 30px 30px rgba(15, 23, 42, 0.08)',
+            boxShadow: '0 30px 30px rgba(15, 23, 42, 0.08)',
             px: 1.3,
             // mt:4,
             py: 1.15,
@@ -329,123 +329,123 @@ export function HeroSideDetailsPanel({ event }: HeroSideDetailsPanelProps) {
                 'Location details coming soon.'}
           </Typography>
 
-
-        <Box sx={{ pt: 1.1 }}>
-          <Typography
-            sx={{
-              fontSize: '0.76rem',
-              fontWeight: 700,
-              lineHeight: 1.2,
-              mb: 0.5,
-              color: '#0f172a',
-            }}
-          >
-            {relativeTime}
-            ·{' '}
-            <span>{startDate.toLocaleTimeString([], {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}</span>
-          </Typography>
-        </Box>
-        </Box>
-
-        {!isOnline && (<Box
-          sx={{
-            position: 'relative',
-            // border: '1px solid rgba(15,23,42,0.12)',
-            borderRadius: 3,
-            // bgcolor: '#f3f4f6',
-            boxShadow: '0 30px 30px rgba(15, 23, 42, 0.08)',
-            minHeight: { xs: 148, sm: 172 },
-            overflow: 'hidden',
-          }}
-        >
-          {isOnline ? (
-            null
-          ) : mapEmbedUrl ? (
-            <>
-              <Box
-                component="iframe"
-                title={`Map for ${event.location_name || 'event location'}`}
-                src={mapEmbedUrl}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                sx={{
-                  display: 'block',
-                  width: '100%',
-                  height: '100%',
-                  border: 0,
-                  pointerEvents: 'none',
-                  filter: 'grayscale(0.08) saturate(0.95)',
-                }}
-              />
-              {eventCoords ? (
-                <Marker label="Event" color="#dc2626" left="50%" top="50%" />
-              ) : null}
-              {userMarkerPosition ? (
-                <Marker
-                  label="You"
-                  color="#2563eb"
-                  left={userMarkerPosition.left}
-                  top={userMarkerPosition.top}
-                />
-              ) : null}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: 10,
-                  top: 10,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 0.9,
-                  py: 0.45,
-                  // bgcolor: 'rgba(255,255,255,0.6)',
-                  // border: '1px solid rgba(17,24,39,0.1)',
-                  borderRadius: '999px',
-                  fontSize: '0.66rem',
-                  fontWeight: 700,
-                  color: '#111827',
-                  pointerEvents: 'none',
-                }}
-              >
-                <Navigation size={12} />
-                {/* Opens in Google Maps */}
-              </Box>
-              {mapHref ? (
-                <Box
-                  component="a"
-                  href={mapHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open event location in Google Maps"
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    zIndex: 3,
-                  }}
-                />
-              ) : null}
-            </>
-          ) : (
-            <Box
+          <Box sx={{ pt: 1.1 }}>
+            <Typography
               sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                px: 2,
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                lineHeight: 1.2,
+                mb: 0.5,
+                color: '#0f172a',
               }}
             >
-              <Typography
-                sx={{ fontSize: '0.76rem', color: '#4b5563', textAlign: 'center' }}
+              {relativeTime}·{' '}
+              <span>
+                {startDate.toLocaleTimeString([], {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </span>
+            </Typography>
+          </Box>
+        </Box>
+
+        {!isOnline && (
+          <Box
+            sx={{
+              position: 'relative',
+              // border: '1px solid rgba(15,23,42,0.12)',
+              borderRadius: 3,
+              // bgcolor: '#f3f4f6',
+              boxShadow: '0 30px 30px rgba(15, 23, 42, 0.08)',
+              minHeight: { xs: 148, sm: 172 },
+              overflow: 'hidden',
+            }}
+          >
+            {isOnline ? null : mapEmbedUrl ? (
+              <>
+                <Box
+                  component="iframe"
+                  title={`Map for ${event.location_name || 'event location'}`}
+                  src={mapEmbedUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  sx={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    border: 0,
+                    pointerEvents: 'none',
+                    filter: 'grayscale(0.08) saturate(0.95)',
+                  }}
+                />
+                {eventCoords ? (
+                  <Marker label="Event" color="#dc2626" left="50%" top="50%" />
+                ) : null}
+                {userMarkerPosition ? (
+                  <Marker
+                    label="You"
+                    color="#2563eb"
+                    left={userMarkerPosition.left}
+                    top={userMarkerPosition.top}
+                  />
+                ) : null}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: 10,
+                    top: 10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 0.9,
+                    py: 0.45,
+                    // bgcolor: 'rgba(255,255,255,0.6)',
+                    // border: '1px solid rgba(17,24,39,0.1)',
+                    borderRadius: '999px',
+                    fontSize: '0.66rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <Navigation size={12} />
+                  {/* Opens in Google Maps */}
+                </Box>
+                {mapHref ? (
+                  <Box
+                    component="a"
+                    href={mapHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Open event location in Google Maps"
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 3,
+                    }}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Box
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  px: 2,
+                }}
               >
-                Map preview unavailable for this location.
-              </Typography>
-            </Box>
-          )}
-        </Box>)}
+                <Typography
+                  sx={{ fontSize: '0.76rem', color: '#4b5563', textAlign: 'center' }}
+                >
+                  Map preview unavailable for this location.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
       </Box>
     </Box>
   );

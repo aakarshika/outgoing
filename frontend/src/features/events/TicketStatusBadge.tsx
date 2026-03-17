@@ -98,8 +98,6 @@ export const TicketStatusBadge = ({
   );
 };
 
-
-
 export const TicketStatusBadgeSimple = ({
   ticketCount,
   capacity,
@@ -116,17 +114,17 @@ export const TicketStatusBadgeSimple = ({
 
   return (
     <Box
-              sx={{
-                px: 1,
-                py: 0.45,
-                borderRadius: '999px',
-                backgroundColor: '#EAF3DE',
-                color: '#3B6D11',
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              {soldCopy}
-            </Box>
+      sx={{
+        px: 1,
+        py: 0.45,
+        borderRadius: '999px',
+        backgroundColor: '#EAF3DE',
+        color: '#3B6D11',
+        fontSize: 12,
+        fontWeight: 700,
+      }}
+    >
+      {soldCopy}
+    </Box>
   );
 };

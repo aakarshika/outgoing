@@ -2,8 +2,11 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import {
+  TicketStatusBadge,
+  TicketStatusBadgeSimple,
+} from '@/features/events/TicketStatusBadge';
 import type { EventListItem } from '@/types/events';
-import { TicketStatusBadge, TicketStatusBadgeSimple } from '@/features/events/TicketStatusBadge';
 
 function formatCardDate(dateString: string | undefined | null) {
   if (!dateString) return '';
@@ -31,8 +34,7 @@ function getCategoryIcon(categoryName: string | undefined | null) {
 
 export function SmallEventCard({ event }: { event: EventListItem }) {
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
-  const hostInitial =
-    event.host.first_name?.[0] || event.host.username[0] || '?';
+  const hostInitial = event.host.first_name?.[0] || event.host.username[0] || '?';
   const engagementCount = Math.max(event.ticket_count, event.interest_count);
 
   return (

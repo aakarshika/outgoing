@@ -158,7 +158,9 @@ export function SearchResults({
   onCreateService?: (category?: string) => void;
   onSignIn: () => void;
 }) {
-  const chipInEventIds = new Set(filteredOpportunities.map((opportunity) => opportunity.event_id));
+  const chipInEventIds = new Set(
+    filteredOpportunities.map((opportunity) => opportunity.event_id),
+  );
   const chipInEvents = filteredEvents.filter((event) => chipInEventIds.has(event.id));
 
   return (

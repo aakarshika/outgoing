@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import { AttendeePopover, type Attendee } from '@/components/ui/AttendeePopover';
+import { type Attendee, AttendeePopover } from '@/components/ui/AttendeePopover';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 
 const NEED_CATEGORY_ICONS: Record<string, string> = {
@@ -304,13 +304,16 @@ export function NormalServicesModule({
                 }}
               >
                 <AttendeePopover
-                  attendee={{
-                    username: assignedVendor.username || assignedVendor.vendor_name || 'user',
-                    name: assignedVendor.name,
-                    avatar: assignedVendor.avatar,
-                    is_verified: assignedVendor.is_verified || false,
-                    bio: assignedVendor.bio,
-                  } as Attendee}
+                  attendee={
+                    {
+                      username:
+                        assignedVendor.username || assignedVendor.vendor_name || 'user',
+                      name: assignedVendor.name,
+                      avatar: assignedVendor.avatar,
+                      is_verified: assignedVendor.is_verified || false,
+                      bio: assignedVendor.bio,
+                    } as Attendee
+                  }
                   variant="normal"
                 >
                   <Box
@@ -349,7 +352,9 @@ export function NormalServicesModule({
                         lineHeight: 1,
                       }}
                     >
-                      <span role="img" aria-label="sparkles">✨</span>
+                      <span role="img" aria-label="sparkles">
+                        ✨
+                      </span>
                       <Box
                         component="span"
                         sx={{
@@ -361,7 +366,9 @@ export function NormalServicesModule({
                         {assignedVendor.username || assignedVendor.vendor_name}
                       </Box>
                       <span>chipped in!</span>
-                      <span role="img" aria-label="rocket">🚀</span>
+                      <span role="img" aria-label="rocket">
+                        🚀
+                      </span>
                     </Typography>
                   </Box>
                 </AttendeePopover>

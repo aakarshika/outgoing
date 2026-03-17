@@ -5,17 +5,17 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
-import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import {
   fetchMyEvents,
   fetchMyInterestedEvents,
   fetchMyTickets,
 } from '@/features/events/api';
 import { useFeed } from '@/features/events/hooks';
+import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 import { fetchMyServices } from '@/features/vendors/api';
 
-import { HeroSection, FeaturedCarouselSection } from './sections/HeroSections';
+import { FeaturedCarouselSection, HeroSection } from './sections/HeroSections';
 import { IconicHostsSection } from './sections/IconicHostsSection';
 import {
   GoingSavedSection,

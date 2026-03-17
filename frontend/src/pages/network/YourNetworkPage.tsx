@@ -1,12 +1,12 @@
 import { Box, Container } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/features/auth/hooks';
-import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import type { FriendshipItem, NetworkPerson } from '@/features/events/api';
+import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import {
   useMyFriendships,
   useNetworkActivity,

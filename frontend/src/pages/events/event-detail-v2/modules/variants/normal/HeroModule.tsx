@@ -54,7 +54,11 @@ export function NormalHeroModule({ event }: NormalHeroModuleProps) {
           opacity: 0.18,
         }}
       >
-        <svg viewBox="0 0 400 280" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: '100%' }}>
+        <svg
+          viewBox="0 0 400 280"
+          preserveAspectRatio="xMidYMid slice"
+          style={{ width: '100%', height: '100%' }}
+        >
           <circle cx="60" cy="60" r="80" fill="#D85A30" opacity="0.25" />
           <circle cx="340" cy="40" r="60" fill="#993C1D" opacity="0.2" />
           <circle cx="200" cy="200" r="100" fill="#F0997B" opacity="0.2" />
@@ -68,7 +72,8 @@ export function NormalHeroModule({ event }: NormalHeroModuleProps) {
         sx={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)',
+          background:
+            'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)',
         }}
       />
 

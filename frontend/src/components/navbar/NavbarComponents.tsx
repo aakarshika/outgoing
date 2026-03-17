@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  MessageSquareIcon,
   Briefcase,
   Calendar,
   CalendarDays,
@@ -9,6 +7,7 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  MessageSquareIcon,
   Pencil,
   Plus,
   Search,
@@ -18,10 +17,12 @@ import {
   User,
   UserPlus,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
+import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import type { EventSearchSuggestion } from '@/types/events';
+
 import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 

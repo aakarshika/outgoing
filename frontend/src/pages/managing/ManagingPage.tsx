@@ -48,11 +48,7 @@ import type { ApiResponse, EventDetail } from '@/types/events';
 import type { EventNeed, NeedApplication } from '@/types/needs';
 import type { VendorService } from '@/types/vendors';
 
-type ManagingKind =
-  | 'hosting'
-  | 'vendor_request'
-  | 'vendor_application'
-  | 'attending';
+type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application' | 'attending';
 type ManagingTab = 'managing' | 'earnings' | 'hosting' | 'attending' | 'services';
 type EarningsRole = 'hosted' | 'serviced';
 
@@ -2742,7 +2738,7 @@ export default function ManagingPage() {
                         ? 'Hosting'
                         : tab === 'attending'
                           ? 'Attending'
-                        : 'Services'}
+                          : 'Services'}
                 </Typography>
               </Stack>
 

@@ -11,15 +11,15 @@ import { ChevronLeft, ChevronRight, Heart, MessageCircle, X } from 'lucide-react
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
 import { ComicButton } from '@/components/ui/ComicButton';
+import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import { useToggleHighlightLike } from '@/features/events/hooks';
+import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 
 import { HighlightCommentDrawer } from './HighlightCommentDrawer';
 import { HighlightComments } from './HighlightComments';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 
 // --- Comic Theme Constants ---
 const COMIC_BORDER = '3px solid #1a1a1a';
@@ -86,25 +86,27 @@ const HighlightInteractionsMobile = ({
         />
       </Box>
 
-      {isAuthenticated && (<Box sx={{ textAlign: 'center' }}>
-        <ComicIconButton
-          onClick={() => isAuthenticated && toggleLike.mutate(highlight.id)}
-          Icon={Heart}
-          iconProps={{ fill: highlight.user_has_liked ? '#ef4444' : 'none' }}
-        />
-        <Typography
-          sx={{
-            fontSize: '0.9rem',
-            fontWeight: 900,
-            color: 'white',
-            textShadow: '2px 2px 0px #000',
-            mt: 1,
-            fontFamily: '"Permanent Marker", cursive',
-          }}
-        >
-          {highlight.likes_count}
-        </Typography>
-      </Box>)}
+      {isAuthenticated && (
+        <Box sx={{ textAlign: 'center' }}>
+          <ComicIconButton
+            onClick={() => isAuthenticated && toggleLike.mutate(highlight.id)}
+            Icon={Heart}
+            iconProps={{ fill: highlight.user_has_liked ? '#ef4444' : 'none' }}
+          />
+          <Typography
+            sx={{
+              fontSize: '0.9rem',
+              fontWeight: 900,
+              color: 'white',
+              textShadow: '2px 2px 0px #000',
+              mt: 1,
+              fontFamily: '"Permanent Marker", cursive',
+            }}
+          >
+            {highlight.likes_count}
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ textAlign: 'center' }}>
         <ComicIconButton
@@ -127,14 +129,16 @@ const HighlightInteractionsMobile = ({
       </Box>
 
       {/* Navigation Buttons Mobile */}
-      {isAuthenticated && (<Box
-        sx={{
-          textAlign: 'center',
-        }}
-      >
-        <ComicIconButton onClick={handlePrev} Icon={ChevronLeft} />
-        <ComicIconButton onClick={handleNext} Icon={ChevronRight} />
-      </Box>)}
+      {isAuthenticated && (
+        <Box
+          sx={{
+            textAlign: 'center',
+          }}
+        >
+          <ComicIconButton onClick={handlePrev} Icon={ChevronLeft} />
+          <ComicIconButton onClick={handleNext} Icon={ChevronRight} />
+        </Box>
+      )}
     </Stack>
   );
 };
@@ -638,7 +642,9 @@ export const HighlightFeedViewer = ({
                 color="#000000"
                 accentColor="#fffbeb"
                 onClick={() => {
-                  const targetId = activeHighlight?.event?.id ?? (eventId ? Number(eventId) : undefined);
+                  const targetId =
+                    activeHighlight?.event?.id ??
+                    (eventId ? Number(eventId) : undefined);
                   if (targetId) {
                     navigate(`/events/${targetId}`);
                   }

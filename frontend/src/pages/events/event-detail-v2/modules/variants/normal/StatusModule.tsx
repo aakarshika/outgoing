@@ -19,7 +19,7 @@ interface NormalStatusModuleProps {
 export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
   const lifecycle = event?.lifecycle_state || 'draft';
   const config = LIFECYCLE_CONFIG[lifecycle] || LIFECYCLE_CONFIG.draft;
-  
+
   const capacity = event.capacity || 100;
   const soldCount = event.ticket_count || event.tickets_sold || 0;
   const minRequired = event.min_attendees || 20;
@@ -31,8 +31,23 @@ export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
   if (!['published', 'event_ready', 'at_risk'].includes(lifecycle)) return null;
 
   return (
-    <Box sx={{ mx: 2, mt: 1.75, bgcolor: 'var(--color-background-secondary, #f9fafb)', borderRadius: 'var(--border-radius-lg, 12px)', p: 1.5 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+    <Box
+      sx={{
+        mx: 2,
+        mt: 1.75,
+        bgcolor: 'var(--color-background-secondary, #f9fafb)',
+        borderRadius: 'var(--border-radius-lg, 12px)',
+        p: 1.5,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 1,
+        }}
+      >
         <Typography
           sx={{
             fontSize: 11,
@@ -58,7 +73,7 @@ export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
           {config.label}
         </Box>
       </Box>
-      
+
       <Box
         sx={{
           height: 6,
@@ -77,9 +92,18 @@ export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
           }}
         />
       </Box>
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}>
-        <span>{soldCount} of {capacity} spots filled</span>
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: 11,
+          color: 'var(--color-text-secondary, #6b7280)',
+        }}
+      >
+        <span>
+          {soldCount} of {capacity} spots filled
+        </span>
         <span>
           {minReached ? (
             <span style={{ color: '#3B6D11' }}>Min. {minRequired} reached ✓</span>
@@ -90,7 +114,11 @@ export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
       </Box>
 
       {isHost && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', fontSize: 10 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ mt: 1, display: 'block', fontSize: 10 }}
+        >
           Event ID: {event.id}
         </Typography>
       )}

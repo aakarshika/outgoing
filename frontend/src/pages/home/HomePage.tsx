@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks';
 import { useFeed } from '@/features/events/hooks';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
+import { LightThemeConferencePoster } from '@/features/events/LightThemeConferencePoster';
 import { scrapbookTheme } from '@/features/events/theme/scrapbookTheme';
 
 import {
@@ -28,7 +29,6 @@ import {
   SIGNED_IN_SECTIONS,
   SIGNED_OUT_SECTIONS,
 } from './SectionConfig';
-import { LightThemeConferencePoster } from '@/features/events/LightThemeConferencePoster';
 
 export default function HomePage() {
   const [searchParams] = useSearchParams();

@@ -14,9 +14,14 @@ export function NormalStickyFooterModule({
   onGetTicket,
 }: NormalStickyFooterModuleProps) {
   const tiers = event.ticket_tiers || [];
-  const minPrice = tiers.length > 0 
-    ? Math.min(...tiers.map((t: any) => typeof t.price === 'number' ? t.price : parseFloat(t.price) || 0))
-    : 0;
+  const minPrice =
+    tiers.length > 0
+      ? Math.min(
+          ...tiers.map((t: any) =>
+            typeof t.price === 'number' ? t.price : parseFloat(t.price) || 0,
+          ),
+        )
+      : 0;
   const priceDisplay = minPrice === 0 ? 'Free' : `₹${minPrice}`;
 
   return (
@@ -52,7 +57,17 @@ export function NormalStickyFooterModule({
           Chip in ⚡
         </Box>
       ) : (
-        <Box sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 500, py: 1.5, borderRadius: 999, textAlign: 'center', border: '1.5px solid transparent' }} />
+        <Box
+          sx={{
+            fontFamily: '"DM Sans", sans-serif',
+            fontSize: 13,
+            fontWeight: 500,
+            py: 1.5,
+            borderRadius: 999,
+            textAlign: 'center',
+            border: '1.5px solid transparent',
+          }}
+        />
       )}
       <Box
         onClick={onGetTicket}

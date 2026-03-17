@@ -17,9 +17,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { VENDOR_CATEGORIES } from '@/constants/categories';
+import { useAuth } from '@/features/auth/AuthContext';
 import { useCreateVendorService } from '@/features/vendors/hooks';
 import { compressImage } from '@/utils/image';
-import { useAuth } from '@/features/auth/AuthContext';
 
 type QuickCreateServiceFormData = {
   title: string;
@@ -221,7 +221,8 @@ export function QuickCreateServiceDialog({
                 letterSpacing: '0.01em',
               }}
             >
-              All skill levels welcome — from beginner to pro.<br></br> Help your community grow, and receieve self-growth, discounts, or money!
+              All skill levels welcome — from beginner to pro.<br></br> Help your
+              community grow, and receieve self-growth, discounts, or money!
             </Typography>
           </Box>
           <MuiButton
@@ -401,7 +402,9 @@ export function QuickCreateServiceDialog({
                   }}
                 >
                   <ImagePlus size={26} />
-                  <Typography sx={{ fontWeight: 700 }}>Add a portfolio image</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>
+                    Add a portfolio image
+                  </Typography>
                   <Typography sx={{ fontSize: 13, color: 'rgba(66, 50, 28, 0.7)' }}>
                     Show off your best work.
                   </Typography>

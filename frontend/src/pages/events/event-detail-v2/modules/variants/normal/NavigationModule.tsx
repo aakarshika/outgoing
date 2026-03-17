@@ -21,7 +21,6 @@ export function NormalNavigationModule({
       try {
         await navigator.share({
           title: event.title,
-          text: event.description?.slice(0, 100),
           url: window.location.href,
         });
       } catch (err) {

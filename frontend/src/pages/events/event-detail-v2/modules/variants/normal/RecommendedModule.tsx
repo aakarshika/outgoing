@@ -1,4 +1,7 @@
 import { Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
+import { useFeed } from '@/features/events/hooks';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'arts-culture': '#E6F1FB',
@@ -24,15 +27,63 @@ const CATEGORY_ICONS: Record<string, string> = {
   'business-tech': '💻',
 };
 
-interface NormalBrowseModuleProps {
-  event: any;
+interface NormalRecommendedModuleProps {
+  currentEventId?: number;
 }
 
-export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
-  const moreFromHost = event.more_events_from_host || [];
-  const similarEvents = event.similar_events || [];
+export function NormalRecommendedModule({
+  currentEventId,
+}: NormalRecommendedModuleProps) {
+  const navigate = useNavigate();
+  const { data: feedResponse, isLoading } = useFeed({
+    sort: 'trending',
+    page_size: 10,
+  });
 
-  const events = [...moreFromHost, ...similarEvents].slice(0, 4);
+  const events = (feedResponse?.data || [])
+    .filter((evt: any) => evt.id !== currentEventId)
+    .slice(0, 6);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ px: 2, pt: 2 }}>
+        <Typography
+          sx={{
+            fontFamily: '"Syne", sans-serif',
+            fontSize: 13,
+            fontWeight: 700,
+            color: 'var(--color-text-primary, #111)',
+            mb: 1.25,
+            letterSpacing: '0.01em',
+          }}
+        >
+          These might be of your interest too...
+        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1.25,
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            pb: 0.5,
+          }}
+        >
+          {[1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                minWidth: 160,
+                height: 160,
+                bgcolor: 'var(--color-background-secondary, #f3f4f6)',
+                borderRadius: 'var(--border-radius-lg, 12px)',
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
+    );
+  }
 
   if (events.length === 0) return null;
 
@@ -48,9 +99,7 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
           letterSpacing: '0.01em',
         }}
       >
-        {moreFromHost.length > 0
-          ? `More from ${event.host?.name || event.host?.username}`
-          : 'More like this'}
+        These might be of your interest too...
       </Typography>
 
       <Box
@@ -63,7 +112,7 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {events.map((evt: any, idx: number) => {
+        {events.map((evt: any) => {
           const categorySlug = evt.category?.slug || '';
           const bgColor = CATEGORY_COLORS[categorySlug] || '#F1F5F9';
           const icon = CATEGORY_ICONS[categorySlug] || '📅';
@@ -85,7 +134,8 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
 
           return (
             <Box
-              key={idx}
+              key={evt.id}
+              onClick={() => navigate(`/events-new/${evt.id}`)}
               sx={{
                 minWidth: 160,
                 bgcolor: 'var(--color-background-primary, #fff)',
@@ -94,6 +144,11 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
                 overflow: 'hidden',
                 flexShrink: 0,
                 cursor: 'pointer',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                },
               }}
             >
               <Box
@@ -104,6 +159,8 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
                   justifyContent: 'center',
                   fontSize: 28,
                   bgcolor: bgColor,
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
                 {evt.cover_image ? (
@@ -114,6 +171,25 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
                   />
                 ) : (
                   icon
+                )}
+                {evt.is_live && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 6,
+                      left: 6,
+                      bgcolor: '#ef4444',
+                      color: '#fff',
+                      fontSize: 9,
+                      fontWeight: 600,
+                      px: 0.75,
+                      py: 0.25,
+                      borderRadius: '4px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Live
+                  </Box>
                 )}
               </Box>
               <Box sx={{ p: 1 }}>
@@ -136,9 +212,12 @@ export function NormalBrowseModule({ event }: NormalBrowseModuleProps) {
                     color: 'var(--color-text-primary, #111)',
                     lineHeight: 1.3,
                     mt: 0.25,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {evt.title?.slice(0, 30)}
+                  {evt.title}
                 </Typography>
                 <Typography
                   sx={{

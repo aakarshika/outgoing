@@ -71,23 +71,22 @@ export function AppBottomNav() {
     <nav
       aria-label="Primary"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[70]"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
     >
-      <div className="mx-auto w-full max-w-[1040px] px-3 sm:px-4">
+      <div
+        className="pointer-events-auto relative backdrop-blur-xl"
+        style={{
+          background: 'rgba(255, 248, 241, 0.96)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         <div
-          className="pointer-events-auto relative backdrop-blur-xl"
-          style={{
-            background: 'rgba(255, 248, 241, 0.96)',
-          }}
+          className="pointer-events-none absolute inset-x-0 top-0 h-1"
+          style={{ background: '#D85A30' }}
+        />
+        <div
+          className="grid grid-cols-4 gap-2 p-2 sm:p-2.5 mx-auto max-w-[1040px]"
+          style={{ background: 'var(--color-background-secondary)' }}
         >
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-1"
-            style={{ background: '#D85A30' }}
-          />
-          <div
-            className="grid grid-cols-4 gap-2 p-2 sm:p-2.5"
-            style={{ background: 'var(--color-background-secondary)' }}
-          >
             {navItems.map(({ key, label, Icon, to, guestTo, match }) => {
               const isActive = match(location.pathname);
               const target = isAuthenticated ? to : guestTo || to;
@@ -140,7 +139,6 @@ export function AppBottomNav() {
                 </button>
               );
             })}
-          </div>
         </div>
       </div>
 

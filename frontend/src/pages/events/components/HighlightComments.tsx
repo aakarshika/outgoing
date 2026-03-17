@@ -209,7 +209,9 @@ export const HighlightComments = ({
               fontFamily: '"Caveat", cursive',
               fontSize: '1.2rem',
             }}
-            placeholder={isAuthenticated ? "Add a comment..." : "Sign in to like and comment"}
+            placeholder={
+              isAuthenticated ? 'Add a comment...' : 'Sign in to like and comment'
+            }
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddComment(commentText)}

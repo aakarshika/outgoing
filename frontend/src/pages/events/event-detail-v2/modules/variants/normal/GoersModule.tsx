@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
-import { AttendeePopover, type Attendee } from '@/components/ui/AttendeePopover';
+
+import { type Attendee, AttendeePopover } from '@/components/ui/AttendeePopover';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 
 interface NormalGoersModuleProps {
@@ -37,13 +38,15 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
           {displayAttendees.map((attendee: any, idx: number) => (
             <AttendeePopover
               key={idx}
-              attendee={{
-                username: attendee.username,
-                name: attendee.name,
-                avatar: attendee.avatar,
-                is_verified: attendee.is_verified,
-                bio: attendee.bio,
-              } as Attendee}
+              attendee={
+                {
+                  username: attendee.username,
+                  name: attendee.name,
+                  avatar: attendee.avatar,
+                  is_verified: attendee.is_verified,
+                  bio: attendee.bio,
+                } as Attendee
+              }
               variant="normal"
             >
               <Box
@@ -93,19 +96,37 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
             </Box>
           )}
         </Box>
-        <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7280)' }}>
+        <Typography
+          sx={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7280)' }}
+        >
           {attendeesCount} people {isEventOver ? 'went' : 'going'}
         </Typography>
       </Box>
 
       {/* Buddy section */}
       {buddies.length > 0 && !isEventOver && (
-        <Box sx={{ bgcolor: '#EEEDFE', borderRadius: 'var(--border-radius-md, 8px)', p: 1, display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box
+          sx={{
+            bgcolor: '#EEEDFE',
+            borderRadius: 'var(--border-radius-md, 8px)',
+            p: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 1,
+          }}
+        >
           <span style={{ fontSize: 16 }}>👥</span>
           <Box sx={{ flex: 1 }}>
             <Typography sx={{ fontSize: 12, color: '#26215C', lineHeight: 1.4 }}>
-              <b>{buddies.slice(0, 2).map((b: any) => b.name).join(', ')}</b>
-              {buddies.length > 2 && ` and ${buddies.length - 2} other`} buddy{buddies.length > 2 ? 's' : ''} are going to this
+              <b>
+                {buddies
+                  .slice(0, 2)
+                  .map((b: any) => b.name)
+                  .join(', ')}
+              </b>
+              {buddies.length > 2 && ` and ${buddies.length - 2} other`} buddy
+              {buddies.length > 2 ? 's' : ''} are going to this
             </Typography>
           </Box>
           <Typography

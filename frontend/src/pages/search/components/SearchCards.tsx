@@ -26,10 +26,9 @@ import {
   fetchMyApplications,
   fetchMyVendorOpportunities,
 } from '@/features/needs/api';
+import { fetchMyServices } from '@/features/vendors/api';
 import type { EventListItem } from '@/types/events';
 import type { NeedApplication, VendorOpportunity } from '@/types/needs';
-
-import { fetchMyServices } from '@/features/vendors/api';
 
 import type { SearchTabId } from '../searchTypes';
 import {

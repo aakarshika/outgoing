@@ -15,8 +15,12 @@ import {
 } from '@/components/ui/dialog';
 import { createEvent } from '@/features/events/api';
 import { useCategories } from '@/features/events/hooks';
+import { BasicDetailsQuickForm } from '@/pages/events/components/manage-redesign/BasicDetailsQuickForm';
 import { BasicQuick } from '@/pages/events/components/manage-redesign/BasicQuick';
+import { EventFeaturesQuickForm } from '@/pages/events/components/manage-redesign/EventFeaturesQuickForm';
 import { TicketTier } from '@/pages/events/components/manage-redesign/TicketsAndCapacityForm';
+import { TicketsAndCapacityQuickForm } from '@/pages/events/components/manage-redesign/TicketsAndCapacityQuickForm';
+import { WhenAndWhereQuickForm } from '@/pages/events/components/manage-redesign/WhenAndWhereQuickForm';
 import { EventFeature } from '@/pages/events/manage/ManageDetailsSection';
 import {
   canUseBrowserGeolocation,
@@ -24,11 +28,6 @@ import {
   reverseGeocodeCoordinates,
 } from '@/utils/geolocation';
 import { compressImage } from '@/utils/image';
-
-import { BasicDetailsQuickForm } from '@/pages/events/components/manage-redesign/BasicDetailsQuickForm';
-import { EventFeaturesQuickForm } from '@/pages/events/components/manage-redesign/EventFeaturesQuickForm';
-import { TicketsAndCapacityQuickForm } from '@/pages/events/components/manage-redesign/TicketsAndCapacityQuickForm';
-import { WhenAndWhereQuickForm } from '@/pages/events/components/manage-redesign/WhenAndWhereQuickForm';
 
 export function QuickCreateEventModal({
   isOpen,

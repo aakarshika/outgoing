@@ -1,7 +1,7 @@
 import { BadgeCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { AttendeePopover, type Attendee } from '@/components/ui/AttendeePopover';
+import { type Attendee, AttendeePopover } from '@/components/ui/AttendeePopover';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 
 interface AttendingListProps {
@@ -26,10 +26,17 @@ export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) =>
           className="text-2xl text-gray-900  px-4 py-1  transform -rotate-1"
           style={{ fontFamily: '"Permanent Marker", cursive' }}
         >
-          {!isEventOver ? 'CHECK OUT WHO\'S GOING' :
+          {!isEventOver ? (
+            "CHECK OUT WHO'S GOING"
+          ) : (
             <span>
-              the <span className="" style={{ color: 'rgb(216, 90, 48)' }}>Go</span>ers
-            </span>}
+              the{' '}
+              <span className="" style={{ color: 'rgb(216, 90, 48)' }}>
+                Go
+              </span>
+              ers
+            </span>
+          )}
         </h3>
         <div className="h-0.5 flex-1 bg-gray-800" />
       </div>
@@ -55,9 +62,7 @@ export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) =>
               attendee={attendee}
               variant="comic"
             >
-              <div
-                className="group flex items-center p-2 transition-transform hover:-translate-y-1 hover:rotate-1 cursor-pointer"
-              >
+              <div className="group flex items-center p-2 transition-transform hover:-translate-y-1 hover:rotate-1 cursor-pointer">
                 <div className="relative">
                   <UserAvatar
                     src={attendee.avatar}

@@ -441,9 +441,10 @@ function ChatThread({
             username={chat.otherUsername || chat.title}
           />
         )}
-        <Box 
-        onClick={() => navigate(`/events/${chat.eventId}`)}
-        sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}>
+        <Box
+          onClick={() => navigate(`/events/${chat.eventId}`)}
+          sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+        >
           <Typography
             sx={{
               fontFamily: 'Syne, sans-serif',
@@ -453,7 +454,7 @@ function ChatThread({
               lineHeight: 1.2,
             }}
           >
-            {chat.title} 
+            {chat.title}
           </Typography>
           <Typography
             sx={{

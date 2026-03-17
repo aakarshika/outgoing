@@ -11,12 +11,16 @@ import Lottie from 'lottie-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useFeed, useIconicHostsFeed, useTrendingHighlights } from '@/features/events/hooks';
-import type { EventListItem } from '@/types/events';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
 import { HostCard } from '@/components/ui/HostCard';
+import {
+  useFeed,
+  useIconicHostsFeed,
+  useTrendingHighlights,
+} from '@/features/events/hooks';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
+import type { EventListItem } from '@/types/events';
 
 const categoryChips = [
   { label: 'Outdoors', icon: '🏃' },
@@ -555,92 +559,96 @@ export default function GuestLandingPage() {
 
   return (
     <Box sx={{ background: '--var(--color-background-primary)' }}>
-      {false && (<Box
-        component="header"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          // backgroundColor: 'var(--color-background-primary)',
-        }}
-      >
-        <Container
-          maxWidth={false}
+      {false && (
+        <Box
+          component="header"
           sx={{
-            maxWidth: 1240,
-            background: hasNearbySectionInView ? 'rgba(255, 233, 205, 0.7)' : '#D85A30',
-            transition: 'background-color 1000ms ease',
-            px: { xs: 1.5, sm: 3 },
-            py: 1.25,
+            position: 'sticky',
+            top: 0,
+            zIndex: 40,
+            // backgroundColor: 'var(--color-background-primary)',
           }}
         >
-          <Box
+          <Container
+            maxWidth={false}
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: { xs: 0.75, sm: 1.5 },
-              flexWrap: 'nowrap',
-              minWidth: 0,
+              maxWidth: 1240,
+              background: hasNearbySectionInView
+                ? 'rgba(255, 233, 205, 0.7)'
+                : '#D85A30',
+              transition: 'background-color 1000ms ease',
+              px: { xs: 1.5, sm: 3 },
+              py: 1.25,
             }}
           >
             <Box
-              onClick={() => navigate('/')}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-                pr: 0.5,
+                gap: { xs: 0.75, sm: 1.5 },
+                flexWrap: 'nowrap',
                 minWidth: 0,
               }}
             >
-              <Typography
+              <Box
+                onClick={() => navigate('/')}
                 sx={{
-                  mt: 2,
-                  fontFamily: 'Syne, sans-serif',
-                  fontWeight: 800,
-                  fontSize: { xs: 24, sm: 32 },
-                  letterSpacing: '-0.03em',
-                  color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
-                  transition: 'color 180ms ease',
-                  whiteSpace: 'nowrap',
-                  maxWidth: 580,
-                  mx: 'auto',
-                  lineHeight: 1.65,
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  pr: 0.5,
+                  minWidth: 0,
                 }}
               >
-                <span className="">
-                  <strong>out</strong>
-                </span>
-                <Box
-                  component="span"
-                  aria-label="go"
-                  role="img"
+                <Typography
                   sx={{
-                    display: 'inline-block',
-                    width: { xs: 30, md: 36 },
-                    height: { xs: 30, md: 35 },
-                    // pt: 7,
-                    // mx: 0.5,
-                    transform: 'translateY(10px)',
-                    backgroundColor: 'currentColor',
-                    maskImage: "url('/assets/go-symbol.png')",
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                    maskSize: 'contain',
-                    WebkitMaskImage: "url('/assets/go-symbol.png')",
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    WebkitMaskSize: 'contain',
+                    mt: 2,
+                    fontFamily: 'Syne, sans-serif',
+                    fontWeight: 800,
+                    fontSize: { xs: 24, sm: 32 },
+                    letterSpacing: '-0.03em',
+                    color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
+                    transition: 'color 180ms ease',
+                    whiteSpace: 'nowrap',
+                    maxWidth: 580,
+                    mx: 'auto',
+                    lineHeight: 1.65,
                   }}
-                />
-                {''}
-                <strong>ing</strong>
-              </Typography>
+                >
+                  <span className="">
+                    <strong>out</strong>
+                  </span>
+                  <Box
+                    component="span"
+                    aria-label="go"
+                    role="img"
+                    sx={{
+                      display: 'inline-block',
+                      width: { xs: 30, md: 36 },
+                      height: { xs: 30, md: 35 },
+                      // pt: 7,
+                      // mx: 0.5,
+                      transform: 'translateY(10px)',
+                      backgroundColor: 'currentColor',
+                      maskImage: "url('/assets/go-symbol.png')",
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                      maskSize: 'contain',
+                      WebkitMaskImage: "url('/assets/go-symbol.png')",
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      WebkitMaskSize: 'contain',
+                    }}
+                  />
+                  {''}
+                  <strong>ing</strong>
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        </Container>
-      </Box>)}
+          </Container>
+        </Box>
+      )}
 
       <Box
         sx={{

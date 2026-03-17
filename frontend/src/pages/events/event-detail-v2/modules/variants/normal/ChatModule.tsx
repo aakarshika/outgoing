@@ -13,7 +13,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
   if (!canAccessEventChat && messages.length === 0) return null;
 
   const getInitials = (name: string) => name?.charAt(0)?.toUpperCase() || '?';
-  
+
   const getColorFromName = (name: string) => {
     const colors = ['#D85A30', '#534AB7', '#1D9E75', '#D4537E', '#BA7517'];
     const index = name?.charCodeAt(0) % colors.length || 0;
@@ -53,11 +53,19 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
             bgcolor: 'var(--color-background-secondary, #f9fafb)',
           }}
         >
-          <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary, #111)' }}>
+          <Typography
+            sx={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'var(--color-text-primary, #111)',
+            }}
+          >
             {event.title}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}>
+            <Typography
+              sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}
+            >
               {memberCount} members
             </Typography>
             <Typography
@@ -77,7 +85,10 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
         <Box sx={{ p: 1.25, display: 'flex', flexDirection: 'column', gap: 1 }}>
           {messages.length > 0 ? (
             messages.slice(0, 3).map((msg: any, idx: number) => (
-              <Box key={idx} sx={{ display: 'flex', gap: 0.9, alignItems: 'flex-start' }}>
+              <Box
+                key={idx}
+                sx={{ display: 'flex', gap: 0.9, alignItems: 'flex-start' }}
+              >
                 <Box
                   sx={{
                     width: 24,
@@ -96,13 +107,20 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                   {getInitials(msg.sender_name || msg.sender_username)}
                 </Box>
                 <Box>
-                  <Typography sx={{ fontSize: 10, color: 'var(--color-text-secondary, #6b7280)', mb: 0.25 }}>
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      color: 'var(--color-text-secondary, #6b7280)',
+                      mb: 0.25,
+                    }}
+                  >
                     {msg.sender_name || msg.sender_username}
                   </Typography>
                   <Box
                     sx={{
                       bgcolor: 'var(--color-background-secondary, #f9fafb)',
-                      borderRadius: '0 var(--border-radius-md, 8px) var(--border-radius-md, 8px) var(--border-radius-md, 8px)',
+                      borderRadius:
+                        '0 var(--border-radius-md, 8px) var(--border-radius-md, 8px) var(--border-radius-md, 8px)',
                       px: 1.25,
                       py: 0.75,
                       fontSize: 12,
@@ -117,7 +135,14 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
               </Box>
             ))
           ) : (
-            <Typography sx={{ fontSize: 12, color: 'var(--color-text-secondary, #6b7280)', textAlign: 'center', py: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 12,
+                color: 'var(--color-text-secondary, #6b7280)',
+                textAlign: 'center',
+                py: 1,
+              }}
+            >
               No messages yet. Start the conversation!
             </Typography>
           )}
@@ -125,7 +150,15 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
 
         {/* Input */}
         {canAccessEventChat && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.25, borderTop: '0.5px solid var(--color-border-tertiary, #e5e7eb)' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              p: 1.25,
+              borderTop: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
+            }}
+          >
             <Box
               component="input"
               placeholder="Say something..."

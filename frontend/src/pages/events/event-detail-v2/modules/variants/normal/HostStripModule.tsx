@@ -39,7 +39,11 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
         }}
       >
         {host?.avatar ? (
-          <Box component="img" src={host.avatar} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Box
+            component="img"
+            src={host.avatar}
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         ) : (
           getInitials(host?.name || host?.username || 'H')
         )}
@@ -56,9 +60,15 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
         >
           Hosted by
         </Typography>
-        <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary, #111)' }}>
+        <Typography
+          sx={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--color-text-primary, #111)',
+          }}
+        >
           {host?.name || host?.username}
-          {isHost && ' · you\'re the host'}
+          {isHost && " · you're the host"}
         </Typography>
       </Box>
 
@@ -88,7 +98,13 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
             ))}
           </Box>
           {coHosts.length > 3 && (
-            <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)', ml: 0.75 }}>
+            <Typography
+              sx={{
+                fontSize: 11,
+                color: 'var(--color-text-secondary, #6b7280)',
+                ml: 0.75,
+              }}
+            >
               +{coHosts.length - 3}
             </Typography>
           )}

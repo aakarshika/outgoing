@@ -35,14 +35,20 @@ export function NormalReviewsModule({ event, reviews }: NormalReviewsModuleProps
             textAlign: 'center',
           }}
         >
-          <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7280)' }}>
+          <Typography
+            sx={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7280)' }}
+          >
             No reviews yet
           </Typography>
         </Box>
       ) : (
         <Box>
           {hostReviews.slice(0, 5).map((review: any, idx: number) => {
-            const reviewerName = review.reviewer_name || review.reviewer_username || review.username || 'User';
+            const reviewerName =
+              review.reviewer_name ||
+              review.reviewer_username ||
+              review.username ||
+              'User';
             const reviewerAvatar = review.reviewer_avatar || review.avatar;
             const reviewText = review.comment || review.text || review.review;
 

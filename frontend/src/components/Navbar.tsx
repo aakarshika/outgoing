@@ -1,30 +1,30 @@
-import { Link } from 'react-router-dom';
 import {
-  Menu,
-  X,
-  Ticket,
-  CalendarDays,
-  MessageSquare,
   Briefcase,
-  Settings,
-  User,
-  Shield,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  MessageSquare,
+  Settings,
+  Shield,
+  Ticket,
+  User,
+  X,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
 
 import {
-  SidebarLinkItem,
   CreateEventButton,
-  LogoSection,
-  IconButtonsSection,
-  UserInfoSection,
   EventManagementHeader,
-  SearchBar,
+  IconButtonsSection,
+  LogoSection,
   ManageEventButton,
+  SearchBar,
+  SidebarLinkItem,
+  UserInfoSection,
 } from './navbar/NavbarComponents';
 import { NavbarProvider, useNavbarContext } from './navbar/NavbarContext';
 
