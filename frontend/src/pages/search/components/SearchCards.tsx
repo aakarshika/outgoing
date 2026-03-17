@@ -1556,7 +1556,7 @@ export function EventCardWithAllNeeds({
         overflow: 'hidden',
         cursor: 'pointer',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: { xs: 'column', sm: 'row' },
         transition: 'box-shadow 0.2s ease, transform 0.2s ease',
         '&:hover': {
           boxShadow: '0 14px 40px rgba(108, 71, 33, 0.1)',
@@ -1568,7 +1568,7 @@ export function EventCardWithAllNeeds({
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: { xs: 'column', sm: 'row' },
           alignItems: 'stretch',
         }}
       >
@@ -1576,10 +1576,10 @@ export function EventCardWithAllNeeds({
         <Box
           sx={{
             position: 'relative',
-            width: 180,
-            minWidth: 180,
-            height: 'auto',
-            minHeight: 140,
+            width: { xs: '100%', sm: 180 },
+            minWidth: { xs: '100%', sm: 180 },
+            height: { xs: 160, sm: 'auto' },
+            minHeight: { xs: 160, sm: 140 },
             flexShrink: 0,
           }}
         >
@@ -1700,7 +1700,7 @@ export function EventCardWithAllNeeds({
               borderRadius: '14px',
               backgroundColor: '#FAEEDA',
               color: '#412402',
-              px: 1.25,
+              px: { xs: 1, sm: 1.25 },
               py: 1,
               textAlign: 'left',
               cursor: 'pointer',
@@ -1715,7 +1715,13 @@ export function EventCardWithAllNeeds({
               ⚡
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 12, lineHeight: 1.4, color: '#633806' }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: 11, sm: 12 },
+                  lineHeight: 1.4,
+                  color: '#633806',
+                }}
+              >
                 Event{' '}
                 <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
                   needs
@@ -1728,14 +1734,14 @@ export function EventCardWithAllNeeds({
               size="small"
               sx={{
                 borderRadius: '999px',
-                fontSize: 10,
+                fontSize: { xs: 9, sm: 10 },
                 fontWeight: 700,
-                height: 24,
+                height: { xs: 22, sm: 24 },
                 color: aggregateStatus.color,
                 backgroundColor: aggregateStatus.bg,
                 border: aggregateStatus.border,
                 flexShrink: 0,
-                '& .MuiChip-label': { px: 1 },
+                '& .MuiChip-label': { px: { xs: 0.75, sm: 1 } },
               }}
             />
             <Box

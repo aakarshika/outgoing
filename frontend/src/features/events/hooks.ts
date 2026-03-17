@@ -64,6 +64,47 @@ import {
   updateTicket,
 } from './api';
 
+function updateHighlightCollection(
+  items: any[] | undefined,
+  highlightId: number,
+  updater: (highlight: any) => any,
+) {
+  if (!Array.isArray(items)) return items;
+
+  let didChange = false;
+  const nextItems = items.map((item) => {
+    if (item?.id !== highlightId) return item;
+    didChange = true;
+    return updater(item);
+  });
+
+  return didChange ? nextItems : items;
+}
+
+function updateHighlightInCachedData(
+  cachedData: any,
+  highlightId: number,
+  updater: (highlight: any) => any,
+) {
+  if (!cachedData) return cachedData;
+
+  if (Array.isArray(cachedData)) {
+    return updateHighlightCollection(cachedData, highlightId, updater);
+  }
+
+  if (Array.isArray(cachedData.data)) {
+    const nextData = updateHighlightCollection(cachedData.data, highlightId, updater);
+    if (nextData === cachedData.data) return cachedData;
+    return { ...cachedData, data: nextData };
+  }
+
+  return cachedData;
+}
+
+function isHighlightQueryKey(queryKey: readonly unknown[]) {
+  return queryKey.some((part) => String(part).includes('highlight'));
+}
+
 export function useFeed(params: {
   category?: string;
   sort?: string;
@@ -396,10 +437,74 @@ export function useToggleHighlightLike() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (highlightId: number) => toggleHighlightLike(highlightId),
-    onSuccess: () => {
+    onMutate: async (highlightId) => {
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) && query.queryKey.includes('Highlights'),
+      });
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) && query.queryKey.includes('highlights'),
+      });
+
+      const touchedQueries = queryClient
+        .getQueryCache()
+        .findAll()
+        .filter((query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && isHighlightQueryKey(key);
+        })
+        .map((query) => [query.queryKey, query.state.data] as const);
+
+      touchedQueries.forEach(([queryKey]) => {
+        queryClient.setQueryData(queryKey, (current: any) =>
+          updateHighlightInCachedData(current, highlightId, (highlight) => {
+            const currentlyLiked = Boolean(highlight.user_has_liked);
+            const nextLiked = !currentlyLiked;
+
+            return {
+              ...highlight,
+              user_has_liked: nextLiked,
+              likes_count: Math.max(
+                0,
+                (Number(highlight.likes_count) || 0) + (nextLiked ? 1 : -1),
+              ),
+            };
+          }),
+        );
+      });
+
+      return { touchedQueries };
+    },
+    onError: (_error, _highlightId, context) => {
+      context?.touchedQueries?.forEach(
+        ([queryKey, data]: readonly [readonly unknown[], any]) => {
+          queryClient.setQueryData(queryKey, data);
+        },
+      );
+    },
+    onSuccess: (response, highlightId) => {
+      queryClient
+        .getQueryCache()
+        .findAll()
+        .filter((query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && isHighlightQueryKey(key);
+        })
+        .forEach((query) => {
+          queryClient.setQueryData(query.queryKey, (current: any) =>
+            updateHighlightInCachedData(current, highlightId, (highlight) => ({
+              ...highlight,
+              user_has_liked: response?.data?.liked ?? highlight.user_has_liked,
+              likes_count: response?.data?.likes_count ?? highlight.likes_count,
+            })),
+          );
+        });
+
       queryClient.invalidateQueries({ queryKey: ['eventHighlights'] });
       queryClient.invalidateQueries({ queryKey: ['event'] });
       queryClient.invalidateQueries({ queryKey: ['eventStory'] });
+      queryClient.invalidateQueries({ queryKey: ['feed', 'trending-highlights'] });
     },
   });
 }
@@ -426,7 +531,27 @@ export function useAddHighlightComment() {
       queryClient.invalidateQueries({
         queryKey: ['highlightComments', variables.highlightId],
       });
+      queryClient
+        .getQueryCache()
+        .findAll()
+        .filter((query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && isHighlightQueryKey(key);
+        })
+        .forEach((query) => {
+          queryClient.setQueryData(query.queryKey, (current: any) =>
+            updateHighlightInCachedData(
+              current,
+              variables.highlightId,
+              (highlight) => ({
+                ...highlight,
+                comments_count: (Number(highlight.comments_count) || 0) + 1,
+              }),
+            ),
+          );
+        });
       queryClient.invalidateQueries({ queryKey: ['eventHighlights'] });
+      queryClient.invalidateQueries({ queryKey: ['feed', 'trending-highlights'] });
     },
   });
 }

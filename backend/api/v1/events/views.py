@@ -883,7 +883,15 @@ class EventHostVendorMessageListCreateView(APIView):
         if event.host == user:
             return True
         from apps.needs.models import NeedApplication
-        if NeedApplication.objects.filter(vendor=user, need__event=event).exists():
+        from apps.needs.models import EventNeed
+
+        if NeedApplication.objects.filter(
+            vendor=user,
+            need__event=event,
+            status="accepted",
+        ).exists():
+            return True
+        if EventNeed.objects.filter(event=event, assigned_vendor=user).exists():
             return True
         from apps.tickets.models import Ticket
         return Ticket.objects.filter(

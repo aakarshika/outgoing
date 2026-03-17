@@ -40,11 +40,6 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
   const mapUrl = hasCoords ? buildGoogleExternalUrl(coordsString) : null;
   const embedUrl = hasCoords ? buildGoogleEmbedUrl(coordsString) : null;
 
-  const handleAddToCalendar = () => {
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(locationAddress || '')}`;
-    window.open(googleCalendarUrl, '_blank');
-  };
-
   const handleOpenMap = () => {
     if (mapUrl) {
       window.open(mapUrl, '_blank');
@@ -60,6 +55,10 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
             bgcolor: 'var(--color-background-secondary, #f9fafb)',
             borderRadius: 'var(--border-radius-lg, 12px)',
             p: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: 120,
           }}
         >
           <Typography
@@ -93,18 +92,6 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
             }}
           >
             {weekday} · {timeStart} – {timeEnd}
-          </Typography>
-          <Typography
-            onClick={handleAddToCalendar}
-            sx={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: '#D85A30',
-              mt: 0.75,
-              cursor: 'pointer',
-            }}
-          >
-            + Add to calendar
           </Typography>
         </Box>
 

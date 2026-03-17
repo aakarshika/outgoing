@@ -15,7 +15,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Check, MessageCircle, Plus, Search } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import {
@@ -2912,6 +2912,7 @@ function CreateWorkspaceLanding({
 export default function PlanningWorkspacePage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { openChat } = useChatDrawer();
@@ -2930,6 +2931,8 @@ export default function PlanningWorkspacePage() {
   const [reviewingNeedId, setReviewingNeedId] = useState<number | null>(null);
   const [actionDialog, setActionDialog] = useState<NeedActionDialogState | null>(null);
 
+
+
   const {
     data: eventResponse,
     isLoading: isEventLoading,
@@ -2937,6 +2940,22 @@ export default function PlanningWorkspacePage() {
   } = useEvent(eventId);
   const { data: categoryResponse } = useCategories();
   const { data: needsResponse } = useEventNeeds(eventId);
+
+  // Auto-open edit need overlay if editNeedId is provided in URL
+  useEffect(() => {
+    const editNeedId = searchParams.get('editNeedId');
+    if (editNeedId && needsResponse?.data) {
+      const need = needsResponse.data.find((n: EventNeed) => n.id === Number(editNeedId));
+      if (need) {
+        setEditingNeed(need);
+        setIsAddNeedOpen(true);
+        // Clear the param after opening
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('editNeedId');
+        setSearchParams(nextParams, { replace: true });
+      }
+    }
+  }, [searchParams, needsResponse?.data, setSearchParams]);
   const createNeedMutation = useCreateEventNeed();
   const updateTicketTiers = useUpdateTicketTiers();
   const updateNeedMutation = useUpdateEventNeed();
@@ -3291,7 +3310,7 @@ export default function PlanningWorkspacePage() {
         navigate(`/events/${result.data.id}/manage`);
       } else {
         toast.success('Event posted');
-        navigate(`/events/${result.data.id}`);
+        navigate(`/events-new/${result.data.id}`);
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Could not create this event');
@@ -3411,6 +3430,10 @@ export default function PlanningWorkspacePage() {
             fontSize: 15,
             fontWeight: 700,
             color: 'var(--color-text-primary)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: { xs: '120px', sm: '300px', md: '500px' },
           }}
         >
           {event.title}
@@ -3454,7 +3477,13 @@ export default function PlanningWorkspacePage() {
           direction="row"
           alignItems="center"
           spacing={1}
-          sx={{ overflowX: 'auto' }}
+          sx={{
+            overflowX: 'auto',
+            pb: 1,
+            '&::-webkit-scrollbar': { display: 'none' },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
         >
           {progressSteps.map((step, index) => (
             <Stack
@@ -3462,7 +3491,7 @@ export default function PlanningWorkspacePage() {
               direction="row"
               alignItems="center"
               spacing={1}
-              sx={{ minWidth: 'fit-content' }}
+              sx={{ flexShrink: 0 }}
             >
               <Stack direction="row" alignItems="center" spacing={0.75}>
                 <Box
@@ -3486,6 +3515,7 @@ export default function PlanningWorkspacePage() {
                         : index === activeProgressIndex
                           ? '#fff'
                           : 'var(--color-text-secondary)',
+                    flexShrink: 0,
                   }}
                 >
                   {index < activeProgressIndex ? <Check size={11} /> : step.value}
@@ -3494,6 +3524,7 @@ export default function PlanningWorkspacePage() {
                   sx={{
                     fontSize: 12,
                     fontWeight: index === activeProgressIndex ? 700 : 500,
+                    whiteSpace: 'nowrap',
                     color:
                       index < activeProgressIndex
                         ? '#3B6D11'
@@ -3508,9 +3539,10 @@ export default function PlanningWorkspacePage() {
               {index < progressSteps.length - 1 ? (
                 <Box
                   sx={{
-                    width: { xs: 24, md: 40 },
+                    width: { xs: 16, sm: 24, md: 40 },
                     height: '1px',
                     background: 'var(--color-border-tertiary)',
+                    flexShrink: 0,
                   }}
                 />
               ) : null}
@@ -3648,8 +3680,8 @@ export default function PlanningWorkspacePage() {
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 1,
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 1.5,
                   mb: 1.5,
                 }}
               >
@@ -3692,68 +3724,73 @@ export default function PlanningWorkspacePage() {
                   (ticket, index) => (
                     <Stack
                       key={`${ticket.name}-${index}`}
-                      direction="row"
-                      alignItems="center"
-                      spacing={1.5}
+                      direction={{ xs: 'column', sm: 'row' }}
+                      alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      spacing={{ xs: 1, sm: 1.5 }}
                       sx={{
-                        py: 1.25,
+                        py: 1.5,
                         borderBottom: '0.5px solid var(--color-border-tertiary)',
                         '&:last-of-type': { borderBottom: 'none', pb: 0 },
                       }}
                     >
-                      <Typography sx={{ fontSize: 13, fontWeight: 500, minWidth: 90 }}>
-                        {ticket.name}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: 'var(--color-text-secondary)',
-                          minWidth: 50,
-                        }}
-                      >
-                        {'price' in ticket && typeof ticket.price !== 'undefined'
-                          ? formatMoney(ticket.price)
-                          : ''}
-                      </Typography>
-                      <Box sx={{ flex: 1 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={
-                            'progress' in ticket
-                              ? ticket.progress
-                              : ticket.capacity
-                                ? Math.min(
-                                    100,
-                                    ((event.ticket_tiers?.[index]?.sold_count || 0) /
-                                      Number(ticket.capacity)) *
-                                      100,
-                                  )
-                                : 0
-                          }
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <Typography sx={{ fontSize: 13, fontWeight: 700, minWidth: { sm: 90 } }}>
+                          {ticket.name}
+                        </Typography>
+                        <Typography
                           sx={{
-                            height: 6,
-                            borderRadius: '999px',
-                            backgroundColor: 'var(--color-background-secondary)',
-                            '& .MuiLinearProgress-bar': {
-                              borderRadius: '999px',
-                              backgroundColor:
-                                'color' in ticket ? ticket.color : '#D85A30',
-                            },
+                            fontSize: 13,
+                            color: 'var(--color-text-secondary)',
+                            ml: 'auto',
+                            minWidth: { sm: 50 },
                           }}
-                        />
-                      </Box>
-                      <Typography
-                        sx={{
-                          fontSize: 12,
-                          color: 'var(--color-text-secondary)',
-                          minWidth: 74,
-                          textAlign: 'right',
-                        }}
-                      >
-                        {'sold' in ticket
-                          ? ticket.sold
-                          : `${event.ticket_tiers?.[index]?.sold_count || 0} / ${ticket.capacity || '∞'} sold`}
-                      </Typography>
+                        >
+                          {'price' in ticket && typeof ticket.price !== 'undefined'
+                            ? formatMoney(ticket.price)
+                            : ''}
+                        </Typography>
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%', flex: 1 }}>
+                        <Box sx={{ flex: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={
+                              'progress' in ticket
+                                ? ticket.progress
+                                : ticket.capacity
+                                  ? Math.min(
+                                      100,
+                                      ((event.ticket_tiers?.[index]?.sold_count || 0) /
+                                        Number(ticket.capacity)) *
+                                        100,
+                                    )
+                                  : 0
+                            }
+                            sx={{
+                              height: 6,
+                              borderRadius: '999px',
+                              backgroundColor: 'var(--color-background-secondary)',
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: '999px',
+                                backgroundColor:
+                                  'color' in ticket ? ticket.color : '#D85A30',
+                              },
+                            }}
+                          />
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontSize: 12,
+                            color: 'var(--color-text-secondary)',
+                            minWidth: 74,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {'sold' in ticket
+                            ? ticket.sold
+                            : `${event.ticket_tiers?.[index]?.sold_count || 0} / ${ticket.capacity || '∞'} sold`}
+                        </Typography>
+                      </Stack>
                     </Stack>
                   ),
                 )}
@@ -3926,8 +3963,10 @@ export default function PlanningWorkspacePage() {
                           {need.description}
                         </Typography>
                         <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
+                          direction={{ xs: 'row', sm: 'row' }}
+                          flexWrap="wrap"
                           spacing={1}
+                          useFlexGap
                           sx={{ mt: 1.25 }}
                         >
                           <Chip
@@ -3942,11 +3981,12 @@ export default function PlanningWorkspacePage() {
                           {need.application_count > 0 && need.status !== 'filled' ? (
                             <Button
                               variant="outlined"
+                              size="small"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 setReviewingNeedId(need.id);
                               }}
-                              sx={{ borderRadius: '999px', textTransform: 'none' }}
+                              sx={{ borderRadius: '999px', textTransform: 'none', fontSize: 12 }}
                             >
                               Review applicants
                             </Button>
@@ -3954,6 +3994,7 @@ export default function PlanningWorkspacePage() {
                           {need.status !== 'filled' ? (
                             <Button
                               variant="outlined"
+                              size="small"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 setActionDialog({
@@ -3980,7 +4021,7 @@ export default function PlanningWorkspacePage() {
                                   targetLabel: need.title,
                                 });
                               }}
-                              sx={{ borderRadius: '999px', textTransform: 'none' }}
+                              sx={{ borderRadius: '999px', textTransform: 'none', fontSize: 12 }}
                             >
                               Host override
                             </Button>

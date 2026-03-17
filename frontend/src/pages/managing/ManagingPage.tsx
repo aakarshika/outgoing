@@ -2568,7 +2568,7 @@ export default function ManagingPage() {
           subtitle: 'You are attending this event',
           location: detail.location_name || 'Location TBD',
           eventTime: detail.start_time,
-          route: `/events/${row.event_id}`,
+          route: `/events-new/${row.event_id}`,
           isPast: new Date(detail.start_time).getTime() < now,
         };
       });

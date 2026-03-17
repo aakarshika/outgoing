@@ -136,7 +136,7 @@ export default function ManageForHostPage() {
       // Compare stringified IDs or usernames since ID can sometimes be omitted on partial populated objects
       if (user.username !== event.host.username) {
         toast.error('You do not have permission to manage this event.');
-        navigate(`/events/${id}`);
+        navigate(`/events-new/${id}`);
       }
     }
   }, [isEventLoading, event, user, id, navigate]);

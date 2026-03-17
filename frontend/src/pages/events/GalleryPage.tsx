@@ -101,7 +101,7 @@ export default function GalleryPage() {
         alignItems="center"
         sx={{ mb: 4, position: 'relative' }}
       >
-        <IconButton onClick={() => navigate(`/events/${id}`)}>
+        <IconButton onClick={() => navigate(`/events-new/${id}`)}>
           <ChevronLeft />
         </IconButton>
         <Box>

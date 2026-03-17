@@ -20,6 +20,7 @@ import { NormalDescriptionModule } from './variants/normal/DescriptionModule';
 import { NormalDivider } from './variants/normal/Divider';
 import { NormalGoersModule } from './variants/normal/GoersModule';
 import { NormalHeroModule } from './variants/normal/HeroModule';
+import { NormalHighlightsModule } from './variants/normal/HighlightsModule';
 import { NormalHostStripModule } from './variants/normal/HostStripModule';
 import { NormalNavigationModule } from './variants/normal/NavigationModule';
 import { NormalRecommendedModule } from './variants/normal/RecommendedModule';
@@ -61,11 +62,13 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     reviews,
     isEventOver,
     canAccessEventChat,
+    capabilities,
     purchaseTicket,
     clearTicketformTrigger,
     handleBuyTicket,
     handleBuyMultiple,
     handleOneClickBuy,
+    onViewTicket,
     deleteReview,
     isAuthenticated,
   } = viewModel;
@@ -73,7 +76,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
   const toggleInterest = useToggleInterest();
 
   const handleToggleSave = () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !capabilities.canSaveEvent) return;
     toggleInterest.mutate({
       eventId: event.id,
       isInterested: !event.user_is_interested,
@@ -103,41 +106,49 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
               handleBuyTicket={handleBuyTicket}
               handleBuyMultiple={handleBuyMultiple}
               handleOneClickBuy={handleOneClickBuy}
+              onViewTicket={onViewTicket}
             />
           </Box>
         </Grid>
       </Grid>
-      <Box id="services">
-        <ComicServicesModule
-          event={event}
-          displayNeeds={displayNeeds}
-          myServicesResponse={viewModel.myServicesResponse}
-          isAuthenticated={isAuthenticated}
-        />
-      </Box>
+      {!capabilities.showServiceShoutoutOnly || event.participating_vendors?.length > 0 ? (
+        <Box id="services">
+          <ComicServicesModule
+            event={event}
+            displayNeeds={displayNeeds}
+            myServicesResponse={viewModel.myServicesResponse}
+            isAuthenticated={isAuthenticated}
+          />
+        </Box>
+      ) : null}
       <Box id="attending">
         <ComicGoersModule event={event} isEventOver={isEventOver} />
       </Box>
-      <ComicGroupChatModule event={event} canAccessEventChat={canAccessEventChat} />
+      <ComicGroupChatModule
+        event={event}
+        canAccessEventChat={capabilities.canAccessEventChat}
+      />
       <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
-        {canAccessEventChat && (
+        {capabilities.showHighlights && (
           <Box id="highlights">
             <ComicHighlightsModule
               event={event}
               highlights={highlights}
-              canAccessEventChat={canAccessEventChat}
+              canUploadHighlights={capabilities.canUploadHighlights}
             />
           </Box>
         )}
-        <Box id="reviews">
-          <ComicReviewsModule
-            event={event}
-            reviews={reviews}
-            isHost={isHost}
-            user={viewModel.user}
-            deleteReview={deleteReview}
-          />
-        </Box>
+        {capabilities.showReviews && (
+          <Box id="reviews">
+            <ComicReviewsModule
+              event={event}
+              reviews={reviews}
+              isHost={isHost}
+              user={viewModel.user}
+              deleteReview={deleteReview}
+            />
+          </Box>
+        )}
       </Box>
     </>
   );
@@ -157,10 +168,24 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             isAuthenticated={isAuthenticated}
             isInterested={event.user_is_interested || false}
             onToggleInterest={handleToggleSave}
+            disableInterestToggle={!capabilities.canSaveEvent}
             onBack={() => window.history.back()}
           />
           <NormalHeroModule event={event} />
         </Box>
+
+        {capabilities.showHighlightsAtTop && capabilities.showHighlights && (
+          <Box sx={{ bgcolor: 'var(--color-background-primary, #fff)', pt: 1.5 }}>
+            <NormalHighlightsModule
+              event={event}
+              highlights={highlights}
+              canUpload={capabilities.canUploadHighlights}
+              showPublishedPlaceholder={capabilities.showPublishedHighlightsPlaceholder}
+              onOpenComposer={viewModel.onOpenHighlightComposer}
+              compact
+            />
+          </Box>
+        )}
 
         <Box
           sx={{
@@ -189,15 +214,12 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             isAuthenticated={isAuthenticated}
             isSaved={event.user_is_interested || false}
             onToggle={handleToggleSave}
+            disabled={!capabilities.canSaveEvent}
           />
 
           <NormalDivider />
 
-          <NormalTicketsModule
-            event={event}
-            handleBuyTicket={handleBuyTicket}
-            handleBuyMultiple={handleBuyMultiple}
-          />
+          <NormalTicketsModule />
 
           <NormalDivider />
 
@@ -205,7 +227,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             event={event}
             displayNeeds={displayNeeds}
             isAuthenticated={isAuthenticated}
-            isEventOver={isEventOver}
           />
 
           <NormalDivider />
@@ -218,9 +239,31 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
           <NormalDivider />
 
-          <NormalReviewsModule event={event} reviews={reviews} />
+          {!capabilities.showHighlightsAtTop && capabilities.showHighlights && (
+            <>
+              <NormalHighlightsModule
+                event={event}
+                highlights={highlights}
+                canUpload={capabilities.canUploadHighlights}
+                showPublishedPlaceholder={capabilities.showPublishedHighlightsPlaceholder}
+                onOpenComposer={viewModel.onOpenHighlightComposer}
+              />
+              <NormalDivider />
+            </>
+          )}
 
-          <NormalDivider />
+          {capabilities.showReviews ? (
+            <>
+              <NormalReviewsModule
+                event={event}
+                reviews={reviews}
+                canWriteReview={capabilities.canWriteReview}
+                onOpenReviewComposer={viewModel.onOpenReviewComposer}
+                currentUsername={viewModel.user?.username}
+              />
+              <NormalDivider />
+            </>
+          ) : null}
 
           <NormalBrowseModule event={event} />
           <NormalDivider />
@@ -234,9 +277,23 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           isAuthenticated={isAuthenticated}
           isInterested={event.user_is_interested || false}
           onToggleInterest={handleToggleSave}
+          disableInterestToggle={!capabilities.canSaveEvent}
           onBack={() => window.history.back()}
         />
         <NormalHeroModule event={event} />
+        {capabilities.showHighlightsAtTop && capabilities.showHighlights && (
+          <>
+            <NormalHighlightsModule
+              event={event}
+              highlights={highlights}
+              canUpload={capabilities.canUploadHighlights}
+              showPublishedPlaceholder={capabilities.showPublishedHighlightsPlaceholder}
+              onOpenComposer={viewModel.onOpenHighlightComposer}
+              compact
+            />
+            <NormalDivider />
+          </>
+        )}
         <NormalHostStripModule event={event} isHost={isHost} />
         <NormalDivider />
         <NormalDescriptionModule event={event} />
@@ -248,27 +305,45 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           isAuthenticated={isAuthenticated}
           isSaved={event.user_is_interested || false}
           onToggle={handleToggleSave}
+          disabled={!capabilities.canSaveEvent}
         />
         <NormalDivider />
-        <NormalTicketsModule
-          event={event}
-          handleBuyTicket={handleBuyTicket}
-          handleBuyMultiple={handleBuyMultiple}
-        />
+        <NormalTicketsModule />
         <NormalDivider />
         <NormalServicesModule
           event={event}
           displayNeeds={displayNeeds}
           isAuthenticated={isAuthenticated}
-          isEventOver={isEventOver}
         />
         <NormalDivider />
         <NormalGoersModule event={event} isEventOver={isEventOver} />
         <NormalDivider />
         <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
         <NormalDivider />
-        <NormalReviewsModule event={event} reviews={reviews} />
-        <NormalDivider />
+        {!capabilities.showHighlightsAtTop && capabilities.showHighlights && (
+          <>
+            <NormalHighlightsModule
+              event={event}
+              highlights={highlights}
+              canUpload={capabilities.canUploadHighlights}
+              showPublishedPlaceholder={capabilities.showPublishedHighlightsPlaceholder}
+              onOpenComposer={viewModel.onOpenHighlightComposer}
+            />
+            <NormalDivider />
+          </>
+        )}
+        {capabilities.showReviews ? (
+          <>
+            <NormalReviewsModule
+              event={event}
+              reviews={reviews}
+              canWriteReview={capabilities.canWriteReview}
+              onOpenReviewComposer={viewModel.onOpenReviewComposer}
+              currentUsername={viewModel.user?.username}
+            />
+            <NormalDivider />
+          </>
+        ) : null}
         <NormalBrowseModule event={event} />
         <NormalDivider />
         <NormalRecommendedModule currentEventId={event.id} />

@@ -650,7 +650,7 @@ export default function MyHomePage() {
                 >
                   <Box
                     component={nextEvent ? Link : 'div'}
-                    to={nextEvent ? `/events/${nextEvent.id}` : undefined}
+                    to={nextEvent ? `/events-new/${nextEvent.id}` : undefined}
                     sx={{
                       borderRadius: '28px',
                       p: { xs: 2.2, sm: 2.8 },
@@ -762,7 +762,7 @@ export default function MyHomePage() {
                       <Box
                         key={event.id}
                         component={Link}
-                        to={`/events/${event.eventId}`}
+                        to={`/events-new/${event.eventId}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -1040,7 +1040,7 @@ export default function MyHomePage() {
                               opportunities={eventCard.opportunities}
                               matchedNeedIds={matchedOpportunityNeedIds}
                               onCreateService={openQuickCreateService}
-                              onClick={() => navigate(`/events/${eventCard.eventId}`)}
+                              onClick={() => navigate(`/events-new/${eventCard.eventId}`)}
                             />
                           );
                         })

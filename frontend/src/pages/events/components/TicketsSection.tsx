@@ -19,7 +19,7 @@ export const TicketsSection = ({
   handleOneClickBuy: (tierId: number, quantity: number) => void;
   clearTicketformTrigger?: number;
 }) => {
-  const isEventActive = !['draft', 'completed', 'closed', 'live'].includes(
+  const isEventActive = ['published', 'at_risk', 'postponed'].includes(
     event.lifecycle_state,
   );
 

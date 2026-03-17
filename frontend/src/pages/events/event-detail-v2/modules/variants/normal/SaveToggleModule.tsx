@@ -6,6 +6,7 @@ interface NormalSaveToggleModuleProps {
   isAuthenticated: boolean;
   isSaved: boolean;
   onToggle?: () => void;
+  disabled?: boolean;
 }
 
 export function NormalSaveToggleModule({
@@ -13,9 +14,10 @@ export function NormalSaveToggleModule({
   isAuthenticated,
   isSaved,
   onToggle,
+  disabled = false,
 }: NormalSaveToggleModuleProps) {
   const handleToggle = () => {
-    if (onToggle && isAuthenticated) {
+    if (onToggle && isAuthenticated && !disabled) {
       onToggle();
     }
   };
@@ -31,7 +33,7 @@ export function NormalSaveToggleModule({
         variant="outlined"
         fullWidth
         onClick={handleToggle}
-        disabled={!isAuthenticated}
+        disabled={!isAuthenticated || disabled}
         startIcon={isSaved ? <CalendarCheck size={18} /> : <CalendarPlus size={18} />}
         sx={{
           borderColor: isSaved ? '#D85A30' : '#e2e8f0',
@@ -57,7 +59,9 @@ export function NormalSaveToggleModule({
         <Typography
           sx={{ fontSize: 11, color: '#6b7280', mt: 0.75, textAlign: 'center' }}
         >
-          {isSaved
+          {disabled
+            ? 'Saving opens once the event is published'
+            : isSaved
             ? "You'll get a reminder 24h before"
             : 'Get reminded before it starts'}
         </Typography>

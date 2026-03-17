@@ -1,15 +1,20 @@
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
+import type { EventDetailCapabilities } from './statePolicy';
+
 export type ThemeVariant = 'comic' | 'normal';
 
 export interface EventDetailV2ViewModel {
   event: any;
   user: any;
   isHost: boolean;
+  isAcceptedVendor: boolean;
+  hasTicket: boolean;
   isAuthenticated: boolean;
   isEventOver: boolean;
   canAccessEventChat: boolean;
+  capabilities: EventDetailCapabilities;
   highlights: any[];
   reviews: any[];
   occurrences: any[];
@@ -21,6 +26,9 @@ export interface EventDetailV2ViewModel {
   handleBuyTicket: (tierId: number, quantity: number) => void;
   handleBuyMultiple: (selections: Array<{ tierId: number; quantity: number }>) => void;
   handleOneClickBuy: (tierId: number, quantity: number) => void;
+  onViewTicket: (ticketId: number) => void;
+  onOpenHighlightComposer: () => void;
+  onOpenReviewComposer: () => void;
   deleteReview: UseMutationResult<any, any, any, any>;
   themeVariant: ThemeVariant;
 }
@@ -70,6 +78,7 @@ export interface TicketsModuleProps extends ModuleProps {
   handleBuyTicket: (tierId: number, quantity: number) => void;
   handleBuyMultiple: (selections: Array<{ tierId: number; quantity: number }>) => void;
   handleOneClickBuy: (tierId: number, quantity: number) => void;
+  onViewTicket: (ticketId: number) => void;
 }
 
 export interface ServicesModuleProps extends ModuleProps {

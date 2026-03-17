@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import { LIFECYCLE_CONFIG } from './StatusModule';
 
 interface NormalHostStripModuleProps {
   event: any;
@@ -8,7 +9,8 @@ interface NormalHostStripModuleProps {
 export function NormalHostStripModule({ event, isHost }: NormalHostStripModuleProps) {
   const host = event.host;
   const coHosts = event.co_hosts || [];
-  const attendees = event.attendees || [];
+  const lifecycle = event?.lifecycle_state || 'draft';
+  const config = LIFECYCLE_CONFIG[lifecycle] || LIFECYCLE_CONFIG.draft;
 
   const getInitials = (name: string) => {
     return name?.charAt(0)?.toUpperCase() || '?';
@@ -72,44 +74,63 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
         </Typography>
       </Box>
 
-      {coHosts.length > 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', gap: 0.5 }}>
-          <Box sx={{ display: 'flex' }}>
-            {coHosts.slice(0, 3).map((coHost: any, idx: number) => (
-              <Box
-                key={idx}
+      <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 9,
+            fontWeight: 600,
+            px: 1,
+            py: 0.3,
+            borderRadius: '4px',
+            bgcolor: config.bg,
+            color: config.color,
+            textTransform: 'uppercase',
+            letterSpacing: '0.02em',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {config.label}
+        </Box>
+
+        {coHosts.length > 0 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: 'flex' }}>
+              {coHosts.slice(0, 3).map((coHost: any, idx: number) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: '50%',
+                    bgcolor: getColorFromName(coHost.username + idx),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 9,
+                    fontWeight: 500,
+                    color: '#fff',
+                    ml: idx > 0 ? -0.5 : 0,
+                    border: '2px solid var(--color-background-primary, #fff)',
+                  }}
+                >
+                  {getInitials(coHost.name || coHost.username)}
+                </Box>
+              ))}
+            </Box>
+            {coHosts.length > 3 && (
+              <Typography
                 sx={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: '50%',
-                  bgcolor: getColorFromName(coHost.username + idx),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 9,
-                  fontWeight: 500,
-                  color: '#fff',
-                  ml: idx > 0 ? -0.5 : 0,
-                  border: '2px solid var(--color-background-primary, #fff)',
+                  fontSize: 11,
+                  color: 'var(--color-text-secondary, #6b7280)',
+                  ml: 0.75,
                 }}
               >
-                {getInitials(coHost.name || coHost.username)}
-              </Box>
-            ))}
+                +{coHosts.length - 3}
+              </Typography>
+            )}
           </Box>
-          {coHosts.length > 3 && (
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: 'var(--color-text-secondary, #6b7280)',
-                ml: 0.75,
-              }}
-            >
-              +{coHosts.length - 3}
-            </Typography>
-          )}
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 }

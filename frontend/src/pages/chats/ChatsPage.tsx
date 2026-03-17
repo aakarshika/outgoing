@@ -442,7 +442,7 @@ function ChatThread({
           />
         )}
         <Box
-          onClick={() => navigate(`/events/${chat.eventId}`)}
+          onClick={() => navigate(`/events-new/${chat.eventId}`)}
           sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
         >
           <Typography

@@ -33,7 +33,7 @@ export const SearchBarSimple = () => {
   }, [radiusMiles]);
 
   return (
-    <div className="relative  min-w-0 flex-1 bg-white">
+    <div className="sm:relative min-w-0 flex-1 bg-white">
       <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
         <div className="relative flex-1">
           <input
@@ -47,7 +47,7 @@ export const SearchBarSimple = () => {
         </div>
 
         <div
-          className="relative  flex-shrink-0 cursor-pointer rounded-full bg-white "
+          className="sm:relative flex-shrink-0 cursor-pointer rounded-full bg-white "
           ref={locationDropdownRef}
         >
           <button
@@ -77,7 +77,7 @@ export const SearchBarSimple = () => {
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white p-3 shadow-[0px_4px_10px_rgba(0,0,0,0.1)]">
+            <div className="absolute left-2 right-2 sm:left-auto sm:right-0 top-[calc(100%+8px)] z-[70] sm:w-[360px] rounded-2xl bg-white p-3 shadow-[0px_4px_10px_rgba(0,0,0,0.1)]">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}

@@ -5,25 +5,22 @@ import { MemoryBoxSection } from '@/pages/events/components/MemoryBoxSection';
 interface ComicHighlightsModuleProps {
   event: any;
   highlights: any[];
-  canAccessEventChat: boolean;
+  canUploadHighlights: boolean;
 }
 
 export function ComicHighlightsModule({
   event,
   highlights,
-  canAccessEventChat,
+  canUploadHighlights,
 }: ComicHighlightsModuleProps) {
   const [, setIsHighlightOpen] = useState(false);
-
-  if (!canAccessEventChat) {
-    return null;
-  }
 
   return (
     <MemoryBoxSection
       event={event}
       highlights={highlights}
       setIsHighlightOpen={setIsHighlightOpen}
+      canUpload={canUploadHighlights}
     />
   );
 }

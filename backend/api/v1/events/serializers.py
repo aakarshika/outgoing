@@ -178,9 +178,19 @@ class EventListSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             from apps.needs.models import NeedApplication
+            from apps.needs.models import EventNeed
 
-            return NeedApplication.objects.filter(
-                vendor=request.user, need__event=obj
+            has_accepted_application = NeedApplication.objects.filter(
+                vendor=request.user,
+                need__event=obj,
+                status="accepted",
+            ).exists()
+            if has_accepted_application:
+                return True
+
+            return EventNeed.objects.filter(
+                event=obj,
+                assigned_vendor=request.user,
             ).exists()
         return False
 

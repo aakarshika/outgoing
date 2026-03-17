@@ -1,12 +1,14 @@
 import { Box, IconButton, InputBase, Paper, Typography } from '@mui/material';
 import { Send } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import { useAddHighlightComment, useHighlightComments } from '@/features/events/hooks';
 
-// --- Comment Item Component ---
+const surfaceBorder = '1px solid rgba(148, 163, 184, 0.18)';
+
 const CommentItem = ({
   comment,
   onReply,
@@ -29,81 +31,110 @@ const CommentItem = ({
   return (
     <Box
       sx={{
-        mb: 2,
-        ml: comment.parent ? 3 : 0,
-        borderLeft: comment.parent ? '2px solid #333' : 'none',
+        ml: comment.parent ? 3.5 : 0,
         pl: comment.parent ? 2 : 0,
+        borderLeft: comment.parent ? '2px solid rgba(216, 90, 48, 0.16)' : 'none',
       }}
     >
-      <Box sx={{ mb: 1 }}>
-        <Hostname
-          username={comment.author_username}
-          avatarSrc={comment.author_avatar}
-          mode="normal"
-        />
-      </Box>
-      <Box sx={{ mt: 0.5, ml: 4.5 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 1.5,
+          p: 1.5,
+          borderRadius: 3,
+          bgcolor: 'rgba(255,255,255,0.82)',
+          border: surfaceBorder,
+          boxShadow: '0 12px 30px rgba(15, 23, 42, 0.06)',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.2 }}>
+          <Hostname
+            username={comment.author_username}
+            avatarSrc={comment.author_avatar}
+            mode="normal"
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              '& .MuiTypography-root': {
+                fontFamily: 'inherit',
+              },
+            }}
+          />
+        </Box>
+
         <Typography
-          variant="body2"
           sx={{
-            fontFamily: '"Caveat", cursive',
-            fontSize: '1.2rem',
-            lineHeight: 1.2,
+            mt: 1,
+            ml: 5.25,
+            color: '#0f172a',
+            fontSize: '0.97rem',
+            lineHeight: 1.55,
           }}
         >
           {comment.text}
         </Typography>
-        <button
-          onClick={() => onReply(comment.id)}
-          className="font-bold text-blue-500 underline decoration-dashed underline-offset-4 hover:text-blue-600 transition-colors"
-          style={{
-            fontFamily: '"Caveat", cursive',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            border: 'none',
-            background: 'none',
-          }}
-        >
-          Reply
-        </button>
+
+        <Box sx={{ mt: 1, ml: 5.25 }}>
+          <button
+            onClick={() => onReply(comment.id)}
+            style={{
+              border: 'none',
+              background: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              color: '#D85A30',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+            }}
+          >
+            Reply
+          </button>
+        </Box>
 
         {activeReplyId === comment.id && (
-          <Box sx={{ mt: 2, mb: 1 }}>
-            <Paper
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 1.5,
+              ml: 5.25,
+              px: 1.5,
+              py: 0.75,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              borderRadius: 999,
+              bgcolor: '#fff',
+              border: surfaceBorder,
+            }}
+          >
+            <InputBase
+              sx={{ flex: 1, fontSize: '0.94rem', color: '#0f172a' }}
+              placeholder="Write a reply..."
+              value={replyText}
+              onChange={(event) => setReplyText(event.target.value)}
+              onKeyDown={(event) => event.key === 'Enter' && handleSubmit()}
+              autoFocus
+            />
+            <IconButton
+              size="small"
+              onClick={handleSubmit}
+              disabled={!replyText.trim()}
               sx={{
-                p: '4px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                bgcolor: 'white',
-                borderRadius: 0,
-                border: '2px solid #333',
-                shadow: '2px 2px 0px #333',
+                bgcolor: '#D85A30',
+                color: 'white',
+                '&:hover': { bgcolor: '#c44c22' },
+                '&.Mui-disabled': {
+                  bgcolor: 'rgba(148, 163, 184, 0.3)',
+                  color: 'rgba(255,255,255,0.9)',
+                },
               }}
             >
-              <InputBase
-                sx={{
-                  ml: 1,
-                  flex: 1,
-                  fontFamily: '"Caveat", cursive',
-                  fontSize: '1.1rem',
-                }}
-                placeholder="Write a reply..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                autoFocus
-              />
-              <IconButton
-                sx={{ p: 1, color: '#333' }}
-                onClick={handleSubmit}
-                disabled={!replyText.trim()}
-              >
-                <Send size={18} />
-              </IconButton>
-            </Paper>
-          </Box>
+              <Send size={16} />
+            </IconButton>
+          </Paper>
         )}
-      </Box>
+      </Paper>
+
       {comment.replies?.map((reply: any) => (
         <CommentItem
           key={reply.id}
@@ -135,10 +166,16 @@ export const HighlightComments = ({
   const [replyTo, setReplyTo] = useState<number | null>(null);
 
   const handleAddComment = (text: string, parentId?: number) => {
-    if (!text.trim() || !highlightId) return;
+    if (!highlightId) return;
+    if (!isAuthenticated) {
+      toast.error('Sign in to join the conversation');
+      return;
+    }
+    if (!text.trim()) return;
+
     addComment.mutate(
       {
-        highlightId: highlightId,
+        highlightId,
         payload: { text, parent: parentId },
       },
       {
@@ -146,9 +183,14 @@ export const HighlightComments = ({
           if (!parentId) setCommentText('');
           setReplyTo(null);
         },
+        onError: () => {
+          toast.error('Could not send your comment');
+        },
       },
     );
   };
+
+  const comments = commentsResponse?.data || [];
 
   return (
     <Box
@@ -159,71 +201,110 @@ export const HighlightComments = ({
         overflow: 'hidden',
       }}
     >
-      {/* Header Section for Web/Context if needed, otherwise just list */}
-      {/* Comments List */}
       <Box
         sx={{
           flex: 1,
           overflowY: 'auto',
-          p: 3,
-          backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 100%)',
-          backgroundSize: '100% 32px',
-          maxHeight: maxHeight,
+          px: 2,
+          py: 2,
+          maxHeight,
+          background:
+            'linear-gradient(180deg, rgba(248,250,252,0.72) 0%, rgba(241,245,249,0.9) 100%)',
         }}
       >
-        {commentsResponse?.data?.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            onReply={(id) => setReplyTo(id)}
-            activeReplyId={replyTo}
-            onSubmitReply={(text, parentId) => handleAddComment(text, parentId)}
-          />
-        ))}
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              onReply={(id) => setReplyTo(id)}
+              activeReplyId={replyTo}
+              onSubmitReply={(text, parentId) => handleAddComment(text, parentId)}
+            />
+          ))
+        ) : (
+          <Box
+            sx={{
+              minHeight: 220,
+              display: 'grid',
+              placeItems: 'center',
+              textAlign: 'center',
+              px: 3,
+            }}
+          >
+            <Box>
+              <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                No comments yet
+              </Typography>
+              <Typography sx={{ mt: 0.75, fontSize: '0.92rem', color: '#64748b' }}>
+                {isAuthenticated
+                  ? 'Start the conversation on this highlight.'
+                  : 'Sign in to leave the first comment.'}
+              </Typography>
+            </Box>
+          </Box>
+        )}
       </Box>
 
-      {/* Bottom Input (Footer) - for new top-level comments */}
       <Box
         sx={{
           p: 2,
-          borderTop: '2px solid #333',
-          bgcolor: 'white',
+          borderTop: surfaceBorder,
+          bgcolor: 'rgba(255,255,255,0.88)',
+          backdropFilter: 'blur(14px)',
           pb: 'calc(env(safe-area-inset-bottom) + 16px)',
         }}
       >
         <Paper
+          elevation={0}
           sx={{
-            p: '8px 12px',
+            px: 1.75,
+            py: 0.8,
             display: 'flex',
             alignItems: 'center',
-            bgcolor: 'white',
-            borderRadius: 0,
-            border: '2px solid #333',
-            shadow: '3px 3px 0px #333',
+            gap: 1,
+            borderRadius: 999,
+            bgcolor: '#fff',
+            border: surfaceBorder,
+            boxShadow: '0 10px 28px rgba(15, 23, 42, 0.08)',
           }}
         >
           <InputBase
             sx={{
-              ml: 1,
               flex: 1,
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.2rem',
+              color: '#0f172a',
+              fontSize: '0.95rem',
             }}
             placeholder={
               isAuthenticated ? 'Add a comment...' : 'Sign in to like and comment'
             }
             value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddComment(commentText)}
+            onChange={(event) => setCommentText(event.target.value)}
+            onKeyDown={(event) =>
+              event.key === 'Enter' && handleAddComment(commentText)
+            }
+            disabled={!highlightId}
           />
           <IconButton
-            sx={{ p: 1, color: '#333' }}
             onClick={() => handleAddComment(commentText)}
-            disabled={!commentText.trim()}
+            disabled={!commentText.trim() || addComment.isPending || !highlightId}
+            sx={{
+              bgcolor: '#D85A30',
+              color: 'white',
+              '&:hover': { bgcolor: '#c44c22' },
+              '&.Mui-disabled': {
+                bgcolor: 'rgba(148, 163, 184, 0.3)',
+                color: 'rgba(255,255,255,0.9)',
+              },
+            }}
           >
-            <Send size={20} />
+            <Send size={18} />
           </IconButton>
         </Paper>
+
+        <Typography sx={{ mt: 1, px: 0.5, fontSize: '0.78rem', color: '#94a3b8' }}>
+          {commentsCount} {commentsCount === 1 ? 'comment' : 'comments'}
+        </Typography>
       </Box>
     </Box>
   );

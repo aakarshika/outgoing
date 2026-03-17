@@ -35,6 +35,7 @@ import {
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
@@ -279,6 +280,7 @@ export function SimpleNavbar({
             gap: { xs: 0.75, sm: 1.5 },
             flexWrap: 'nowrap',
             minWidth: 0,
+            position: 'relative',
           }}
         >
           <Box
@@ -463,6 +465,56 @@ export function SimpleNavbar({
         }}
       >
         <Box sx={{ py: 0.75 }}>
+          {isAuthenticated && user && (
+            <>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  borderBottom: '1px solid rgba(120,94,60,0.1)',
+                  mb: 0.5,
+                }}
+              >
+                <UserAvatar
+                  src={user.avatar}
+                  username={user.username}
+                  size="sm"
+                  className="ring-1 ring-[#D85A30]/20"
+                />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#3D3124',
+                      lineHeight: 1.2,
+                      fontSize: 14,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {user.first_name && user.last_name 
+                      ? `${user.first_name} ${user.last_name}`
+                      : user.username}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'rgba(61,49,36,0.6)',
+                      display: 'block',
+                      fontSize: 11,
+                    }}
+                  >
+                    Personal Account
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
           {menuGroups.map((group, groupIndex) => (
             <Box key={`group-${groupIndex}`} sx={{ py: 0.35 }}>
               {group.map((item) => (

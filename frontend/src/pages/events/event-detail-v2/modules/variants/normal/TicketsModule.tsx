@@ -1,10 +1,11 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 
+import { useEventDetailV2 } from '../../context';
+import { PurchasedTicketsModule } from './PurchasedTicketsModule';
+
 interface NormalTicketsModuleProps {
-  event: any;
-  handleBuyTicket: (tierId: number, quantity: number) => void;
-  handleBuyMultiple: (selections: Array<{ tierId: number; quantity: number }>) => void;
+  className?: string;
 }
 
 const TicketIcon = ({ color }: { color: string }) => (
@@ -94,13 +95,12 @@ const Stepper = ({
   </Box>
 );
 
-export function NormalTicketsModule({
-  event,
-  handleBuyMultiple,
-}: NormalTicketsModuleProps) {
+export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
+  const { event, handleBuyMultiple, onViewTicket, capabilities } = useEventDetailV2();
   const tiers = event.ticket_tiers || [];
   const hasPurchased = event.user_tickets && event.user_tickets.length > 0;
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [showStubs, setShowStubs] = useState(!hasPurchased);
 
   const handleUpdateQty = (tierId: number, delta: number, max: number) => {
     setQuantities((prev) => {
@@ -114,9 +114,7 @@ export function NormalTicketsModule({
 
   if (tiers.length === 0 && !hasPurchased) return null;
 
-  const isEventActive = ['published', 'event_ready', 'at_risk'].includes(
-    event.lifecycle_state,
-  );
+  const isEventActive = capabilities.canBuyTickets;
 
   if (!isEventActive && !hasPurchased) {
     return (
@@ -162,56 +160,33 @@ export function NormalTicketsModule({
 
       {hasPurchased && (
         <Box sx={{ mb: 3 }}>
-          <Typography
-            sx={{
-              fontSize: 12,
-              color: 'var(--color-text-secondary, #6b7280)',
-              mb: 1,
-              fontWeight: 500,
-            }}
-          >
-            Your tickets
-          </Typography>
-          {event.user_tickets.map((ticket: any) => (
-            <Box
-              key={ticket.id}
-              sx={{
-                p: 1.5,
-                bgcolor: '#f0fdf4',
-                borderRadius: '12px',
-                mb: 1,
-                border: '0.5px solid #dcfce7',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#166534' }}>
-                  {ticket.ticket_type}
-                </Typography>
-                <Typography sx={{ fontSize: 11, color: '#15803d' }}>
-                  {ticket.guest_name || 'Guest'}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#dcfce7', px: 1, py: 0.5, borderRadius: '6px' }}>
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: '#166534',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Valid
-                </Typography>
-              </Box>
+          <PurchasedTicketsModule 
+            userTickets={event.user_tickets} 
+            ticketTiers={tiers}
+            onViewTicket={onViewTicket}
+          />
+          
+          {capabilities.showTicketPurchase && (
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                onClick={() => setShowStubs(!showStubs)}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: THEME_ORANGE,
+                  '&:hover': { bgcolor: 'transparent', opacity: 0.8 },
+                }}
+              >
+                {showStubs ? 'Hide ticket options' : 'Buy more tickets'}
+              </Button>
             </Box>
-          ))}
+          )}
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      {capabilities.showTicketPurchase && (!hasPurchased || showStubs) && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {tiers.map((tier: any, idx: number) => {
           const isSoldOut = tier.sold_out || tier.capacity <= (tier.sold_count || 0);
           const price =
@@ -234,7 +209,9 @@ export function NormalTicketsModule({
                 bgcolor: '#fff',
                 borderRadius: '14px',
                 border: '0.5px solid #e5e7eb',
-                opacity: isSoldOut ? 0.6 : 1,
+                opacity: isSoldOut ? 0.4 : 1,
+                filter: isSoldOut ? 'grayscale(1)' : 'none',
+                pointerEvents: isSoldOut ? 'none' : 'auto',
                 position: 'relative',
               }}
             >
@@ -331,9 +308,7 @@ export function NormalTicketsModule({
                   </Typography>
                   <Stepper
                     value={currentQty}
-                    onIncrement={() =>
-                      handleUpdateQty(tier.id, 1, Math.min(leftCount, 10))
-                    }
+                    onIncrement={() => handleUpdateQty(tier.id, 1, Math.min(leftCount, 10))}
                     onDecrement={() => handleUpdateQty(tier.id, -1, 10)}
                   />
                 </Box>
@@ -342,43 +317,46 @@ export function NormalTicketsModule({
           );
         })}
       </Box>
+    )}
 
       {/* Get Ticket Button - Static at the bottom of the list */}
-      <Box sx={{ mt: 3 }}>
-        <Button
-          fullWidth
-          disabled={totalQuantity === 0}
-          onClick={() => {
-            const selections = Object.entries(quantities)
-              .filter(([_, qty]) => qty > 0)
-              .map(([tierId, qty]) => ({ tierId: Number(tierId), quantity: qty }));
-            handleBuyMultiple(selections);
-          }}
-          sx={{
-            fontFamily: '"Syne", sans-serif',
-            fontSize: 15,
-            fontWeight: 700,
-            py: 1.75,
-            borderRadius: '12px',
-            bgcolor: THEME_ORANGE,
-            color: '#fff',
-            textTransform: 'none',
-            '&:hover': {
+      {capabilities.showTicketPurchase && (!hasPurchased || showStubs) && (
+        <Box sx={{ mt: 3 }}>
+          <Button
+            fullWidth
+            disabled={totalQuantity === 0}
+            onClick={() => {
+              const selections = Object.entries(quantities)
+                .filter(([_, qty]) => qty > 0)
+                .map(([tierId, qty]) => ({ tierId: Number(tierId), quantity: qty }));
+              handleBuyMultiple(selections);
+            }}
+            sx={{
+              fontFamily: '"Syne", sans-serif',
+              fontSize: 15,
+              fontWeight: 700,
+              py: 1.75,
+              borderRadius: '12px',
               bgcolor: THEME_ORANGE,
-              opacity: 0.9,
-            },
-            '&.Mui-disabled': {
-              bgcolor: '#f3f4f6',
-              color: '#9ca3af',
-              border: '1px solid #e1e4e8',
-            },
-          }}
-        >
-          {totalQuantity > 0
-            ? `Get ${totalQuantity} ticket${totalQuantity > 1 ? 's' : ''}`
-            : 'Get ticket'}
-        </Button>
-      </Box>
+              color: '#fff',
+              textTransform: 'none',
+              '&:hover': {
+                bgcolor: THEME_ORANGE,
+                opacity: 0.9,
+              },
+              '&.Mui-disabled': {
+                bgcolor: '#f3f4f6',
+                color: '#9ca3af',
+                border: '1px solid #e1e4e8',
+              },
+            }}
+          >
+            {totalQuantity > 0
+              ? `Get ${totalQuantity} ticket${totalQuantity > 1 ? 's' : ''}`
+              : 'Get ticket'}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

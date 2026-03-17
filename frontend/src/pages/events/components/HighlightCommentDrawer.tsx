@@ -1,5 +1,5 @@
 import { Box, Drawer, IconButton, Typography } from '@mui/material';
-import { X } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 
 import { HighlightComments } from './HighlightComments';
 
@@ -23,66 +23,88 @@ export const HighlightCommentDrawer = ({
       onClose={onClose}
       PaperProps={{
         sx: {
-          height: '85%',
-          maxWidth: { md: '600px' },
+          height: { xs: '82%', md: '78%' },
+          maxWidth: { xs: '100%', md: '640px' },
           mx: 'auto',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: '#f4f1ea',
-          backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-          backgroundSize: '15px 15px',
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
-          border: '3px solid #333',
-          borderBottom: 'none',
+          bgcolor: '#f8fafc',
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          border: '1px solid rgba(148, 163, 184, 0.22)',
+          boxShadow: '0 -20px 70px rgba(15, 23, 42, 0.22)',
+          backgroundImage:
+            'linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(248,250,252,0.96) 100%)',
         },
       }}
-      sx={{
-        zIndex: 10005,
-      }}
+      sx={{ zIndex: 10005 }}
     >
-      {/* Header */}
       <Box
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          borderBottom: '2px solid #333',
-          position: 'relative',
-          bgcolor: 'white',
+          px: 2,
+          pt: 1.5,
+          pb: 1.75,
+          borderBottom: '1px solid rgba(148, 163, 184, 0.18)',
+          bgcolor: 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(18px)',
         }}
       >
-        {/* Washi tape decor */}
         <Box
           sx={{
-            position: 'absolute',
-            top: -10,
-            left: '40%',
-            width: '80px',
-            height: '20px',
-            bgcolor: 'rgba(252, 211, 77, 0.6)',
-            transform: 'rotate(-2deg)',
-            zIndex: 1,
-            border: '1px solid rgba(0,0,0,0.1)',
+            width: 56,
+            height: 5,
+            borderRadius: 999,
+            bgcolor: 'rgba(148, 163, 184, 0.55)',
+            mx: 'auto',
+            mb: 1.5,
           }}
         />
 
-        <Typography
+        <Box
           sx={{
-            flex: 1,
-            textAlign: 'center',
-            fontWeight: 700,
-            fontSize: '1.2rem',
-            fontFamily: '"Permanent Marker", cursive',
-            transform: 'rotate(-1deg)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.25,
           }}
         >
-          {commentsCount} thoughts ✏️
-        </Typography>
-        <IconButton onClick={onClose} size="small" sx={{ color: '#333' }}>
-          <X size={24} />
-        </IconButton>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 999,
+              bgcolor: '#fff',
+              color: '#D85A30',
+              boxShadow: '0 8px 20px rgba(216, 90, 48, 0.14)',
+              border: '1px solid rgba(216, 90, 48, 0.14)',
+            }}
+          >
+            <MessageCircle size={18} />
+          </Box>
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+              Comments
+            </Typography>
+            <Typography sx={{ fontSize: '0.86rem', color: '#64748b' }}>
+              {commentsCount} {commentsCount === 1 ? 'reply' : 'replies'}
+            </Typography>
+          </Box>
+
+          <IconButton
+            onClick={onClose}
+            size="small"
+            sx={{
+              color: '#475569',
+              bgcolor: 'rgba(255,255,255,0.85)',
+              border: '1px solid rgba(148, 163, 184, 0.18)',
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+        </Box>
       </Box>
 
       <HighlightComments highlightId={highlightId} commentsCount={commentsCount} />

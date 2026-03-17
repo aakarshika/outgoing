@@ -355,8 +355,8 @@ export default function SearchPage() {
           isFeedLoading={isFeedLoading}
           isOpportunitiesLoading={isOpportunitiesLoading}
           isAuthenticated={isAuthenticated}
-          onEventClick={(eventId) => navigate(`/events/${eventId}`)}
-          onOpportunityClick={(eventId) => navigate(`/events/${eventId}`)}
+          onEventClick={(eventId) => navigate(`/events-new/${eventId}`)}
+          onOpportunityClick={(eventId) => navigate(`/events-new/${eventId}`)}
           onCreateService={openQuickCreateService}
           onSignIn={() => navigate('/signin')}
         />

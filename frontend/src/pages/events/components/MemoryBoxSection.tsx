@@ -17,11 +17,16 @@ export const MemoryBoxSection = ({
   highlights,
   setIsHighlightOpen,
   event,
+  canUpload,
 }: {
   highlights: any[];
   setIsHighlightOpen: (v: boolean) => void;
   event: any;
+  canUpload?: boolean;
 }) => {
+    const canUploadHighlights =
+      canUpload ?? !(event.lifecycle_state === 'draft' || event.lifecycle_state === 'published');
+
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -70,12 +75,12 @@ export const MemoryBoxSection = ({
             }}
           >
             {event.lifecycle_state === 'draft' ||
-            event.lifecycle_state === 'published' ||
-            event.lifecycle_state === 'event_ready' ? (
+            event.lifecycle_state === 'published' ? (
               <Highlighter color="rgba(252, 211, 77, 0.4)">
                 Memories to come
               </Highlighter>
-            ) : event.lifecycle_state === 'live' ? (
+            ) : event.lifecycle_state === 'live' ||
+              event.lifecycle_state === 'event_ready' ? (
               <Highlighter color="rgba(252, 211, 77, 0.4)">Memories</Highlighter>
             ) : (
               <Highlighter color="rgba(252, 211, 77, 0.4)">Memories made</Highlighter>
@@ -283,8 +288,7 @@ export const MemoryBoxSection = ({
               }}
             >
               {event.lifecycle_state === 'draft' ||
-              event.lifecycle_state === 'published' ||
-              event.lifecycle_state === 'event_ready'
+              event.lifecycle_state === 'published'
                 ? 'Check back later to pile on your highlights!'
                 : event.lifecycle_state === 'live'
                   ? 'Be the first to add your highlights to the pile!'
@@ -294,9 +298,7 @@ export const MemoryBoxSection = ({
         )}
 
         {/* Action Buttons - Sticker Style moved inside container for cohesiveness */}
-        {!(
-          event.lifecycle_state === 'draft' || event.lifecycle_state === 'published'
-        ) && (
+        {canUploadHighlights && (
           <Box
             sx={{
               display: 'flex',

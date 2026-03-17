@@ -7,6 +7,7 @@ interface NormalNavigationModuleProps {
   isInterested: boolean;
   onBack?: () => void;
   onToggleInterest?: () => void;
+  disableInterestToggle?: boolean;
 }
 
 export function NormalNavigationModule({
@@ -15,6 +16,7 @@ export function NormalNavigationModule({
   isInterested,
   onBack,
   onToggleInterest,
+  disableInterestToggle = false,
 }: NormalNavigationModuleProps) {
   const handleShare = async () => {
     if (navigator.share) {
@@ -60,12 +62,14 @@ export function NormalNavigationModule({
       <Box sx={{ display: 'flex', gap: 1 }}>
         <IconButton
           onClick={onToggleInterest}
+          disabled={disableInterestToggle}
           sx={{
             width: 34,
             height: 34,
             bgcolor: 'rgba(255,255,255,0.85)',
             color: isInterested ? '#D85A30' : 'inherit',
             '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' },
+            '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.7)', color: '#94a3b8' },
           }}
         >
           <Heart size={18} fill={isInterested ? '#D85A30' : 'none'} />

@@ -6,10 +6,24 @@ import { UserAvatar } from '@/components/ui/UserAvatar';
 interface NormalReviewsModuleProps {
   event: any;
   reviews: any[];
+  canWriteReview?: boolean;
+  onOpenReviewComposer?: () => void;
+  currentUsername?: string;
 }
 
-export function NormalReviewsModule({ event, reviews }: NormalReviewsModuleProps) {
+export function NormalReviewsModule({
+  event,
+  reviews,
+  canWriteReview = false,
+  onOpenReviewComposer,
+  currentUsername,
+}: NormalReviewsModuleProps) {
   const hostReviews = event.host_reviews || reviews || [];
+  const hasUserReview = hostReviews.some(
+    (review: any) =>
+      review.reviewer_username === currentUsername || review.username === currentUsername,
+  );
+  const canLeaveReview = canWriteReview && event.user_has_ticket && !hasUserReview;
 
   return (
     <Box sx={{ px: 2, pt: 2 }}>
@@ -120,6 +134,28 @@ export function NormalReviewsModule({ event, reviews }: NormalReviewsModuleProps
               </Box>
             );
           })}
+        </Box>
+      )}
+
+      {canLeaveReview && (
+        <Box sx={{ mt: 1.5 }}>
+          <Box
+            component="button"
+            onClick={onOpenReviewComposer}
+            sx={{
+              width: '100%',
+              py: 1.15,
+              borderRadius: '12px',
+              border: '0.5px solid #D85A30',
+              background: '#FFF5F2',
+              color: '#D85A30',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Leave a review
+          </Box>
         </Box>
       )}
     </Box>

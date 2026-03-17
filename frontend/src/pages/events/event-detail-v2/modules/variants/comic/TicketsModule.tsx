@@ -9,6 +9,7 @@ interface ComicTicketsModuleProps {
   handleBuyTicket: (tierId: number, quantity: number) => void;
   handleBuyMultiple: (selections: Array<{ tierId: number; quantity: number }>) => void;
   handleOneClickBuy: (tierId: number, quantity: number) => void;
+  onViewTicket: (ticketId: number) => void;
 }
 
 export function ComicTicketsModule({
@@ -18,6 +19,7 @@ export function ComicTicketsModule({
   handleBuyTicket,
   handleBuyMultiple,
   handleOneClickBuy,
+  onViewTicket,
 }: ComicTicketsModuleProps) {
   return (
     <TicketsSection
@@ -26,6 +28,7 @@ export function ComicTicketsModule({
       handleBuyTicket={handleBuyTicket}
       handleOneClickBuy={handleOneClickBuy}
       clearTicketformTrigger={clearTicketformTrigger}
+      onViewTicket={onViewTicket}
     />
   );
 }

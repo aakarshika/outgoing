@@ -9,6 +9,7 @@ import { HighlightComposer } from '@/components/events/HighlightComposer';
 import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
+import { TicketManagementModal } from '@/components/events/TicketManagementModal';
 import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { useAuth } from '@/features/auth/hooks';
 import { CategoricalBackground } from '@/features/events/CategoricalBackground';
@@ -28,8 +29,12 @@ import { useBackground } from '@/theme/BackgroundProvider';
 import { GenericFeedSection } from '../home/sections/FeedSections';
 import { getDaysAgo } from './components/scrapbookHelpers';
 import { EventDetailV2Provider } from './event-detail-v2/modules/context';
+import { buildEventDetailCapabilities } from './event-detail-v2/modules/shared/statePolicy';
 import type { EventDetailV2ViewModel } from './event-detail-v2/modules/shared/types';
 import { VariantRegistry } from './event-detail-v2/modules/VariantRegistry';
+import { NormalTicketConfirmationModal } from './event-detail-v2/modules/variants/normal/components/NormalTicketConfirmationModal';
+import { NormalTicketManagementModal } from './event-detail-v2/modules/variants/normal/components/NormalTicketManagementModal';
+import { NormalTicketPurchaseModal } from './event-detail-v2/modules/variants/normal/components/NormalTicketPurchaseModal';
 
 const modernTheme = createTheme({
   ...scrapbookTheme,
@@ -91,6 +96,8 @@ export default function EventDetailPageV2() {
   const [selectedSelections, setSelectedSelections] = useState<
     Array<{ tierId: number; quantity: number }> | undefined
   >(undefined);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [isTicketManagementModalOpen, setIsTicketManagementModalOpen] = useState(false);
 
   const [quickBuyData, setQuickBuyData] = useState<{
     tierId: number;
@@ -238,10 +245,39 @@ export default function EventDetailPageV2() {
   }
 
   const isHost = user?.username === event.host.username;
+  const hasTicket = Boolean(event.user_has_ticket);
+  const isAcceptedVendor = Boolean(event.user_is_vendor);
+  const capabilities = buildEventDetailCapabilities({
+    lifecycleState: event.lifecycle_state,
+    isHost,
+    hasTicket,
+    isAcceptedVendor,
+  });
+
+  if (!capabilities.canViewDraftPage) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '50vh',
+          gap: 1.5,
+        }}
+      >
+        <Typography sx={{ fontWeight: 600 }}>This draft event is private</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>
+          Only the host can preview this draft.
+        </Typography>
+        <MuiButton onClick={() => navigate('/')}>Go Home</MuiButton>
+      </Box>
+    );
+  }
+
   const displayNeeds = needs.filter((n: any) => n.status !== 'cancelled');
 
-  const canAccessEventChat =
-    isHost || Boolean(event.user_is_vendor) || Boolean(event.user_has_ticket);
+  const canAccessEventChat = capabilities.canAccessEventChat;
 
   const handleBuyTicket = (tierId: number, _quantity: number) => {
     if (!isAuthenticated) return navigate('/signin');
@@ -316,6 +352,11 @@ export default function EventDetailPageV2() {
     }
   };
 
+  const handleViewTicket = (ticketId: number) => {
+    setSelectedTicketId(ticketId);
+    setIsTicketManagementModalOpen(true);
+  };
+
   const isEventOver = !['published', 'draft', 'postponed', 'event_ready'].includes(
     event.lifecycle_state,
   );
@@ -324,9 +365,12 @@ export default function EventDetailPageV2() {
     event,
     user,
     isHost,
+    isAcceptedVendor,
+    hasTicket,
     isAuthenticated,
     isEventOver,
     canAccessEventChat,
+    capabilities,
     highlights,
     reviews,
     occurrences,
@@ -338,6 +382,9 @@ export default function EventDetailPageV2() {
     handleBuyTicket,
     handleBuyMultiple,
     handleOneClickBuy,
+    onViewTicket: handleViewTicket,
+    onOpenHighlightComposer: () => setIsHighlightOpen(true),
+    onOpenReviewComposer: () => setIsReviewOpen(true),
     deleteReview,
     themeVariant,
   };
@@ -345,108 +392,119 @@ export default function EventDetailPageV2() {
   const activeTheme = themeVariant === 'comic' ? scrapbookTheme : modernTheme;
 
   // Normal theme handles its own layout entirely
-  if (themeVariant === 'normal') {
-    return (
-      <EventDetailV2Provider value={viewModel}>
-        <VariantRegistry variant={themeVariant} />
-      </EventDetailV2Provider>
-    );
-  }
-
-  // Comic theme
   return (
     <EventDetailV2Provider value={viewModel}>
       <ThemeProvider theme={activeTheme}>
-        <Box
-          sx={{
-            minHeight: '100vh',
-            color: 'inherit',
-            transition: 'all 0.5s ease',
-          }}
-        >
+        {themeVariant === 'normal' ? (
+          <VariantRegistry variant={themeVariant} />
+        ) : (
           <Box
             sx={{
-              maxWidth: '1000px',
-              mx: 'auto',
-              position: 'relative',
-              '&::before, &::after': {
-                content: '""',
-                position: 'absolute',
-                zIndex: 0,
-                bottom: '25px',
-                width: '40%',
-                height: '20px',
-                boxShadow: '0 25px 20px rgba(0,0,0,0.4)',
-                transition: 'all 0.3s ease',
-              },
-              '&::before': { left: '12px', transform: 'rotate(-4deg)' },
-              '&::after': { right: '12px', transform: 'rotate(4deg)' },
+              minHeight: '100vh',
+              color: 'inherit',
+              transition: 'all 0.5s ease',
             }}
           >
-            <CategoricalBackground
-              category={event?.category}
+            <Box
               sx={{
-                width: '100%',
-                height: '100%',
+                maxWidth: '1000px',
+                mx: 'auto',
                 position: 'relative',
-                zIndex: 1,
-                p: { xs: 2, sm: 4, md: 6 },
-                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                borderRadius: '4px',
-                overflow: 'visible',
+                '&::before, &::after': {
+                  content: '""',
+                  position: 'absolute',
+                  zIndex: 0,
+                  bottom: '25px',
+                  width: '40%',
+                  height: '20px',
+                  boxShadow: '0 25px 20px rgba(0,0,0,0.4)',
+                  transition: 'all 0.3s ease',
+                },
+                '&::before': { left: '12px', transform: 'rotate(-4deg)' },
+                '&::after': { right: '12px', transform: 'rotate(4deg)' },
               }}
             >
-              <VariantRegistry variant={themeVariant} />
-            </CategoricalBackground>
-          </Box>
+              <CategoricalBackground
+                category={event?.category}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'relative',
+                  zIndex: 1,
+                  p: { xs: 2, sm: 4, md: 6 },
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                  overflow: 'visible',
+                }}
+              >
+                <VariantRegistry variant={themeVariant} />
+              </CategoricalBackground>
+            </Box>
 
-          <Box
-            sx={{
-              maxWidth: '1000px',
-              mx: 'auto',
-              pt: 16,
-              mt: { xs: 4, sm: 5, md: 6 },
+            <Box
+              sx={{
+                maxWidth: '1000px',
+                mx: 'auto',
+                pt: 16,
+                mt: { xs: 4, sm: 5, md: 6 },
+              }}
+            >
+              <GenericFeedSection
+                title="These might be of your interest too..."
+                params={{ sort: 'trending' }}
+                viewAllPath="/browse?sort=trending&title=Trending Events"
+                forceShowHeader={true}
+              />
+            </Box>
+          </Box>
+        )}
+
+        {selectedNeed && (
+          <ApplyToNeedModal
+            isOpen={isApplyModalOpen}
+            onClose={() => {
+              setIsApplyModalOpen(false);
+              setTimeout(() => setSelectedNeed(null), 200);
             }}
-          >
-            <GenericFeedSection
-              title="These might be of your interest too..."
-              params={{ sort: 'trending' }}
-              viewAllPath="/browse?sort=trending&title=Trending Events"
-              forceShowHeader={true}
-            />
-          </Box>
-
-          {selectedNeed && (
-            <ApplyToNeedModal
-              isOpen={isApplyModalOpen}
-              onClose={() => {
-                setIsApplyModalOpen(false);
-                setTimeout(() => setSelectedNeed(null), 200);
-              }}
-              needId={selectedNeed.id}
-              needTitle={selectedNeed.title}
-            />
-          )}
-          <HighlightComposer
-            eventId={Number(id)}
-            isOpen={isHighlightOpen}
-            onOpenChange={setIsHighlightOpen}
+            needId={selectedNeed.id}
+            needTitle={selectedNeed.title}
           />
-          {event && (
-            <ReviewComposer
-              eventId={Number(id)}
-              eventName={event.title}
-              participatingVendors={event.participating_vendors}
-              isOpen={isReviewOpen}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setTimeout(() => setEditReviewData(null), 200);
-                }
-                setIsReviewOpen(open);
-              }}
-              initialData={editReviewData}
-            />
-          )}
+        )}
+        <HighlightComposer
+          eventId={Number(id)}
+          isOpen={isHighlightOpen}
+          onOpenChange={setIsHighlightOpen}
+        />
+        {event && (
+          <ReviewComposer
+            eventId={Number(id)}
+            eventName={event.title}
+            participatingVendors={event.participating_vendors}
+            isOpen={isReviewOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setTimeout(() => setEditReviewData(null), 200);
+              }
+              setIsReviewOpen(open);
+            }}
+            initialData={editReviewData}
+          />
+        )}
+        {themeVariant === 'normal' ? (
+          <NormalTicketPurchaseModal
+            isOpen={isTicketingModalOpen}
+            onClose={() => {
+              setIsTicketingModalOpen(false);
+              setSelectedQuantity(null);
+            }}
+            event={event}
+            user={user}
+            selectedQuantity={selectedQuantity}
+            selectedTierId={selectedTierId}
+            selections={selectedSelections}
+            onSuccess={handleTicketingSuccess}
+          />
+        ) : (
           <TicketingServiceModal
             isOpen={isTicketingModalOpen}
             onClose={() => {
@@ -460,7 +518,21 @@ export default function EventDetailPageV2() {
             selections={selectedSelections}
             onSuccess={handleTicketingSuccess}
           />
+        )}
 
+        {themeVariant === 'normal' ? (
+          <NormalTicketConfirmationModal
+            isOpen={!!confirmedTicket}
+            onClose={() => {
+              setConfirmedTicket(null);
+              setSelectedQuantity(null);
+            }}
+            eventTitle={event?.title || ''}
+            ticketType={confirmedTicket?.type || ''}
+            price={confirmedTicket?.price || '0'}
+            needsAadharVerification={confirmedTicket?.needsAadharVerification}
+          />
+        ) : (
           <TicketConfirmationModal
             isOpen={!!confirmedTicket}
             onClose={() => {
@@ -472,21 +544,43 @@ export default function EventDetailPageV2() {
             price={confirmedTicket?.price || '0'}
             needsAadharVerification={confirmedTicket?.needsAadharVerification}
           />
-          <QuickBuyPopup
-            isOpen={!!quickBuyData}
-            onClose={() => {
-              setQuickBuyData(null);
-              setOneClickStatus('idle');
-              setSelectedQuantity(null);
-            }}
-            event={event}
-            tierId={quickBuyData?.tierId ?? null}
-            quantity={quickBuyData?.quantity || 1}
-            user={user}
-            status={oneClickStatus}
-            onConfirm={handleQuickBuyConfirm}
+        )}
+        <QuickBuyPopup
+          isOpen={!!quickBuyData}
+          onClose={() => {
+            setQuickBuyData(null);
+            setOneClickStatus('idle');
+            setSelectedQuantity(null);
+          }}
+          event={event}
+          tierId={quickBuyData?.tierId ?? null}
+          quantity={quickBuyData?.quantity || 1}
+          user={user}
+          status={oneClickStatus}
+          onConfirm={handleQuickBuyConfirm}
+        />
+        {themeVariant === 'comic' ? (
+          <TicketManagementModal
+            isOpen={isTicketManagementModalOpen}
+            onClose={() => setIsTicketManagementModalOpen(false)}
+            tickets={event.user_tickets}
+            ticketTiers={event.ticket_tiers}
+            initialIndex={Math.max(
+              0,
+              event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
+            )}
           />
-        </Box>
+        ) : (
+          <NormalTicketManagementModal
+            isOpen={isTicketManagementModalOpen}
+            onClose={() => setIsTicketManagementModalOpen(false)}
+            tickets={event.user_tickets}
+            initialIndex={Math.max(
+              0,
+              event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
+            )}
+          />
+        )}
       </ThemeProvider>
     </EventDetailV2Provider>
   );
