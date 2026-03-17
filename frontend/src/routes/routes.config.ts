@@ -72,6 +72,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/events-new/:id',
+    componentName: 'EventDetailV2',
+    isPublic: true,
+  },
+  {
     path: '/events/:id/gallery',
     componentName: 'Gallery',
     isPublic: true,

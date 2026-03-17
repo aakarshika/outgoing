@@ -13,3 +13,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5151",
 ]
+# REST Framework Settings
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "core.authentication.DevAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}

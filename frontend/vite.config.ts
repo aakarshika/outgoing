@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), basicSsl()],
+  plugins: [react(), process.env.VITE_NO_SSL ? null : basicSsl()].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

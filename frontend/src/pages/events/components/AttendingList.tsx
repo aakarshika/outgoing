@@ -1,13 +1,8 @@
 import { BadgeCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { AttendeePopover, type Attendee } from '@/components/ui/AttendeePopover';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-
-interface Attendee {
-  username: string;
-  avatar: string | null;
-  is_verified: boolean;
-}
 
 interface AttendingListProps {
   attendees: Attendee[];
@@ -22,12 +17,10 @@ export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) =>
     return null;
   }
 
-  // Duplicate the list even more to ensure a continuous loop for small lists
   const displayAttendees = [...attendees, ...attendees, ...attendees, ...attendees];
 
   return (
     <div className="relative mt-12">
-      {/* Comic book themed header */}
       <div className="flex items-center">
         <h3
           className="text-2xl text-gray-900  px-4 py-1  transform -rotate-1"
@@ -57,42 +50,47 @@ export const AttendingList = ({ attendees, isEventOver }: AttendingListProps) =>
           }}
         >
           {displayAttendees.map((attendee, index) => (
-            <div
+            <AttendeePopover
               key={`${attendee.username}-${index}`}
-              className="group flex items-center  p-2  transition-transform hover:-translate-y-1 hover:rotate-1"
+              attendee={attendee}
+              variant="comic"
             >
-              <div className="relative">
-                <UserAvatar
-                  src={attendee.avatar}
-                  username={attendee.username}
-                  size="md"
-                  borderGradient
-                />
-                {attendee.is_verified && (
-                  <BadgeCheck
-                    className="absolute -top-1 -right-1 text-blue-500 bg-white rounded-full p-0.5 border-2 border-gray-800"
-                    size={16}
+              <div
+                className="group flex items-center p-2 transition-transform hover:-translate-y-1 hover:rotate-1 cursor-pointer"
+              >
+                <div className="relative">
+                  <UserAvatar
+                    src={attendee.avatar}
+                    username={attendee.username}
+                    size="md"
+                    borderGradient
                   />
-                )}
+                  {attendee.is_verified && (
+                    <BadgeCheck
+                      className="absolute -top-1 -right-1 text-blue-500 bg-white rounded-full p-0.5 border-2 border-gray-800"
+                      size={16}
+                    />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span
+                    className="font-bold text-gray-900"
+                    style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
+                  >
+                    @{attendee.username}
+                  </span>
+                  <span
+                    className="text-xs text-gray-500 uppercase tracking-widest font-bold"
+                    style={{
+                      fontFamily: '"Permanent Marker", cursive',
+                      fontSize: '0.65rem',
+                    }}
+                  >
+                    Soul Identity
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span
-                  className="font-bold text-gray-900"
-                  style={{ fontFamily: '"Caveat", cursive', fontSize: '1.25rem' }}
-                >
-                  @{attendee.username}
-                </span>
-                <span
-                  className="text-xs text-gray-500 uppercase tracking-widest font-bold"
-                  style={{
-                    fontFamily: '"Permanent Marker", cursive',
-                    fontSize: '0.65rem',
-                  }}
-                >
-                  Soul Identity
-                </span>
-              </div>
-            </div>
+            </AttendeePopover>
           ))}
         </div>
       </div>

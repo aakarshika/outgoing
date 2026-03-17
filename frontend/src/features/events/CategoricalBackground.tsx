@@ -15,7 +15,7 @@ export const CATEGORY_THEMES: Record<
     bg: '#f8fafc',
     pattern:
       'linear-gradient(rgba(130, 153, 186, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(122, 166, 229, 0.1) 1px, transparent 1px)',
-    accent: '16a34a',
+    accent: '#16a34a',
     tape: 'rgba(138, 177, 231, 0.4)',
     icon: 'cpu',
   },

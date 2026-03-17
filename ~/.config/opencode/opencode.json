@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp", "--server", "--host=127.0.0.1", "--port=8931"],
+      "enabled": true
+    }
+  }
+}
