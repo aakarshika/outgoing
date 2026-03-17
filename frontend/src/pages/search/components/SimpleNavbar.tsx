@@ -15,14 +15,14 @@ import {
   Menu,
   MessageCircle,
   Monitor,
+  Pencil,
   PlusCircle,
   Settings,
   Speech,
   Ticket,
-  Users,
-  Pencil,
   UserIcon,
   UserPlus,
+  Users,
 } from 'lucide-react';
 import { type MouseEvent, useState } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
@@ -32,13 +32,18 @@ import {
   QuickCreateSpark,
   type QuickCreateSubmitPayload,
 } from '@/components/events/QuickCreateSpark';
-import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
+import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
-import { useCategories, useEvent, useMyEvents, useMyTickets } from '@/features/events/hooks';
+import {
+  useCategories,
+  useEvent,
+  useMyEvents,
+  useMyTickets,
+} from '@/features/events/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 
 type MenuItem = {
@@ -107,7 +112,43 @@ export function SimpleNavbar({
     });
   }
 
+  const mobileAccountItems: MenuItem[] = [];
+  if (isMobile && !isAuthenticated) {
+    if (location.pathname !== '/signin') {
+      mobileAccountItems.push({
+        label: 'Sign In',
+        to: '/signin',
+        Icon: UserIcon,
+      });
+    }
+    if (location.pathname !== '/signup') {
+      mobileAccountItems.push({
+        label: 'Sign Up',
+        to: '/signup',
+        Icon: UserPlus,
+      });
+    }
+  }
+
+  const mobileManageItems: MenuItem[] = [];
+  if (isMobile && isAuthenticated && isVendor && isNotOnManagePage && eventId) {
+    mobileManageItems.push({
+      label: 'Manage Service',
+      to: `/events/${eventId}/service-event-management`,
+      Icon: Pencil,
+    });
+  }
+  if (isMobile && isAuthenticated && isEventHost && isNotOnManagePage && eventId) {
+    mobileManageItems.push({
+      label: 'Manage Event',
+      to: `/events/${eventId}/manage`,
+      Icon: Pencil,
+    });
+  }
+
   const menuGroups: MenuItem[][] = [
+    ...(mobileManageItems.length ? [mobileManageItems] : []),
+    ...(mobileAccountItems.length ? [mobileAccountItems] : []),
     [
       {
         label: 'Create Event',
@@ -173,7 +214,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-      'Planning is underway. More details are coming soon.',
+        'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -251,6 +292,28 @@ export function SimpleNavbar({
     }
   };
 
+  const goMark = (
+    <Box
+      component="span"
+      aria-label="go"
+      role="img"
+      sx={{
+        display: 'inline-block',
+        width: { xs: 28, sm: 30, md: 36 },
+        height: { xs: 28, sm: 30, md: 35 },
+        backgroundColor: 'currentColor',
+        maskImage: "url('/assets/go-symbol.png')",
+        maskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        maskSize: 'contain',
+        WebkitMaskImage: "url('/assets/go-symbol.png')",
+        WebkitMaskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        WebkitMaskSize: 'contain',
+      }}
+    />
+  );
+
   return (
     <Box
       component="header"
@@ -283,62 +346,48 @@ export function SimpleNavbar({
               alignItems: 'center',
               cursor: 'pointer',
               flexShrink: 0,
-              pr: 0.5,
+              pr: { xs: 0, sm: 0.5 },
               minWidth: 0,
             }}
           >
-            {/* <Typography
+            <Box
               sx={{
-                fontFamily: 'Syne, sans-serif',
-                fontWeight: 800,
-                fontSize: { xs: 24, sm: 32 },
-                lineHeight: 1,
-                letterSpacing: '-0.03em',
                 color: '#D85A30',
-                whiteSpace: 'nowrap',
+                display: { xs: 'inline-flex', sm: 'none' },
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
               }}
             >
-              outGOing
-            </Typography> */}
+              {goMark}
+            </Box>
             <Typography
               sx={{
+                display: { xs: 'none', sm: 'block' },
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: { xs: 24, sm: 32 },
+                fontSize: { sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
                 color: '#D85A30',
                 whiteSpace: 'nowrap',
                 maxWidth: 580,
                 mx: 'auto',
-                lineHeight: 1.65,
+                lineHeight: 1.2,
               }}
             >
-              <span className="">
-                <strong>out</strong>
-              </span>
+              <strong>out</strong>
               <Box
                 component="span"
-                aria-label="go"
-                role="img"
                 sx={{
-                  display: 'inline-block',
-                  width: { xs: 30, md: 36 },
-                  height: { xs: 30, md: 35 },
-                  // pt: 7,
-                  // mx: 0.5,
-                  transform: 'translateY(10px)',
-                  backgroundColor: 'currentColor',
-                  maskImage: "url('/assets/go-symbol.png')",
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                  maskSize: 'contain',
-                  WebkitMaskImage: "url('/assets/go-symbol.png')",
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  WebkitMaskSize: 'contain',
+                  display: 'inline-flex',
+                  alignItems: 'flex-end',
+                  mx: 0.15,
+                  transform: 'translateY(4px)',
                 }}
-              />
-              {''}
+              >
+                {goMark}
+              </Box>
               <strong>ing</strong>
             </Typography>
           </Box>
@@ -356,51 +405,8 @@ export function SimpleNavbar({
               minWidth: 0,
             }}
           >
-          {isMobile && !isAuthenticated && location.pathname !== '/signin' && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-              onClick={() => navigate(`/signin`)}
-            >
-              <UserIcon size={14} /> Sign In
-            </Button>
-          )}
-          {isMobile && !isAuthenticated && location.pathname !== '/signup' && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-9 px-3 text-xs hover:bg-[#ffffff] border-[#D85A30] hover:text-[#D85A30]"
-              onClick={() => navigate(`/signup`)}
-            >
-              <UserPlus size={14} /> Sign Up
-            </Button>
-          )}
             {isAuthenticated ? (
               <>
-
-                {isMobile && isVendor && isNotOnManagePage && eventId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#e6fafa] hover:text-[#008a8a]"
-                    onClick={() =>
-                      navigate(`/events/${eventId}/service-event-management`)
-                    }
-                  >
-                    <Pencil size={14} /> Service
-                  </Button>
-                )}
-                {isMobile && isEventHost && isNotOnManagePage && eventId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#f0ebff] hover:text-[#7c5dd6]"
-                    onClick={() => navigate(`/events/${eventId}/manage`)}
-                  >
-                    <Pencil size={14} /> Event
-                  </Button>
-                )}
                 {!isMobile && isVendor && isNotOnManagePage && eventId && (
                   <Button
                     type="button"

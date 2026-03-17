@@ -183,7 +183,6 @@ export const SearchBar = () => {
                           onClick={() => {
                             handleLocationSuggestionClick(suggestion);
                             setShowLocationSuggestions(false);
-                            setLocationDropdownOpen(false);
                           }}
                           className="w-full flex items-start gap-2 rounded-none px-3 py-2.5 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
                           style={{ fontFamily: '"Permanent Marker"' }}

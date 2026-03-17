@@ -33,8 +33,11 @@ export const SearchBarSimple = () => {
   }, [radiusMiles]);
 
   return (
-    <div className="relative  min-w-0 flex-1 bg-white">
-      <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
+    <div className="relative min-w-0 flex-1 bg-white">
+      <form
+        onSubmit={handleSearchSubmit}
+        className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2"
+      >
         <div className="relative flex-1">
           <input
             value={search}
@@ -42,18 +45,18 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full bg-white   py-2 pl-4 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full min-w-0 bg-white py-2 pl-3 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30] sm:pl-4"
           />
         </div>
 
         <div
-          className="relative  flex-shrink-0 cursor-pointer rounded-full bg-white "
+          className="relative flex-shrink-0 cursor-pointer rounded-full bg-white"
           ref={locationDropdownRef}
         >
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex md:hidden   h-10 justify-end gap-2 rounded-full bg-white px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
+            className="flex h-10 items-center justify-end gap-2 rounded-full bg-white px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)] md:hidden"
           >
             <span className="flex items-center gap-2 truncate">
               <MapPin size={14} className="shrink-0" />
@@ -77,7 +80,16 @@ export const SearchBarSimple = () => {
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[360px] rounded-2xl bg-white p-3 shadow-[0px_4px_10px_rgba(0,0,0,0.1)]">
+            <div className="absolute right-0 top-[calc(100%+8px)] z-[70] w-[min(248px,calc(100vw-20px))] overflow-hidden rounded-[14px] border border-[rgba(120,94,60,0.2)] bg-[#FFFCF7] p-2.5 shadow-[0_18px_40px_rgba(86,58,28,0.16)]">
+              <div className="mb-2 px-1 text-[13px] text-[#3D3124]">Search area</div>
+
+              <div className="mb-2 flex items-center gap-2 px-1 text-[12px] text-[rgba(61,49,36,0.62)]">
+                <span className="truncate">
+                  {nearYouEnabled ? nearYouName || 'Near you' : 'Custom location'}
+                </span>
+                <span className="ml-auto shrink-0">{radiusMiles} mi</span>
+              </div>
+
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -85,35 +97,39 @@ export const SearchBarSimple = () => {
                   toggleNearYou();
                   setLocationDropdownOpen(false);
                 }}
-                className="mb-3 flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2 text-left text-sm text-[var(--color-text-primary)]"
+                className="mb-2 flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] text-[#3D3124] transition-colors hover:bg-[#FFF1DE]"
               >
                 <LocateFixed
-                  size={16}
-                  className={nearYouEnabled ? 'text-[#D85A30]' : ''}
+                  size={14}
+                  className={nearYouEnabled ? 'text-[#D85A30]' : 'text-[#8f7760]'}
                 />
                 <span>Use current location</span>
               </button>
 
               <div className="relative">
-                <input
-                  value={locationSearch}
-                  onChange={(e) => {
-                    setLocationSearch(e.target.value);
-                    if (nearYouEnabled) toggleNearYou();
-                  }}
-                  onFocus={() => {
-                    if (locationSuggestions.length > 0)
-                      setShowLocationSuggestions(true);
-                  }}
-                  onBlur={() =>
-                    setTimeout(() => setShowLocationSuggestions(false), 200)
-                  }
-                  placeholder="City or address..."
-                  className="h-10 w-full rounded-xl bg-white px-3 text-sm text-[var(--color-text-primary)] outline-none"
-                />
+                <div className="flex items-center gap-2 rounded-[10px] bg-[#fff8ee] px-3">
+                  <Search size={14} className="shrink-0 text-[rgba(61,49,36,0.5)]" />
+                  <input
+                    autoFocus
+                    value={locationSearch}
+                    onChange={(e) => {
+                      setLocationSearch(e.target.value);
+                      if (nearYouEnabled) toggleNearYou();
+                    }}
+                    onFocus={() => {
+                      if (locationSuggestions.length > 0)
+                        setShowLocationSuggestions(true);
+                    }}
+                    onBlur={() =>
+                      setTimeout(() => setShowLocationSuggestions(false), 200)
+                    }
+                    placeholder="City or address..."
+                    className="h-10 w-full bg-transparent text-[13px] text-[var(--color-text-primary)] outline-none placeholder:text-[#a18d78]"
+                  />
+                </div>
 
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute left-0 bg-white right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl ">
+                  <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] max-h-56 overflow-y-auto overflow-x-hidden rounded-[10px] border border-[rgba(120,94,60,0.14)] bg-[#FFFCF7] shadow-[0_12px_24px_rgba(86,58,28,0.14)]">
                     {locationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}
@@ -122,15 +138,14 @@ export const SearchBarSimple = () => {
                         onClick={() => {
                           handleLocationSuggestionClick(suggestion);
                           setShowLocationSuggestions(false);
-                          setLocationDropdownOpen(false);
                         }}
-                        className="flex w-full bg-white items-start gap-2 border-b border-white px-3 py-2 text-left last:border-b-0 hover:bg-white"
+                        className="flex w-full items-start gap-2 border-b border-[rgba(120,94,60,0.1)] bg-transparent px-3 py-2.5 text-left text-[13px] last:border-b-0 hover:bg-[#FFF1DE]"
                       >
                         <Search
                           size={14}
-                          className="mt-0.5 shrink-0 text-[var(--color-text-secondary)]"
+                          className="mt-0.5 shrink-0 text-[rgba(61,49,36,0.48)]"
                         />
-                        <p className="line-clamp-2 text-sm text-[var(--color-text-primary)]">
+                        <p className="line-clamp-2 text-[13px] text-[var(--color-text-primary)]">
                           {suggestion.display_name}
                         </p>
                       </button>
@@ -139,37 +154,35 @@ export const SearchBarSimple = () => {
                 )}
               </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <label className="text-xs text-[var(--color-text-secondary)]">
-                  Radius
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={radiusInput}
-                  onChange={(e) => {
-                    const nextValue = e.target.value;
-                    setRadiusInput(nextValue);
-                    const value = parseInt(nextValue, 10);
-                    if (!Number.isNaN(value) && value > 0) {
-                      setRadiusMiles(value);
-                      if (locationSearch.trim()) {
-                        navigateToSearch({ nextRadiusMiles: value });
+              <div className="mt-2 flex items-center gap-2 px-1">
+                <label className="text-[12px] text-[rgba(61,49,36,0.62)]">Radius</label>
+                <div className="flex items-center gap-2 rounded-[10px] bg-[#fff8ee] px-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={radiusInput}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      setRadiusInput(nextValue);
+                      const value = parseInt(nextValue, 10);
+                      if (!Number.isNaN(value) && value > 0) {
+                        setRadiusMiles(value);
+                        if (locationSearch.trim()) {
+                          navigateToSearch({ nextRadiusMiles: value });
+                        }
                       }
-                    }
-                  }}
-                  onBlur={() => {
-                    const value = parseInt(radiusInput, 10);
-                    if (Number.isNaN(value) || value < 1) {
-                      setRadiusInput(String(radiusMiles));
-                    }
-                  }}
-                  className="h-8 w-20 rounded-lg bg-white px-2 text-sm text-[var(--color-text-primary)] outline-none"
-                />
-                <span className="text-xs text-[var(--color-text-secondary)]">
-                  miles
-                </span>
+                    }}
+                    onBlur={() => {
+                      const value = parseInt(radiusInput, 10);
+                      if (Number.isNaN(value) || value < 1) {
+                        setRadiusInput(String(radiusMiles));
+                      }
+                    }}
+                    className="h-9 w-14 bg-transparent text-[13px] text-[var(--color-text-primary)] outline-none"
+                  />
+                  <span className="text-[12px] text-[rgba(61,49,36,0.62)]">mi</span>
+                </div>
               </div>
 
               <button
@@ -178,7 +191,7 @@ export const SearchBarSimple = () => {
                   clearLocationSelection();
                   setLocationDropdownOpen(false);
                 }}
-                className="mt-3 bg-gray-100 w-full rounded-xl  px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-gray-200"
+                className="mt-2 w-full rounded-[10px] px-3 py-2.5 text-left text-[13px] text-[rgba(61,49,36,0.62)] transition-colors hover:bg-[#FFF1DE] hover:text-[#3D3124]"
               >
                 Clear location
               </button>

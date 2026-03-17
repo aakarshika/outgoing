@@ -304,14 +304,24 @@ export function useNavbarData() {
 
     if (!nearYouEnabled) {
       const trimmedLocation = locationSearch.trim();
+      const storedLocation = getStoredSearchLocation();
       if (trimmedLocation) {
+        const nextCoords =
+          storedLocation?.label === trimmedLocation ? storedLocation.coords : undefined;
         setStoredSearchLocation({
           label: trimmedLocation,
           city: inferCityFromLocationLabel(trimmedLocation),
+          coords: nextCoords,
+        });
+        navigateToSearch({
+          nextLocation: trimmedLocation,
+          nextCoords: nextCoords ?? null,
         });
       } else {
         clearStoredSearchLocation();
+        navigateToSearch();
       }
+      return;
     }
 
     navigateToSearch();
@@ -332,13 +342,6 @@ export function useNavbarData() {
       label: suggestion.display_name,
       city,
       coords: {
-        lat: suggestion.lat,
-        lng: suggestion.lon,
-      },
-    });
-    navigateToSearch({
-      nextLocation: suggestion.display_name,
-      nextCoords: {
         lat: suggestion.lat,
         lng: suggestion.lon,
       },
