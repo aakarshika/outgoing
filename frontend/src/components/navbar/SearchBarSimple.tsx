@@ -26,14 +26,14 @@ export const SearchBarSimple = () => {
   return (
     <div className="sm:relative min-w-0 flex-1 bg-white">
       <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full bg-white   py-2 pl-4 pr-1 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full bg-white py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
           />
         </div>
 
@@ -44,10 +44,13 @@ export const SearchBarSimple = () => {
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex md:hidden   h-10 justify-end gap-2 rounded-full bg-white px-3 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)]"
+            className="flex md:hidden h-10 items-center justify-end px-2 text-sm text-[var(--color-text-secondary)] transition-colors"
           >
-            <span className="flex items-center gap-2 truncate">
-              <MapPin size={14} className="shrink-0" />
+            <span className="flex items-center gap-1.5 truncate">
+              <MapPin size={16} className="shrink-0 text-[#D85A30]" />
+              <span className="max-w-[80px] truncate text-xs">
+                {nearYouEnabled ? 'Near you' : locationSearch || 'Anywhere'}
+              </span>
             </span>
           </button>
 
@@ -69,7 +72,7 @@ export const SearchBarSimple = () => {
           </button>
 
           {locationDropdownOpen && (
-            <div className="absolute left-2 right-2 top-[calc(100%+8px)] z-[70] rounded-3xl border border-[rgba(120,94,60,0.14)] bg-[#fffaf3] p-3 shadow-[0_18px_40px_rgba(74,53,33,0.14)] sm:left-auto sm:right-0 sm:w-[360px]">
+            <div className="fixed inset-x-4 top-20 z-[100] rounded-3xl border border-[rgba(120,94,60,0.14)] bg-[#fffaf3] p-4 shadow-[0_18px_40px_rgba(74,53,33,0.14)] sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-[360px] sm:inset-x-auto">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}

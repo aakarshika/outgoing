@@ -936,7 +936,7 @@ export default function MyHomePage() {
                 >
                   {filteredTrendingEvents.length > 0 ? (
                     filteredTrendingEvents.map((event) => (
-                      <SmallEventCard key={event.id} event={event} />
+                      <SmallEventCard key={event.id} event={event} sx={{ minWidth: 260 }} />
                     ))
                   ) : (
                     <Box
@@ -1103,7 +1103,7 @@ export default function MyHomePage() {
                 >
                   {recommendedEvents.length > 0 ? (
                     recommendedEvents.map((event) => (
-                      <SmallEventCard key={event.id} event={event} />
+                      <SmallEventCard key={event.id} event={event} sx={{ minWidth: 260 }} />
                     ))
                   ) : (
                     <Box

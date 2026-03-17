@@ -152,6 +152,7 @@ function EventCard({
         borderRadius: '24px',
         overflow: 'hidden',
         minWidth: 0,
+        height: '100%',
       }}
     >
       <Box
@@ -249,6 +250,7 @@ function ThingsToDoCard({
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
+        height: '100%',
       }}
     >
       {event.cover_image ? (
@@ -564,7 +566,7 @@ export default function GuestLandingPage() {
           background: '#D85A30',
           textAlign: 'center',
           px: 2,
-          py: { xs: 7, md: 10 },
+          py: { xs: 4, md: 6 },
         }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 900, mb: 10 }}>
@@ -576,7 +578,7 @@ export default function GuestLandingPage() {
               color: '#fff',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              mt: 10,
+              mt: 2,
               fontSize: 12,
             }}
           />
@@ -751,7 +753,7 @@ export default function GuestLandingPage() {
             <Box
               key={event.id}
               sx={{
-                flex: '0 0 clamp(220px, 28vw, 280px)',
+                flex: '0 0 clamp(260px, 32vw, 320px)',
                 minWidth: 0,
                 scrollSnapAlign: 'start',
               }}
@@ -770,7 +772,7 @@ export default function GuestLandingPage() {
               <Box
                 key={event.id}
                 sx={{
-                  flex: '0 0 clamp(220px, 28vw, 280px)',
+                  flex: '0 0 clamp(260px, 32vw, 320px)',
                   minWidth: 0,
                   scrollSnapAlign: 'start',
                 }}
@@ -814,7 +816,7 @@ export default function GuestLandingPage() {
               <Box
                 key={event.id}
                 sx={{
-                  flex: '0 0 clamp(240px, 32vw, 320px)',
+                  flex: '0 0 clamp(260px, 32vw, 320px)',
                   minWidth: 0,
                   scrollSnapAlign: 'start',
                 }}
@@ -881,17 +883,16 @@ export default function GuestLandingPage() {
             label="What people are talking about"
             title="Trending highlights"
           />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {trendingHighlights.map((highlight: any) => (
               <Box
                 key={highlight.id}
-                sx={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
+                sx={{
+                  flex: '0 0 clamp(200px, 25vw, 260px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                  cursor: 'pointer',
+                }}
                 onClick={() => {
                   setSelectedHighlightId(highlight.id);
                   setIsHighlightViewerOpen(true);
@@ -900,7 +901,7 @@ export default function GuestLandingPage() {
                 <HighlightCard highlight={highlight} disableHover />
               </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         </Container>
       </Box>
 
