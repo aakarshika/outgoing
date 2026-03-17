@@ -3,6 +3,7 @@
 import type { ApiResponse } from './events';
 
 export interface NeedApplication {
+  vendor_id: string;
   id: number;
   need_id: number;
   vendor_name: string;
