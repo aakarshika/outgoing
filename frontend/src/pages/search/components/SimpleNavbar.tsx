@@ -9,11 +9,9 @@ import {
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Bell,
   LogOut,
   type LucideIcon,
   Menu,
-  MessageCircle,
   Monitor,
   Pencil,
   PlusCircle,
@@ -51,7 +49,7 @@ type MenuItem = {
   label: string;
   Icon: LucideIcon;
   to?: string;
-  action?: 'create-event' | 'create-service' | 'logout';
+  action?: 'create-event' | 'create-service' | 'logout' | 'signin' | 'signup';
   muted?: boolean;
 };
 
@@ -106,7 +104,43 @@ export function SimpleNavbar({
     Icon: Ticket,
   });
 
+  const mobileAccountItems: MenuItem[] = [];
+  if (isMobile && !isAuthenticated) {
+    if (location.pathname !== '/signin') {
+      mobileAccountItems.push({
+        label: 'Sign In',
+        to: '/signin',
+        Icon: UserIcon,
+      });
+    }
+    if (location.pathname !== '/signup') {
+      mobileAccountItems.push({
+        label: 'Sign Up',
+        to: '/signup',
+        Icon: UserPlus,
+      });
+    }
+  }
+
+  const mobileManageItems: MenuItem[] = [];
+  if (isMobile && isAuthenticated && isVendor && isNotOnManagePage && eventId) {
+    mobileManageItems.push({
+      label: 'Manage Service',
+      to: `/events/${eventId}/service-event-management`,
+      Icon: Pencil,
+    });
+  }
+  if (isMobile && isAuthenticated && isEventHost && isNotOnManagePage && eventId) {
+    mobileManageItems.push({
+      label: 'Manage Event',
+      to: `/events/${eventId}/manage`,
+      Icon: Pencil,
+    });
+  }
+
   const menuGroups: MenuItem[][] = [
+    ...(mobileManageItems.length ? [mobileManageItems] : []),
+    ...(mobileAccountItems.length ? [mobileAccountItems] : []),
     [
       {
         label: 'Create Event',
@@ -177,7 +211,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-      'Planning is underway. More details are coming soon.',
+        'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -255,6 +289,28 @@ export function SimpleNavbar({
     }
   };
 
+  const goMark = (
+    <Box
+      component="span"
+      aria-label="go"
+      role="img"
+      sx={{
+        display: 'inline-block',
+        width: { xs: 28, sm: 30, md: 36 },
+        height: { xs: 28, sm: 30, md: 35 },
+        backgroundColor: 'currentColor',
+        maskImage: "url('/assets/go-symbol.png')",
+        maskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        maskSize: 'contain',
+        WebkitMaskImage: "url('/assets/go-symbol.png')",
+        WebkitMaskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        WebkitMaskSize: 'contain',
+      }}
+    />
+  );
+
   return (
     <Box
       component="header"
@@ -288,62 +344,48 @@ export function SimpleNavbar({
               alignItems: 'center',
               cursor: 'pointer',
               flexShrink: 0,
-              pr: 0.5,
+              pr: { xs: 0, sm: 0.5 },
               minWidth: 0,
             }}
           >
-            {/* <Typography
+            <Box
               sx={{
-                fontFamily: 'Syne, sans-serif',
-                fontWeight: 800,
-                fontSize: { xs: 24, sm: 32 },
-                lineHeight: 1,
-                letterSpacing: '-0.03em',
                 color: '#D85A30',
-                whiteSpace: 'nowrap',
+                display: { xs: 'inline-flex', sm: 'none' },
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
               }}
             >
-              outGOing
-            </Typography> */}
+              {goMark}
+            </Box>
             <Typography
               sx={{
+                display: { xs: 'none', sm: 'block' },
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: { xs: 24, sm: 32 },
+                fontSize: { sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
                 color: '#D85A30',
                 whiteSpace: 'nowrap',
                 maxWidth: 580,
                 mx: 'auto',
-                lineHeight: 1.65,
+                lineHeight: 1.2,
               }}
             >
-              <span className="">
-                <strong>out</strong>
-              </span>
+              <strong>out</strong>
               <Box
                 component="span"
-                aria-label="go"
-                role="img"
                 sx={{
-                  display: 'inline-block',
-                  width: { xs: 30, md: 36 },
-                  height: { xs: 30, md: 35 },
-                  // pt: 7,
-                  // mx: 0.5,
-                  transform: 'translateY(10px)',
-                  backgroundColor: 'currentColor',
-                  maskImage: "url('/assets/go-symbol.png')",
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                  maskSize: 'contain',
-                  WebkitMaskImage: "url('/assets/go-symbol.png')",
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  WebkitMaskSize: 'contain',
+                  display: 'inline-flex',
+                  alignItems: 'flex-end',
+                  mx: 0.15,
+                  transform: 'translateY(4px)',
                 }}
-              />
-              {''}
+              >
+                {goMark}
+              </Box>
               <strong>ing</strong>
             </Typography>
           </Box>

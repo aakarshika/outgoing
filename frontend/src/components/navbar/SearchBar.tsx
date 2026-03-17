@@ -190,7 +190,6 @@ export const SearchBar = () => {
                           onClick={() => {
                             handleLocationSuggestionClick(suggestion);
                             setShowLocationSuggestions(false);
-                            setLocationDropdownOpen(false);
                           }}
                           className="flex w-full items-start gap-3 border-b border-[rgba(120,94,60,0.1)] px-4 py-3 text-left last:border-0 hover:bg-[#fff6e8] transition-colors"
                           style={{ fontFamily: '"Permanent Marker"' }}

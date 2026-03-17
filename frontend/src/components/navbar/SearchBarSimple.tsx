@@ -25,7 +25,10 @@ export const SearchBarSimple = () => {
 
   return (
     <div className="sm:relative min-w-0 flex-1 bg-white">
-      <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
+      <form
+        onSubmit={handleSearchSubmit}
+        className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2"
+      >
         <div className="relative flex-1 min-w-0">
           <input
             value={search}
@@ -33,18 +36,18 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full bg-white py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full min-w-0 bg-white py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
           />
         </div>
 
         <div
-          className="sm:relative flex-shrink-0 cursor-pointer rounded-full bg-white "
+          className="sm:relative flex-shrink-0 cursor-pointer rounded-full bg-white"
           ref={locationDropdownRef}
         >
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex md:hidden h-10 items-center justify-end px-2 text-sm text-[var(--color-text-secondary)] transition-colors"
+            className="flex h-10 items-center justify-end gap-2 rounded-full bg-white px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)] md:hidden"
           >
             <span className="flex items-center gap-1.5 truncate">
               <MapPin size={16} className="shrink-0 text-[#D85A30]" />
@@ -126,15 +129,14 @@ export const SearchBarSimple = () => {
                         onClick={() => {
                           handleLocationSuggestionClick(suggestion);
                           setShowLocationSuggestions(false);
-                          setLocationDropdownOpen(false);
                         }}
                         className="flex w-full items-start gap-2 border-b border-[rgba(120,94,60,0.1)] bg-white px-3 py-3 text-left last:border-b-0 hover:bg-[#fff6e8]"
                       >
                         <Search
                           size={14}
-                          className="mt-0.5 shrink-0 text-[var(--color-text-secondary)]"
+                          className="mt-0.5 shrink-0 text-[rgba(61,49,36,0.48)]"
                         />
-                        <p className="line-clamp-2 text-sm text-[var(--color-text-primary)]">
+                        <p className="line-clamp-2 text-[13px] text-[var(--color-text-primary)]">
                           {suggestion.display_name}
                         </p>
                       </button>
