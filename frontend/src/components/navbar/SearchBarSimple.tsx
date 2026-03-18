@@ -24,10 +24,10 @@ export const SearchBarSimple = () => {
   } = useNavbarContext();
 
   return (
-    <div className="sm:relative min-w-0 flex-1 bg-white/80">
+    <div className="sm:relative min-w-0 flex-1/80">
       <form
         onSubmit={handleSearchSubmit}
-        className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2"
+        className="flex w-full min-w-0 items-center rounded-full bg-white/80"
       >
         <div className="relative flex-1 min-w-0">
           <input
@@ -36,7 +36,7 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full min-w-0 py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full min-w-0 bg-transparent px-3 py-1 text-sm text-[var(--color-text-primary)] outline-none"
           />
         </div>
 
@@ -51,9 +51,9 @@ export const SearchBarSimple = () => {
           >
             <span className="flex items-center gap-1.5 truncate">
               <MapPin size={16} className="shrink-0 text-[#D85A30]" />
-              <span className="max-w-[80px] truncate text-xs">
+              {/* <span className="max-w-[80px] truncate text-xs">
                 {nearYouEnabled ? 'Near you' : locationSearch || 'Anywhere'}
-              </span>
+              </span> */}
             </span>
           </button>
 
@@ -85,7 +85,7 @@ export const SearchBarSimple = () => {
                 }}
                 className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-[rgba(29,158,117,0.16)] bg-[#f3fbf8] px-3 py-3 text-left text-sm text-[var(--color-text-primary)]"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#1D9E75]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full text-[#1D9E75]">
                   <LocateFixed
                     size={16}
                     className={nearYouEnabled ? 'text-[#1D9E75]' : ''}
@@ -116,11 +116,11 @@ export const SearchBarSimple = () => {
                     setTimeout(() => setShowLocationSuggestions(false), 200)
                   }
                   placeholder="City or address..."
-                  className="h-11 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                  className="h-11 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] px-3 text-sm text-[var(--color-text-primary)] outline-none"
                 />
 
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
                     {locationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}
@@ -130,7 +130,7 @@ export const SearchBarSimple = () => {
                           handleLocationSuggestionClick(suggestion);
                           setShowLocationSuggestions(false);
                         }}
-                        className="flex w-full items-start gap-2 border-b border-[rgba(120,94,60,0.1)] bg-white px-3 py-3 text-left last:border-b-0 hover:bg-[#fff6e8]"
+                        className="flex w-full items-start gap-2 border-b border-[rgba(120,94,60,0.1)] px-3 py-3 text-left last:border-b-0 hover:bg-[#fff6e8]"
                       >
                         <Search
                           size={14}
@@ -151,13 +151,14 @@ export const SearchBarSimple = () => {
                   clearLocationSelection();
                   setLocationDropdownOpen(false);
                 }}
-                className="mt-3 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-3 py-2.5 text-sm text-[var(--color-text-secondary)] hover:bg-[#faf4ec]"
+                className="mt-3 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] px-3 py-2.5 text-sm text-[var(--color-text-secondary)] hover:bg-[#faf4ec]"
               >
                 Clear location
               </button>
             </div>
           )}
         </div>
+
       </form>
     </div>
   );

@@ -10,7 +10,15 @@ import {
   useTheme,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Inbox, MapPin, MessageCircle, Send, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Inbox,
+  MapPin,
+  MessageCircle,
+  Search,
+  Send,
+  Users,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
@@ -41,6 +49,8 @@ import {
   useNetworkPeople,
   usePrivateMessages,
 } from '@/features/events/hooks';
+
+type ChatFilter = 'all' | 'events' | 'people';
 
 function parseNumberParam(value: string | null) {
   if (!value) return undefined;
@@ -80,9 +90,11 @@ function EmptyThreadState() {
       sx={{
         flex: 1,
         minHeight: 320,
-        borderRadius: '28px',
-        border: '0.5px solid var(--color-border-tertiary)',
-        background: 'rgba(255, 255, 255, 0.72)',
+        borderRadius: '32px',
+        border: '1px solid rgba(120, 94, 60, 0.12)',
+        background:
+          'linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 250, 245, 0.92) 100%)',
+        boxShadow: '0 24px 60px rgba(86, 58, 28, 0.08)',
         px: 3,
         py: 6,
         textAlign: 'center',
@@ -97,6 +109,7 @@ function EmptyThreadState() {
           placeItems: 'center',
           background: '#FAECE7',
           color: '#D85A30',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
         }}
       >
         <MessageCircle size={28} />
@@ -288,9 +301,11 @@ function ChatListAvatar({
       <Box
         sx={{
           position: 'relative',
-          width: 68,
-          height: 48,
+          width: 72,
+          height: 66,
           flexShrink: 0,
+          overflow: 'visible',
+          boxShadow: '0 10px 24px rgba(86, 58, 28, 0.12)',
         }}
       >
         {chat.coverImage ? (
@@ -303,7 +318,7 @@ function ChatListAvatar({
               height: '100%',
               objectFit: 'cover',
               display: 'block',
-              borderRadius: '12px',
+              borderRadius: '14px',
             }}
           />
         ) : (
@@ -315,7 +330,7 @@ function ChatListAvatar({
               placeItems: 'center',
               background: '#FAECE7',
               color: '#D85A30',
-              borderRadius: '12px',
+              borderRadius: '14px',
             }}
           >
             <Users size={18} />
@@ -374,6 +389,7 @@ function ChatListAvatar({
         src={chat.otherAvatar}
         username={chat.otherUsername || chat.title}
         size="md"
+        className="shadow-[0_8px_20px_rgba(86,58,28,0.12)]"
       />
     </Box>
   );
@@ -505,9 +521,11 @@ function ChatThread({
       sx={{
         minWidth: 0,
         flex: 1,
-        borderRadius: { xs: '28px', md: '32px' },
-        border: '0.5px solid var(--color-border-tertiary)',
-        background: 'rgba(255, 255, 255, 0.72)',
+        borderRadius: { xs: '28px', md: '34px' },
+        border: '1px solid rgba(120, 94, 60, 0.12)',
+        background:
+          'linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 250, 245, 0.9) 100%)',
+        boxShadow: '0 26px 70px rgba(86, 58, 28, 0.1)',
         overflow: 'hidden',
         height: { xs: '100%', md: 680 },
         minHeight: { xs: '100%', md: 680 },
@@ -518,11 +536,11 @@ function ChatThread({
         alignItems="center"
         spacing={1.5}
         sx={{
-          px: { xs: 1.5, sm: 2.5 },
-          py: { xs: 1.5, sm: 2 },
-          borderBottom: '0.5px solid var(--color-border-tertiary)',
+          px: { xs: 1.75, sm: 2.75 },
+          py: { xs: 1.5, sm: 2.1 },
+          borderBottom: '1px solid rgba(120, 94, 60, 0.1)',
           background:
-            'linear-gradient(180deg, rgba(250, 236, 231, 0.95) 0%, rgba(255,255,255,0.82) 100%)',
+            'linear-gradient(180deg, rgba(250, 236, 231, 0.95) 0%, rgba(255,255,255,0.88) 100%)',
         }}
       >
         {isMobile && (
@@ -584,11 +602,12 @@ function ChatThread({
             borderRadius: '999px',
             background: '#EAF3DE',
             color: '#3B6D11',
-            px: 1.2,
-            py: 0.6,
+            px: 1.35,
+            py: 0.65,
             fontSize: 11,
             fontWeight: 700,
             whiteSpace: 'nowrap',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
           }}
         >
           {chat.badgeLabel}
@@ -600,11 +619,11 @@ function ChatThread({
         sx={{
           flex: 1,
           overflowY: 'auto',
-          px: { xs: 1.5, sm: 2.5 },
-          py: 2,
+          px: { xs: 1.5, sm: 2.25 },
+          py: { xs: 1.5, sm: 2 },
           pb: { xs: 12, sm: 2 },
           background:
-            'linear-gradient(180deg, rgba(255,248,241,0.55) 0%, rgba(255,255,255,0.88) 100%)',
+            'linear-gradient(180deg, rgba(255,248,241,0.62) 0%, rgba(255,255,255,0.9) 100%)',
         }}
       >
         {isLoading ? (
@@ -633,7 +652,7 @@ function ChatThread({
             </Typography>
           </Stack>
         ) : (
-          <Stack spacing={1.25}>
+          <Stack spacing={1.5}>
             {timelineItems.map((item, index) =>
               item.type === 'activity' ? (
                 <ChatActivityRow key={`${item.id}-${index}`} item={item} />
@@ -648,8 +667,8 @@ function ChatThread({
       <Box
         sx={{
           p: { xs: 1.25, sm: 1.5 },
-          borderTop: '0.5px solid var(--color-border-tertiary)',
-          background: 'rgba(255,255,255,0.92)',
+          borderTop: '1px solid rgba(120, 94, 60, 0.1)',
+          background: 'rgba(255,255,255,0.96)',
           flexShrink: 0,
           position: 'sticky',
           bottom: 0,
@@ -662,11 +681,12 @@ function ChatThread({
             display: 'flex',
             alignItems: 'flex-end',
             gap: 1,
-            borderRadius: '24px',
-            background: '#F9F9F9',
-            border: '0.5px solid var(--color-border-tertiary)',
-            px: 1.5,
-            py: 0.8,
+            borderRadius: '26px',
+            background: 'linear-gradient(180deg, #FFFFFF 0%, #FBF8F4 100%)',
+            border: '1px solid rgba(120, 94, 60, 0.12)',
+            boxShadow: '0 10px 28px rgba(86, 58, 28, 0.08)',
+            px: 1.6,
+            py: 0.9,
           }}
         >
           <InputBase
@@ -717,6 +737,10 @@ export default function ChatsPage() {
   const navigate = useNavigate();
   const params = useParams();
   const { user, isAuthenticated } = useAuth();
+  const chatSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const [chatSearch, setChatSearch] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [chatFilter, setChatFilter] = useState<ChatFilter>('all');
   const { data, isLoading } = useAllChatsList(true);
   const { data: friendships, isLoading: friendshipsLoading } = useMyFriendships(
     !!isAuthenticated && !!user,
@@ -738,6 +762,33 @@ export default function ChatsPage() {
     [data?.data, eventOverviewRows, friendships?.accepted, user?.id, user?.username],
   );
   const isListLoading = isLoading || friendshipsLoading || eventOverviewLoading;
+  const filteredChatEntries = useMemo(() => {
+    const baseChats =
+      chatFilter === 'events'
+        ? chatEntries.filter((chat) => chat.mode === 'group')
+        : chatFilter === 'people'
+          ? chatEntries.filter((chat) => chat.mode !== 'group')
+          : chatEntries;
+    const searchValue = chatSearch.trim().toLowerCase();
+    if (!searchValue) return baseChats;
+    return baseChats.filter((chat) =>
+      [
+        chat.title,
+        chat.subtitle,
+        chat.latestMessageText,
+        chat.latestMessageSenderUsername,
+        chat.locationName,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(searchValue)),
+    );
+  }, [chatEntries, chatFilter, chatSearch]);
+
+  useEffect(() => {
+    if (!isSearchExpanded) return;
+    const timeout = window.setTimeout(() => chatSearchInputRef.current?.focus(), 120);
+    return () => window.clearTimeout(timeout);
+  }, [isSearchExpanded]);
 
   const selectedChat = useMemo(() => {
     const eventId = parseNumberParam((params.eventId as string | undefined) ?? null);
@@ -798,15 +849,21 @@ export default function ChatsPage() {
         minHeight: isMobileThread ? '100dvh' : 'calc(100vh - 4rem)',
         height: isMobileThread ? '100dvh' : 'auto',
         pb: isMobileThread ? 0 : { xs: 12, md: 4 },
-        pt: isMobileThread ? 0 : 8,
-        background: '#fff8f1',
+        background: `
+          radial-gradient(circle at top, rgba(250, 236, 231, 0.8) 0%, rgba(250, 248, 244, 0.92) 28%, rgba(250, 248, 244, 1) 60%),
+          linear-gradient(180deg, #FBF8F4 0%, #F7F1E8 100%)
+        `,
         overflow: isMobileThread ? 'hidden' : 'visible',
       }}
     >
       <Container
         maxWidth={false}
         disableGutters
-        sx={{ py: 0, height: isMobileThread ? '100%' : 'auto' }}
+        sx={{
+          maxWidth: 1240,
+          py: 0,
+          height: isMobileThread ? '100%' : 'auto',
+        }}
       >
         <Stack spacing={0} sx={{ height: isMobileThread ? '100%' : 'auto' }}>
           <Box
@@ -816,7 +873,7 @@ export default function ChatsPage() {
                 !isMobile && showList && showThread
                   ? 'minmax(300px, 340px) minmax(0, 1fr)'
                   : '1fr',
-              gap: 0,
+              gap: { xs: 0, md: 2 },
               alignItems: 'stretch',
               height: isMobileThread ? '100%' : 'auto',
             }}
@@ -827,9 +884,164 @@ export default function ChatsPage() {
                 sx={{
                   minWidth: 0,
                   minHeight: { xs: 'calc(100vh - 8rem)', md: 'calc(100vh - 4rem)' },
+                  background:
+                    'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,250,245,0.92) 100%)',
+                  boxShadow: '0 24px 60px rgba(86, 58, 28, 0.08)',
+                  overflow: 'hidden',
                 }}
               >
-                <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                <Box
+                  sx={{
+                    px: { xs: 1.35, sm: 1.6 },
+                    pt: { xs: 1.35, sm: 1.6 },
+                    pb: { xs: 1, sm: 1.15 },
+                    borderBottom: '1px solid rgba(120, 94, 60, 0.1)',
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(251,248,244,0.92) 100%)',
+                  }}
+                >
+                  <Stack spacing={1.25}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        {isSearchExpanded ? (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              borderRadius: '999px',
+                              border: '1px solid rgba(120, 94, 60, 0.12)',
+                              background:
+                                'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,248,244,0.96) 100%)',
+                              px: 1.5,
+                              py: 0.7,
+                              boxShadow: '0 12px 28px rgba(74, 53, 33, 0.08)',
+                            }}
+                          >
+                            <Search size={16} color="#8A6C4A" />
+                            <InputBase
+                              inputRef={chatSearchInputRef}
+                              value={chatSearch}
+                              onChange={(event) => setChatSearch(event.target.value)}
+                              placeholder="Search chats..."
+                              inputProps={{ 'aria-label': 'Search chats...' }}
+                              sx={{
+                                flex: 1,
+                                fontSize: 14,
+                                color: 'var(--color-text-primary)',
+                                '& input::placeholder': {
+                                  opacity: 0.5,
+                                  color: 'var(--color-text-secondary)',
+                                },
+                              }}
+                            />
+                          </Box>
+                        ) : (
+                          <>
+                            <Typography
+                              sx={{
+                                fontFamily: 'Georgia, serif',
+                                fontSize: { xs: 24, sm: 26 },
+                                lineHeight: 1,
+                                letterSpacing: '-0.03em',
+                                color: '#1a1a18',
+                              }}
+                            >
+                              Messages
+                            </Typography>
+                            <Typography
+                              sx={{
+                                mt: 0.35,
+                                fontSize: 12,
+                                color: 'rgba(66, 50, 28, 0.58)',
+                              }}
+                            >
+                              {filteredChatEntries.length} conversation
+                              {filteredChatEntries.length === 1 ? '' : 's'}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                      <IconButton
+                        onClick={() => {
+                          if (isSearchExpanded && !chatSearch.trim()) {
+                            setIsSearchExpanded(false);
+                            return;
+                          }
+                          setIsSearchExpanded(true);
+                        }}
+                        sx={{
+                          width: 38,
+                          height: 38,
+                          border: '1px solid rgba(120, 94, 60, 0.12)',
+                          background: 'rgba(237, 235, 229, 0.88)',
+                          color: '#444441',
+                          boxShadow: '0 8px 18px rgba(74, 53, 33, 0.06)',
+                          '&:hover': {
+                            background: 'rgba(237, 235, 229, 1)',
+                          },
+                        }}
+                      >
+                        <Search size={17} />
+                      </IconButton>
+                    </Box>
+
+                    <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.25 }}>
+                      {(['all', 'events', 'people'] as ChatFilter[]).map((filter) => {
+                        const isActive = chatFilter === filter;
+                        const label =
+                          filter === 'all'
+                            ? 'All'
+                            : filter === 'events'
+                              ? 'Events'
+                              : 'People';
+
+                        return (
+                          <Box
+                            key={filter}
+                            component="button"
+                            type="button"
+                            onClick={() => setChatFilter(filter)}
+                            sx={{
+                              flexShrink: 0,
+                              border: 'none',
+                              borderRadius: '999px',
+                              px: 1.6,
+                              py: 0.75,
+                              fontSize: 12,
+                              fontWeight: isActive ? 700 : 500,
+                              color: isActive ? '#fff' : '#5F5E5A',
+                              background: isActive ? '#C84B22' : '#EDEBE5',
+                              boxShadow: isActive
+                                ? '0 12px 24px rgba(200, 75, 34, 0.22)'
+                                : 'inset 0 1px 0 rgba(255,255,255,0.7)',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.18s ease',
+                            }}
+                          >
+                            {label}
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Stack>
+                </Box>
+                <Box
+                  sx={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    px: { xs: 1, sm: 1.25 },
+                    py: { xs: 1.1, sm: 1.25 },
+                  }}
+                >
                   {isListLoading ? (
                     <Stack
                       alignItems="center"
@@ -861,9 +1073,32 @@ export default function ChatsPage() {
                         Conversations will appear here once you start messaging.
                       </Typography>
                     </Stack>
+                  ) : filteredChatEntries.length === 0 ? (
+                    <Stack
+                      spacing={1.5}
+                      alignItems="center"
+                      justifyContent="center"
+                      sx={{ minHeight: 220, textAlign: 'center', px: 2 }}
+                    >
+                      <Search size={24} color="#D85A30" />
+                      <Typography
+                        sx={{
+                          fontFamily: 'Syne, sans-serif',
+                          fontWeight: 700,
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        No matching chats
+                      </Typography>
+                      <Typography
+                        sx={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                      >
+                        Try a different title or clear your search.
+                      </Typography>
+                    </Stack>
                   ) : (
-                    <Stack spacing={0.5}>
-                      {chatEntries.map((chat) => {
+                    <Stack spacing={0.95}>
+                      {filteredChatEntries.map((chat) => {
                         const isActive = selectedChat?.id === chat.id;
                         const isGroupCard = chat.badgeLabel === 'Group';
 
@@ -874,37 +1109,51 @@ export default function ChatsPage() {
                             type="button"
                             onClick={() => handleSelectChat(chat)}
                             sx={{
+                              position: 'relative',
                               width: '100%',
                               textAlign: 'left',
                               border: 'none',
-                              borderLeft: isGroupCard ? '4px solid #D85A30' : 'none',
-                              borderRadius: isGroupCard ? '18px 0 0 18px' : 0,
-                              px: 1,
-                              py: 1,
+                              borderRadius: '24px',
+                              px: 1.25,
+                              py: 1.15,
                               background: isGroupCard
                                 ? isActive
-                                  ? 'rgba(255, 248, 241, 0.96)'
-                                  : 'rgba(255,255,255,0.9)'
+                                  ? 'rgba(255, 248, 241, 0.98)'
+                                  : 'rgba(255, 251, 247, 0.94)'
                                 : isActive
-                                  ? 'rgba(255, 248, 241, 0.9)'
-                                  : 'rgba(255,255,255,0.82)',
-                              boxShadow: 'none',
-                              transition: 'background 0.18s ease, box-shadow 0.18s ease',
+                                  ? 'rgba(255, 248, 241, 0.94)'
+                                  : 'rgba(255,255,255,0.88)',
+                              boxShadow: isActive
+                                ? '0 16px 34px rgba(86, 58, 28, 0.12)'
+                                : '0 6px 16px rgba(86, 58, 28, 0.05)',
+                              transition:
+                                'background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
+                              '&::before': isGroupCard
+                                ? {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 8,
+                                    bottom: 8,
+                                    width: 4,
+                                    borderRadius: '999px',
+                                    background: '#D85A30',
+                                  }
+                                : undefined,
                               '&:hover': {
                                 background: isGroupCard
-                                  ? 'rgba(255, 248, 241, 0.98)'
-                                  : 'rgba(255,255,255,0.94)',
-                                boxShadow: isGroupCard
-                                  ? '0 12px 26px rgba(108, 71, 33, 0.08)'
-                                  : 'none',
+                                  ? 'rgba(255, 248, 241, 1)'
+                                  : 'rgba(255,255,255,0.96)',
+                                boxShadow: '0 18px 36px rgba(86, 58, 28, 0.1)',
+                                transform: 'translateY(-1px)',
                               },
                             }}
                           >
-                            <Stack direction="row" spacing={1.2} alignItems="center">
+                            <Stack direction="row" spacing={1.5} alignItems="center">
                               <ChatListAvatar chat={chat} />
                               <Box sx={{ minWidth: 0, flex: 1 }}>
                                 {chat.badgeLabel === 'Group' ? (
-                                  <Stack spacing={0.15} sx={{ minWidth: 0 }}>
+                                  <Stack spacing={0.35} sx={{ minWidth: 0 }}>
                                     <Stack
                                       direction="row"
                                       justifyContent="space-between"
@@ -914,7 +1163,7 @@ export default function ChatsPage() {
                                       <Typography
                                         sx={{
                                           fontFamily: 'Syne, sans-serif',
-                                          fontSize: 13,
+                                          fontSize: 15,
                                           fontWeight: 700,
                                           color: 'var(--color-text-primary)',
                                           lineHeight: 1.2,
@@ -931,12 +1180,13 @@ export default function ChatsPage() {
                                           borderRadius: '999px',
                                           background: '#EAF3DE',
                                           color: '#3B6D11',
-                                          px: 0.9,
-                                          py: 0.35,
-                                          fontSize: 9,
+                                          px: 1,
+                                          py: 0.45,
+                                          fontSize: 10,
                                           fontWeight: 700,
                                           lineHeight: 1,
                                           whiteSpace: 'nowrap',
+                                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
                                         }}
                                       >
                                         {(chat.attendeeCount ?? 0).toLocaleString()} going
@@ -953,7 +1203,7 @@ export default function ChatsPage() {
                                         sx={{
                                           minWidth: 0,
                                           flex: 1,
-                                          fontSize: 11,
+                                          fontSize: 13,
                                           color: 'var(--color-text-secondary)',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
@@ -969,7 +1219,7 @@ export default function ChatsPage() {
                                         <Typography
                                           sx={{
                                             flexShrink: 0,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                             fontWeight: 700,
                                             letterSpacing: '0.02em',
                                             color: 'rgba(66, 50, 28, 0.52)',
@@ -991,8 +1241,8 @@ export default function ChatsPage() {
                                       <Typography
                                         sx={{
                                           minWidth: 0,
-                                          fontSize: 10.5,
-                                          color: 'gray',
+                                          fontSize: 11,
+                                          color: 'rgba(66, 50, 28, 0.5)',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
                                           whiteSpace: 'nowrap',
@@ -1003,7 +1253,7 @@ export default function ChatsPage() {
                                     </Stack>
                                   </Stack>
                                 ) : (
-                                  <Stack spacing={0.15} sx={{ minWidth: 0 }}>
+                                  <Stack spacing={0.35} sx={{ minWidth: 0 }}>
                                     <Stack
                                       direction="row"
                                       justifyContent="space-between"
@@ -1013,7 +1263,7 @@ export default function ChatsPage() {
                                       <Typography
                                         sx={{
                                           fontFamily: 'Syne, sans-serif',
-                                          fontSize: 13,
+                                          fontSize: 15,
                                           fontWeight: 700,
                                           color: 'var(--color-text-primary)',
                                           lineHeight: 1.25,
@@ -1036,7 +1286,7 @@ export default function ChatsPage() {
                                         sx={{
                                           minWidth: 0,
                                           flex: 1,
-                                          fontSize: 11,
+                                          fontSize: 13,
                                           color: 'var(--color-text-secondary)',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
@@ -1049,7 +1299,7 @@ export default function ChatsPage() {
                                         <Typography
                                           sx={{
                                             flexShrink: 0,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                             fontWeight: 700,
                                             letterSpacing: '0.02em',
                                             color: 'rgba(66, 50, 28, 0.52)',

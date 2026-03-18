@@ -84,8 +84,9 @@ export function SimpleNavbar({
     !!user &&
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
-  const isOrangePage = (location.pathname === '/'  && !isAuthenticated) || location.pathname === '/network';
-  const isEventPage = location.pathname.startsWith('/events');
+  const isGuestLandingPage = location.pathname === '/' && !isAuthenticated;
+  const isOrangePage = isGuestLandingPage || location.pathname === '/network';
+  const hideSearchBar = location.pathname.startsWith('/events') || location.pathname.startsWith('/events-new') || location.pathname.startsWith('/chats');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
@@ -354,7 +355,7 @@ export function SimpleNavbar({
             <Box
               sx={{
                 color: isOrangePage ? '#eeeeee' : '#D85A30',
-                display: { xs: 'inline-flex', sm: 'none' },
+                display: { xs: isGuestLandingPage ? 'none' : 'inline-flex', sm: 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: 28,
@@ -365,10 +366,10 @@ export function SimpleNavbar({
             </Box>
             <Typography
               sx={{
-                display: { xs: 'none', sm: 'block' },
+                display: { xs: isGuestLandingPage ? 'block' : 'none', sm: 'block' },
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: { sm: 24, md: 32 },
+                fontSize: { xs: 20, sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
                 color: isOrangePage ? '#eeeeee' : '#D85A30',
                 whiteSpace: 'nowrap',
@@ -384,7 +385,7 @@ export function SimpleNavbar({
                   display: 'inline-flex',
                   alignItems: 'flex-end',
                   mx: 0.15,
-                  transform: 'translateY(4px)',
+                  transform: { xs: 'translateY(2px)', sm: 'translateY(4px)' },
                 }}
               >
                 {goMark}
@@ -393,7 +394,7 @@ export function SimpleNavbar({
             </Typography>
           </Box>
           <NavbarProvider>
-            {isEventPage ? <></> : <SearchBarSimple />}
+            {hideSearchBar ? <></> : <SearchBarSimple />}
           </NavbarProvider>
 
           <Box

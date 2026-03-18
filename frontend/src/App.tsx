@@ -47,6 +47,8 @@ function AppContent() {
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
+  const isChatListRoute =
+    location.pathname.startsWith('/chats');
   const isChatThreadRoute =
     location.pathname.startsWith('/chats/group/') ||
     location.pathname.startsWith('/chats/private/') ||
@@ -57,7 +59,7 @@ function AppContent() {
     <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && !isChatThreadRoute && (
+      {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && (
         <Box className="relative">
         <Box className="absolute top-0 right-0 z-50">
           <SimpleNavbar />
