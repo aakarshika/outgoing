@@ -13,6 +13,7 @@ const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
+const SettingsNewPage = lazy(() => import('@/pages/profile/settings-new/SettingsNewPage'));
 const HomePage = lazy(() => import('@/pages/home/RootHomePage'));
 const HomePageRenewed = lazy(() => import('@/pages/home/HomePageRenewed'));
 const HighlightsPage = lazy(() => import('@/pages/highlights/HighlightsPage'));
@@ -47,6 +48,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignIn: SignInPage,
   Profile: ProfilePage,
   UserProfile: UserProfilePage,
+  SettingsNew: SettingsNewPage,
   Home: HomePage,
   Highlights: HighlightsPage,
   HighlightsReels: HighlightsReelsPage,

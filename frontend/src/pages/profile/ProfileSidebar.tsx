@@ -1,10 +1,11 @@
-import { ChevronRight, Settings, Shield, User } from 'lucide-react';
+import { ChevronRight, Settings, Shield, Smartphone, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { path: 'user-info', label: 'User Info', icon: User },
   { path: 'settings', label: 'Account Settings', icon: Settings },
   { path: 'privacy', label: 'Privacy', icon: Shield },
+  { path: '/profile/settings-new', label: 'Settings', icon: Smartphone },
 ];
 
 export const ProfileSidebar = () => {

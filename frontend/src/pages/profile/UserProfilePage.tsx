@@ -473,62 +473,6 @@ export default function UserProfilePage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#FDF8F3', pb: 14 }}>
       <Box sx={{ maxWidth: 430, mx: 'auto', position: 'relative' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 1.2,
-            borderBottom: '0.5px solid #EAE0D4',
-            background: '#FDF8F3',
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
-          }}
-        >
-          <IconButton
-            onClick={() => navigate(-1)}
-            size="small"
-            sx={{
-              width: 32,
-              height: 32,
-              background: '#FAEADA',
-              color: '#C95E35',
-              borderRadius: '9px',
-              '&:hover': { background: '#F4DFC8' },
-            }}
-            aria-label="Back"
-          >
-            <ArrowLeft size={16} />
-          </IconButton>
-          <Box
-            sx={{
-              flex: 1,
-              borderRadius: '18px',
-              px: 1.8,
-              py: 0.9,
-              background: '#F2EAE0',
-            }}
-          >
-            <Typography sx={{ fontSize: 12, color: '#8C7B6B' }}>Search events, people...</Typography>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.6,
-              px: 1,
-              py: 0.6,
-              borderRadius: '14px',
-              bgcolor: '#FAEADA',
-              color: '#C95E35',
-            }}
-          >
-            <MapPin size={12} />
-            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>Near me</Typography>
-          </Box>
-        </Box>
 
         <Box sx={{ position: 'relative' }}>
           <Box

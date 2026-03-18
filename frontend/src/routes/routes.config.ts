@@ -180,6 +180,12 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/profile/settings-new',
+    componentName: 'SettingsNew',
+    roles: [UserRole.USER, UserRole.ADMIN],
+    theme: 'profile-theme',
+  },
+  {
     path: '/browse',
     componentName: 'BrowseFeed',
     isPublic: true,

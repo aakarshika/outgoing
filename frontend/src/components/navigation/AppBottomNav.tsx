@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
 import { cn } from '@/lib/utils';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 type NavItem = {
   key: string;
@@ -13,7 +14,7 @@ type NavItem = {
   match: (pathname: string) => boolean;
 };
 
-const navItems: NavItem[] = [
+const navItems: (user: any) => NavItem[] = (user) => [
   {
     key: 'home',
     label: 'Home',
@@ -40,16 +41,21 @@ const navItems: NavItem[] = [
     key: 'profile',
     label: 'Profile',
     Icon: User,
-    to: '/profile',
+    to: user?.username ? `/user/${user.username}` : '/profile',
     guestTo: '/signin',
-    match: (pathname) => pathname === '/profile' || pathname.startsWith('/profile/'),
+    match: (pathname) =>
+      pathname === '/profile' ||
+      pathname.startsWith('/profile/') ||
+      (user?.username && (pathname === `/user/${user.username}` || pathname.startsWith(`/user/${user.username}/`))),
   },
 ];
 
 export function AppBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  const items = navItems(user);
 
   return (
     <nav
@@ -71,7 +77,7 @@ export function AppBottomNav() {
           className="grid grid-cols-4 gap-2 p-2 sm:p-2.5 mx-auto max-w-[1040px]"
           style={{ background: 'var(--color-background-secondary)' }}
         >
-          {navItems.map(({ key, label, Icon, to, guestTo, match }) => {
+          {items.map(({ key, label, Icon, to, guestTo, match }) => {
             const isActive = match(location.pathname);
             const target = isAuthenticated ? to : guestTo || to;
 
@@ -95,7 +101,24 @@ export function AppBottomNav() {
                   boxShadow: isActive ? '0 10px 22px rgba(216, 90, 48, 0.24)' : 'none',
                 }}
               >
-                <Icon className="h-5 w-5" strokeWidth={2.3} />
+                {key === 'profile' && isAuthenticated ? (
+                  <div className={cn(
+                    "transition-transform duration-200",
+                    isActive ? "scale-110" : "scale-100"
+                  )}>
+                    <UserAvatar
+                      src={user?.avatar}
+                      username={user?.username}
+                      size="xs"
+                      className={cn(
+                        "ring-2 transition-all duration-200",
+                        isActive ? "ring-white/80" : "ring-transparent"
+                      )}
+                    />
+                  </div>
+                ) : (
+                  <Icon className="h-5 w-5" strokeWidth={2.3} />
+                )}
                 <span
                   className={cn(
                     'pointer-events-none absolute bottom-1.5 h-1 w-6 rounded-full transition-opacity duration-200',

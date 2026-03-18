@@ -125,7 +125,7 @@ export const dashboardLinks: {
   },
   'account-settings': {
     key: 'account-settings',
-    to: '/profile/settings',
+    to: '/profile/settings-new',
     label: 'Account Settings',
     icon: Settings,
     indent: 2,
