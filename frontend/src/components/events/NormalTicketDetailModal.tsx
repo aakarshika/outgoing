@@ -23,6 +23,8 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useUpdateTicket } from '@/features/events/hooks';
+
+interface NormalTicketDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   tickets: any[];
