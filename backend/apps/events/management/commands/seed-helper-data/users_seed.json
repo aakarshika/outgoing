@@ -11,14 +11,14 @@
     {
       "username": "shika_a",
       "category_list": [
-        "arts-culture"
+        "arts"
       ],
       "type": "Host"
     },
     {
       "username": "coco_a",
       "category_list": [
-        "arts-culture"
+        "arts"
       ],
       "type": "Vendor"
     },
@@ -39,7 +39,7 @@
     {
       "username": "jello_a",
       "category_list": [
-        "arts-culture"
+        "arts"
       ],
       "type": "Vendor"
     },
@@ -60,7 +60,7 @@
     {
       "username": "maggi_a",
       "category_list": [
-        "arts-culture"
+        "arts"
       ],
       "type": "Vendor"
     },

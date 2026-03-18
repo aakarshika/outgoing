@@ -40,27 +40,27 @@ const trendingFeedFilters = [
 ] as const;
 
 const trendingCategoryGroups = {
-  outdoors: ['outdoor-adventure', 'sports-fitness'],
+  outdoors: ['outdoor', 'sports'],
   fun: [
     'comedy',
     'music',
-    'networking-social',
+    'networking',
     'festivals',
     'nightlife',
-    'food-drink',
-    'arts-culture',
+    'food',
+    'arts',
   ],
   social: [
-    'networking-social',
-    'community',
-    'workshops-classes',
-    'arts-culture',
-    'food-drink',
-    'tech-innovation',
+    'networking',
+    'social',
+    'workshops',
+    'arts',
+    'food',
+    'tech',
     'festivals',
   ],
-  'play-school': ['arts-culture', 'workshops-classes'],
-  tech: ['tech-innovation', 'networking-social'],
+  'play-school': ['arts', 'workshops'],
+  tech: ['tech', 'networking'],
 } as const;
 
 const networkGroups = [
@@ -84,10 +84,16 @@ type ContributionEventCardData = {
 type UpcomingEventData = {
   id: string;
   eventId: number;
+  cover_image?: string;
+  category?: {
+    slug?: string;
+    name?: string;
+  } | null;
   month: string;
   day: string;
   title: string;
   subtitle: string;
+  start_time?: string;
   pill: { label: string; background: string; color: string };
 };
 
@@ -112,25 +118,6 @@ function formatTime(dateString: string | undefined | null) {
     hour: 'numeric',
     minute: '2-digit',
   });
-}
-
-function getCountdownParts(dateString: string | undefined | null) {
-  if (!dateString) return { countdown: '-', countdownLabel: 'plan ahead' };
-  const today = new Date();
-  const target = new Date(dateString);
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const startOfTarget = new Date(
-    target.getFullYear(),
-    target.getMonth(),
-    target.getDate(),
-  );
-  const diffDays = Math.ceil(
-    (startOfTarget.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (diffDays <= 0) return { countdown: 'Now', countdownLabel: 'happening soon' };
-  if (diffDays === 1) return { countdown: '1', countdownLabel: 'day away' };
-  return { countdown: String(diffDays), countdownLabel: 'days away' };
 }
 
 function getTodayWindow(reference = new Date()) {
@@ -377,23 +364,10 @@ export default function MyHomePage() {
       ),
     [trendingResponse],
   );
-  const nextEvent = trendingEvents[0];
-  const nextEventCountdown = getCountdownParts(nextEvent?.start_time);
-  const nextEventTitle =
-    nextEvent?.title || 'Trending events will show up here';
-  const nextEventDateTimeLabel = nextEvent
-    ? `${formatDate(nextEvent.start_time, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      })}, ${formatTime(nextEvent.start_time)}`
-    : 'Check back soon';
-  const nextEventLocationLabel = nextEvent?.location_name || locationLabel;
-
   const overviewRows = (overviewResponse?.data?.data || []) as EventOverviewRow[];
   const savedEvents = (savedResponse?.data || []) as EventListItem[];
 
-  const upcomingEvents = useMemo<UpcomingEventData[]>(() => {
+  const upcomingEvents = useMemo<any[]>(() => {
     const now = Date.now();
     const items = new Map<string, UpcomingEventData>();
 
@@ -415,6 +389,10 @@ export default function MyHomePage() {
       items.set(`event-${detail.id}`, {
         id: `event-${detail.id}`,
         eventId: detail.id,
+        start_time: detail.start_time,
+        cover_image: detail.cover_image || undefined,
+        category: detail.category,
+
         month: date.toLocaleDateString(undefined, { month: 'short' }),
         day: String(date.getDate()).padStart(2, '0'),
         title: detail.title,
@@ -429,6 +407,8 @@ export default function MyHomePage() {
       items.set(`saved-${event.id}`, {
         id: `saved-${event.id}`,
         eventId: event.id,
+        cover_image: event.cover_image || undefined,
+        category: event.category,
         month: date.toLocaleDateString(undefined, { month: 'short' }),
         day: String(date.getDate()).padStart(2, '0'),
         title: event.title,
@@ -449,6 +429,22 @@ export default function MyHomePage() {
       })
       .slice(0, 3);
   }, [overviewRows, savedEvents, user?.id]);
+
+
+  // const nextEvent = upcomingEvents[0];
+  // const nextEventCountdown = getCountdownParts(nextEvent?.start_time);
+  // const nextEventTitle =
+  //   nextEvent?.title || 'Trending events will show up here';
+  // const nextEventDateTimeLabel = nextEvent
+  //   ? `${formatDate(nextEvent.start_time, {
+  //       weekday: 'short',
+  //       month: 'short',
+  //       day: 'numeric',
+  //     })}, ${formatTime(nextEvent.start_time)}`
+  //   : 'Check back soon';
+  // const nextEventLocationLabel = nextEvent?.location_name || locationLabel;
+
+
   const hasUpcomingEvents = upcomingEvents.length > 0;
   const weekendFeedTitle = hasUpcomingEvents
     ? 'A sharper feed for your next yes'
@@ -503,14 +499,14 @@ export default function MyHomePage() {
 
   const recommendedEvents = useMemo(() => {
     const seen = new Set<number>([
-      nextEvent?.id || -1,
+      // nextEvent?.id || -1,
       ...filteredTrendingEvents.map((event) => event.id),
     ]);
 
     return ((recommendedResponse?.data || []) as EventListItem[])
       .filter((event) => !seen.has(event.id))
       .slice(0, 6);
-  }, [filteredTrendingEvents, nextEvent?.id, recommendedResponse]);
+  }, [filteredTrendingEvents, recommendedResponse]);
 
   const toggleTrendingFilter = (filter: TrendingFeedFilter) => {
     setSelectedTrendingFilters((current) =>
@@ -563,7 +559,7 @@ export default function MyHomePage() {
         }}
     >
       <Box 
-      className="pt-10"
+      className="pt-10 pb-32"
       >
         <Box
           sx={{
@@ -575,11 +571,6 @@ export default function MyHomePage() {
         >
           <MyHomeUpcomingSection
             hasUpcomingEvents={hasUpcomingEvents}
-            nextEventTitle={nextEventTitle}
-            nextEventHref={nextEvent ? `/events-new/${nextEvent.id}` : undefined}
-            nextEventDateTimeLabel={nextEventDateTimeLabel}
-            nextEventLocationLabel={nextEventLocationLabel}
-            nextEventCountdown={nextEventCountdown}
             upcomingEvents={upcomingEvents}
           />
           <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, md: 4 } }}>

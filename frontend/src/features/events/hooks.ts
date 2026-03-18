@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { EventLifecycleState } from '@/types/events';
+import type { BaseFeedParams, EventLifecycleState } from '@/types/events';
 
 import {
   addDirectMessage,
@@ -19,6 +19,7 @@ import {
   fetchAllChatsList,
   fetchCarouselEvents,
   fetchCategories,
+  fetchBaseFeed,
   fetchDirectMessages,
   fetchEvent,
   fetchEventAttendees,
@@ -125,6 +126,17 @@ export function useFeed(params: {
   return useQuery({
     queryKey: ['feed', params],
     queryFn: () => fetchFeed(params),
+    retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useBaseFeed(params: BaseFeedParams = {}) {
+  return useQuery({
+    queryKey: ['feed', 'base', params],
+    queryFn: () => fetchBaseFeed(params),
     retry: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

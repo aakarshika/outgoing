@@ -52,20 +52,9 @@ export function NormalSaveToggleModule({
         }}
       >
         <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
-          {isSaved ? 'Saved to your calendar' : 'Save to calendar'}
+          {isSaved ? 'Saved to your calendar' : 'Save the Date'}
         </Typography>
       </Button>
-      {isAuthenticated && (
-        <Typography
-          sx={{ fontSize: 11, color: '#6b7280', mt: 0.75, textAlign: 'center' }}
-        >
-          {disabled
-            ? 'Saving opens once the event is published'
-            : isSaved
-              ? "You'll get a reminder 24h before"
-              : 'Get reminded before it starts'}
-        </Typography>
-      )}
     </Box>
   );
 }

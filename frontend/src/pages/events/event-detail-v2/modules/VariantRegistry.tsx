@@ -63,13 +63,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     isEventOver,
     canAccessEventChat,
     capabilities,
-    purchaseTicket,
-    clearTicketformTrigger,
-    handleBuyTicket,
-    handleBuyMultiple,
-    handleOneClickBuy,
-    onViewTicket,
-    deleteReview,
     isAuthenticated,
   } = viewModel;
 
@@ -82,77 +75,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
       isInterested: !event.user_is_interested,
     });
   };
-
-  const comicComponents = (
-    <>
-      <ComicHeroModule
-        event={event}
-        isHost={isHost}
-        highlights={highlights}
-        occurrences={viewModel.occurrences}
-        displayNeedsCount={displayNeeds?.length || 0}
-        displayNeeds={displayNeeds}
-      />
-      <Grid container spacing={6}>
-        <Grid
-          size={{ xs: 12, md: 6 }}
-          sx={{ display: 'flex', flexDirection: 'column' }}
-        >
-          <Box id="tickets">
-            <ComicTicketsModule
-              event={event}
-              purchaseTicket={purchaseTicket}
-              clearTicketformTrigger={clearTicketformTrigger}
-              handleBuyTicket={handleBuyTicket}
-              handleBuyMultiple={handleBuyMultiple}
-              handleOneClickBuy={handleOneClickBuy}
-              onViewTicket={onViewTicket}
-            />
-          </Box>
-        </Grid>
-      </Grid>
-      {!capabilities.showServiceShoutoutOnly ||
-      event.participating_vendors?.length > 0 ? (
-        <Box id="services">
-          <ComicServicesModule
-            event={event}
-            displayNeeds={displayNeeds}
-            myServicesResponse={viewModel.myServicesResponse}
-            isAuthenticated={isAuthenticated}
-          />
-        </Box>
-      ) : null}
-      <Box id="attending">
-        <ComicGoersModule event={event} isEventOver={isEventOver} />
-      </Box>
-      <ComicGroupChatModule
-        event={event}
-        canAccessEventChat={capabilities.canAccessEventChat}
-      />
-      <Box sx={{ mt: highlights.length === 0 ? 6 : 0 }}>
-        {capabilities.showHighlights && (
-          <Box id="highlights">
-            <ComicHighlightsModule
-              event={event}
-              highlights={highlights}
-              canUploadHighlights={capabilities.canUploadHighlights}
-            />
-          </Box>
-        )}
-        {capabilities.showReviews && (
-          <Box id="reviews">
-            <ComicReviewsModule
-              event={event}
-              reviews={reviews}
-              isHost={isHost}
-              user={viewModel.user}
-              deleteReview={deleteReview}
-            />
-          </Box>
-        )}
-      </Box>
-    </>
-  );
 
   const normalComponents =
     isMobile || isMobileDevice ? (
@@ -353,9 +275,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
       </Box>
     );
 
-  if (variant === 'comic') {
-    return comicComponents;
-  }
 
   return normalComponents;
 }

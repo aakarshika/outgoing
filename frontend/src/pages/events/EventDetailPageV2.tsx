@@ -4,15 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { ApplyToNeedModal } from '@/components/events/ApplyToNeedModal';
 import { HighlightComposer } from '@/components/events/HighlightComposer';
-import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
-import { TicketConfirmationModal } from '@/components/events/TicketConfirmationModal';
-import { TicketManagementModal } from '@/components/events/TicketManagementModal';
-import { TicketingServiceModal } from '@/components/events/TicketingServiceModal';
 import { useAuth } from '@/features/auth/hooks';
-import { CategoricalBackground } from '@/features/events/CategoricalBackground';
 import {
   useDeleteEventReview,
   useEvent,
@@ -26,7 +20,6 @@ import { useEventNeeds } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
 import { useBackground } from '@/theme/BackgroundProvider';
 
-import { GenericFeedSection } from '../home/sections/FeedSections';
 import { getDaysAgo } from './components/scrapbookHelpers';
 import { EventDetailV2Provider } from './event-detail-v2/modules/context';
 import { buildEventDetailCapabilities } from './event-detail-v2/modules/shared/statePolicy';
@@ -77,11 +70,6 @@ export default function EventDetailPageV2() {
     eventResponse?.data?.series?.id ?? 0,
   );
 
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [selectedNeed, setSelectedNeed] = useState<{
-    id: number;
-    title: string;
-  } | null>(null);
   const [isHighlightOpen, setIsHighlightOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [confirmedTicket, setConfirmedTicket] = useState<{
@@ -268,41 +256,6 @@ export default function EventDetailPageV2() {
     setOneClickStatus('idle');
   };
 
-  const handleQuickBuyConfirm = ({
-    guestName,
-  }: {
-    guestName: string;
-    paymentMethod: string;
-  }) => {
-    if (!quickBuyData) return;
-    setOneClickStatus('loading');
-
-    const tickets = Array.from({ length: quickBuyData.quantity }).map((_, i) => ({
-      tier_id: quickBuyData.tierId,
-      guest_name: i === 0 ? guestName.trim() : '',
-      is_18_plus: true,
-    }));
-
-    purchaseTicket.mutate(
-      { eventId: Number(id), tickets },
-      {
-        onSuccess: (_res: any) => {
-          setOneClickStatus('success');
-          toast.success('Quick Buy Successful!');
-          setTimeout(() => {
-            setOneClickStatus('idle');
-            setQuickBuyData(null);
-            setClearTicketformTrigger((prev) => prev + 1);
-          }, 3000);
-        },
-        onError: () => {
-          setOneClickStatus('error');
-          toast.error('Purchase failed');
-          setTimeout(() => setOneClickStatus('idle'), 3000);
-        },
-      },
-    );
-  };
 
   const handleTicketingSuccess = (ticketsData: any[]) => {
     setIsTicketingModalOpen(false);
@@ -360,192 +313,64 @@ export default function EventDetailPageV2() {
   return (
     <EventDetailV2Provider value={viewModel}>
       <ThemeProvider theme={activeTheme}>
-        {themeVariant === 'normal' ? (
-          <VariantRegistry variant={themeVariant} />
-        ) : (
-          <Box
-            sx={{
-              minHeight: '100vh',
-              color: 'inherit',
-              transition: 'all 0.5s ease',
-            }}
-          >
-            <Box
-              sx={{
-                maxWidth: '1000px',
-                mx: 'auto',
-                position: 'relative',
-                '&::before, &::after': {
-                  content: '""',
-                  position: 'absolute',
-                  zIndex: 0,
-                  bottom: '25px',
-                  width: '40%',
-                  height: '20px',
-                  boxShadow: '0 25px 20px rgba(0,0,0,0.4)',
-                  transition: 'all 0.3s ease',
-                },
-                '&::before': { left: '12px', transform: 'rotate(-4deg)' },
-                '&::after': { right: '12px', transform: 'rotate(4deg)' },
-              }}
-            >
-              <CategoricalBackground
-                category={event?.category}
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  position: 'relative',
-                  zIndex: 1,
-                  p: { xs: 2, sm: 4, md: 6 },
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  borderRadius: '4px',
-                  overflow: 'visible',
-                }}
-              >
-                <VariantRegistry variant={themeVariant} />
-              </CategoricalBackground>
-            </Box>
+        <VariantRegistry variant={themeVariant} />
 
-            <Box
-              sx={{
-                maxWidth: '1000px',
-                mx: 'auto',
-                pt: 16,
-                mt: { xs: 4, sm: 5, md: 6 },
-              }}
-            >
-              <GenericFeedSection
-                title="These might be of your interest too..."
-                params={{ sort: 'trending' }}
-                viewAllPath="/browse?sort=trending&title=Trending Events"
-                forceShowHeader={true}
-              />
-            </Box>
-          </Box>
-        )}
-
-        {selectedNeed && (
-          <ApplyToNeedModal
-            isOpen={isApplyModalOpen}
-            onClose={() => {
-              setIsApplyModalOpen(false);
-              setTimeout(() => setSelectedNeed(null), 200);
-            }}
-            needId={selectedNeed.id}
-            needTitle={selectedNeed.title}
-          />
-        )}
         <HighlightComposer
           eventId={Number(id)}
           isOpen={isHighlightOpen}
           onOpenChange={setIsHighlightOpen}
         />
-        {event && (
-          <ReviewComposer
-            eventId={Number(id)}
-            eventName={event.title}
-            participatingVendors={event.participating_vendors}
-            isOpen={isReviewOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setTimeout(() => setEditReviewData(null), 200);
-              }
-              setIsReviewOpen(open);
-            }}
-            initialData={editReviewData}
-          />
-        )}
-        {themeVariant === 'normal' ? (
-          <NormalTicketPurchaseModal
-            isOpen={isTicketingModalOpen}
-            onClose={() => {
-              setIsTicketingModalOpen(false);
-              setSelectedQuantity(null);
-            }}
-            event={event}
-            user={user}
-            selectedQuantity={selectedQuantity}
-            selectedTierId={selectedTierId}
-            selections={selectedSelections}
-            onSuccess={handleTicketingSuccess}
-          />
-        ) : (
-          <TicketingServiceModal
-            isOpen={isTicketingModalOpen}
-            onClose={() => {
-              setIsTicketingModalOpen(false);
-              setSelectedQuantity(null);
-            }}
-            event={event}
-            user={user}
-            selectedQuantity={selectedQuantity}
-            selectedTierId={selectedTierId}
-            selections={selectedSelections}
-            onSuccess={handleTicketingSuccess}
-          />
-        )}
 
-        {themeVariant === 'normal' ? (
-          <NormalTicketConfirmationModal
-            isOpen={!!confirmedTicket}
-            onClose={() => {
-              setConfirmedTicket(null);
-              setSelectedQuantity(null);
-            }}
-            eventTitle={event?.title || ''}
-            ticketType={confirmedTicket?.type || ''}
-            price={confirmedTicket?.price || '0'}
-            needsAadharVerification={confirmedTicket?.needsAadharVerification}
-          />
-        ) : (
-          <TicketConfirmationModal
-            isOpen={!!confirmedTicket}
-            onClose={() => {
-              setConfirmedTicket(null);
-              setSelectedQuantity(null);
-            }}
-            eventTitle={event?.title || ''}
-            ticketType={confirmedTicket?.type || ''}
-            price={confirmedTicket?.price || '0'}
-            needsAadharVerification={confirmedTicket?.needsAadharVerification}
-          />
-        )}
-        <QuickBuyPopup
-          isOpen={!!quickBuyData}
+        <ReviewComposer
+          eventId={Number(id)}
+          eventName={event.title}
+          participatingVendors={event.participating_vendors}
+          isOpen={isReviewOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setTimeout(() => setEditReviewData(null), 200);
+            }
+            setIsReviewOpen(open);
+          }}
+          initialData={editReviewData}
+        />
+
+        <NormalTicketPurchaseModal
+          isOpen={isTicketingModalOpen}
           onClose={() => {
-            setQuickBuyData(null);
-            setOneClickStatus('idle');
+            setIsTicketingModalOpen(false);
             setSelectedQuantity(null);
           }}
           event={event}
-          tierId={quickBuyData?.tierId ?? null}
-          quantity={quickBuyData?.quantity || 1}
           user={user}
-          status={oneClickStatus}
-          onConfirm={handleQuickBuyConfirm}
+          selectedQuantity={selectedQuantity}
+          selectedTierId={selectedTierId}
+          selections={selectedSelections}
+          onSuccess={handleTicketingSuccess}
         />
-        {themeVariant === 'comic' ? (
-          <TicketManagementModal
-            isOpen={isTicketManagementModalOpen}
-            onClose={() => setIsTicketManagementModalOpen(false)}
-            tickets={event.user_tickets}
-            ticketTiers={event.ticket_tiers}
-            initialIndex={Math.max(
-              0,
-              event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
-            )}
-          />
-        ) : (
-          <NormalTicketManagementModal
-            isOpen={isTicketManagementModalOpen}
-            onClose={() => setIsTicketManagementModalOpen(false)}
-            tickets={event.user_tickets}
-            initialIndex={Math.max(
-              0,
-              event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
-            )}
-          />
-        )}
+
+
+        <NormalTicketConfirmationModal
+          isOpen={!!confirmedTicket}
+          onClose={() => {
+            setConfirmedTicket(null);
+            setSelectedQuantity(null);
+          }}
+          eventTitle={event?.title || ''}
+          ticketType={confirmedTicket?.type || ''}
+          price={confirmedTicket?.price || '0'}
+          needsAadharVerification={confirmedTicket?.needsAadharVerification}
+        />
+        <NormalTicketManagementModal
+          event={event}
+          isOpen={isTicketManagementModalOpen}
+          onClose={() => setIsTicketManagementModalOpen(false)}
+          tickets={event.user_tickets}
+          initialIndex={Math.max(
+            0,
+            event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
+          )}
+        />
       </ThemeProvider>
     </EventDetailV2Provider>
   );

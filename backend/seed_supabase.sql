@@ -30,17 +30,17 @@ TRUNCATE auth_user,
 -- 2. Insert Categories
 INSERT INTO events_eventcategory (id, name, slug, icon) VALUES 
 (1, 'Music', 'music', 'music'),
-(2, 'Food & Drink', 'food-drink', 'utensils'),
+(2, 'Food & Drink', 'food', 'utensils'),
 (3, 'Nightlife', 'nightlife', 'moon'),
-(4, 'Sports & Fitness', 'sports-fitness', 'dumbbell'),
-(5, 'Arts & Culture', 'arts-culture', 'palette'),
-(6, 'Tech & Innovation', 'tech-innovation', 'cpu'),
-(7, 'Workshops & Classes', 'workshops-classes', 'book-open'),
-(8, 'Outdoors & Adventure', 'outdoors-adventure', 'mountain'),
+(4, 'Sports & Fitness', 'sports', 'dumbbell'),
+(5, 'Arts & Culture', 'arts', 'palette'),
+(6, 'Tech & Innovation', 'tech', 'cpu'),
+(7, 'Workshops & Classes', 'workshops', 'book'),
+(8, 'Outdoors & Adventure', 'outdoors', 'mountain'),
 (9, 'Comedy', 'comedy', 'laugh'),
-(10, 'Networking & Social', 'networking-social', 'users'),
-(11, 'Festivals', 'festivals', 'party-popper'),
-(12, 'Community', 'community', 'heart-handshake');
+(10, 'Networking & Social', 'networking', 'users'),
+(11, 'Festivals', 'festivals', 'party'),
+(12, 'Community', 'community', 'heart');
 
 -- 3. Insert Users (auth_user)
 INSERT INTO auth_user (id, password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES

@@ -6,6 +6,7 @@ import type { EventDetail, EventListItem } from '@/types/events';
 import type { VendorOpportunity } from '@/types/needs';
 
 import { SectionHeading } from './MyHomeSectionHeading';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 
 type ContributionEventCardData = {
   eventId: number;
@@ -71,11 +72,13 @@ export function MyHomeChipInSection({
         {contributionEventCards.map((eventCard) => {
           const eventDetail = eventDetailByEventId.get(eventCard.eventId);
           if (!eventDetail) return null;
+          const accent = getCategoryTheme(eventDetail.category).accent;
 
           return (
             <Box key={eventCard.eventId} sx={{ minWidth: 320 }}>
               <EventCardWithAllNeeds
                 event={eventDetail as EventDetail & EventListItem}
+                accent={accent}
                 opportunities={eventCard.opportunities}
                 matchedNeedIds={matchedOpportunityNeedIds}
                 onCreateService={onOpenQuickCreateService}

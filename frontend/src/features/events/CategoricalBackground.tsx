@@ -14,79 +14,103 @@ export const CATEGORY_THEMES: Record<
   default: {
     bg: '#f8fafc',
     pattern:
-      'linear-gradient(rgba(130, 153, 186, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(122, 166, 229, 0.1) 1px, transparent 1px)',
-    accent: '#16a34a',
-    tape: 'rgba(138, 177, 231, 0.4)',
+      'linear-gradient(rgba(71, 85, 105, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(71, 85, 105, 0.1) 1px, transparent 1px)',
+    accent: 'rgb(71, 85, 105)',
+    tape: 'rgba(71, 85, 105, 0.32)',
     icon: 'cpu',
   },
-  'arts-culture': {
-    bg: '#fff5f5',
-    pattern: 'radial-gradient(#feb2b2 1px, transparent 0)',
-    accent: '#f87171',
-    tape: 'rgba(239, 68, 68, 0.4)',
+  arts: {
+    bg: 'rgb(231, 236, 182)',
+    pattern: 'radial-gradient(rgba(179, 190, 81, 0.25) 1.5px, transparent 0)',
+    accent: 'rgb(179, 190, 81)',
+    tape: 'rgba(179, 190, 81, 0.35)',
     icon: 'palette',
   },
   music: {
-    bg: '#f5f3ff',
+    bg: 'rgb(235, 217, 235)',
     pattern:
-      'linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)',
-    accent: '#8b5cf6',
-    tape: 'rgba(139, 92, 246, 0.4)',
+      'linear-gradient(rgba(166, 16, 171, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(166, 16, 171, 0.12) 1px, transparent 1px)',
+    accent: 'rgb(166, 16, 171)',
+    tape: 'rgba(166, 16, 171, 0.34)',
     icon: 'music',
   },
-  'food-drink': {
-    bg: '#fffbeb',
-    pattern: 'radial-gradient(#fde68a 2px, transparent 0)',
-    accent: '#f59e0b',
-    tape: 'rgba(245, 158, 11, 0.4)',
+  food: {
+    bg: 'rgb(251, 227, 190)',
+    pattern: 'radial-gradient(rgba(250, 168, 45, 0.25) 2px, transparent 0)',
+    accent: 'rgb(250, 168, 45)',
+    tape: 'rgba(250, 168, 45, 0.35)',
     icon: 'utensils',
   },
-  'networking-social': {
-    bg: '#f0f9ff',
+  networking: {
+    bg: 'rgb(222, 223, 250)',
     pattern:
-      'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(56, 189, 248, 0.05) 10px, rgba(56, 189, 248, 0.05) 20px)',
-    accent: '#0ea5e9',
-    tape: 'rgba(14, 165, 233, 0.4)',
+      'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(59, 130, 246, 0.08) 10px, rgba(59, 130, 246, 0.08) 20px)',
+    accent: 'rgb(59, 130, 246)',
+    tape: 'rgba(59, 130, 246, 0.34)',
     icon: 'users',
   },
   comedy: {
-    bg: '#fdf2f8',
-    pattern: 'radial-gradient(#fbcfe8 1.5px, transparent 0)',
-    accent: '#ec4899',
-    tape: 'rgba(236, 72, 153, 0.4)',
+    bg: 'rgb(252, 222, 218)',
+    pattern: 'radial-gradient(rgba(206, 62, 9, 0.2) 1.5px, transparent 0)',
+    accent: 'rgb(206, 62, 9)',
+    tape: 'rgba(206, 62, 9, 0.32)',
     icon: 'laugh',
   },
-  community: {
-    bg: '#ecfdf5',
+  social: {
+    bg: 'rgb(229, 241, 222)',
     pattern:
-      'linear-gradient(45deg, rgba(16, 185, 129, 0.05) 25%, transparent 25%, transparent 50%, rgba(16, 185, 129, 0.05) 50%, rgba(16, 185, 129, 0.05) 75%, transparent 75%, transparent)',
-    accent: '#10b981',
-    tape: 'rgba(16, 185, 129, 0.4)',
+      'linear-gradient(45deg, rgba(146, 47, 82, 0.08) 25%, transparent 25%, transparent 50%, rgba(146, 47, 82, 0.08) 50%, rgba(146, 47, 82, 0.08) 75%, transparent 75%, transparent)',
+    accent: 'rgb(146, 47, 82)',
+    tape: 'rgba(146, 47, 82, 0.33)',
     icon: 'heart-handshake',
   },
   festivals: {
-    bg: '#fff7ed',
+    bg: 'rgb(253, 243, 214)',
     pattern:
-      'radial-gradient(circle at 2px 2px, rgba(251, 146, 60, 0.1) 1px, transparent 0)',
-    accent: '#f97316',
-    tape: 'rgba(249, 115, 22, 0.4)',
+      'radial-gradient(circle at 2px 2px, rgba(216, 177, 20, 0.16) 1px, transparent 0)',
+    accent: 'rgb(216, 177, 20)',
+    tape: 'rgba(216, 177, 20, 0.35)',
     icon: 'party-popper',
   },
-  'outdoors-adventure': {
-    bg: '#f0fdf4',
+  outdoors: {
+    bg: 'rgb(229, 241, 222)',
     pattern:
-      'repeating-linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0, rgba(34, 197, 94, 0.08) 2px, transparent 2px, transparent 12px)',
-    accent: '#16a34a',
-    tape: 'rgba(22, 163, 74, 0.35)',
+      'repeating-linear-gradient(135deg, rgba(17, 145, 128, 0.1) 0, rgba(17, 145, 128, 0.1) 2px, transparent 2px, transparent 12px)',
+    accent: 'rgb(17, 145, 128)',
+    tape: 'rgba(17, 145, 128, 0.33)',
     icon: 'mountain',
   },
-  'business-tech': {
-    bg: '#f8fafc',
+  nightlife: {
+    bg: 'rgb(236, 230, 249)',
     pattern:
-      'linear-gradient(rgba(71, 85, 105, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(71, 85, 105, 0.1) 1px, transparent 1px)',
-    accent: '#475569',
-    tape: 'rgba(71, 85, 105, 0.4)',
+      'radial-gradient(circle at 3px 3px, rgba(93, 63, 211, 0.18) 1px, transparent 0)',
+    accent: 'rgb(93, 63, 211)',
+    tape: 'rgba(93, 63, 211, 0.35)',
+    icon: 'moon',
+  },
+  sports: {
+    bg: 'rgb(218, 245, 237)',
+    pattern:
+      'repeating-linear-gradient(120deg, rgba(20, 133, 108, 0.12) 0, rgba(20, 133, 108, 0.12) 2px, transparent 2px, transparent 11px)',
+    accent: 'rgb(20, 133, 108)',
+    tape: 'rgba(20, 133, 108, 0.33)',
+    icon: 'dumbbell',
+  },
+  tech: {
+    bg: 'rgb(233, 234, 236)',
+    pattern:
+      'linear-gradient(rgba(80, 61, 153, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(80, 61, 153, 0.12) 1px, transparent 1px)',
+    accent: 'rgb(80, 61, 153)',
+    tape: 'rgba(80, 61, 153, 0.34)',
     icon: 'cpu',
+  },
+  workshops: {
+    bg: 'rgb(225, 235, 252)',
+    pattern:
+      'linear-gradient(135deg, rgba(37, 99, 235, 0.12) 25%, transparent 25%, transparent 50%, rgba(37, 99, 235, 0.12) 50%, rgba(37, 99, 235, 0.12) 75%, transparent 75%, transparent)',
+    accent: 'rgb(37, 99, 235)',
+    tape: 'rgba(37, 99, 235, 0.33)',
+    icon: 'book-open',
   },
 };
 
@@ -96,21 +120,10 @@ export const resolveCategorySlug = (category?: {
   slug?: string | null;
   name?: string | null;
 }) => {
-  if (category?.slug) return category.slug;
-
-  return (
-    category?.name
-      ?.toLowerCase()
-      .replace(/&/g, 'and')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || ''
-  );
+  return category?.slug || '';
 };
 
-export const getCategoryTheme = (category?: {
-  slug?: string | null;
-  name?: string | null;
-}) => CATEGORY_THEMES[resolveCategorySlug(category)] || DEFAULT_CATEGORY_THEME;
+export const getCategoryTheme = (category?: any) => CATEGORY_THEMES[resolveCategorySlug(category)] || DEFAULT_CATEGORY_THEME;
 
 export type EventCategory = {
   slug?: string | null;
@@ -292,6 +305,48 @@ const CategoryDecoration = ({ icon }: { icon: string }) => {
           }}
         >
           <Typography sx={{ fontSize: '1.2rem' }}>⛰</Typography>
+        </Box>
+      );
+    case 'moon':
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 8,
+            opacity: 0.25,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: '1.1rem' }}>🌙</Typography>
+        </Box>
+      );
+    case 'dumbbell':
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 6,
+            right: 10,
+            opacity: 0.2,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: '1.1rem' }}>🏋</Typography>
+        </Box>
+      );
+    case 'book-open':
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 6,
+            left: 10,
+            opacity: 0.22,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography sx={{ fontSize: '1.1rem' }}>📖</Typography>
         </Box>
       );
     default:

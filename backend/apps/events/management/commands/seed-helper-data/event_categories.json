@@ -1,74 +1,74 @@
 [
     {
-        "id": 91,
+        "id": 10001,
         "name": "Arts & Culture",
-        "slug": "arts-culture",
+        "slug": "arts",
         "icon": "palette"
     },
     {
-        "id": 95,
+        "id": 10002,
         "name": "Comedy",
         "slug": "comedy",
         "icon": "laugh"
     },
     {
-        "id": 98,
-        "name": "Community",
-        "slug": "community",
+        "id": 10003,
+        "name": "Social",
+        "slug": "social",
         "icon": "heart-handshake"
     },
     {
-        "id": 97,
+        "id": 10004,
         "name": "Festivals",
         "slug": "festivals",
         "icon": "party-popper"
     },
     {
-        "id": 88,
-        "name": "Food & Drink",
-        "slug": "food-drink",
+        "id": 10005,
+        "name": "Food & Drinks",
+        "slug": "food",
         "icon": "utensils"
     },
     {
-        "id": 87,
+        "id": 10006,
         "name": "Music",
         "slug": "music",
         "icon": "music"
     },
     {
-        "id": 96,
-        "name": "Networking & Social",
-        "slug": "networking-social",
+        "id": 10007,
+        "name": "Networking",
+        "slug": "networking",
         "icon": "users"
     },
     {
-        "id": 89,
+        "id": 10008,
         "name": "Nightlife",
         "slug": "nightlife",
         "icon": "moon"
     },
     {
-        "id": 94,
+        "id": 10009,
         "name": "Outdoors & Adventure",
-        "slug": "outdoors-adventure",
+        "slug": "outdoors",
         "icon": "mountain"
     },
     {
-        "id": 90,
+        "id": 10010,
         "name": "Sports & Fitness",
-        "slug": "sports-fitness",
+        "slug": "sports",
         "icon": "dumbbell"
     },
     {
-        "id": 92,
+        "id": 10011,
         "name": "Tech & Innovation",
-        "slug": "tech-innovation",
+        "slug": "tech",
         "icon": "cpu"
     },
     {
-        "id": 93,
+        "id": 10012,
         "name": "Workshops & Classes",
-        "slug": "workshops-classes",
+        "slug": "workshops",
         "icon": "book-open"
     }
 ]

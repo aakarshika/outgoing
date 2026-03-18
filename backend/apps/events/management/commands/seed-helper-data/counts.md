@@ -2,7 +2,7 @@
 
 
 # Hosts	(decided from seed) - select a user of host type from users_seed.json. pick one by one and follow the following directions. 
-    PICK A CATEGORY from his categories. seeed is only for[ 'arts-culture', 'comedy', 'music'] - use this to pick events from event_title_seed.json
+    PICK A CATEGORY from his categories. seeed is only for[ 'arts', 'comedy', 'music'] - use this to pick events from event_title_seed.json
        
 # Events - use the category of host to pick events from event_title_seed.json create all the events in the list with given name and description.
     5 events seed data is provided for 3 categories, it will create 15 events.

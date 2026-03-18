@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EventLocationMap } from '@/components/events/EventLocationMap';
 import { HostCard } from '@/components/ui/HostCard';
 import { Media } from '@/components/ui/media';
-import { CATEGORY_THEMES } from '@/features/events/CategoricalBackground';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 
 import { LIFECYCLE_LABELS, WashiTape } from './scrapbookHelpers';
 
@@ -21,6 +21,8 @@ export const HeroNegativeStripGallery = ({
   host: any;
   categorySlug?: string;
 }) => {
+  const categoryTheme = getCategoryTheme({ slug: categorySlug });
+
   // We double/triple the images for infinite scrolling effect
   const extendedImages = useMemo(() => {
     if (images.length === 0) return [];
@@ -51,10 +53,10 @@ export const HeroNegativeStripGallery = ({
           gap: 4,
           px: 6,
           py: 3,
-          border: `1px solid ${categorySlug ? CATEGORY_THEMES[categorySlug]?.accent : '#e1780898'}`,
+          border: `1px solid ${categoryTheme.accent}`,
           borderRadius: '2px',
           width: 'max-content',
-          bgcolor: categorySlug ? CATEGORY_THEMES[categorySlug]?.tape : '#e1780898', // category color dynamic
+          bgcolor: categoryTheme.tape,
           // Truly transparent sprocket holes using Mask
           WebkitMaskImage: `
             radial-gradient(circle at 16px 14px, transparent 7px, black 7.5px),

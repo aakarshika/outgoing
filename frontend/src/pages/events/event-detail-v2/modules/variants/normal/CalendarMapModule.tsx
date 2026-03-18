@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { Globe, MapPin, Navigation } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getNearYouCoords, getStoredSearchLocation } from '@/utils/locationPrefs';
 import { buildGoogleExternalUrl } from '@/utils/mapEmbed';
@@ -19,35 +19,83 @@ function parseCoordinate(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function buildGoogleCoordinateEmbedUrl(lat: number, lng: number) {
-  return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=13&output=embed`;
+// ---------------------------------------------------------------------------
+// Web Mercator projection
+// Google Maps uses Web Mercator (EPSG:3857) with 256px tiles.
+// By using the same math we can convert any lat/lng into a pixel offset from
+// the map centre and express it as a CSS percentage — always pixel-perfect.
+// ---------------------------------------------------------------------------
+
+const TILE_SIZE = 256;
+
+function latLngToWorld(coords: Coords): { x: number; y: number } {
+  const sinLat = Math.sin((coords.lat * Math.PI) / 180);
+  const x = (coords.lng + 180) / 360;
+  const y = 0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI);
+  return { x, y };
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
+function coordToPercent(
+  target: Coords,
+  center: Coords,
+  zoom: number,
+  containerW: number,
+  containerH: number,
+): { left: string; top: string } {
+  const scale = TILE_SIZE * Math.pow(2, zoom);
+  const centerWorld = latLngToWorld(center);
+  const targetWorld = latLngToWorld(target);
+  const dx = (targetWorld.x - centerWorld.x) * scale;
+  const dy = (targetWorld.y - centerWorld.y) * scale;
+  const left = ((containerW / 2 + dx) / containerW) * 100;
+  const top = ((containerH / 2 + dy) / containerH) * 100;
+  return {
+    left: `${Math.max(4, Math.min(96, left))}%`,
+    top: `${Math.max(4, Math.min(96, top))}%`,
+  };
+}
+
+/**
+ * Picks a center and zoom that fits both points with comfortable padding.
+ * Subtracts 1 from the raw zoom so neither pin sits at the edge.
+ */
+function fitView(
+  eventCoords: Coords,
+  userCoords: Coords | null,
+): { center: Coords; zoom: number } {
+  if (!userCoords) {
+    return { center: eventCoords, zoom: 13 };
+  }
+  const center: Coords = {
+    lat: (eventCoords.lat + userCoords.lat) / 2,
+    lng: (eventCoords.lng + userCoords.lng) / 2,
+  };
+  const latSpan = Math.abs(eventCoords.lat - userCoords.lat);
+  const lngSpan = Math.abs(eventCoords.lng - userCoords.lng);
+  const span = Math.max(latSpan, lngSpan, 0.001);
+  // log2(180/span) approximates the zoom needed to fit `span` degrees.
+  // -1 adds padding so the pins don't sit at the very edge.
+  const zoom = Math.max(3, Math.min(14, Math.round(Math.log2(180 / span)) - 1));
+  return { center, zoom };
+}
+
+function buildEmbedUrl(center: Coords, zoom: number): string {
+  // Plain ?q= centers the map and drops Google's native red pin on the event.
+  // No route, no sidebar — just clean map tiles with one marker.
+  return `https://maps.google.com/maps?q=${center.lat},${center.lng}&z=${zoom}&output=embed`;
 }
 
 function buildGoogleDirectionsUrl(destination: Coords, origin?: Coords | null) {
   if (!origin) {
     return buildGoogleExternalUrl(`${destination.lat},${destination.lng}`);
   }
-
   return `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`;
 }
 
-function getRelativeMarkerPosition(center: Coords, target: Coords) {
-  const latWindow = 0.16;
-  const lngWindow = latWindow / Math.max(0.35, Math.cos((center.lat * Math.PI) / 180));
-  const left = 50 + ((target.lng - center.lng) / lngWindow) * 50;
-  const top = 50 - ((target.lat - center.lat) / latWindow) * 50;
-
-  return {
-    left: `${clamp(left, 8, 92)}%`,
-    top: `${clamp(top, 14, 86)}%`,
-  };
-}
-
-function Marker({
+// ---------------------------------------------------------------------------
+// SVG teardrop pin marker overlay
+// ---------------------------------------------------------------------------
+function PinMarker({
   label,
   color,
   left,
@@ -64,52 +112,51 @@ function Marker({
         position: 'absolute',
         left,
         top,
+        // Pin tip sits exactly on the coordinate point
         transform: 'translate(-50%, -100%)',
         pointerEvents: 'none',
         zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
       }}
     >
-      <Box
+      <Typography
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 0.35,
+          px: 0.75,
+          py: 0.15,
+          mb: 0.3,
+          borderRadius: '999px',
+          bgcolor: 'rgba(255,255,255,0.97)',
+          border: '1px solid rgba(17,24,39,0.12)',
+          fontSize: '0.58rem',
+          fontWeight: 800,
+          lineHeight: 1.2,
+          color: '#111827',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          whiteSpace: 'nowrap',
         }}
       >
-        <Typography
-          sx={{
-            px: 0.8,
-            py: 0.2,
-            borderRadius: '999px',
-            bgcolor: 'rgba(255,255,255,0.96)',
-            border: '1px solid rgba(17,24,39,0.15)',
-            fontSize: '0.6rem',
-            fontWeight: 800,
-            lineHeight: 1.1,
-            color: '#111827',
-            boxShadow: '0 4px 10px rgba(15, 23, 42, 0.12)',
-          }}
-        >
-          {label}
-        </Typography>
-        <Box
-          sx={{
-            width: 11,
-            height: 11,
-            borderRadius: '999px',
-            bgcolor: color,
-            border: '2px solid white',
-            boxShadow: '0 0 0 1px rgba(17,24,39,0.2)',
-          }}
+        {label}
+      </Typography>
+      <svg width="18" height="24" viewBox="0 0 18 24" fill="none">
+        <path
+          d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 15 9 15s9-8.25 9-15C18 4.03 13.97 0 9 0z"
+          fill={color}
         />
-      </Box>
+        <circle cx="9" cy="9" r="3.5" fill="white" opacity="0.9" />
+      </svg>
     </Box>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps) {
   const [userCoords, setUserCoords] = useState<Coords | null>(null);
+  const mapBoxRef = useRef<HTMLDivElement>(null);
+  const [mapSize, setMapSize] = useState({ w: 160, h: 160 });
 
   const startDate = useMemo(() => new Date(event.start_time), [event.start_time]);
   const endDate = useMemo(() => new Date(event.end_time), [event.end_time]);
@@ -117,14 +164,8 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
   const month = startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const day = startDate.getDate();
   const weekday = startDate.toLocaleDateString('en-US', { weekday: 'short' });
-  const timeStart = startDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-  const timeEnd = endDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const timeStart = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const timeEnd = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
   const locationName = event.location?.name || event.location_name;
   const locationAddress = event.location?.address || event.location_address;
@@ -133,34 +174,53 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
   const lat = parseCoordinate(event.location?.lat ?? event.latitude);
   const lng = parseCoordinate(event.location?.lng ?? event.longitude);
   const hasCoords = lat !== null && lng !== null;
-
   const eventCoords: Coords | null = hasCoords ? { lat, lng } : null;
 
   useEffect(() => {
-    const storedCoords =
-      getNearYouCoords() ?? getStoredSearchLocation()?.coords ?? null;
+    const storedCoords = getNearYouCoords() ?? getStoredSearchLocation()?.coords ?? null;
     setUserCoords(storedCoords);
   }, []);
 
-  const userMarkerPosition = useMemo(() => {
-    if (!eventCoords || !userCoords) return null;
-    return getRelativeMarkerPosition(eventCoords, userCoords);
-  }, [eventCoords, userCoords]);
+  // Measure the rendered map box so projection math uses actual pixel dimensions
+  useEffect(() => {
+    const el = mapBoxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setMapSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-  const mapUrl = useMemo(() => {
-    if (!eventCoords) return null;
-    return buildGoogleDirectionsUrl(eventCoords, userCoords);
-  }, [eventCoords, userCoords]);
+  const view = useMemo(
+    () => (eventCoords ? fitView(eventCoords, userCoords) : null),
+    [eventCoords, userCoords],
+  );
 
-  const embedUrl = useMemo(() => {
-    if (!eventCoords) return null;
-    return buildGoogleCoordinateEmbedUrl(eventCoords.lat, eventCoords.lng);
-  }, [eventCoords]);
+  const embedUrl = useMemo(
+    () => (view ? buildEmbedUrl(view.center, view.zoom) : null),
+    [view],
+  );
+
+  // Pixel-perfect marker positions derived from the same center+zoom as the embed
+  const eventMarker = useMemo(() => {
+    if (!eventCoords || !view) return null;
+    return coordToPercent(eventCoords, view.center, view.zoom, mapSize.w, mapSize.h);
+  }, [eventCoords, view, mapSize]);
+
+  const userMarker = useMemo(() => {
+    if (!userCoords || !eventCoords || !view) return null;
+    return coordToPercent(userCoords, view.center, view.zoom, mapSize.w, mapSize.h);
+  }, [userCoords, eventCoords, view, mapSize]);
+
+  const mapUrl = useMemo(
+    () => (eventCoords ? buildGoogleDirectionsUrl(eventCoords, userCoords) : null),
+    [eventCoords, userCoords],
+  );
 
   const handleOpenMap = () => {
-    if (mapUrl) {
-      window.open(mapUrl, '_blank');
-    }
+    if (mapUrl) window.location.href = mapUrl;
   };
 
   return (
@@ -214,6 +274,7 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
 
         {/* Map Card */}
         <Box
+          ref={mapBoxRef}
           onClick={handleOpenMap}
           sx={{
             bgcolor: '#E1F5EE',
@@ -221,39 +282,40 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
             position: 'relative',
             overflow: 'hidden',
             cursor: mapUrl ? 'pointer' : 'default',
-            minHeight: 120,
+            aspectRatio: '1 / 1',
+            minHeight: 140,
           }}
         >
           {embedUrl ? (
             <>
-              <Box
-                sx={{
+              <iframe
+                src={embedUrl}
+                loading="lazy"
+                title="Event location"
+                style={{
                   position: 'absolute',
                   inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  filter: 'grayscale(15%) contrast(1.05)',
+                  pointerEvents: 'none',
                 }}
-              >
-                <iframe
-                  src={embedUrl}
-                  loading="lazy"
-                  title="Event location"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    filter: 'grayscale(20%) contrast(1.1)',
-                    pointerEvents: 'none',
-                  }}
+              />
+              {eventMarker && (
+                <PinMarker
+                  label="Event"
+                  color="#dc2626"
+                  left={eventMarker.left}
+                  top={eventMarker.top}
                 />
-              </Box>
-              {eventCoords && (
-                <Marker label="Event" color="#dc2626" left="50%" top="50%" />
               )}
-              {userMarkerPosition && (
-                <Marker
+              {userMarker && (
+                <PinMarker
                   label="You"
                   color="#2563eb"
-                  left={userMarkerPosition.left}
-                  top={userMarkerPosition.top}
+                  left={userMarker.left}
+                  top={userMarker.top}
                 />
               )}
             </>
@@ -275,10 +337,8 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
 
       {/* Location strip */}
       <Box
-        component={mapUrl ? 'a' : 'div'}
-        {...(mapUrl
-          ? { href: mapUrl, target: '_blank', rel: 'noopener noreferrer' }
-          : {})}
+        component="div"
+        onClick={handleOpenMap}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -286,13 +346,11 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
           mt: 1.25,
           px: 0.5,
           py: 0.75,
-          textDecoration: 'none',
           color: 'inherit',
           borderRadius: 'var(--border-radius-md, 8px)',
           transition: 'background 0.15s',
-          '&:hover': mapUrl
-            ? { bgcolor: 'rgba(0,0,0,0.03)' }
-            : undefined,
+          cursor: mapUrl ? 'pointer' : 'default',
+          '&:hover': mapUrl ? { bgcolor: 'rgba(0,0,0,0.03)' } : undefined,
         }}
       >
         {isOnline ? (

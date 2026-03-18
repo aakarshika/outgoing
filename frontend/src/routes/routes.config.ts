@@ -17,6 +17,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/test-feed',
+    componentName: 'TestFeed',
+    isPublic: true,
+  },
+  {
     path: '/highlights',
     componentName: 'Highlights',
     isPublic: true,

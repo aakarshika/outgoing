@@ -218,6 +218,93 @@ export interface EventSearchSuggestion extends Partial<EventListItem> {
   category?: EventCategory | null;
 }
 
+export type BaseFeedSort = 'popularity' | 'distance' | 'created' | 'start_time';
+
+export interface BaseFeedParams {
+  sort?: BaseFeedSort;
+  online?: boolean;
+  status?: string | string[];
+  start_time_gte?: string;
+  start_time_lte?: string;
+  category?: string;
+  categories?: string[];
+  free_only?: boolean;
+  has_needs?: boolean;
+  lat?: number;
+  lng?: number;
+  page?: number;
+  page_size?: number;
+}
+
+export interface BaseFeedUser {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+}
+
+export interface BaseFeedService {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  visibility: string;
+  base_price: string | null;
+  portfolio_image: string | null;
+  location_city: string;
+  is_active: boolean;
+}
+
+export interface BaseFeedNeedApplication {
+  id: number;
+  vendor: BaseFeedUser;
+  service: BaseFeedService | null;
+  message: string;
+  proposed_price: string | null;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at: string;
+  i_have_applied: boolean;
+}
+
+export interface BaseFeedAssignedVendor {
+  user: BaseFeedUser;
+  service: BaseFeedService | null;
+  i_am_assigned_vendor: boolean;
+}
+
+export interface BaseFeedNeed {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  criticality: string;
+  budget_min: string | null;
+  budget_max: string | null;
+  status: string;
+  application_count: number;
+  applications: BaseFeedNeedApplication[];
+  i_have_applied: boolean;
+  assigned_vendor: BaseFeedAssignedVendor | null;
+  created_at: string;
+}
+
+export interface BaseFeedEventItem {
+  event: EventListItem;
+  needs: BaseFeedNeed[];
+  host: BaseFeedUser;
+  event_popularity_score: number;
+  tickets_sold_count: number;
+  saved_count: number;
+  highlights_count: number;
+  review_count: number;
+  min_ticket_price: number;
+  i_am_host: boolean;
+  i_have_ticket: boolean;
+  i_have_saved: boolean;
+  distance_km: number | null;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;

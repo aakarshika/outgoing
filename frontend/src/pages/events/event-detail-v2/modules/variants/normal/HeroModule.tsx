@@ -1,17 +1,5 @@
 import { Box, Typography } from '@mui/material';
-
-const CATEGORY_ICONS: Record<string, string> = {
-  'arts-culture': '🎨',
-  music: '🎵',
-  'food-drink': '🍽️',
-  'networking-social': '🤝',
-  comedy: '🎭',
-  community: '❤️',
-  festivals: '🎉',
-  'outdoors-adventure': '🏔️',
-  'business-tech': '💻',
-  default: '📅',
-};
+import { CATEGORY_ICONS, CATEGORY_COLORS } from '@/features/events/constants';
 
 interface NormalHeroModuleProps {
   event: any;
@@ -23,18 +11,7 @@ export function NormalHeroModule({ event }: NormalHeroModuleProps) {
   const categoryName = event.category?.name || 'Event';
 
   const getCategoryColor = () => {
-    const colors: Record<string, string> = {
-      'arts-culture': '#F5C4B3',
-      music: '#E6F1FB',
-      'food-drink': '#FAEEDA',
-      'networking-social': '#EEEDFE',
-      comedy: '#FAECE7',
-      community: '#EAF3DE',
-      festivals: '#FEF3C7',
-      'outdoors-adventure': '#EAF3DE',
-      'business-tech': '#E5E7EB',
-    };
-    return colors[categorySlug] || '#F5C4B3';
+    return CATEGORY_COLORS[categorySlug] || CATEGORY_COLORS.default;
   };
 
   return (

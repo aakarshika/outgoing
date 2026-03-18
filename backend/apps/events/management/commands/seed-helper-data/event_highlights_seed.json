@@ -1,15 +1,19 @@
 {
-    "arts-culture": [
+    "arts": [
         "It was such a fun event! I learned a lot.",
         "Look at my first attempt at this flower painting!.",
         "Such a beautiful arts and culture event. Every corner had something inspiring to see.",
         "I did not expect to enjoy this exhibit so much, but it completely pulled me in.",
-        "Spent the evening surrounded by creativity, music, and the nicest crowd.",
+        "Spent the evening surrounded by creativity, music, and the nicest crowd."
+    ],
+    "community": [
         "Still thinking about the performances and the atmosphere from tonight's cultural event.",
         "My first time attending something like this, and it was honestly unforgettable.",
         "The art, the energy, and the storytelling made this event feel really special.",
         "Came for a casual evening and left feeling inspired for days.",
-        "Every detail of this event felt thoughtful, expressive, and full of life.",
+        "Every detail of this event felt thoughtful, expressive, and full of life."
+    ],
+    "festivals": [
         "From the live performances to the visual art, this was such a rich experience.",
         "One of those events that reminds you how powerful community and creativity can be."
     ],
@@ -20,7 +24,9 @@
         "Comedy night absolutely delivered. The crowd, the timing, everything was on point.",
         "Who knew one event could leave me laughing this much by the end of the night.",
         "This comedy event had the whole room in tears. In the healthy laughing way, for once.",
-        "Still replaying some of those jokes in my head. What a fun night out.",
+        "Still replaying some of those jokes in my head. What a fun night out."
+    ],
+    "outdoors": [
         "Came in tired, left smiling. That is a successful comedy night in my book.",
         "The comedians were hilarious and the energy in the room was amazing.",
         "Nothing beats a good comedy event with friends and nonstop laughter.",
@@ -34,11 +40,19 @@
         "Such a great event. The live music completely made the night.",
         "Still not over how good that set was. What an atmosphere.",
         "The crowd was alive, the sound was amazing, and the whole night felt electric.",
-        "From the first song to the last, this music event was unforgettable.",
+        "From the first song to the last, this music event was unforgettable."
+    ],
+    "networking": [
         "There is just something about live music that makes everything feel better.",
         "Amazing performance, amazing vibe, and a night worth remembering.",
-        "The DJ kept the energy going all night. Such a fun experience.",
+        "The DJ kept the energy going all night. Such a fun experience."
+    ],
+    "food": [
         "Good music, good people, and the kind of night you wish would last longer.",
         "This event had everything I wanted. Strong sound, great crowd, and nonstop energy."
+    ],
+    "tech": [
+        "I learned a lot about the latest trends in technology and how to apply them to my business.",
+        "This event was a great opportunity to network with other professionals in the tech industry."
     ]
 }

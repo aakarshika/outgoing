@@ -498,10 +498,8 @@ function EventOpportunityBanner({
         },
       }}
     >
-      <Box component="span" sx={{ fontSize: 12, lineHeight: 1.4, mt: 0.1 }}>
-        ⚡
-      </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
+        
         <Typography
           sx={{
             fontSize: isLandscape ? 12 : 11,
@@ -509,23 +507,12 @@ function EventOpportunityBanner({
             color: '#633806',
           }}
         >
+          needs{' '}
           <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
             {opportunity.need_title}
           </Box>{' '}
-          {needRewardValue ? `- up to Rs ${needRewardValue}` : '- tap to view details'}
+          {needRewardValue ? `- up to Rs ${needRewardValue}` : ''}
         </Typography>
-        {ctaLabel ? (
-          <Typography
-            sx={{
-              mt: 0.35,
-              fontSize: isLandscape ? 11 : 10,
-              fontWeight: 700,
-              color: '#854F0B',
-            }}
-          >
-            {ctaLabel}
-          </Typography>
-        ) : null}
       </Box>
     </Box>
   );
@@ -586,6 +573,7 @@ function EventCardFooter({
 type EventCardWithAllNeedsProps = {
   event: EventListItem;
   opportunities: VendorOpportunity[];
+  accent: string;
   matchedNeedIds?: Set<number>;
   onCreateService?: (category?: string) => void;
   onClick: () => void;
@@ -593,6 +581,7 @@ type EventCardWithAllNeedsProps = {
 
 export function EventCardWithAllNeeds({
   event,
+  accent,
   opportunities,
   matchedNeedIds: externalMatchedNeedIds,
   onCreateService,
@@ -655,7 +644,7 @@ export function EventCardWithAllNeeds({
       onClick={onClick}
       sx={{
         border: '1px solid rgba(143, 105, 66, 0.14)',
-        borderLeft: `4px solid #EF9F27`,
+        borderLeft: `4px solid ${accent}`,
         borderRadius: '22px',
         backgroundColor: 'rgba(255,255,255,0.92)',
         boxShadow: '0 8px 28px rgba(108, 71, 33, 0.06)',

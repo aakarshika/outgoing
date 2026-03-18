@@ -1,28 +1,7 @@
+import { CATEGORY_COLORS, CATEGORY_ICONS } from '@/features/events/constants';
 import { Box, Typography } from '@mui/material';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'arts-culture': '#E6F1FB',
-  music: '#E6F1FB',
-  'food-drink': '#FAEEDA',
-  'networking-social': '#EEEDFE',
-  comedy: '#FAECE7',
-  community: '#EAF3DE',
-  festivals: '#FEF3C7',
-  'outdoors-adventure': '#EAF3DE',
-  'business-tech': '#E5E7EB',
-};
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'arts-culture': '🎨',
-  music: '🎵',
-  'food-drink': '🍽️',
-  'networking-social': '🤝',
-  comedy: '🎭',
-  community: '❤️',
-  festivals: '🎉',
-  'outdoors-adventure': '🏔️',
-  'business-tech': '💻',
-};
 
 interface NormalBrowseModuleProps {
   event: any;

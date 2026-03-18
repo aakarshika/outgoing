@@ -116,15 +116,6 @@ export function NormalStatusModule({ event, isHost }: NormalStatusModuleProps) {
         </span>
       </Box>
 
-      {isHost && (
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ mt: 1, display: 'block', fontSize: 10 }}
-        >
-          Event ID: {event.id}
-        </Typography>
-      )}
     </Box>
   );
 }

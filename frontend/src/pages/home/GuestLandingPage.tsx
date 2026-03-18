@@ -485,23 +485,15 @@ export default function GuestLandingPage() {
   const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
-    sort: 'trending'
-  });
-  const { data: onlineResponse, isLoading: loadingOnline } = useFeed({
-    online: true,
-    sort: 'upcoming'
-  });
-  const { data: discoverResponse, isLoading: loadingDiscover } = useFeed({
-    sort: activeFilter === 'Tonight' ? 'upcoming' : 'trending',
-    online: activeFilter === 'Contributor spots open' ? undefined : false,
-    weekend: activeFilter === 'This weekend' ? true : undefined
+    sort: 'trending',
+    page_size: 100,
   });
 
-  const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]).slice(0, 4);
-  const onlineEvents = ((onlineResponse?.data || []) as EventListItem[]).slice(0, 4);
+  const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]);
+  const onlineEvents = ((nearbyResponse?.data || []) as EventListItem[]);
 
   const discoverEvents = useMemo(() => {
-    const baseEvents = ((discoverResponse?.data || []) as EventListItem[]).slice(0, 12);
+    const baseEvents = ((nearbyResponse?.data || []) as EventListItem[]);
 
     return baseEvents
       .filter((event) => {
@@ -528,7 +520,7 @@ export default function GuestLandingPage() {
         }
       })
       .slice(0, 4);
-  }, [activeFilter, discoverResponse]);
+  }, [activeFilter, nearbyResponse]);
 
   const { data: iconicHostsResponse } = useIconicHostsFeed();
   const { data: trendingHighlightsResponse } = useTrendingHighlights(12);
@@ -536,7 +528,7 @@ export default function GuestLandingPage() {
   const iconicHosts = (iconicHostsResponse?.data || []).slice(0, 8);
   const trendingHighlights = (trendingHighlightsResponse?.data || []).slice(0, 8);
 
-  const isLoading = loadingNearby || loadingOnline || loadingDiscover;
+  const isLoading = loadingNearby ;
 
   useEffect(() => {
     let ignore = false;
@@ -816,6 +808,7 @@ export default function GuestLandingPage() {
             {discoverEvents.map((event) => (
               <Box
                 key={event.id}
+                onClick={() => navigate(`/events-new/${event.id}`)}
                 sx={{
                   flex: '0 0 clamp(260px, 32vw, 320px)',
                   minWidth: 0,

@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    BaseFeedView,
     CarouselFeedView,
     CompletedHighlightsFeedView,
     FeedView,
@@ -14,6 +15,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("base/", BaseFeedView.as_view(), name="base_feed"),
     path("carousel/", CarouselFeedView.as_view(), name="carousel_feed"),
     path(
         "trending-highlights/",

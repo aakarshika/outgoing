@@ -10,6 +10,7 @@ import {
 } from '@/features/events/TicketStatusBadge';
 import { EventStatusBadge } from '@/features/events/EventStatusBadge';
 import type { EventListItem } from '@/types/events';
+import { CATEGORY_ICONS } from '@/features/events/constants';
 
 function formatCardDate(dateString: string | undefined | null) {
   if (!dateString) return '';
@@ -23,16 +24,8 @@ function formatCardDate(dateString: string | undefined | null) {
 }
 
 function getCategoryIcon(categoryName: string | undefined | null) {
-  const cat = (categoryName || '').toLowerCase();
-  if (cat.includes('music')) return '🎶';
-  if (cat.includes('food')) return '🍽️';
-  if (cat.includes('art')) return '🎨';
-  if (cat.includes('film')) return '🎞️';
-  if (cat.includes('game')) return '🎮';
-  if (cat.includes('well')) return '🧘';
-  if (cat.includes('run') || cat.includes('sport') || cat.includes('outdoor'))
-    return '🏃';
-  return '✨';
+  const cat = CATEGORY_ICONS[categoryName || ''] || '❓';
+  return cat;
 }
 
 export function SmallEventCard({
@@ -200,7 +193,7 @@ export function SmallEventCard({
           >
             {event.category?.name || 'Event'}
           </Typography>
-          {isLive ? null : <EventStatusBadge status={event.lifecycle_state} />}
+          <EventStatusBadge status={event.lifecycle_state} />
         </Stack>
         <Typography
           sx={{

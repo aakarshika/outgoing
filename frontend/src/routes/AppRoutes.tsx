@@ -11,7 +11,7 @@ import { RouteDefinition, routesConfig } from './routes.config';
 
 const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
-const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
+// const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
 const SettingsNewPage = lazy(() => import('@/pages/profile/settings-new/SettingsNewPage'));
 const HomePage = lazy(() => import('@/pages/home/RootHomePage'));
@@ -23,30 +23,30 @@ const EventDetailV2Page = lazy(() => import('@/pages/events/EventDetailPageV2'))
 const PlanningWorkspacePage = lazy(
   () => import('@/pages/events/PlanningWorkspacePage'),
 );
-const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
-const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'));
-const ManageForVendorPage = lazy(() => import('@/pages/events/ManageForVendorPage'));
-const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
-const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
+// const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
+// const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'));
+// const ManageForVendorPage = lazy(() => import('@/pages/events/ManageForVendorPage'));
+// const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
+// const CalendarPage = lazy(() => import('@/pages/calendar/CalendarPage'));
 const ManagingPage = lazy(() => import('@/pages/managing/ManagingPage'));
-const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
+// const BrowseVendorsPage = lazy(() => import('@/pages/vendors/BrowseVendorsPage'));
 const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPage'));
-const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
-const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage'));
-const EditServicePage = lazy(() => import('@/pages/vendors/EditServicePage'));
-const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
-const AlertsPage = lazy(() => import('@/pages/alerts/AlertsPage'));
+// const CreateServicePage = lazy(() => import('@/pages/vendors/CreateServicePage'));
+// const ServiceDetailPage = lazy(() => import('@/pages/vendors/ServiceDetailPage'));
+// const EditServicePage = lazy(() => import('@/pages/vendors/EditServicePage'));
+// const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
+const TestFeedPage = lazy(() => import('@/pages/home/TestFeedPage'));
 const ChatsPage = lazy(() => import('@/pages/chats/ChatsPage'));
-const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
+// const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
 const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
-const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
+// const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
 const SearchPage = lazy(() => import('@/pages/search/SearchPage'));
 const YourNetworkPage = lazy(() => import('@/pages/network/YourNetworkPage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignUp: SignUpPage,
   SignIn: SignInPage,
-  Profile: ProfilePage,
+  // Profile: ProfilePage,
   UserProfile: UserProfilePage,
   SettingsNew: SettingsNewPage,
   Home: HomePage,
@@ -55,23 +55,24 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   EventDetail: EventDetailNewPage,
   EventDetailV2: EventDetailV2Page,
   PlanningWorkspace: PlanningWorkspacePage,
-  CreateEvent: CreateEventPage,
-  ManageForHost: ManageForHostPage,
-  ManageForVendor: ManageForVendorPage,
-  Dashboard: DashboardPage,
-  Calendar: CalendarPage,
+  TestFeed: TestFeedPage,
+  // CreateEvent: CreateEventPage,
+  // ManageForHost: ManageForHostPage,
+  // ManageForVendor: ManageForVendorPage,
+  // Dashboard: DashboardPage,
+  // Calendar: CalendarPage,
   Managing: ManagingPage,
-  BrowseVendors: BrowseVendorsPage,
+  // BrowseVendors: BrowseVendorsPage,
   VendorPortfolio: VendorPortfolioPage,
-  CreateService: CreateServicePage,
-  ServiceDetail: ServiceDetailPage,
-  EditService: EditServicePage,
-  Requests: RequestsPage,
-  Alerts: AlertsPage,
+  // CreateService: CreateServicePage,
+  // ServiceDetail: ServiceDetailPage,
+  // EditService: EditServicePage,
+  // Requests: RequestsPage,
+  // Alerts: AlertsPage,
   Chats: ChatsPage,
-  EventsSpecial: EventsSpecialPage,
+  // EventsSpecial: EventsSpecialPage,
   Gallery: GalleryPage,
-  BrowseFeed: BrowseFeedPage,
+  // BrowseFeed: BrowseFeedPage,
   Search: SearchPage,
   YourNetwork: YourNetworkPage,
   HomeRenewed: HomePageRenewed,

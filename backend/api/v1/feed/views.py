@@ -5,7 +5,7 @@ from math import cos, radians
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Avg, Case, Count, IntegerField, Q, Value, When
+from django.db.models import Avg, Case, Count, IntegerField, Min, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -15,10 +15,416 @@ from rest_framework.views import APIView
 from api.v1.events.serializers import EventHighlightSerializer, EventListSerializer
 from api.v1.vendors.serializers import VendorServiceSerializer
 from apps.events.models import Event, EventHighlight, EventView
-from apps.profiles.models import UserProfile
 from apps.vendors.models import VendorService
 from core.responses import success_response
 from core.utils import resolve_media_url
+
+
+def _safe_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _haversine_distance_km(lat1, lng1, lat2, lng2):
+    """Return great-circle distance in km for two lat/lng points."""
+    from math import asin, sin, sqrt
+
+    lat1_rad, lng1_rad, lat2_rad, lng2_rad = map(radians, [lat1, lng1, lat2, lng2])
+    d_lat = lat2_rad - lat1_rad
+    d_lng = lng2_rad - lng1_rad
+    a = sin(d_lat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(d_lng / 2) ** 2
+    c = 2 * asin(min(1, sqrt(a)))
+    return 6371.0 * c
+
+
+def _serialize_user(user, request):
+    if not user:
+        return None
+
+    profile = getattr(user, "profile", None)
+    avatar = resolve_media_url(profile.avatar, request) if profile and profile.avatar else None
+    return {
+        "id": user.id,
+        "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "avatar": avatar,
+    }
+
+
+def _serialize_service(service, request):
+    if not service:
+        return None
+
+    return {
+        "id": service.id,
+        "title": service.title,
+        "description": service.description,
+        "category": service.category,
+        "visibility": service.visibility,
+        "base_price": str(service.base_price) if service.base_price is not None else None,
+        "portfolio_image": (
+            resolve_media_url(service.portfolio_image, request)
+            if service.portfolio_image
+            else None
+        ),
+        "location_city": service.location_city,
+        "is_active": service.is_active,
+    }
+
+
+class BaseFeedView(APIView):
+    """Base feed endpoint with nested event/need/application/vendor metadata."""
+
+    permission_classes = [AllowAny]
+
+    SORT_POPULARITY = "popularity"
+    SORT_DISTANCE = "distance"
+    SORT_CREATED = "created"
+    SORT_START_TIME = "start_time"
+    ALLOWED_SORTS = {SORT_POPULARITY, SORT_DISTANCE, SORT_CREATED, SORT_START_TIME}
+
+    def _parse_datetime_param(self, raw_value):
+        if not raw_value:
+            return None
+        parsed = parse_datetime(raw_value)
+        if parsed is None:
+            return None
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed)
+        return parsed
+
+    def _apply_filters(self, events, request):
+        # Online-only filter
+        online_only = request.query_params.get("online") == "true"
+        if online_only:
+            events = events.filter(
+                Q(location_address__iexact="online")
+                | Q(location_address__iexact="online event")
+            )
+
+        # Status filter supports single value or comma-separated values
+        status = request.query_params.get("status", "").strip()
+        if status:
+            statuses = [value.strip() for value in status.split(",") if value.strip()]
+            if statuses:
+                events = events.filter(status__in=statuses)
+
+        # Start time range filter
+        start_at = self._parse_datetime_param(request.query_params.get("start_time_gte"))
+        end_at = self._parse_datetime_param(request.query_params.get("start_time_lte"))
+        if start_at is not None:
+            events = events.filter(start_time__gte=start_at)
+        if end_at is not None:
+            events = events.filter(start_time__lte=end_at)
+
+        # Category filter supports both category and categories (csv)
+        category_single = request.query_params.get("category", "").strip()
+        categories_csv = request.query_params.get("categories", "").strip()
+        category_slugs = []
+        if category_single:
+            category_slugs.append(category_single)
+        if categories_csv:
+            category_slugs.extend(
+                [value.strip() for value in categories_csv.split(",") if value.strip()]
+            )
+        if category_slugs:
+            events = events.filter(category__slug__in=category_slugs)
+
+        # Only free events (min ticket price == 0)
+        free_only = request.query_params.get("free_only") == "true"
+        if free_only:
+            events = events.filter(
+                Q(ticket_tiers__price=0)
+                | Q(ticket_tiers__isnull=True, ticket_price_standard=0)
+                | Q(ticket_tiers__isnull=True, ticket_price_standard__isnull=True)
+            )
+
+        # Only events with at least one need
+        has_needs = request.query_params.get("has_needs") == "true"
+        if has_needs:
+            events = events.filter(needs__isnull=False)
+
+        return events
+
+    def _serialize_need(self, need, request):
+        user = request.user
+        applications_payload = []
+        i_have_applied = False
+
+        for application in need.applications.all():
+            app_user = _serialize_user(application.vendor, request)
+            app_service = _serialize_service(application.service, request)
+            is_mine = bool(user.is_authenticated and application.vendor_id == user.id)
+            i_have_applied = i_have_applied or is_mine
+
+            applications_payload.append(
+                {
+                    "id": application.id,
+                    "vendor": app_user,
+                    "service": app_service,
+                    "message": application.message,
+                    "proposed_price": (
+                        str(application.proposed_price)
+                        if application.proposed_price is not None
+                        else None
+                    ),
+                    "status": application.status,
+                    "created_at": application.created_at,
+                    "i_have_applied": is_mine,
+                }
+            )
+
+        accepted_application = next(
+            (
+                app
+                for app in need.applications.all()
+                if app.status == "accepted"
+                and need.assigned_vendor_id
+                and app.vendor_id == need.assigned_vendor_id
+            ),
+            None,
+        )
+
+        assigned_vendor_payload = None
+        if need.assigned_vendor:
+            assigned_vendor_payload = {
+                "user": _serialize_user(need.assigned_vendor, request),
+                "service": _serialize_service(
+                    accepted_application.service if accepted_application else None,
+                    request,
+                ),
+                "i_am_assigned_vendor": bool(
+                    user.is_authenticated and need.assigned_vendor_id == user.id
+                ),
+            }
+
+        return {
+            "id": need.id,
+            "title": need.title,
+            "description": need.description,
+            "category": need.category,
+            "criticality": need.criticality,
+            "budget_min": str(need.budget_min) if need.budget_min is not None else None,
+            "budget_max": str(need.budget_max) if need.budget_max is not None else None,
+            "status": need.status,
+            "application_count": need.application_count,
+            "applications": applications_payload,
+            "i_have_applied": i_have_applied,
+            "assigned_vendor": assigned_vendor_payload,
+            "created_at": need.created_at,
+        }
+
+    def _serialize_event(self, event, request, query_lat, query_lng):
+        host_payload = _serialize_user(event.host, request)
+        user = request.user
+
+        ticket_tier_prices = [
+            float(tier.price) for tier in event.ticket_tiers.all() if tier.price is not None
+        ]
+        if ticket_tier_prices:
+            min_ticket_price = min(ticket_tier_prices)
+        elif event.ticket_price_standard is None:
+            min_ticket_price = 0.0
+        else:
+            min_ticket_price = float(event.ticket_price_standard)
+
+        latitude = _safe_float(event.latitude)
+        longitude = _safe_float(event.longitude)
+        if query_lat is not None and query_lng is not None and latitude is not None and longitude is not None:
+            distance_km = _haversine_distance_km(query_lat, query_lng, latitude, longitude)
+        else:
+            distance_km = None
+
+        needs_payload = [self._serialize_need(need, request) for need in event.needs.all()]
+
+        saved_count = int(event.interest_count or 0)
+        tickets_sold_count = int(getattr(event, "sold_ticket_count", 0) or 0)
+        highlights_count = int(getattr(event, "highlight_count", 0) or 0)
+        review_count = int(getattr(event, "review_count", 0) or 0)
+        popularity_score = (
+            saved_count
+            + (tickets_sold_count * 3)
+            + (highlights_count * 2)
+            + (review_count * 2)
+        )
+
+        i_have_ticket = False
+        i_have_saved = False
+        i_am_host = False
+        if user.is_authenticated:
+            i_have_ticket = event.tickets.filter(
+                goer=user,
+                status__in=["active", "used"],
+            ).exists()
+            i_have_saved = event.interests.filter(user=user).exists()
+            i_am_host = event.host_id == user.id
+
+        event_payload = {
+            "id": event.id,
+            "title": event.title,
+            "slug": event.slug,
+            "description": event.description,
+            "status": event.status,
+            "lifecycle_state": event.lifecycle_state,
+            "category": {
+                "id": event.category.id,
+                "name": event.category.name,
+                "slug": event.category.slug,
+                "icon": event.category.icon,
+            }
+            if event.category
+            else None,
+            "location_name": event.location_name,
+            "location_address": event.location_address,
+            "latitude": latitude,
+            "longitude": longitude,
+            "start_time": event.start_time,
+            "end_time": event.end_time,
+            "created_at": event.created_at,
+            "ticket_price_standard": (
+                str(event.ticket_price_standard)
+                if event.ticket_price_standard is not None
+                else None
+            ),
+            "ticket_price_flexible": (
+                str(event.ticket_price_flexible)
+                if event.ticket_price_flexible is not None
+                else None
+            ),
+            "cover_image": resolve_media_url(event.cover_image, request)
+            if event.cover_image
+            else None,
+            "capacity": event.capacity,
+            "interest_count": saved_count,
+            "ticket_count": event.ticket_count,
+            "host": host_payload,
+        }
+
+        return {
+            "event": event_payload,
+            "needs": needs_payload,
+            "host": host_payload,
+            "event_popularity_score": popularity_score,
+            "tickets_sold_count": tickets_sold_count,
+            "saved_count": saved_count,
+            "highlights_count": highlights_count,
+            "review_count": review_count,
+            "min_ticket_price": min_ticket_price,
+            "i_am_host": i_am_host,
+            "i_have_ticket": i_have_ticket,
+            "i_have_saved": i_have_saved,
+            "distance_km": distance_km,
+        }
+
+    def get(self, request):
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
+        page = max(page, 1)
+        page_size = max(1, min(page_size, 100))
+
+        sort = request.query_params.get("sort", self.SORT_POPULARITY)
+        if sort not in self.ALLOWED_SORTS:
+            sort = self.SORT_POPULARITY
+
+        query_lat = _safe_float(request.query_params.get("lat"))
+        query_lng = _safe_float(request.query_params.get("lng"))
+
+        events = (
+            Event.objects.select_related("host", "host__profile", "category")
+            .prefetch_related(
+                "ticket_tiers",
+                "tickets",
+                "interests",
+                "needs",
+                "needs__assigned_vendor",
+                "needs__assigned_vendor__profile",
+                "needs__applications",
+                "needs__applications__vendor",
+                "needs__applications__vendor__profile",
+                "needs__applications__service",
+            )
+            .filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES)
+            .annotate(
+                sold_ticket_count=Count(
+                    "tickets",
+                    filter=Q(tickets__status__in=["active", "used"]),
+                    distinct=True,
+                ),
+                highlight_count=Count(
+                    "highlights",
+                    filter=Q(highlights__moderation_status="approved"),
+                    distinct=True,
+                ),
+                review_count=Count(
+                    "reviews",
+                    filter=Q(reviews__is_public=True),
+                    distinct=True,
+                ),
+                min_tier_price=Min("ticket_tiers__price"),
+            )
+            .distinct()
+        )
+
+        events = self._apply_filters(events, request)
+
+        if sort == self.SORT_CREATED:
+            events = events.order_by("-created_at", "-id")
+            total_count = events.count()
+            start = (page - 1) * page_size
+            paged_events = list(events[start : start + page_size])
+        elif sort == self.SORT_START_TIME:
+            events = events.order_by("start_time", "-id")
+            total_count = events.count()
+            start = (page - 1) * page_size
+            paged_events = list(events[start : start + page_size])
+        elif sort == self.SORT_DISTANCE:
+            # Distance sort requires caller coordinates; fallback to popularity if missing.
+            if query_lat is None or query_lng is None:
+                sort = self.SORT_POPULARITY
+            else:
+                all_events = list(events)
+                payload_rows = [
+                    self._serialize_event(event, request, query_lat, query_lng)
+                    for event in all_events
+                ]
+                payload_rows.sort(
+                    key=lambda row: (
+                        row["distance_km"] is None,
+                        row["distance_km"] if row["distance_km"] is not None else float("inf"),
+                        -row["event_popularity_score"],
+                    )
+                )
+                total_count = len(payload_rows)
+                start = (page - 1) * page_size
+                data = payload_rows[start : start + page_size]
+                return success_response(
+                    data=data,
+                    meta={"page": page, "page_size": page_size, "total_count": total_count},
+                )
+
+        if sort == self.SORT_POPULARITY:
+            events = events.order_by(
+                "-interest_count",
+                "-sold_ticket_count",
+                "-highlight_count",
+                "-review_count",
+                "-created_at",
+            )
+            total_count = events.count()
+            start = (page - 1) * page_size
+            paged_events = list(events[start : start + page_size])
+
+        data = [
+            self._serialize_event(event, request, query_lat, query_lng)
+            for event in paged_events
+        ]
+        return success_response(
+            data=data,
+            meta={"page": page, "page_size": page_size, "total_count": total_count},
+        )
 
 
 class FeedView(APIView):

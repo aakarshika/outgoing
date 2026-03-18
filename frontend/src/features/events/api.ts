@@ -4,6 +4,8 @@ import client from '@/api/client';
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 import type {
   ApiResponse,
+  BaseFeedEventItem,
+  BaseFeedParams,
   EventAttendee,
   EventCategory,
   EventDetail,
@@ -63,6 +65,18 @@ export async function fetchFeed(params: {
     lifecycle_states: params.lifecycle_states?.join(','),
   };
   const { data } = await client.get<ApiResponse<EventListItem[]>>('/feed/', {
+    params: normalizedParams,
+  });
+  return data;
+}
+
+export async function fetchBaseFeed(params: BaseFeedParams = {}) {
+  const normalizedParams = {
+    ...params,
+    status: Array.isArray(params.status) ? params.status.join(',') : params.status,
+    categories: params.categories?.join(','),
+  };
+  const { data } = await client.get<ApiResponse<BaseFeedEventItem[]>>('/feed/base/', {
     params: normalizedParams,
   });
   return data;

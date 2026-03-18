@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Media } from '@/components/ui/media';
 import { useAuth } from '@/features/auth/hooks';
 
-import { CategoricalBackground, CATEGORY_THEMES } from './CategoricalBackground';
+import { CategoricalBackground, getCategoryTheme } from './CategoricalBackground';
 import { useToggleInterest } from './hooks';
 
 interface EventListItem {
@@ -15,7 +15,7 @@ interface EventListItem {
   cover_image: string | null;
   start_time: string;
   location_name: string;
-  category?: { name: string; icon: string };
+  category?: { name: string; icon: string; slug?: string };
   ticket_price_standard: string | null;
   ticket_price_flexible: string | null;
   lifecycle_state: string;
@@ -65,11 +65,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
     });
   };
 
-  const theme = CATEGORY_THEMES[
-    event.category?.name?.toLowerCase().replace(/\s+/g, '-') || ''
-  ] || {
-    tape: 'rgba(59, 130, 246, 0.4)',
-  };
+  const theme = getCategoryTheme(event.category);
   const tapeColor = theme.tape;
 
   const date = new Date(event.start_time).toLocaleDateString('en-US', {

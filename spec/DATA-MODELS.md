@@ -108,17 +108,17 @@ Template-level recurring container. Holds recurring identity and defaults, not t
 | Name | Slug | Icon (Lucide) |
 | :--- | :--- | :--- |
 | Music | `music` | `music` |
-| Food & Drink | `food-drink` | `utensils` |
+| Food & Drink | `food` | `utensils` |
 | Nightlife | `nightlife` | `moon` |
-| Sports & Fitness | `sports-fitness` | `dumbbell` |
-| Arts & Culture | `arts-culture` | `palette` |
-| Tech & Innovation | `tech-innovation` | `cpu` |
-| Workshops & Classes | `workshops-classes` | `book-open` |
-| Outdoors & Adventure | `outdoors-adventure` | `mountain` |
+| Sports & Fitness | `sports` | `dumbbell` |
+| Arts & Culture | `arts` | `palette` |
+| Tech & Innovation | `tech` | `cpu` |
+| Workshops & Classes | `workshops` | `book-open` |
+| Outdoors & Adventure | `outdoors` | `mountain` |
 | Comedy | `comedy` | `laugh` |
-| Networking & Social | `networking-social` | `users` |
-| Festivals | `festivals` | `party-popper` |
-| Community | `community` | `heart-handshake` |
+| Networking & Social | `networking` | `users` |
+| Festivals | `festivals` | `party` |
+| Community | `community` | `heart` |
 
 ### EventNeed (`apps.needs`)
 

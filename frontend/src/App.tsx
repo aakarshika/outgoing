@@ -46,6 +46,7 @@ function AppContent() {
   const { isAuthenticated } = useAuth();
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
+  const isEventDetailRoute = location.pathname.startsWith('/events');
   const isSearchRoute = location.pathname.startsWith('/search');
   const isChatListRoute =
     location.pathname.startsWith('/chats');
@@ -56,20 +57,20 @@ function AppContent() {
   const isSignedOutRoot = !isAuthenticated;
 
   return (
-    <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
+    <div className="relative flex min-h-screen flex-col pb-40 text-foreground transition-colors duration-300">
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && (
+      {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && !isEventDetailRoute && (
 
           <SimpleNavbar />
       )}
       
       <Toaster />
-      <main className="flex-1 bg-transparent">
+      <main className="flex-1 bg-transparent pb-32">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      {!isChatThreadRoute && <AppBottomNav />}
+      {!isChatThreadRoute && !isEventDetailRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />

@@ -10,8 +10,8 @@ const getStatusStyles = (status: EventLifecycleState | string) => {
   switch (status) {
     case 'live':
       return {
-        bg: 'rgba(232, 245, 233, 0.8)',
-        color: '#2E7D32',
+        bg: 'rgba(182, 0, 0, 0.8)',
+        color: '#ff0000',
         label: 'Live',
       };
     case 'event_ready':
@@ -19,12 +19,6 @@ const getStatusStyles = (status: EventLifecycleState | string) => {
         bg: 'rgba(227, 242, 253, 0.8)',
         color: '#1976D2',
         label: 'Ready',
-      };
-    case 'at_risk':
-      return {
-        bg: 'rgba(255, 243, 224, 0.8)',
-        color: '#EF6C00',
-        label: 'At Risk',
       };
     case 'cancelled':
       return {

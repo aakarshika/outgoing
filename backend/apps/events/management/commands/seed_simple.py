@@ -1,9 +1,13 @@
 import json
 import random
+import mimetypes
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
 from django.db import transaction, connection
 
 # We explicitly import the models after Django has booted
@@ -36,8 +40,34 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 HERE = Path(__file__).resolve().parent
+HELPERS_DIR = HERE / "seed-helper-data"
+EVENT_CATEGORIES_PATH = HELPERS_DIR / "event_categories.json"
 LIVE_EVENT_RATIO = 0.2
 LIVE_EVENT_USED_TICKET_RATIO = 0.9
+
+
+def _filename_for_image_url(url: str, fallback_stem: str):
+    parsed = urllib.parse.urlparse(url)
+    ext = Path(parsed.path).suffix
+    if not ext:
+        guess = mimetypes.guess_extension("image/jpeg") or ".jpg"
+        ext = guess
+    # normalize uncommon extensions
+    if ext.lower() == ".jpe":
+        ext = ".jpg"
+    return f"{fallback_stem}{ext}"
+
+
+def _download_image_bytes(url: str):
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "outgoing-seeder/1.0", "Accept": "image/*,*/*;q=0.8"},
+        method="GET",
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        content_type = resp.headers.get("Content-Type") or ""
+        data = resp.read()
+    return data, content_type
 
 
 def normalize_need_status(raw_status):
@@ -69,6 +99,22 @@ def random_event_window_in_coming_month(rng, now):
     end_time = start_time + timedelta(seconds=duration_seconds)
     return start_time, end_time
 
+
+def _load_event_categories_by_slug():
+    try:
+        with open(EVENT_CATEGORIES_PATH, "r", encoding="utf-8") as f:
+            cats = json.load(f) or []
+    except Exception:
+        return {}
+    out = {}
+    for c in cats:
+        slug = (c or {}).get("slug")
+        if not slug:
+            continue
+        out[slug] = {"name": c.get("name") or slug, "icon": c.get("icon") or "calendar"}
+    return out
+
+
 class Command(BaseCommand):
     help = "Seeds database using seed_simple_generated.json."
 
@@ -84,6 +130,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Do not wipe existing data before seeding.",
         )
+        parser.add_argument("--debug", action="store_true", help="Enable verbose debug logging.")
 
     def wipe_data(self):
         self.stdout.write("Wiping existing data...")
@@ -123,6 +170,9 @@ class Command(BaseCommand):
         input_path = Path(options["input"]).resolve()
         rng = random.Random()
         now = datetime.now(timezone.utc)
+        debug = bool(options.get("debug"))
+        if debug:
+            self.stdout.write(f"[seed_simple] input={input_path} no_wipe={bool(options.get('no_wipe'))}")
         
         if not input_path.exists():
             self.stderr.write(self.style.ERROR(f"Input file {input_path} does not exist."))
@@ -130,6 +180,8 @@ class Command(BaseCommand):
 
         with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
+
+        category_defaults_by_slug = _load_event_categories_by_slug()
 
         if not options.get("no_wipe"):
             self.wipe_data()
@@ -152,6 +204,7 @@ class Command(BaseCommand):
         event_map = {}
         tier_map = {}
         live_event_ids = set()
+        cover_bytes_cache = {}
 
         with transaction.atomic():
             self.stdout.write("Seeding Users...")
@@ -198,13 +251,54 @@ class Command(BaseCommand):
                     event_status = "published" if is_live_event else e["status"]
                     event_lifecycle_state = "live" if is_live_event else e["lifecycle_state"]
                     # Depending on exact mandatory fields, add standard defaults for others
+                    cat_defaults = category_defaults_by_slug.get(e["category"]) or {}
                     category_obj, _ = EventCategory.objects.get_or_create(
                         slug=e["category"],
                         defaults={
-                            "name": e["category"].replace('-', ' ').title(),
-                            "icon": "calendar",
+                            "name": cat_defaults.get("name") or e["category"].replace('-', ' ').title(),
+                            "icon": cat_defaults.get("icon") or "calendar",
                         }
                     )
+
+                    cover_image_url = e.get("cover_image")
+                    cover_image_file = None
+                    if isinstance(cover_image_url, str) and cover_image_url.startswith(("http://", "https://")):
+                        try:
+                            if debug:
+                                self.stdout.write(
+                                    f"[seed_simple] cover_download event_key={e.get('_key')} url={cover_image_url}"
+                                )
+                            if cover_image_url in cover_bytes_cache:
+                                img_bytes, _content_type = cover_bytes_cache[cover_image_url]
+                            else:
+                                img_bytes, content_type = _download_image_bytes(cover_image_url)
+                                cover_bytes_cache[cover_image_url] = (img_bytes, content_type)
+
+                            if img_bytes:
+                                filename = _filename_for_image_url(
+                                    cover_image_url,
+                                    fallback_stem=f"seed_{e.get('_key', 'event')}_cover",
+                                )
+                                cover_image_file = ContentFile(img_bytes, name=filename)
+                                if debug:
+                                    self.stdout.write(
+                                        f"[seed_simple] cover_download_ok bytes={len(img_bytes)} content_type={content_type!r} filename={filename}"
+                                    )
+                        except Exception:
+                            if debug:
+                                import traceback
+                                self.stdout.write(
+                                    "[seed_simple] cover_download_fail event_key="
+                                    + str(e.get("_key"))
+                                    + "\n"
+                                    + traceback.format_exc()
+                                )
+                            cover_image_file = None
+                    elif debug and cover_image_url:
+                        self.stdout.write(
+                            f"[seed_simple] cover_skip_invalid_url event_key={e.get('_key')} cover_image={cover_image_url!r}"
+                        )
+
                     event, created = Event.objects.get_or_create(
                         host=host,
                         title=e["title"],
@@ -215,7 +309,7 @@ class Command(BaseCommand):
                             "location_address": e.get("location_address", ""),
                             "latitude": e.get("latitude"),
                             "longitude": e.get("longitude"),
-                            "cover_image": e.get("cover_image"),
+                            "cover_image": cover_image_file,
                             "start_time": start_time,
                             "end_time": end_time,
                             "status": event_status,
@@ -232,9 +326,15 @@ class Command(BaseCommand):
                         if e.get("longitude") is not None and event.longitude != e.get("longitude"):
                             event.longitude = e.get("longitude")
                             fields_to_update.append("longitude")
-                        if e.get("cover_image") and event.cover_image.name != e.get("cover_image"):
-                            event.cover_image = e.get("cover_image")
+                        # If we were able to download a cover image and the event doesn't already have one,
+                        # populate it. (Avoid overwriting user-provided images.)
+                        if cover_image_file and not event.cover_image:
+                            event.cover_image = cover_image_file
                             fields_to_update.append("cover_image")
+                            if debug:
+                                self.stdout.write(
+                                    f"[seed_simple] cover_saved_existing event_id={event.id} name={event.cover_image.name}"
+                                )
                         if event.start_time != start_time:
                             event.start_time = start_time
                             fields_to_update.append("start_time")
@@ -252,6 +352,10 @@ class Command(BaseCommand):
                     if is_live_event:
                         live_event_ids.add(event.id)
                     event_map[e["_key"]] = event
+                    if created and debug:
+                        self.stdout.write(
+                            f"[seed_simple] event_created id={event.id} key={e.get('_key')} cover_set={bool(event.cover_image)}"
+                        )
 
             self.stdout.write("Seeding Event Tiers...")
             for t in tiers_data:
