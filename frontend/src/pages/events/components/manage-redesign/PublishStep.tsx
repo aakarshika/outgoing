@@ -15,7 +15,7 @@ export function PublishStep({ event, readonly }: PublishStepProps) {
   const transitionLifecycle = useTransitionEventLifecycle();
   const navigate = useNavigate();
   const navigateToNextStep = () => {
-    navigate(`/events/${event.id}/host-event-management/services-prep`);
+    navigate(`/events/${event.id}/manage`);
   };
   const missingBasicInfoFields = [
     { key: 'title', label: 'Event Title', missing: !event.title?.trim() },

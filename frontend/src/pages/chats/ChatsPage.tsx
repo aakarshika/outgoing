@@ -720,6 +720,7 @@ export default function ChatsPage() {
       sx={{
         minHeight: 'calc(100vh - 4rem)',
         pb: { xs: 12, md: 4 },
+        pt: 8,
         background: '#fff8f1',
       }}
     >

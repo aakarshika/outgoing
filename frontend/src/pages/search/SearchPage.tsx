@@ -38,6 +38,16 @@ import {
   updateListParam,
 } from './searchUtils';
 
+const SEARCH_THEME = {
+  bgBase: '#F9F4EA',
+  bgPanel: '#FFFCF7',
+  bgMuted: '#F7EEDF',
+  border: 'rgba(120,94,60,0.2)',
+  borderSoft: 'rgba(120,94,60,0.14)',
+  text: '#3F3123',
+  textMuted: '#7A6A55',
+  accent: '#D85A30',
+};
 export default function SearchPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -264,11 +274,11 @@ export default function SearchPage() {
         sx={{
           position: 'sticky',
           top: 0,
+          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
           zIndex: 40,
         }}
       >
         <SimpleNavbar onCreateService={openQuickCreateService} />
-      </Box>
       <SearchToolbar
         tab={tab}
         selectedDate={selectedDate}
@@ -323,12 +333,12 @@ export default function SearchPage() {
             replace: true,
           })
         }
-        stickyTop={74}
       />
+      </Box>
 
       <Container
         maxWidth={false}
-        sx={{ maxWidth: 960, mx: 'auto', px: { xs: 2, sm: 3 }, pt: 3 }}
+        sx={{ maxWidth: 960, mx: 'auto' }}
       >
         <SearchResults
           tab={tab}

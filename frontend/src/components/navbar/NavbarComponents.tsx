@@ -197,7 +197,7 @@ export const ManageEventButton = ({
 }) => {
   const { location } = useNavbarContext();
   const isActive =
-    (location.pathname.includes('host-event-management') &&
+    (location.pathname.includes('manage') &&
       type === 'manage-event-ghost') ||
     (location.pathname.includes('service-event-management') &&
       type === 'manage-service-ghost');

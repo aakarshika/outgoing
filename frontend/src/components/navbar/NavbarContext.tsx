@@ -30,7 +30,7 @@ import { useNearYou } from '@/utils/useNearYou';
 export function isNativeSidebarPath(path: string): boolean {
   const isDashboard = path === '/dashboard' || path.startsWith('/dashboard/');
   const isCreateService = path === '/vendors/create';
-  const isManageEvent = path.includes('/host-event-management');
+  const isManageEvent = path.includes('/manage');
   const isManageService = path.includes('/service-event-management');
   return isDashboard || isCreateService || isManageEvent || isManageService;
 }
@@ -163,7 +163,7 @@ export function useNavbarData() {
 
   const eventManagementMatch =
     matchPath(
-      { path: '/events/:id/host-event-management/*', end: false },
+      { path: '/events/:id/manage/*', end: false },
       location.pathname,
     ) ??
     matchPath(

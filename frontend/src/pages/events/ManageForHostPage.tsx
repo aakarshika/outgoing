@@ -115,9 +115,7 @@ export default function ManageForHostPage() {
   const queryClient = useQueryClient();
   const hostStepMatch = useMatch('/events/:id/host-event-management/:step');
   const activeSlug = hostStepMatch?.params.step;
-  const hostBasePath = id
-    ? `/events/${id}/host-event-management`
-    : '/events/host-event-management';
+  const hostBasePath = `/events/${id}/manage`;
 
   // ── Remote data ───────────────────────────────────────────────────────────
   const {

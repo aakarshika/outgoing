@@ -461,7 +461,7 @@ export function ManagingEventCard({
             {item.kind === 'hosting' ? (
               <Box
                 component={Link}
-                to={`/events/${event.id}/host-event-management`}
+                to={`/events/${event.id}/manage`}
                 onClick={(event) => event.stopPropagation()}
                 sx={{
                   px: 1.15,
@@ -522,10 +522,10 @@ export function CompactManagingEventCard({
   const date = new Date(item.eventTime);
   const categoryTheme = getCategoryTheme(item.event?.category ?? undefined);
   const checklistTone = getChecklistTone(nextChecklistItem?.status);
-  const eventId = item.event?.id;
+  const eventId = item.event?.id ?? 0;
   const manageRoute =
     item.kind === 'hosting'
-      ? `/events/${eventId}/host-event-management`
+      ? `/events/${eventId}/manage`
       : `/events/${eventId}/service-event-management`;
   const viewRoute = `/events-new/${eventId}`;
   const sharedSx = {

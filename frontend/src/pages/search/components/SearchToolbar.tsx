@@ -339,13 +339,8 @@ export function SearchToolbar({
     <>
       <Box
         sx={{
-          position: 'sticky',
           maxWidth: 1240,
           justifyContent: 'center',
-
-          top: stickyTop,
-          zIndex: 20,
-          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
           borderBottom: `1px solid ${SEARCH_THEME.borderSoft}`,
         }}
       >

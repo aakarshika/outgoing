@@ -78,7 +78,7 @@ export function SeriesTimeline({ occurrences, currentEventId }: SeriesTimelinePr
             key={occ.id}
             onClick={() =>
               !isCurrent &&
-              navigate(`/events/${occ.id}/host-event-management/${targetSlug}`)
+              navigate(`/events/${occ.id}/manage/`)
             }
             sx={{
               cursor: isCurrent ? 'default' : 'pointer',
