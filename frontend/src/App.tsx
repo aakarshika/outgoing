@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { scan } from 'react-scan';
 
@@ -25,6 +24,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
+import { Box } from '@mui/material';
 
 function GlobalChatDrawer() {
   const { isOpen, closeChat, params } = useChatDrawer();
@@ -47,18 +47,32 @@ function AppContent() {
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
+  const isChatListRoute =
+    location.pathname.startsWith('/chats');
+  const isChatThreadRoute =
+    location.pathname.startsWith('/chats/group/') ||
+    location.pathname.startsWith('/chats/private/') ||
+    location.pathname.startsWith('/chats/direct/');
   const isSignedOutRoot = !isAuthenticated;
 
   return (
     <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {!isSearchRoute && <SimpleNavbar />}
+      {/* {!isSearchRoute && <SimpleNavbar />} */}
+      {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && (
+        <Box className="relative">
+        <Box className="absolute top-0 right-0 z-50">
+          <SimpleNavbar />
+        </Box>
+        </Box>
+      )}
+      
       <Toaster />
       <main className="flex-1 bg-transparent">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      <AppBottomNav />
+      {!isChatThreadRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />
@@ -81,9 +95,6 @@ function App() {
               </ChatDrawerProvider>
             </BackgroundProvider>
           </BrowserRouter>
-          {process.env.NODE_ENV === 'development' && (
-            <ReactQueryDevtools initialIsOpen={false} />
-          )}
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

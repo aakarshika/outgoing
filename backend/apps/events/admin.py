@@ -6,16 +6,24 @@ from .models import (
     Event,
     EventCategory,
     EventHighlight,
+    EventHighlightComment,
+    EventHighlightLike,
     EventInterest,
     EventLifecycleTransition,
     EventMedia,
+    EventPrivateConversation,
+    EventPrivateMessage,
     EventReview,
+    EventReviewComment,
+    EventReviewLike,
     EventReviewMedia,
     EventSeries,
     EventSeriesNeedTemplate,
+    EventTicketTier,
     EventVendorReview,
     EventView,
     Friendship,
+    EventHostVendorMessage,
 )
 
 
@@ -154,3 +162,71 @@ class FriendshipAdmin(admin.ModelAdmin):
         "request_sender__username",
         "met_at_event__title",
     ]
+
+
+@admin.register(EventTicketTier)
+class EventTicketTierAdmin(admin.ModelAdmin):
+    """Admin for EventTicketTier."""
+
+    list_display = ["event", "name", "price", "capacity", "is_refundable"]
+    search_fields = ["event__title", "name"]
+
+
+@admin.register(EventHighlightLike)
+class EventHighlightLikeAdmin(admin.ModelAdmin):
+    """Admin for EventHighlightLike."""
+
+    list_display = ["highlight", "user", "created_at"]
+    search_fields = ["highlight__id", "user__username"]
+
+
+@admin.register(EventHighlightComment)
+class EventHighlightCommentAdmin(admin.ModelAdmin):
+    """Admin for EventHighlightComment."""
+
+    list_display = ["highlight", "author", "parent", "created_at"]
+    list_filter = ["created_at"]
+    search_fields = ["highlight__id", "author__username", "content"]
+
+
+@admin.register(EventReviewLike)
+class EventReviewLikeAdmin(admin.ModelAdmin):
+    """Admin for EventReviewLike."""
+
+    list_display = ["review", "user", "created_at"]
+    search_fields = ["review__id", "user__username"]
+
+
+@admin.register(EventReviewComment)
+class EventReviewCommentAdmin(admin.ModelAdmin):
+    """Admin for EventReviewComment."""
+
+    list_display = ["review", "author", "parent", "created_at"]
+    list_filter = ["created_at"]
+    search_fields = ["review__id", "author__username", "content"]
+
+
+@admin.register(EventHostVendorMessage)
+class EventHostVendorMessageAdmin(admin.ModelAdmin):
+    """Admin for EventHostVendorMessage."""
+
+    list_display = ["event", "sender", "created_at"]
+    search_fields = ["event__title", "sender__username", "text"]
+    list_filter = ["created_at"]
+
+
+@admin.register(EventPrivateConversation)
+class EventPrivateConversationAdmin(admin.ModelAdmin):
+    """Admin for EventPrivateConversation."""
+
+    list_display = ["event", "participant1", "participant2", "created_at"]
+    search_fields = ["event__title", "participant1__username", "participant2__username"]
+
+
+@admin.register(EventPrivateMessage)
+class EventPrivateMessageAdmin(admin.ModelAdmin):
+    """Admin for EventPrivateMessage."""
+
+    list_display = ["conversation", "sender", "created_at", "is_read"]
+    list_filter = ["is_read", "created_at"]
+    search_fields = ["conversation__event__title", "sender__username", "content"]

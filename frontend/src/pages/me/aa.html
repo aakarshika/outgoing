@@ -2,8 +2,8 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  .lp{font-family:'DM Sans',sans-serif;background:var(--color-background-primary);}
-  .lp-nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+  .lp{font-family:'DM Sans',sans-serif;background:#F9F9F9;}
+  .lp-nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:0.5px solid var(--color-border-tertiary);background:#F9F9F9;}
   .lp-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#D85A30;letter-spacing:-0.5px;}
   .lp-nav-links{display:flex;gap:24px;font-size:14px;color:var(--color-text-secondary);}
   .lp-nav-links span{cursor:pointer;}
@@ -29,11 +29,11 @@
   .section-sub{font-size:15px;color:var(--color-text-secondary);margin-bottom:1.5rem;line-height:1.6;}
 
   .cat-scroll{display:flex;gap:10px;flex-wrap:wrap;}
-  .cat-chip{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);font-size:14px;font-weight:500;color:var(--color-text-primary);cursor:pointer;}
+  .cat-chip{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:0.5px solid var(--color-border-tertiary);background:#F9F9F9;font-size:14px;font-weight:500;color:var(--color-text-primary);cursor:pointer;}
   .cat-chip span{font-size:16px;}
 
   .event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
-  .ev-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;cursor:pointer;}
+  .ev-card{background:#F9F9F9;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;cursor:pointer;}
   .ev-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:32px;}
   .ev-body{padding:10px 12px;}
   .ev-cat{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-secondary);margin-bottom:3px;}
@@ -43,17 +43,17 @@
   .ev-going{font-size:11px;color:#3B6D11;background:#EAF3DE;padding:2px 8px;border-radius:999px;}
 
   .how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
-  .how-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;}
+  .how-card{background:#F9F9F9;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;}
   .how-icon{width:44px;height:44px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
   .how-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--color-text-primary);margin-bottom:6px;}
   .how-desc{font-size:13px;color:var(--color-text-secondary);line-height:1.55;}
 
   .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  .fbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 16px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;}
+  .fbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 16px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:#F9F9F9;color:var(--color-text-primary);cursor:pointer;}
   .fbtn.on{background:#D85A30;border-color:#D85A30;color:#fff;}
 
   .city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
-  .city-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;text-align:center;cursor:pointer;}
+  .city-card{background:#F9F9F9;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;text-align:center;cursor:pointer;}
   .city-flag{font-size:24px;margin-bottom:6px;}
   .city-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--color-text-primary);}
   .city-count{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
@@ -63,7 +63,7 @@
   .lp-cta p{font-size:16px;color:rgba(255,255,255,0.85);margin-bottom:2rem;max-width:480px;margin-left:auto;margin-right:auto;}
   .lp-cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
 
-  .lp-footer{padding:2.5rem 2rem;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+  .lp-footer{padding:2.5rem 2rem;border-top:0.5px solid var(--color-border-tertiary);background:#F9F9F9;}
   .lp-footer-inner{max-width:960px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;}
   .footer-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#D85A30;margin-bottom:8px;}
   .footer-tagline{font-size:13px;color:var(--color-text-secondary);line-height:1.6;}
@@ -123,7 +123,7 @@
   <section class="lp-section">
     <div class="section-label">Near you</div>
     <div class="section-title">Events happening in your city</div>
-    <div class="section-sub">Baltimore · This weekend</div>
+    <div class="section-sub">This weekend</div>
     <div class="event-grid">
       <div class="ev-card">
         <div class="ev-thumb" style="background:#FAECE7;">&#127807;</div>

@@ -167,7 +167,6 @@ export function SearchToolbar({
   selectedCategories,
   selectedRoles,
   categories,
-  radiusMiles,
   onTabChange,
   onToggleWhen,
   onDateChange,
@@ -176,7 +175,6 @@ export function SearchToolbar({
   onToggleRole,
   onClearRoles,
   onClearManualFilters,
-  onClearLocation,
   stickyTop = 0,
 }: {
   tab: SearchTabId;
@@ -186,7 +184,6 @@ export function SearchToolbar({
   selectedCategories: string[];
   selectedRoles: RoleFilterId[];
   categories: EventCategory[];
-  radiusMiles?: string | null;
   onTabChange: (tab: SearchTabId) => void;
   onToggleWhen: (filter: WhenFilterId) => void;
   onDateChange: (value: string) => void;
@@ -195,11 +192,9 @@ export function SearchToolbar({
   onToggleRole: (role: RoleFilterId) => void;
   onClearRoles: () => void;
   onClearManualFilters: () => void;
-  onClearLocation: () => void;
   stickyTop?: number;
 }) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const isNearMeActive = Boolean(radiusMiles);
 
   const contextualPills: ContextualPill[] = (
     tab === 'all'
@@ -231,12 +226,6 @@ export function SearchToolbar({
               label: 'This weekend',
               active: effectiveWhen.includes('this-weekend'),
               onClick: () => onToggleWhen('this-weekend'),
-            },
-            {
-              label: 'Near me (<5km)',
-              active: isNearMeActive,
-              accent: '#1D9E75',
-              onClick: isNearMeActive ? onClearLocation : undefined,
             },
             { label: 'Outdoor only' },
             {
@@ -350,13 +339,8 @@ export function SearchToolbar({
     <>
       <Box
         sx={{
-          position: 'sticky',
           maxWidth: 1240,
           justifyContent: 'center',
-
-          top: stickyTop,
-          zIndex: 20,
-          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
           borderBottom: `1px solid ${SEARCH_THEME.borderSoft}`,
         }}
       >

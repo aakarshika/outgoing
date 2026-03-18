@@ -29,6 +29,7 @@ from apps.events.models import (
     Friendship,
 )
 from apps.tickets.models import Ticket
+from core.utils import resolve_media_url
 
 
 class EventCategorySerializer(serializers.ModelSerializer):
@@ -46,7 +47,19 @@ class EventTicketTierSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventTicketTier
-        fields = ["id", "name", "description", "color", "price", "capacity", "is_refundable", "refund_percentage", "admits", "max_passes_per_ticket", "sold_count"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "color",
+            "price",
+            "capacity",
+            "is_refundable",
+            "refund_percentage",
+            "admits",
+            "max_passes_per_ticket",
+            "sold_count",
+        ]
 
     def get_sold_count(self, obj):
         return obj.tickets.filter(status__in=["active", "used"]).count()
@@ -63,10 +76,7 @@ class EventHostSerializer(serializers.Serializer):
         """Return the host's avatar URL or None."""
         profile = getattr(obj, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -136,13 +146,7 @@ class EventListSerializer(serializers.ModelSerializer):
         """Return the frontend asset path or absolute backend media URL."""
         if not obj.cover_image:
             return None
-        url = obj.cover_image.name
-        if url.startswith('/assets/'):
-            return url
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(obj.cover_image.url)
-        return obj.cover_image.url
+        return resolve_media_url(obj.cover_image, self.context.get("request"))
 
     def get_user_is_interested(self, obj):
         """Check if the current user is interested in this event."""
@@ -166,7 +170,20 @@ class EventListSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             from apps.needs.models import NeedApplication
-            return NeedApplication.objects.filter(vendor=request.user, need__event=obj).exists()
+            from apps.needs.models import EventNeed
+
+            has_accepted_application = NeedApplication.objects.filter(
+                vendor=request.user,
+                need__event=obj,
+                status="accepted",
+            ).exists()
+            if has_accepted_application:
+                return True
+
+            return EventNeed.objects.filter(
+                event=obj,
+                assigned_vendor=request.user,
+            ).exists()
         return False
 
     def get_media(self, obj):
@@ -175,11 +192,15 @@ class EventListSerializer(serializers.ModelSerializer):
             # We use a filter on the related name 'media' across all events in the series
             # But it's more direct to use EventMedia model
             return EventMediaSerializer(
-                EventMedia.objects.filter(event__series_id=obj.series_id).order_by("order", "-created_at"),
+                EventMedia.objects.filter(event__series_id=obj.series_id).order_by(
+                    "order", "-created_at"
+                ),
                 many=True,
-                context=self.context
+                context=self.context,
             ).data
-        return EventMediaSerializer(obj.media.all(), many=True, context=self.context).data
+        return EventMediaSerializer(
+            obj.media.all(), many=True, context=self.context
+        ).data
 
     def get_reviews(self, obj):
         """Return a small subset of public reviews for snippets."""
@@ -289,8 +310,11 @@ class EventDetailSerializer(EventListSerializer):
         """Get the specific tickets the current user has for this event."""
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            tickets = obj.tickets.filter(goer=request.user, status__in=["active", "used", "cancelled"])
+            tickets = obj.tickets.filter(
+                goer=request.user, status__in=["active", "used", "cancelled"]
+            )
             from api.v1.tickets.serializers import TicketSerializer
+
             return TicketSerializer(tickets, many=True, context=self.context).data
         return []
 
@@ -299,7 +323,10 @@ class EventDetailSerializer(EventListSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             from apps.needs.models import NeedApplication
-            applications = NeedApplication.objects.filter(vendor=request.user, need__event=obj)
+
+            applications = NeedApplication.objects.filter(
+                vendor=request.user, need__event=obj
+            )
             return [
                 {
                     "id": app.id,
@@ -307,7 +334,9 @@ class EventDetailSerializer(EventListSerializer):
                     "need_title": app.need.title,
                     "service_id": app.service_id,
                     "status": app.status,
-                    "proposed_price": str(app.proposed_price) if app.proposed_price else None,
+                    "proposed_price": str(app.proposed_price)
+                    if app.proposed_price
+                    else None,
                 }
                 for app in applications
             ]
@@ -356,7 +385,9 @@ class EventDetailSerializer(EventListSerializer):
             highlights = obj.highlights.filter(moderation_status="approved").order_by(
                 "-created_at"
             )
-        return EventHighlightSerializer(highlights, many=True, context=self.context).data
+        return EventHighlightSerializer(
+            highlights, many=True, context=self.context
+        ).data
 
     def get_reviews(self, obj):
         """Return full reviews."""
@@ -365,9 +396,7 @@ class EventDetailSerializer(EventListSerializer):
 
     def get_average_rating(self, obj):
         """Calculate average rating."""
-        reviews = getattr(
-            obj, "prefetched_reviews", obj.reviews.filter(is_public=True)
-        )
+        reviews = getattr(obj, "prefetched_reviews", obj.reviews.filter(is_public=True))
         if not reviews:
             return None
         return sum(r.rating for r in reviews) / len(reviews)
@@ -385,11 +414,7 @@ class EventDetailSerializer(EventListSerializer):
                 profile = getattr(vendor, "profile", None)
                 vendor_avatar = None
                 if profile and profile.avatar:
-                    request = self.context.get("request")
-                    if request:
-                        vendor_avatar = request.build_absolute_uri(profile.avatar.url)
-                    else:
-                        vendor_avatar = profile.avatar.url
+                    vendor_avatar = resolve_media_url(profile.avatar, self.context.get("request"))
 
                 vendors.append(
                     {
@@ -411,12 +436,12 @@ class EventDetailSerializer(EventListSerializer):
         tickets = obj.tickets.select_related("goer", "goer__profile").filter(
             status__in=["active", "used"]
         )
-        
+
         attendees = []
         for t in tickets:
             user = t.goer
             profile = getattr(user, "profile", None)
-            
+
             # Check privacy settings
             is_past = obj.lifecycle_state == "completed"
             is_visible = False
@@ -428,22 +453,22 @@ class EventDetailSerializer(EventListSerializer):
             else:
                 # Default visibility if no profile exists (though it should)
                 is_visible = True
-            
+
             if is_visible:
                 avatar_url = None
                 if profile and profile.avatar:
-                    request = self.context.get("request")
-                    if request:
-                        avatar_url = request.build_absolute_uri(profile.avatar.url)
-                    else:
-                        avatar_url = profile.avatar.url
-                
-                attendees.append({
-                    "username": user.username,
-                    "avatar": avatar_url,
-                    "is_verified": False, # Placeholder for verified tick mark if implemented
-                })
-        
+                    avatar_url = resolve_media_url(profile.avatar, self.context.get("request"))
+
+                attendees.append(
+                    {
+                        "username": user.username,
+                        "name": user.first_name or "",
+                        "avatar": avatar_url,
+                        "is_verified": False,  # Placeholder for verified tick mark if implemented
+                        "bio": profile.bio if profile else None,
+                    }
+                )
+
         return attendees
 
 
@@ -515,6 +540,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
         # Check if data is a QueryDict-like object (common for multipart/form-data)
         if hasattr(data, "getlist") and not isinstance(data, dict):
             import json
+
             data = data.copy()
             for field in ("features", "tags", "ticket_tiers"):
                 val = data.get(field)
@@ -667,6 +693,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
     event_id = serializers.IntegerField(source="event.id", read_only=True)
+    media_file = serializers.SerializerMethodField()
     # Basic event card details for scrapbook components on the frontend
     event = serializers.SerializerMethodField()
 
@@ -699,9 +726,11 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "user_has_liked",
-            "event_id",
             "event",
         ]
+
+    def get_media_file(self, obj):
+        return resolve_media_url(obj.media_file, self.context.get("request"))
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -719,10 +748,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         """Return the author's avatar URL or None."""
         profile = getattr(obj.author, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
     def get_event(self, obj):
@@ -756,7 +782,13 @@ class EventHighlightCommentSerializer(serializers.ModelSerializer):
             "updated_at",
             "replies",
         ]
-        read_only_fields = ["id", "author_username", "author_avatar", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "author_username",
+            "author_avatar",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_author_avatar(self, obj):
         profile = getattr(obj.author, "profile", None)
@@ -795,7 +827,13 @@ class EventReviewCommentSerializer(serializers.ModelSerializer):
             "updated_at",
             "replies",
         ]
-        read_only_fields = ["id", "author_username", "author_avatar", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "author_username",
+            "author_avatar",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_author_avatar(self, obj):
         profile = getattr(obj.author, "profile", None)
@@ -839,9 +877,8 @@ class EventVendorReviewSerializer(serializers.ModelSerializer):
 class EventReviewSerializer(serializers.ModelSerializer):
     """Serializer for event reviews."""
 
-    reviewer_username = serializers.CharField(
-        source="reviewer.username", read_only=True
-    )
+    reviewer_username = serializers.ReadOnlyField(source="reviewer.username")
+    reviewer_name = serializers.SerializerMethodField()
     reviewer_avatar = serializers.SerializerMethodField()
     media = EventReviewMediaSerializer(many=True, read_only=True)
     vendor_reviews = EventVendorReviewSerializer(many=True, read_only=True)
@@ -856,6 +893,7 @@ class EventReviewSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "reviewer_username",
+            "reviewer_name",
             "reviewer_avatar",
             "rating",
             "text",
@@ -867,7 +905,13 @@ class EventReviewSerializer(serializers.ModelSerializer):
             "comments_count",
             "user_has_liked",
         ]
-        read_only_fields = ["id", "reviewer_username", "reviewer_avatar", "created_at"]
+        read_only_fields = [
+            "id",
+            "reviewer_username",
+            "reviewer_name",
+            "reviewer_avatar",
+            "created_at",
+        ]
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -881,13 +925,15 @@ class EventReviewSerializer(serializers.ModelSerializer):
             return obj.likes.filter(user=request.user).exists()
         return False
 
+    def get_reviewer_name(self, obj):
+        """Return the reviewer's full name or username."""
+        return obj.reviewer.get_full_name() or obj.reviewer.username
+
     def get_reviewer_avatar(self, obj):
         """Return the reviewer's avatar URL or None."""
         profile = getattr(obj.reviewer, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -908,7 +954,13 @@ class EventHostVendorMessageSerializer(serializers.ModelSerializer):
             "text",
             "created_at",
         ]
-        read_only_fields = ["id", "sender_username", "sender_avatar", "sender_role", "created_at"]
+        read_only_fields = [
+            "id",
+            "sender_username",
+            "sender_avatar",
+            "sender_role",
+            "created_at",
+        ]
 
     def get_sender_avatar(self, obj):
         profile = getattr(obj.sender, "profile", None)
@@ -961,6 +1013,8 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
     other_user_id = serializers.SerializerMethodField()
     other_username = serializers.SerializerMethodField()
     other_avatar = serializers.SerializerMethodField()
+    latest_message_text = serializers.CharField(read_only=True, allow_null=True)
+    latest_message_sender_username = serializers.CharField(read_only=True, allow_null=True)
 
     class Meta:
         model = EventPrivateConversation
@@ -971,6 +1025,8 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
             "other_user_id",
             "other_username",
             "other_avatar",
+            "latest_message_text",
+            "latest_message_sender_username",
             "updated_at",
         ]
         read_only_fields = fields
@@ -996,10 +1052,7 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
         other_user = self._get_other_user(obj)
         profile = getattr(other_user, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -1009,10 +1062,18 @@ class EventGroupChatListSerializer(serializers.ModelSerializer):
     event_id = serializers.IntegerField(source="id", read_only=True)
     event_title = serializers.CharField(source="title", read_only=True)
     latest_message_at = serializers.DateTimeField(read_only=True)
+    latest_message_text = serializers.CharField(read_only=True, allow_null=True)
+    latest_message_sender_username = serializers.CharField(read_only=True, allow_null=True)
 
     class Meta:
         model = Event
-        fields = ["event_id", "event_title", "latest_message_at"]
+        fields = [
+            "event_id",
+            "event_title",
+            "latest_message_at",
+            "latest_message_text",
+            "latest_message_sender_username",
+        ]
         read_only_fields = fields
 
 
@@ -1077,4 +1138,4 @@ class FriendshipRequestCreateSerializer(serializers.Serializer):
 class FriendshipActionSerializer(serializers.Serializer):
     """Validate supported friendship state transitions."""
 
-    action = serializers.ChoiceField(choices=["accept", "withdraw"])
+    action = serializers.ChoiceField(choices=["accept", "withdraw", "unfriend"])

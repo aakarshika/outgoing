@@ -1,6 +1,8 @@
+import { Box, keyframes, Stack, Typography } from '@mui/material';
+import { ArrowDown, Circle, MessageSquare, Mic, Square } from 'lucide-react';
+
 import { EventListItem } from '@/types/events';
-import { Box, Typography, Stack, keyframes } from '@mui/material';
-import { MessageSquare, ArrowDown, Mic, Circle, Square } from 'lucide-react';
+
 import {
   MainInfoTimeLocationBox,
   OnlineTimeLocationBox,

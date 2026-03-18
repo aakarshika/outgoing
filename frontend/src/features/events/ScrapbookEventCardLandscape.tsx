@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Media } from '@/components/ui/media';
 import { useAuth } from '@/features/auth/hooks';
 import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
+import { EventListItem, TicketInfo } from '@/types/events';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
 import { CategoricalBackground, getCategoryTheme } from './CategoricalBackground';
@@ -19,12 +20,11 @@ import {
   FullHouseBadge,
   getEventCardRoles,
   HostVendorBadge,
-  LiveBadge,
   ImageWatermarkPlaceholder,
+  LiveBadge,
   PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
-import { EventListItem, TicketInfo } from '@/types/events';
 
 /** Landscape list card: full-width row, image left, content right. Use in lists. */
 interface ScrapbookEventCardLandscapeProps {

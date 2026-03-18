@@ -180,7 +180,7 @@ export function HeroSection() {
           )}
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-md">
-            <Link to={`/events/${currentEvent.id}`} className="hover:underline">
+            <Link to={`/events-new/${currentEvent.id}`} className="hover:underline">
               {currentEvent.title}
             </Link>
           </h1>

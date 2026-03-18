@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  MessageSquareIcon,
   Briefcase,
   Calendar,
   CalendarDays,
@@ -9,6 +7,7 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  MessageSquareIcon,
   Pencil,
   Plus,
   Search,
@@ -18,10 +17,12 @@ import {
   User,
   UserPlus,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
+import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import type { EventSearchSuggestion } from '@/types/events';
+
 import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 
@@ -124,7 +125,7 @@ export const dashboardLinks: {
   },
   'account-settings': {
     key: 'account-settings',
-    to: '/profile/settings',
+    to: '/profile/settings-new',
     label: 'Account Settings',
     icon: Settings,
     indent: 2,
@@ -196,7 +197,7 @@ export const ManageEventButton = ({
 }) => {
   const { location } = useNavbarContext();
   const isActive =
-    (location.pathname.includes('host-event-management') &&
+    (location.pathname.includes('manage') &&
       type === 'manage-event-ghost') ||
     (location.pathname.includes('service-event-management') &&
       type === 'manage-service-ghost');
@@ -272,7 +273,7 @@ export const CreateEventButton = ({
         if (type === 'event') setIsQuickCreateOpen(true);
         else if (type === 'service') navigate('/vendors/create');
         else if (type === 'manage-event')
-          navigate(`/events/${eventId}/host-event-management`);
+          navigate(`/events/${eventId}/manage`);
         else if (type === 'manage-service')
           navigate(`/events/${eventId}/service-event-management`);
         else if (type === 'signin') navigate('/signin');

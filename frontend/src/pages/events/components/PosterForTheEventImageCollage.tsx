@@ -73,7 +73,6 @@ export const PosterForTheEventImageCollage = ({ imageUrl, title }: PosterProps) 
           />
         </Box>
       </Box>
-
     </Box>
   );
 };

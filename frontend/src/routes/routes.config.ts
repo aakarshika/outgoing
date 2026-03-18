@@ -22,6 +22,16 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/highlightsreels',
+    componentName: 'HighlightsReels',
+    isPublic: true,
+  },
+  {
+    path: '/highlightsreels/:highlightId',
+    componentName: 'HighlightsReels',
+    isPublic: true,
+  },
+  {
     path: '/homerenewed',
     componentName: 'HomeRenewed',
     isPublic: true,
@@ -33,6 +43,21 @@ export const routesConfig: RouteDefinition[] = [
   },
   {
     path: '/chats',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats/group/:eventId',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats/private/:conversationId',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats/direct/:username',
     componentName: 'Chats',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
@@ -52,7 +77,7 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
-    path: '/events/:id/manage',
+    path: '/events/:id/manage/*',
     componentName: 'PlanningWorkspace',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
@@ -69,6 +94,11 @@ export const routesConfig: RouteDefinition[] = [
   {
     path: '/events/:id',
     componentName: 'EventDetail',
+    isPublic: true,
+  },
+  {
+    path: '/events-new/:id',
+    componentName: 'EventDetailV2',
     isPublic: true,
   },
   {
@@ -148,6 +178,12 @@ export const routesConfig: RouteDefinition[] = [
     path: '/user/:username',
     componentName: 'UserProfile',
     isPublic: true,
+  },
+  {
+    path: '/profile/settings-new',
+    componentName: 'SettingsNew',
+    roles: [UserRole.USER, UserRole.ADMIN],
+    theme: 'profile-theme',
   },
   {
     path: '/browse',

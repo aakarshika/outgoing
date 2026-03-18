@@ -30,6 +30,7 @@ interface TicketingServiceModalProps {
   user: User | null;
   selectedTierId: number | null;
   selectedQuantity: number | null;
+  selections?: Array<{ tierId: number; quantity: number }>;
   onSuccess: (ticketsData: any[]) => void;
 }
 
@@ -40,6 +41,7 @@ export function TicketingServiceModal({
   user,
   selectedTierId,
   selectedQuantity,
+  selections,
   onSuccess,
 }: TicketingServiceModalProps) {
   const navigate = useNavigate();
@@ -57,19 +59,37 @@ export function TicketingServiceModal({
   // Initialize guests when modal opens or ticket count changes
   useEffect(() => {
     if (isOpen && guests.length === 0) {
-      const initialCount = selectedQuantity || 1;
-      const initialGuests = Array.from({ length: initialCount }).map((_, i) => ({
-        tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
-        guest_name:
-          i === 0 && user ? `${user.first_name} ${user.last_name}`.trim() : '',
-        is_18_plus: true, // Default to adult as requested
-      }));
+      let initialGuests: any[] = [];
+      let initialCount = 1;
+
+      if (selections && selections.length > 0) {
+        initialGuests = selections.flatMap((s) =>
+          Array.from({ length: s.quantity }).map((_, i) => ({
+            tier_id: s.tierId,
+            guest_name:
+              initialGuests.length === 0 && i === 0 && user
+                ? `${user.first_name} ${user.last_name}`.trim()
+                : '',
+            is_18_plus: true,
+          })),
+        );
+        initialCount = initialGuests.length;
+      } else {
+        initialCount = selectedQuantity || 1;
+        initialGuests = Array.from({ length: initialCount }).map((_, i) => ({
+          tier_id: selectedTierId || event.ticket_tiers?.[0]?.id || null,
+          guest_name:
+            i === 0 && user ? `${user.first_name} ${user.last_name}`.trim() : '',
+          is_18_plus: true,
+        }));
+      }
+
       setGuests(initialGuests);
       setTicketCount(initialCount);
       setTabValue(0);
       setPurchaseSummary(null);
     }
-  }, [isOpen, selectedTierId, selectedQuantity, event.ticket_tiers, user]);
+  }, [isOpen, selectedTierId, selectedQuantity, selections, event.ticket_tiers, user]);
 
   const handleTicketCountChange = (delta: number) => {
     const newCount = Math.max(1, Math.min(10, ticketCount + delta));

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import transaction, connection
 
 # We explicitly import the models after Django has booted
 from apps.events.models import (
@@ -133,6 +133,8 @@ class Command(BaseCommand):
 
         if not options.get("no_wipe"):
             self.wipe_data()
+        
+        self.run_extra_sql()
 
         users_data = data.get("users", [])
         services_data = data.get("services", [])
@@ -343,3 +345,28 @@ class Command(BaseCommand):
             self.stdout.write(f"  Created {created_count} friendships.")
 
         self.stdout.write(self.style.SUCCESS("Seeding complete!"))
+
+    def run_extra_sql(self):
+        """Execute extra SQL files to create views or other DB objects."""
+        sql_path = Path(HERE).parents[3] / "event_view.sql"
+        if not sql_path.exists():
+            self.stdout.write(self.style.WARNING(f"SQL file not found at {sql_path}"))
+            return
+
+        self.stdout.write("Running extra SQL from event_view.sql...")
+        with open(sql_path, "r", encoding="utf-8") as f:
+            sql = f.read()
+
+        # Drop view if exists and recreate
+        sql = "DROP VIEW IF EXISTS event_overview;\n" + sql
+
+        with connection.cursor() as cursor:
+            try:
+                # SQLite doesn't support multiple statements in one execute()
+                # and CASADE is not supported.
+                statements = [s.strip() for s in sql.split(";") if s.strip()]
+                for statement in statements:
+                    cursor.execute(statement)
+                self.stdout.write(self.style.SUCCESS("Database view 'event_overview' created/updated."))
+            except Exception as e:
+                self.stderr.write(self.style.ERROR(f"Error executing SQL: {e}"))

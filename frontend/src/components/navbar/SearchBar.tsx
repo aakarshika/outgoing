@@ -38,7 +38,6 @@ export const SearchBar = () => {
     nearYouEnabled,
     nearYouName,
     locationSearch,
-    radiusMiles,
     locationDropdownOpen,
     toggleNearYou,
     setShowLocationSuggestions,
@@ -47,7 +46,6 @@ export const SearchBar = () => {
     locationSuggestions,
     handleLocationSuggestionClick,
     clearLocationSelection,
-    setRadiusMiles,
     suggestions,
     navigate,
     location,
@@ -106,32 +104,32 @@ export const SearchBar = () => {
             <button
               type="button"
               onClick={() => setLocationDropdownOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-none backdrop-blur-md supports-[backdrop-filter]:bg-white/15  px-4 py-2  hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all justify-between"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-[rgba(120,94,60,0.18)] bg-[rgba(255,252,247,0.92)] px-4 py-2.5 text-left shadow-[0_8px_24px_rgba(74,53,33,0.08)] transition-all hover:border-[rgba(216,90,48,0.35)] hover:shadow-[0_10px_28px_rgba(74,53,33,0.12)]"
               style={{ fontFamily: '"Permanent Marker"' }}
             >
-              <span className="flex items-center gap-2 truncate">
-                <MapPin size={18} className="text-gray-600 shrink-0" />
-                <span className="truncate text-gray-800">
-                  {nearYouEnabled
-                    ? nearYouName || 'Near you'
-                    : locationSearch || 'Location'}
+              <span className="flex items-center gap-2.5 truncate">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FAECE7] text-[#D85A30]">
+                  <MapPin size={16} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] uppercase tracking-[0.18em] text-gray-500">
+                    Location
+                  </span>
+                  <span className="block truncate text-sm text-gray-800">
+                    {nearYouEnabled
+                      ? nearYouName || 'Near you'
+                      : locationSearch || 'Anywhere'}
+                  </span>
                 </span>
               </span>
-              <span className="text-gray-500 text-xs shrink-0">{radiusMiles} mi</span>
             </button>
             {locationDropdownOpen && (
-              <div
-                className="absolute top-full left-0 mt-2 z-50 w-[380px] rounded-none bg-[#f4f1ea] p-3 "
-                style={{
-                  backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-                  backgroundSize: '10px 10px',
-                }}
-              >
+              <div className="absolute top-full left-0 z-50 mt-2 w-[380px] rounded-3xl border border-[rgba(120,94,60,0.16)] bg-[#fffaf3] p-3 shadow-[0_18px_40px_rgba(74,53,33,0.14)]">
                 <p
-                  className="text-xs uppercase tracking-wider text-gray-600 mb-2"
+                  className="mb-2 text-[11px] uppercase tracking-[0.18em] text-gray-500"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  Where?
+                  Choose a location
                 </p>
                 <button
                   type="button"
@@ -140,20 +138,29 @@ export const SearchBar = () => {
                     toggleNearYou();
                     setLocationDropdownOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 rounded-none px-4 py-3 text-left bg-blue-200/80 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all font-bold text-gray-900 mb-3"
+                  className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-[rgba(29,158,117,0.16)] bg-[#f3fbf8] px-4 py-3 text-left text-gray-900 transition-colors hover:bg-[#edf8f4]"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  <LocateFixed
-                    size={20}
-                    className={nearYouEnabled ? 'text-blue-600' : ''}
-                  />
-                  <span>Use current location</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1D9E75]">
+                    <LocateFixed
+                      size={18}
+                      className={nearYouEnabled ? 'text-[#1D9E75]' : ''}
+                    />
+                  </span>
+                  <span className="flex flex-col">
+                    <span>Use current location</span>
+                    <span className="text-xs text-gray-500">
+                      {nearYouEnabled
+                        ? nearYouName || 'Using your location'
+                        : 'Find events nearby automatically'}
+                    </span>
+                  </span>
                 </button>
                 <p
-                  className="text-xs uppercase tracking-wider text-gray-600 mb-2 mt-2"
+                  className="mb-2 mt-2 text-[11px] uppercase tracking-[0.18em] text-gray-500"
                   style={{ fontFamily: '"Permanent Marker"' }}
                 >
-                  Or type an address
+                  Or search manually
                 </p>
                 <div className="relative">
                   <input
@@ -170,11 +177,11 @@ export const SearchBar = () => {
                       setTimeout(() => setShowLocationSuggestions(false), 200)
                     }
                     placeholder="City or address..."
-                    className="w-full rounded-none bg-white px-3 py-2.5 text-gray-800 placeholder:text-gray-500 outline-none shadow-[2px_2px_0px_#333]"
+                    className="w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-4 py-3 text-gray-800 placeholder:text-gray-400 outline-none"
                     style={{ fontFamily: '"Permanent Marker"' }}
                   />
                   {showLocationSuggestions && locationSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 rounded-none bg-white shadow-[3px_4px_0px_#333] overflow-hidden z-10">
+                    <div className="absolute top-full left-0 right-0 z-10 mt-2 overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
                       {locationSuggestions.map((suggestion) => (
                         <button
                           key={suggestion.place_id}
@@ -184,43 +191,17 @@ export const SearchBar = () => {
                             handleLocationSuggestionClick(suggestion);
                             setShowLocationSuggestions(false);
                           }}
-                          className="w-full flex items-start gap-2 rounded-none px-3 py-2.5 text-left border-b border-dashed border-gray-300 last:border-0 hover:bg-yellow-100 transition-colors"
+                          className="flex w-full items-start gap-3 border-b border-[rgba(120,94,60,0.1)] px-4 py-3 text-left last:border-0 hover:bg-[#fff6e8] transition-colors"
                           style={{ fontFamily: '"Permanent Marker"' }}
                         >
-                          <Search size={14} className="text-gray-500 shrink-0 mt-0.5" />
-                          <p className="text-sm line-clamp-2">
+                          <Search size={14} className="mt-0.5 shrink-0 text-gray-500" />
+                          <p className="line-clamp-2 text-sm">
                             {suggestion.display_name}
                           </p>
                         </button>
                       ))}
                     </div>
                   )}
-                </div>
-                <p
-                  className="text-xs uppercase tracking-wider text-gray-600 mb-1.5 mt-3"
-                  style={{ fontFamily: '"Permanent Marker"' }}
-                >
-                  Miles radius
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={radiusMiles}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      if (!Number.isNaN(v)) setRadiusMiles(v);
-                    }}
-                    className="w-20 rounded-none bg-white px-3 py-2 text-gray-800 outline-none shadow-[2px_2px_0px_#333]"
-                    style={{ fontFamily: '"Permanent Marker"' }}
-                  />
-                  <span
-                    className="text-sm text-gray-600"
-                    style={{ fontFamily: '"Permanent Marker"' }}
-                  >
-                    miles
-                  </span>
                 </div>
                 {locationSearch && (
                   <button
@@ -229,7 +210,7 @@ export const SearchBar = () => {
                       clearLocationSelection();
                       setLocationDropdownOpen(false);
                     }}
-                    className="mt-3 w-full rounded-none bg-red-100 px-3 py-2 shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-gray-800 font-bold"
+                    className="mt-3 w-full rounded-2xl border border-[rgba(120,94,60,0.14)] bg-white px-3 py-2.5 text-gray-700 transition-colors hover:bg-[#faf4ec]"
                     style={{ fontFamily: '"Permanent Marker"' }}
                   >
                     Clear location

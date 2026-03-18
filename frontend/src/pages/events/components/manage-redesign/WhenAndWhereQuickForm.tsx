@@ -1,10 +1,9 @@
-import { LocateFixed, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, LocateFixed } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-
-import { WhenAndWhereForm } from './WhenAndWhereForm';
 
 import { RecurringForm, RecurringFormProps } from './RecurringForm';
 import { ScrapbookInput } from './ui/ScrapbookInput';
+import { WhenAndWhereForm } from './WhenAndWhereForm';
 
 export interface WhenAndWhereQuickFormProps extends RecurringFormProps {
   event: any;

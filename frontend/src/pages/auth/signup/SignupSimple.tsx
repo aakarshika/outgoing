@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -36,17 +36,19 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 export default function SignupSimple() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/';
   const { login } = useAuth();
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: 'shika_a',
-      email: 'shika_a@outgoing.com',
-      firstName: 'Shika',
-      lastName: 'Artist',
-      phoneNumber: '555-0199',
-      password: 'password123',
+      username: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      password: '',
     },
   });
 
@@ -64,7 +66,7 @@ export default function SignupSimple() {
       if (res.success) {
         login(res.data.access, res.data.refresh, res.data.user);
         toast.success('Account created successfully!');
-        navigate('/');
+        navigate(redirectTo);
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
@@ -122,6 +124,24 @@ export default function SignupSimple() {
             sx={authFieldSx}
           />
           <TextField
+            label="First name"
+            autoComplete="given-name"
+            fullWidth
+            {...register('firstName')}
+            error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+            sx={authFieldSx}
+          />
+          <TextField
+            label="Last name"
+            autoComplete="family-name"
+            fullWidth
+            {...register('lastName')}
+            error={!!errors.lastName}
+            helperText={errors.lastName?.message}
+            sx={authFieldSx}
+          />
+          <TextField
             label="Username"
             autoComplete="username"
             fullWidth
@@ -138,6 +158,16 @@ export default function SignupSimple() {
             {...register('password')}
             error={!!errors.password}
             helperText={errors.password?.message}
+            sx={authFieldSx}
+          />
+          <TextField
+            label="Phone number (optional)"
+            type="tel"
+            autoComplete="tel"
+            fullWidth
+            {...register('phoneNumber')}
+            error={!!errors.phoneNumber}
+            helperText={errors.phoneNumber?.message}
             sx={authFieldSx}
           />
 

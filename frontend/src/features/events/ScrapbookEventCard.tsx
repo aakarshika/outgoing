@@ -2,6 +2,14 @@ import { Box, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 import { CategoricalBackground } from './CategoricalBackground';
+import {
+  EventUIProvider,
+  MainInfoCard,
+  MainInfoCardImage,
+  ScrapbookEventData,
+  useEventUIData,
+} from './EventItemUIComponents';
+import { LightThemeConferencePoster } from './LightThemeConferencePoster';
 import { LikeButton } from './LikeButton';
 import {
   CategorySticker,
@@ -12,14 +20,6 @@ import {
   PriceBadge,
 } from './scrapbookCard';
 import { TicketStatusBadge } from './TicketStatusBadge';
-import {
-  EventUIProvider,
-  MainInfoCard,
-  MainInfoCardImage,
-  ScrapbookEventData,
-  useEventUIData,
-} from './EventItemUIComponents';
-import { LightThemeConferencePoster } from './LightThemeConferencePoster';
 
 const isOnlineLike = (event: ScrapbookEventData) => {
   const hay =

@@ -15,6 +15,17 @@ export const scrapbookTheme = createTheme({
     },
   },
   components: {
+    MuiContainer: {
+      defaultProps: {
+        disableGutters: true,
+      },
+      styleOverrides: {
+        root: {
+          paddingLeft: 0,
+          paddingRight: 0,
+        },
+      },
+    },
     MuiPaper: {
       styleOverrides: {
         root: {

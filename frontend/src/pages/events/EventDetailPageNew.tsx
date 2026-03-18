@@ -326,6 +326,48 @@ export default function EventDetailPageNew() {
               overflow: 'visible',
             }}
           >
+            {/* Deprecation Banner */}
+            <Box
+              sx={{
+                mb: 4,
+                p: 2,
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                borderLeft: '4px solid #f59e0b',
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                justifyContent: 'space-between',
+                gap: 2,
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                backdropFilter: 'blur(4px)',
+                fontFamily: '"DM Sans", sans-serif',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e' }}>
+                  ✨ This page will be deprecated soon. Try the new experience!
+                </Typography>
+              </Box>
+              <MuiButton
+                variant="contained"
+                size="small"
+                onClick={() => navigate(`/events-new/${id}`)}
+                sx={{
+                  bgcolor: '#0f172a',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#1e293b' },
+                  textTransform: 'none',
+                  borderRadius: '20px',
+                  px: 3,
+                  fontWeight: 600,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Go to New Page
+              </MuiButton>
+            </Box>
+
             {/* Section 1: Hero — Image + Important Details */}
             <HeroSection
               event={event}

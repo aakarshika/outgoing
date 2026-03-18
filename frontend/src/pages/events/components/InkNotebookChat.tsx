@@ -13,11 +13,12 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
+import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import {
   useAddHostVendorMessage,
   useHostVendorMessages,
 } from '@/features/events/hooks';
-import { useChatDrawer } from '@/features/events/ChatDrawerContext';
+
 import { BuddyRequestPanel } from './BuddyRequestPanel';
 
 interface InkNotebookChatProps {
@@ -133,7 +134,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
           `,
           backgroundSize: '30px 30px',
           p: 1,
-          pt:3,
+          pt: 3,
           pr: 4,
           borderRadius: '2px',
           // boxShadow: '10px 10px 0px rgba(0,0,0,0.1)',
@@ -150,7 +151,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
         }}
       >
         {/* Notebook Header */}
-        <Box sx={{position: 'relative', zIndex: 2 }}>
+        <Box sx={{ position: 'relative', zIndex: 2 }}>
           <Typography
             variant="h4"
             sx={{

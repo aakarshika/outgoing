@@ -1,13 +1,13 @@
+import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import client from '@/api/client';
 import { useAuth } from '@/features/auth/hooks';
 import { useMyInterestedEvents } from '@/features/events/hooks';
 import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
-import { getEventStep, type EventOverviewRow } from '@/pages/alerts/utils';
+import { type EventOverviewRow, getEventStep } from '@/pages/alerts/utils';
 import type { ApiResponse, EventDetail, EventListItem } from '@/types/events';
 
 type CalendarFilter = 'all' | 'hosting' | 'attending' | 'saved' | 'vendor';

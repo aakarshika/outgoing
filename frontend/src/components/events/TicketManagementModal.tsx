@@ -7,14 +7,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import {
   ChevronLeft,
   ChevronRight,
   Download,
   Edit2,
   Info,
+  Share,
   Ticket as TicketIcon,
   Trash2,
   X,
@@ -25,10 +24,12 @@ import { toast } from 'sonner';
 
 import { TICKET_COLORS } from '@/features/events/constants';
 import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
+import { exportTicketAsPDF, shareTicket } from '@/features/events/utils/ticketSharing';
 
 interface TicketManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
+  event?: any;
   tickets: any[];
   ticketTiers?: any[];
   initialIndex?: number;
@@ -37,6 +38,7 @@ interface TicketManagementModalProps {
 export function TicketManagementModal({
   isOpen,
   onClose,
+  event: passedEvent,
   tickets,
   ticketTiers = [],
   initialIndex = 0,
@@ -45,10 +47,13 @@ export function TicketManagementModal({
   const cancelTicket = useCancelTicket();
 
   const [activeIndex, setActiveIndex] = useState(initialIndex);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
   const currentTicket = tickets?.[activeIndex];
   const [guestName, setGuestName] = useState(currentTicket?.guest_name || '');
   const ticketRef = useRef<HTMLDivElement>(null);
+
+  // Derive event if not passed (fallback for comic mode)
+  const event = passedEvent ?? currentTicket?.event_summary;
 
   // Reset index when modal opens with new index
   useEffect(() => {
@@ -60,11 +65,16 @@ export function TicketManagementModal({
   // Reset guest name when active ticket changes
   const lastTicketId = useRef<number | null>(null);
   useEffect(() => {
-    if (currentTicket && currentTicket.id !== lastTicketId.current && !isEditing) {
+    if (
+      currentTicket &&
+      currentTicket.id !== lastTicketId.current &&
+      !isInlineEditing
+    ) {
       setGuestName(currentTicket.guest_name || '');
+      setIsInlineEditing(false);
       lastTicketId.current = currentTicket.id;
     }
-  }, [currentTicket, isEditing]);
+  }, [currentTicket, isInlineEditing]);
 
   if (!isOpen || !tickets || tickets.length === 0) return null;
 
@@ -75,7 +85,7 @@ export function TicketManagementModal({
       {
         onSuccess: () => {
           toast.success('Guest name updated!');
-          setIsEditing(false);
+          setIsInlineEditing(false);
         },
         onError: () => toast.error('Failed to update guest name.'),
       },
@@ -90,8 +100,6 @@ export function TicketManagementModal({
       cancelTicket.mutate(currentTicket.id, {
         onSuccess: (res: any) => {
           toast.success(res?.message || 'Ticket cancelled.');
-          // If multiple tickets, maybe just stay on modal? Or close?
-          // For now, let's just refresh.
         },
         onError: (err: any) =>
           toast.error(err?.response?.data?.message || 'Failed to cancel ticket.'),
@@ -99,25 +107,14 @@ export function TicketManagementModal({
     }
   };
 
-  const handleExport = async () => {
-    if (!ticketRef.current) return;
+  const handleExport = () => {
+    if (!event || !currentTicket) return;
+    exportTicketAsPDF({ event, ticket: currentTicket, ticketTiers });
+  };
 
-    try {
-      const canvas = await html2canvas(ticketRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'px',
-        format: [canvas.width, canvas.height],
-      });
-
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`Ticket-${currentTicket?.barcode || 'Export'}.pdf`);
-      toast.success('Ticket PDF downloaded!');
-    } catch (error) {
-      console.error('Failed to generate PDF', error);
-      toast.error('Failed to generate PDF. Please try again.');
-    }
+  const handleShare = () => {
+    if (!event || !currentTicket) return;
+    shareTicket({ event, ticket: currentTicket, ticketTiers });
   };
 
   return (
@@ -293,7 +290,7 @@ export function TicketManagementModal({
                           fontFamily: '"Permanent Marker"',
                           fontSize: '0.8rem',
                           zIndex: 50,
-                          clipPath: 'polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%)', // Bookmark shape
+                          clipPath: 'polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%)',
                           boxShadow: '2px 4px 6px rgba(0,0,0,0.2)',
                           whiteSpace: 'nowrap',
                         }}
@@ -413,14 +410,85 @@ export function TicketManagementModal({
                           {t.ticket_type}
                         </Typography>
                       </Box>
-                      {t.guest_name && (
-                        <Box>
+                      {idx === activeIndex && isInlineEditing ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="caption" color="text.secondary">
                             GUEST
                           </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                            {t.guest_name}
+                          <TextField
+                            size="small"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            placeholder="Enter guest name"
+                            sx={{ minWidth: 120 }}
+                            autoFocus
+                          />
+                          <MuiButton
+                            variant="contained"
+                            size="small"
+                            onClick={handleUpdateName}
+                            disabled={updateTicket.isPending}
+                            sx={{ height: 28, fontSize: '0.7rem' }}
+                          >
+                            Save
+                          </MuiButton>
+                          <MuiButton
+                            variant="outlined"
+                            size="small"
+                            onClick={() => {
+                              setIsInlineEditing(false);
+                              setGuestName(currentTicket?.guest_name || '');
+                            }}
+                            sx={{ height: 28, fontSize: '0.7rem' }}
+                          >
+                            Cancel
+                          </MuiButton>
+                        </Box>
+                      ) : t.guest_name ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              GUEST
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              {t.guest_name}
+                            </Typography>
+                          </Box>
+                          {currentTicket?.status !== 'cancelled' && (
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setIsInlineEditing(true);
+                                setGuestName(t.guest_name || '');
+                              }}
+                              sx={{ ml: 0.5 }}
+                            >
+                              <Edit2 size={14} />
+                            </IconButton>
+                          )}
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            GUEST
                           </Typography>
+                          <TextField
+                            size="small"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            placeholder="Enter guest name"
+                            sx={{ minWidth: 120 }}
+                            autoFocus
+                          />
+                          <MuiButton
+                            variant="contained"
+                            size="small"
+                            onClick={handleUpdateName}
+                            disabled={updateTicket.isPending}
+                            sx={{ height: 28, fontSize: '0.7rem' }}
+                          >
+                            Save
+                          </MuiButton>
                         </Box>
                       )}
                       <Box sx={{ textAlign: 'right' }}>
@@ -541,64 +609,21 @@ export function TicketManagementModal({
               </Box>
             )}
 
-            <Box
-              sx={{ bgcolor: '#fff', p: 2, border: '1px solid #ddd', borderRadius: 1 }}
+            <MuiButton
+              variant="contained"
+              fullWidth
+              startIcon={<Share size={18} />}
+              onClick={handleShare}
+              sx={{
+                bgcolor: '#333',
+                color: 'white',
+                fontWeight: 'bold',
+                '&:hover': { bgcolor: '#555' },
+                mb: 2,
+              }}
             >
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  mb: isEditing ? 2 : 0,
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                  Guest Name
-                </Typography>
-                {!isEditing && currentTicket.status !== 'cancelled' ? (
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setIsEditing(true);
-                      setGuestName(currentTicket.guest_name || '');
-                    }}
-                  >
-                    <Edit2 size={16} />
-                  </IconButton>
-                ) : null}
-              </Box>
-
-              {!isEditing ? (
-                <Typography>
-                  {currentTicket.guest_name || 'No name provided'}
-                </Typography>
-              ) : (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Enter guest name"
-                  />
-                  <MuiButton
-                    variant="contained"
-                    size="small"
-                    onClick={handleUpdateName}
-                    disabled={updateTicket.isPending}
-                  >
-                    Save
-                  </MuiButton>
-                  <MuiButton
-                    variant="outlined"
-                    size="small"
-                    onClick={() => setIsEditing(false)}
-                  >
-                    Cancel
-                  </MuiButton>
-                </Box>
-              )}
-            </Box>
+              Share Ticket
+            </MuiButton>
 
             <Box sx={{ display: 'flex', gap: 2 }}>
               <MuiButton

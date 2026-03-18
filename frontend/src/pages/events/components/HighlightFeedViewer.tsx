@@ -1,149 +1,71 @@
-import {
-  Box,
-  Dialog,
-  Fade,
-  Stack,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import { ChevronLeft, ChevronRight, Heart, MessageCircle, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Heart, MessageCircle, Share2, X } from 'lucide-react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
-import { ComicIconButton as SharedComicIconButton } from '@/components/ui/ComicIconButton';
-import { ComicButton } from '@/components/ui/ComicButton';
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
 import { useToggleHighlightLike } from '@/features/events/hooks';
 
 import { HighlightCommentDrawer } from './HighlightCommentDrawer';
-import { HighlightComments } from './HighlightComments';
-import { ScrapbookEventCardLandscape } from '@/features/events/ScrapbookEventCardLandscape';
 
-// --- Comic Theme Constants ---
-const COMIC_BORDER = '3px solid #1a1a1a';
-const COMIC_SHADOW = '4px 4px 0px #1a1a1a';
-
-// --- Comic Styled Components ---
-const ComicIconButton = ({ children, onClick, sx = {}, Icon, iconProps }: any) => (
-  <SharedComicIconButton
-    onClick={onClick}
-    variant="solid"
-    shape="round"
-    Icon={Icon}
-    iconProps={iconProps}
-    color={'black'}
-    accentColor={'white'}
-    style={sx}
-  >
-    {children}
-  </SharedComicIconButton>
-);
-
-// --- Highlight Interaction Section (Mobile) ---
-const HighlightInteractionsMobile = ({
-  highlight,
-  onOpenComments,
-  handlePrev,
-  handleNext,
-  activeIndex,
-  highlights,
-}: {
-  highlight: any;
-  onOpenComments: () => void;
-  handlePrev: () => void;
-  handleNext: () => void;
-  activeIndex: number;
-  highlights: any[];
-}) => {
-  const { isAuthenticated } = useAuth();
-  const toggleLike = useToggleHighlightLike();
-
-  return (
-    <Stack
-      spacing={3}
-      alignItems="center"
-      sx={{
-        position: 'absolute',
-        right: 16,
-        bottom: 120,
-        zIndex: 50,
-      }}
-    >
-      <Box sx={{ textAlign: 'center' }}>
-        <Hostname
-          username={highlight.author_username}
-          avatarSrc={highlight.author_avatar}
-          mode="bigger"
-          className="!text-white"
-          sx={{
-            '& .MuiAvatar-root': {
-              border: COMIC_BORDER,
-              boxShadow: COMIC_SHADOW,
-            },
-          }}
-        />
-      </Box>
-
-      {isAuthenticated && (<Box sx={{ textAlign: 'center' }}>
-        <ComicIconButton
-          onClick={() => isAuthenticated && toggleLike.mutate(highlight.id)}
-          Icon={Heart}
-          iconProps={{ fill: highlight.user_has_liked ? '#ef4444' : 'none' }}
-        />
-        <Typography
-          sx={{
-            fontSize: '0.9rem',
-            fontWeight: 900,
-            color: 'white',
-            textShadow: '2px 2px 0px #000',
-            mt: 1,
-            fontFamily: '"Permanent Marker", cursive',
-          }}
-        >
-          {highlight.likes_count}
-        </Typography>
-      </Box>)}
-
-      <Box sx={{ textAlign: 'center' }}>
-        <ComicIconButton
-          onClick={onOpenComments}
-          Icon={MessageCircle}
-          iconProps={{ fill: 'none', color: 'black' }}
-        />
-        <Typography
-          sx={{
-            fontSize: '0.9rem',
-            fontWeight: 900,
-            color: 'white',
-            textShadow: '2px 2px 0px #000',
-            mt: 1,
-            fontFamily: '"Permanent Marker", cursive',
-          }}
-        >
-          {highlight.comments_count}
-        </Typography>
-      </Box>
-
-      {/* Navigation Buttons Mobile */}
-      {isAuthenticated && (<Box
-        sx={{
-          textAlign: 'center',
-        }}
-      >
-        <ComicIconButton onClick={handlePrev} Icon={ChevronLeft} />
-        <ComicIconButton onClick={handleNext} Icon={ChevronRight} />
-      </Box>)}
-    </Stack>
-  );
-};
+const BOTTOM_NAV_OFFSET = 'calc(88px + env(safe-area-inset-bottom, 0px))';
+const TOP_SAFE_OFFSET = 'calc(16px + env(safe-area-inset-top, 0px))';
 
 interface HighlightFeedViewerProps {
   highlights: any[];
   isOpen: boolean;
   onClose: () => void;
   initialHighlightId?: number;
+  urlPattern?: 'gallery' | 'highlightsreels' | ((highlight: any) => string);
+}
+
+function FrostedActionButton({
+  icon,
+  label,
+  count,
+  onClick,
+  active = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  count?: number;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <Stack alignItems="center" spacing={0.9}>
+      <IconButton
+        aria-label={label}
+        onClick={onClick}
+        sx={{
+          width: { xs: 58, sm: 64 },
+          height: { xs: 58, sm: 64 },
+          color: active ? '#ff6b81' : '#fff',
+          bgcolor: 'rgba(255,255,255,0.16)',
+          border: '1px solid rgba(255,255,255,0.28)',
+          backdropFilter: 'blur(18px)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.24)',
+          '&:hover': {
+            bgcolor: 'rgba(255,255,255,0.24)',
+          },
+        }}
+      >
+        {icon}
+      </IconButton>
+      <Typography
+        sx={{
+          fontSize: '0.78rem',
+          fontWeight: 700,
+          color: 'white',
+          textShadow: '0 2px 10px rgba(0,0,0,0.45)',
+        }}
+      >
+        {count ?? ''}
+      </Typography>
+    </Stack>
+  );
 }
 
 export const HighlightFeedViewer = ({
@@ -151,61 +73,101 @@ export const HighlightFeedViewer = ({
   isOpen,
   onClose,
   initialHighlightId,
+  urlPattern = 'gallery',
 }: HighlightFeedViewerProps) => {
-  const { id: eventId } = useParams();
+  const { id: routeEventId } = useParams();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isAuthenticated } = useAuth();
+  const toggleLike = useToggleHighlightLike();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [activeHighlightId, setActiveHighlightId] = useState<number | null>(
     initialHighlightId || null,
   );
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
   const activeIndex = useMemo(
-    () => highlights.findIndex((h) => h.id === activeHighlightId),
-    [highlights, activeHighlightId],
+    () => highlights.findIndex((highlight) => highlight.id === activeHighlightId),
+    [activeHighlightId, highlights],
   );
 
   const activeHighlight = highlights[activeIndex] || highlights[0];
 
-  useEffect(() => {
-    // Lock background scroll while viewer is open (especially on mobile)
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
+  const getHighlightUrl = (highlight: any) => {
+    const eventId = highlight?.event?.id ?? highlight?.event_id ?? routeEventId;
+    if (!eventId || !highlight?.id) return '';
+
+    if (typeof urlPattern === 'function') {
+      return urlPattern(highlight);
     }
+
+    switch (urlPattern) {
+      case 'highlightsreels':
+        return `/highlightsreels/${highlight.id}`;
+      case 'gallery':
+      default:
+        return `/events/${eventId}/gallery/${highlight.id}`;
+    }
+  };
+
+  const syncHighlightUrl = (highlight: any) => {
+    const url = getHighlightUrl(highlight);
+    if (url) {
+      window.history.replaceState(null, '', url);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && !activeHighlightId && highlights.length > 0) {
-      setActiveHighlightId(highlights[0].id);
+      setActiveHighlightId(initialHighlightId || highlights[0].id);
     }
-  }, [isOpen, activeHighlightId, highlights]);
+  }, [activeHighlightId, highlights, initialHighlightId, isOpen]);
 
   useEffect(() => {
-    if (isOpen && initialHighlightId && scrollContainerRef.current && isMobile) {
-      const index = highlights.findIndex((h) => h.id === initialHighlightId);
-      if (index !== -1) {
-        scrollContainerRef.current.scrollTop = index * window.innerHeight;
-        setActiveHighlightId(initialHighlightId);
-      }
+    if (!isOpen) {
+      setHasInitialScrolled(false);
     }
-  }, [isOpen, initialHighlightId, highlights, isMobile]);
+  }, [isOpen]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!isMobile) return;
-    const container = e.currentTarget;
-    const scrollTop = container.scrollTop;
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !scrollContainerRef.current ||
+      highlights.length === 0 ||
+      hasInitialScrolled
+    )
+      return;
+
+    const targetId = initialHighlightId || highlights[0]?.id;
+    if (!targetId) return;
+
+    const index = highlights.findIndex((highlight) => highlight.id === targetId);
+    if (index === -1) return;
+
+    requestAnimationFrame(() => {
+      if (!scrollContainerRef.current) return;
+      scrollContainerRef.current.scrollTop =
+        index * scrollContainerRef.current.clientHeight;
+      setActiveHighlightId(targetId);
+      setHasInitialScrolled(true);
+    });
+  }, [highlights, initialHighlightId, isOpen, hasInitialScrolled]);
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const container = event.currentTarget;
     const containerHeight = container.clientHeight || window.innerHeight || 1;
-
-    // Derive index based on how many full screens we've scrolled
-    const rawIndex = scrollTop / containerHeight;
-    const index = Math.round(rawIndex);
-
+    const index = Math.round(container.scrollTop / containerHeight);
     const clampedIndex = Math.min(
       Math.max(index, 0),
       Math.max(highlights.length - 1, 0),
@@ -214,442 +176,308 @@ export const HighlightFeedViewer = ({
 
     if (highlight && highlight.id !== activeHighlightId) {
       setActiveHighlightId(highlight.id);
-      window.history.replaceState(
-        null,
-        '',
-        `/events/${eventId}/gallery/${highlight.id}`,
-      );
+      syncHighlightUrl(highlight);
     }
   };
 
-  const handleNext = () => {
-    if (activeIndex < highlights.length - 1) {
-      const nextIndex = activeIndex + 1;
-      const nextHighlight = highlights[nextIndex];
-      setActiveHighlightId(nextHighlight.id);
-      window.history.replaceState(
-        null,
-        '',
-        `/events/${eventId}/gallery/${nextHighlight.id}`,
-      );
+  const handleShare = async (highlight: any) => {
+    const shareUrl = getHighlightUrl(highlight);
+    if (!shareUrl) return;
 
-      if (isMobile && scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({
-          top: nextIndex * window.innerHeight,
-          behavior: 'smooth',
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: highlight?.event?.title || 'Event highlight',
+          text: highlight?.text || 'Check out this highlight',
+          url: shareUrl,
         });
+        toast.success('Highlight shared');
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const input = document.createElement('input');
+        input.value = shareUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      toast.success('Link copied to clipboard');
+    } catch (error) {
+      if ((error as Error)?.name !== 'AbortError') {
+        toast.error('Unable to share this highlight right now');
+        console.log('Share failed', error);
       }
     }
   };
 
-  const handlePrev = () => {
-    if (activeIndex > 0) {
-      const prevIndex = activeIndex - 1;
-      const prevHighlight = highlights[prevIndex];
-      setActiveHighlightId(prevHighlight.id);
-      window.history.replaceState(
-        null,
-        '',
-        `/events/${eventId}/gallery/${prevHighlight.id}`,
-      );
+  if (!isOpen || highlights.length === 0) return null;
 
-      if (isMobile && scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({
-          top: prevIndex * window.innerHeight,
-          behavior: 'smooth',
-        });
-      }
-    }
-  };
-
-  if (!isOpen) return null;
-
-  if (isMobile) {
-    return (
+  return (
+    <>
       <Box
         sx={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 9999,
-          bgcolor: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          flexDirection: 'column',
+          inset: 0,
+          zIndex: 60,
+          bgcolor: '#050505',
         }}
       >
-        <ComicIconButton
-          onClick={onClose}
-          Icon={X}
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 100,
-          }}
-        />
-
         <Box
           ref={scrollContainerRef}
           onScroll={handleScroll}
           sx={{
-            flex: 1,
-            overflowY: 'scroll',
+            height: '100dvh',
+            overflowY: 'auto',
             scrollSnapType: 'y mandatory',
-            height: '100%',
-            '&::-webkit-scrollbar': { display: 'none' },
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            touchAction: 'pan-y',
+            '&::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
           }}
         >
-          {highlights.map((h) => (
-            <Box
-              key={h.id}
-              sx={{
-                height: '100vh',
-                width: '100%',
-                scrollSnapAlign: 'start',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundImage: `url(${h.media_file})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'blur(30px)',
-                  opacity: 0.4,
-                  transform: 'scale(1.1)',
-                }}
-              />
+          {highlights.map((highlight) => {
+            const isLiked = Boolean(highlight.user_has_liked);
 
-              {/* Event details + Go to event (mobile) */}
-              {h.event && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 16,
-                    left: 16,
-                    right: 16,
-                    zIndex: 5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1.5,
-                    bgcolor: 'rgba(0,0,0,0.6)',
-                    borderRadius: 999,
-                    px: 2,
-                    py: 1,
-                    border: '2px solid rgba(255,255,255,0.7)',
-                  }}
-                >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      sx={{
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        color: 'white',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {h.event.title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: '0.75rem',
-                        color: 'rgba(255,255,255,0.85)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {h.event.location_name}
-                    </Typography>
-                  </Box>
-                  <ComicButton
-                    size="sm"
-                    shape="rounded"
-                    color="#000000"
-                    accentColor="#fffbeb"
-                    onClick={() => {
-                      if (h.event?.id) {
-                        navigate(`/events/${h.event.id}`);
-                      }
-                    }}
-                  >
-                    Go to event
-                  </ComicButton>
-                </Box>
-              )}
-
+            return (
               <Box
+                key={highlight.id}
                 sx={{
                   position: 'relative',
-                  zIndex: 1,
-                  maxHeight: '100%',
-                  maxWidth: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  height: '100dvh',
+                  width: '100%',
+                  scrollSnapAlign: 'start',
+                  overflow: 'hidden',
+                  bgcolor: '#050505',
                 }}
               >
-                <img
-                  src={h.media_file}
-                  alt={h.text}
-                  style={{
-                    maxHeight: '100vh',
-                    maxWidth: '100vw',
-                    objectFit: 'contain',
-                    display: 'block',
+                <Box
+                  component="img"
+                  src={highlight.media_file}
+                  alt={highlight.text || 'Highlight'}
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
                   }}
                 />
 
                 <Box
                   sx={{
                     position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    p: 4,
-                    pb: 10,
-                    background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-                    color: 'white',
-                  }}
-                >
-                  <Hostname
-                    username={h.author_username}
-                    mode="simple"
-                    className="!text-white mb-2"
-                  />
-                  <Typography
-                    variant="body1"
-                    sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}
-                  >
-                    {h.text}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <HighlightInteractionsMobile
-                highlight={h}
-                onOpenComments={() => setIsCommentsOpen(true)}
-                handlePrev={handlePrev}
-                handleNext={handleNext}
-                activeIndex={activeIndex}
-                highlights={highlights}
-              />
-            </Box>
-          ))}
-        </Box>
-
-        <HighlightCommentDrawer
-          highlightId={activeHighlightId}
-          commentsCount={activeHighlight?.comments_count || 0}
-          isOpen={isCommentsOpen}
-          onClose={() => setIsCommentsOpen(false)}
-        />
-      </Box>
-    );
-  }
-
-  // --- Web Popup Layout ---
-  return (
-    <Dialog
-      fullScreen
-      open={isOpen}
-      onClose={onClose}
-      TransitionComponent={Fade}
-      sx={{ zIndex: 9999 }}
-      PaperProps={{
-        sx: {
-          bgcolor: 'rgba(255, 255, 255, 0)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: { md: 4, lg: 8 },
-        },
-      }}
-    >
-      <ComicIconButton
-        onClick={onClose}
-        Icon={X}
-        sx={{
-          position: 'absolute',
-          top: 32,
-          left: 32,
-          zIndex: 10000,
-        }}
-      />
-
-      <Box
-        sx={{
-          display: 'flex',
-          width: '100%',
-          maxWidth: '1200px',
-          height: '80vh',
-          bgcolor: '#fdfbf7',
-          borderRadius: 2,
-          border: '3px solid #1a1a1a',
-          boxShadow: '4px 4px 0px #1a1a1a',
-          p: 3,
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          position: 'relative',
-          flexDirection: { md: 'row' },
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            width: '100%',
-            height: '100%',
-            bgcolor: '#fdfbf7',
-            border: '3px solid #1a1a1a',
-            borderRadius: 2,
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-            position: 'relative',
-            flexDirection: { md: 'row' },
-          }}
-        >
-          {/* Left Column: Media */}
-          <Box
-            sx={{
-              flex: { md: 1.5 },
-              bgcolor: '#f3f4f6',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRight: COMIC_BORDER,
-              overflow: 'hidden',
-            }}
-          >
-            <Box className="flex flex-col w-full h-full">
-              <Box className="flex flex-1 items-center justify-center overflow-hidden">
-                <img
-                  src={activeHighlight?.media_file}
-                  alt={activeHighlight?.text}
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    objectFit: 'contain',
+                    inset: 0,
+                    background:
+                      'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.12) 28%, rgba(0,0,0,0.4) 58%, rgba(0,0,0,0.84) 100%)',
                   }}
                 />
-              </Box>
-              {/* Caption Overlay Web */}
-              <Box
-                sx={{
-                  width: '100%',
-                  background: 'rgba(0,0,0,0.7)',
-                  color: 'white',
-                }}
-              >
-                <ScrapbookEventCardLandscape event={activeHighlight?.event} />
-              </Box>
-            </Box>
-            {/* Navigation Buttons Web */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 24,
-                right: { md: '10%' }, // Positioned near the split
-                display: 'flex',
-                gap: 2,
-                zIndex: 20,
-              }}
-            >
-              <ComicIconButton
-                onClick={handlePrev}
-                Icon={ChevronLeft}
-                sx={{
-                  visibility: activeIndex > 0 ? 'visible' : 'hidden',
-                }}
-              />
-              <ComicIconButton
-                onClick={handleNext}
-                Icon={ChevronRight}
-                sx={{
-                  visibility:
-                    activeIndex < highlights.length - 1 ? 'visible' : 'hidden',
-                }}
-              />
-            </Box>
-          </Box>
 
-          {/* Right Column: Comments */}
-          <Box
-            sx={{
-              flex: { md: 1 },
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: '#fdfbf7',
-              backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-              backgroundSize: '15px 15px',
-            }}
-          >
-            <Box sx={{ p: 2, borderBottom: '2px solid #1a1a1a', bgcolor: 'white' }}>
-              <Typography
-                sx={{
-                  fontWeight: 900,
-                  fontSize: '1.2rem',
-                  fontFamily: '"Permanent Marker", cursive',
-                  textAlign: 'center',
-                }}
-              >
-                {activeHighlight?.comments_count} thoughts ✏️
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1, overflow: 'hidden' }}>
-              <HighlightComments
-                highlightId={activeHighlightId}
-                commentsCount={activeHighlight?.comments_count || 0}
-              />
-            </Box>
-            <Box
-              sx={{
-                p: 2,
-                borderTop: '2px solid #1a1a1a',
-                bgcolor: 'white',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                mt: 'auto',
-              }}
-            >
-              <ComicButton
-                size="lg"
-                shape="rounded"
-                color="#000000"
-                accentColor="#fffbeb"
-                onClick={() => {
-                  const targetId = activeHighlight?.event?.id ?? (eventId ? Number(eventId) : undefined);
-                  if (targetId) {
-                    navigate(`/events/${targetId}`);
-                  }
-                }}
-              >
-                Go to event
-              </ComicButton>
-            </Box>
-          </Box>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1.5}
+                  sx={{
+                    position: 'absolute',
+                    top: TOP_SAFE_OFFSET,
+                    left: 16,
+                    right: 16,
+                    zIndex: 2,
+                  }}
+                >
+                  {highlight.event && (
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1.5,
+                        px: { xs: 1.5, sm: 2 },
+                        py: 1.25,
+                        borderRadius: 999,
+                        border: '1px solid rgba(255,255,255,0.26)',
+                        bgcolor: 'rgba(15,15,15,0.42)',
+                        backdropFilter: 'blur(18px)',
+                        boxShadow: '0 18px 50px rgba(0,0,0,0.25)',
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          sx={{
+                            color: 'white',
+                            fontWeight: 800,
+                            fontSize: { xs: '0.95rem', sm: '1rem' },
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {highlight.event.title}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            mt: 0.25,
+                            color: 'rgba(255,255,255,0.78)',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {highlight.event.location_name}
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        component="button"
+                        type="button"
+                        onClick={() => {
+                          const eventId = highlight.event?.id ?? highlight.event_id;
+                          if (eventId) {
+                            navigate(`/events-new/${eventId}`);
+                          }
+                        }}
+                        sx={{
+                          flexShrink: 0,
+                          px: { xs: 1.4, sm: 1.8 },
+                          py: 0.9,
+                          borderRadius: 999,
+                          border: '1px solid rgba(255,255,255,0.24)',
+                          bgcolor: '#fff6dd',
+                          color: '#111',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Go to Event
+                      </Box>
+                    </Box>
+                  )}
+
+                  <IconButton
+                    aria-label="Close viewer"
+                    onClick={onClose}
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.26)',
+                      bgcolor: 'rgba(15,15,15,0.42)',
+                      backdropFilter: 'blur(18px)',
+                    }}
+                  >
+                    <X size={24} />
+                  </IconButton>
+                </Stack>
+
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: { xs: 16, sm: 24 },
+                    right: { xs: 104, sm: 128 },
+                    bottom: `calc(${BOTTOM_NAV_OFFSET} + 22px)`,
+                    zIndex: 2,
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1.2}>
+                    <Hostname
+                      username={highlight.author_username}
+                      avatarSrc={highlight.author_avatar}
+                      mode="normal"
+                      className="!text-white"
+                      sx={{
+                        color: 'white',
+                        '& .MuiTypography-root': {
+                          color: 'white',
+                        },
+                      }}
+                    />
+                  </Stack>
+
+                  {highlight.text && (
+                    <Typography
+                      sx={{
+                        mt: 1.2,
+                        maxWidth: 'min(560px, 100%)',
+                        color: 'white',
+                        fontSize: { xs: '0.98rem', sm: '1.05rem' },
+                        lineHeight: 1.5,
+                        textShadow: '0 4px 16px rgba(0,0,0,0.45)',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {highlight.text}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Stack
+                  spacing={2}
+                  alignItems="center"
+                  sx={{
+                    position: 'absolute',
+                    right: { xs: 16, sm: 24 },
+                    bottom: `calc(${BOTTOM_NAV_OFFSET} + 22px)`,
+                    zIndex: 2,
+                  }}
+                >
+                  {isAuthenticated && (
+                    <FrostedActionButton
+                      label="Like highlight"
+                      count={highlight.likes_count || 0}
+                      active={isLiked}
+                      onClick={() =>
+                        toggleLike.mutate(highlight.id, {
+                          onError: () => toast.error('Could not update like right now'),
+                        })
+                      }
+                      icon={
+                        <Heart
+                          size={28}
+                          fill={isLiked ? 'currentColor' : 'none'}
+                          strokeWidth={2.1}
+                        />
+                      }
+                    />
+                  )}
+
+                  <FrostedActionButton
+                    label="Open comments"
+                    count={highlight.comments_count || 0}
+                    onClick={() => {
+                      setActiveHighlightId(highlight.id);
+                      setIsCommentsOpen(true);
+                    }}
+                    icon={<MessageCircle size={28} strokeWidth={2.1} />}
+                  />
+
+                  <FrostedActionButton
+                    label="Share highlight"
+                    onClick={() => handleShare(highlight)}
+                    icon={<Share2 size={28} strokeWidth={2.1} />}
+                  />
+                </Stack>
+              </Box>
+            );
+          })}
         </Box>
       </Box>
-    </Dialog>
+
+      <HighlightCommentDrawer
+        highlightId={activeHighlightId}
+        commentsCount={activeHighlight?.comments_count || 0}
+        isOpen={isCommentsOpen}
+        onClose={() => setIsCommentsOpen(false)}
+      />
+    </>
   );
 };

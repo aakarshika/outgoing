@@ -83,7 +83,7 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
   return (
     <Box
       component={Link}
-      to={`/events/${event.id}`}
+      to={`/events-new/${event.id}`}
       sx={{
         display: 'block',
         textDecoration: 'none',
@@ -159,9 +159,8 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
           >
             <Heart
               size={16}
-              className={`transition-colors ${
-                event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
-              }`}
+              className={`transition-colors ${event.user_is_interested ? 'fill-red-500 text-red-500' : 'text-gray-500'
+                }`}
             />
           </button>
 
@@ -295,36 +294,36 @@ export const ScrapbookEventCard = ({ event }: { event: EventListItem }) => {
 
         {(event.lifecycle_state === 'published' ||
           event.lifecycle_state === 'live') && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 15,
-              right: -10,
-              bgcolor: '#fbbf24',
-              color: '#000',
-              p: '4px 15px 4px 10px',
-              transform: 'rotate(-10deg)',
-              boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
-              zIndex: 2,
-              '&::before': {
-                content: '""',
+            <Box
+              sx={{
                 position: 'absolute',
-                left: -5,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 10,
-                height: 10,
-                bgcolor: 'inherit',
-                borderRadius: '50%',
-                borderRight: '1px solid rgba(0,0,0,0.1)',
-              },
-            }}
-          >
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
-              {price}
-            </Typography>
-          </Box>
-        )}
+                bottom: 15,
+                right: -10,
+                bgcolor: '#fbbf24',
+                color: '#000',
+                p: '4px 15px 4px 10px',
+                transform: 'rotate(-10deg)',
+                boxShadow: '2px 2px 5px rgba(0,0,0,0.1)',
+                zIndex: 2,
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: -5,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 10,
+                  height: 10,
+                  bgcolor: 'inherit',
+                  borderRadius: '50%',
+                  borderRight: '1px solid rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                {price}
+              </Typography>
+            </Box>
+          )}
 
         {event.lifecycle_state === 'completed' && (
           <Box

@@ -14,8 +14,8 @@ import {
 import type { EventLifecycleState, EventListItem } from '@/types/events';
 
 import { SearchResults } from './components/SearchResults';
-import { SimpleNavbar } from './components/SimpleNavbar';
 import { SearchToolbar } from './components/SearchToolbar';
+import { SimpleNavbar } from './components/SimpleNavbar';
 import type {
   FormatFilterId,
   RoleFilterId,
@@ -23,7 +23,6 @@ import type {
   WhenFilterId,
 } from './searchTypes';
 import {
-  buildLocationSearchParams,
   buildClearFiltersSearchParams,
   buildDateSearchParams,
   buildTabSearchParams,
@@ -39,6 +38,16 @@ import {
   updateListParam,
 } from './searchUtils';
 
+const SEARCH_THEME = {
+  bgBase: '#F9F4EA',
+  bgPanel: '#FFFCF7',
+  bgMuted: '#F7EEDF',
+  border: 'rgba(120,94,60,0.2)',
+  borderSoft: 'rgba(120,94,60,0.14)',
+  text: '#3F3123',
+  textMuted: '#7A6A55',
+  accent: '#D85A30',
+};
 export default function SearchPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -46,17 +55,17 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
-  const normalizedSearchParams = useMemo(
-    () => normalizeSearchPageParams(searchParams),
-    [searchParams],
-  );
+  const normalizedSearchParams = useMemo(() => {
+    const params = normalizeSearchPageParams(searchParams);
+    params.delete('radius_miles');
+    return params;
+  }, [searchParams]);
 
   const tab = (normalizedSearchParams.get('tab') as SearchTabId) || 'trending';
   const search = normalizedSearchParams.get('search') || '';
   const location = normalizedSearchParams.get('location') || '';
   const lat = normalizedSearchParams.get('lat');
   const lng = normalizedSearchParams.get('lng');
-  const radiusMiles = normalizedSearchParams.get('radius_miles');
   const selectedDate = normalizedSearchParams.get('date') || '';
   const selectedWhenParam = normalizedSearchParams.get('when') || '';
   const selectedCategoriesParam = normalizedSearchParams.get('categories') || '';
@@ -121,10 +130,6 @@ export default function SearchPage() {
     return ['published', 'event_ready', 'live'];
   }, [tab]);
 
-  const parsedRadiusKm = radiusMiles
-    ? Math.round(Number(radiusMiles) * 1.60934) || undefined
-    : undefined;
-
   const feedSort = getFeedSort(tab);
   const isOnlineTab = tab === 'online';
 
@@ -133,7 +138,6 @@ export default function SearchPage() {
     location: isOnlineTab ? undefined : lat && lng ? undefined : location || undefined,
     lat: isOnlineTab ? undefined : lat ? Number(lat) : undefined,
     lng: isOnlineTab ? undefined : lng ? Number(lng) : undefined,
-    radius_km: isOnlineTab ? undefined : parsedRadiusKm,
     online: isOnlineTab ? true : undefined,
     sort: feedSort,
     lifecycle_states: trendingLifecycleStates,
@@ -270,11 +274,11 @@ export default function SearchPage() {
         sx={{
           position: 'sticky',
           top: 0,
+          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
           zIndex: 40,
         }}
       >
         <SimpleNavbar onCreateService={openQuickCreateService} />
-      </Box>
       <SearchToolbar
         tab={tab}
         selectedDate={selectedDate}
@@ -283,7 +287,6 @@ export default function SearchPage() {
         selectedCategories={selectedCategories}
         selectedRoles={selectedRoles}
         categories={categories}
-        radiusMiles={radiusMiles}
         onTabChange={setTab}
         onToggleWhen={(value) =>
           updateListParam(
@@ -330,20 +333,12 @@ export default function SearchPage() {
             replace: true,
           })
         }
-        onClearLocation={() =>
-          setSearchParams(
-            buildLocationSearchParams(normalizedSearchParams, { location: '' }),
-            {
-              replace: true,
-            },
-          )
-        }
-        stickyTop={74}
       />
+      </Box>
 
       <Container
         maxWidth={false}
-        sx={{ maxWidth: 960, mx: 'auto', px: { xs: 2, sm: 3 }, pt: 3 }}
+        sx={{ maxWidth: 960, mx: 'auto' }}
       >
         <SearchResults
           tab={tab}
@@ -355,8 +350,8 @@ export default function SearchPage() {
           isFeedLoading={isFeedLoading}
           isOpportunitiesLoading={isOpportunitiesLoading}
           isAuthenticated={isAuthenticated}
-          onEventClick={(eventId) => navigate(`/events/${eventId}`)}
-          onOpportunityClick={(eventId) => navigate(`/events/${eventId}`)}
+          onEventClick={(eventId) => navigate(`/events-new/${eventId}`)}
+          onOpportunityClick={(eventId) => navigate(`/events-new/${eventId}`)}
           onCreateService={openQuickCreateService}
           onSignIn={() => navigate('/signin')}
         />

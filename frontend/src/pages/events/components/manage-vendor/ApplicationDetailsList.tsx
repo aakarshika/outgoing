@@ -1,3 +1,4 @@
+import { Button, Chip } from '@mui/material';
 import { Edit2, Pencil } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,7 +8,6 @@ import { ComicButton } from '@/components/ui/ComicButton';
 
 import { EnclosingBox } from '../manage-redesign/ui/EnclosingBox';
 import { VendorAgreement } from './VendorAgreement';
-import { Button, Chip } from '@mui/material';
 
 interface ApplicationDetailsListProps {
   applications: any[];
@@ -79,32 +79,34 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                       )}
                     </div>
 
-                    {tone === 'comic' ? (<div className="flex items-center gap-2">
-                      <ComicButton
-                        type="button"
-                        onClick={() =>
-                          navigate(
-                            `/events/${application.event_id}/service-event-management`,
-                          )
-                        }
-                        color={manageButtonColor}
-                        accentColor={manageButtonAccent}
-                        Icon={
-                          application.event_status == 'Completed' ? undefined : Pencil
-                        }
-                        label={` ${application.event_status == 'Completed' ? 'Go to Gig' : 'Manage Gig'}`}
-                      ></ComicButton>
-                      {application.status === 'pending' && (
+                    {tone === 'comic' ? (
+                      <div className="flex items-center gap-2">
                         <ComicButton
                           type="button"
-                          onClick={() => setEditingApplication(application)}
-                          Icon={Edit2}
-                          color={editButtonColor}
-                          accentColor={editButtonAccent}
-                          label="Edit"
+                          onClick={() =>
+                            navigate(
+                              `/events/${application.event_id}/service-event-management`,
+                            )
+                          }
+                          color={manageButtonColor}
+                          accentColor={manageButtonAccent}
+                          Icon={
+                            application.event_status == 'Completed' ? undefined : Pencil
+                          }
+                          label={` ${application.event_status == 'Completed' ? 'Go to Gig' : 'Manage Gig'}`}
                         ></ComicButton>
-                      )}
-                    </div>) : (
+                        {application.status === 'pending' && (
+                          <ComicButton
+                            type="button"
+                            onClick={() => setEditingApplication(application)}
+                            Icon={Edit2}
+                            color={editButtonColor}
+                            accentColor={editButtonAccent}
+                            label="Edit"
+                          ></ComicButton>
+                        )}
+                      </div>
+                    ) : (
                       <div className="flex items-center gap-2">
                         {/* <Button
                           size="small"
@@ -148,7 +150,8 @@ export const ApplicationDetailsList: React.FC<ApplicationDetailsListProps> = ({
                             Edit Application
                           </Button>
                         )}
-                      </div>)}
+                      </div>
+                    )}
                   </div>
 
                   <>

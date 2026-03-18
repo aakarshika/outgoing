@@ -344,7 +344,7 @@ export const StatusBannerSection = ({
                   return (
                     <Box
                       key={occ.id}
-                      onClick={() => !isCurrent && navigate(`/events/${occ.id}`)}
+                      onClick={() => !isCurrent && navigate(`/events-new/${occ.id}`)}
                       sx={{
                         minWidth: 100,
                         cursor: isCurrent ? 'default' : 'pointer',

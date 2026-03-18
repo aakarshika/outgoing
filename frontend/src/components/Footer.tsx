@@ -8,211 +8,249 @@ export function Footer() {
 
   const currentYear = new Date().getFullYear();
 
+  return null;
   return (
     <Box
       component="footer"
       sx={{
-        bgcolor: '#ffd78dff', // Slightly darker old paper tone
-        borderTop: '3px dashed #d1d5db',
-        pt: 8,
-        pb: 4,
-        px: { xs: 4, sm: 6, lg: 8 },
+        bgcolor: '#fefcf2ff', // Soft yellowish cream
+        borderTop: '1px solid #e2e8f0',
+        pt: { xs: 4, md: 6 },
+        pb: { xs: 3, md: 4 },
+        px: { xs: 2, sm: 6, lg: 8 },
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Decorative Tape */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -10,
-          left: '50%',
-          transform: 'translateX(-50%) rotate(-2deg)',
-          width: 120,
-          height: 25,
-          bgcolor: 'rgba(239, 68, 68, 0.4)', // Red tape
-          zIndex: 10,
-        }}
-      />
-
       <Box
         sx={{
           maxWidth: 1200,
           mx: 'auto',
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr 1fr' },
-          gap: 6,
-          mb: 6,
+          mb: { xs: 3, md: 4 },
         }}
       >
-        {/* Brand Section */}
-        <Box>
-          <Typography
-            variant="h4"
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr 1fr 1fr', md: '2fr 1fr 1fr 1fr' },
+            gap: { xs: 2.5, md: 8 },
+            alignItems: 'start',
+          }}
+        >
+          {/* Brand Section */}
+          <Box
             sx={{
-              fontFamily: '"Permanent Marker"',
-              color: '#1a1a1a',
-              mb: 2,
-              transform: 'rotate(-2deg)',
+              gridColumn: { xs: '1 / span 3', md: 'auto' },
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: { xs: 3, md: 0 },
             }}
           >
-            Outgoing
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: '"Caveat", cursive',
-              fontSize: '1.2rem',
-              color: '#4b5563',
-              maxWidth: 300,
-              lineHeight: 1.4,
-            }}
-          >
-            Turning every living room, rooftop, and backyard into the best venue in the
-            city. Start hosting or find your next adventure.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <a
-              href="#"
-              className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition-transform hover:-rotate-6 border border-gray-200"
+            <Typography
+              variant="h4"
+              sx={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 800,
+                color: '#1e293b',
+                mb: 1,
+                fontSize: { xs: '1.8rem', md: '2rem' },
+                letterSpacing: '-0.02em',
+              }}
             >
-              <Instagram size={20} color="#1a1a1a" />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition-transform hover:rotate-6 border border-gray-200"
+              Outgoing
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: '"Inter", sans-serif',
+                fontSize: { xs: '0.85rem', md: '0.9rem' },
+                color: '#64748b',
+                maxWidth: { xs: '90%', md: 300 },
+                lineHeight: 1.5,
+                mx: 'auto',
+              }}
             >
-              <Twitter size={20} color="#1a1a1a" />
-            </a>
-            <a
-              href="#"
-              className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition-transform hover:-rotate-3 border border-gray-200"
+              Turning every room and rooftop into the best venue.
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1.5,
+                mt: 2,
+                justifyContent: 'center',
+              }}
             >
-              <Facebook size={20} color="#1a1a1a" />
-            </a>
+              <a
+                href="#"
+                className="p-2 bg-white rounded-full shadow-sm hover:scale-105 transition-transform border border-slate-100 text-slate-500"
+              >
+                <Instagram size={18} />
+              </a>
+              <a
+                href="#"
+                className="p-2 bg-white rounded-full shadow-sm hover:scale-105 transition-transform border border-slate-100 text-slate-500"
+              >
+                <Twitter size={18} />
+              </a>
+              <a
+                href="#"
+                className="p-2 bg-white rounded-full shadow-sm hover:scale-105 transition-transform border border-slate-100 text-slate-500"
+              >
+                <Facebook size={18} />
+              </a>
+            </Box>
           </Box>
-        </Box>
 
-        {/* Links 1 */}
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '1.1rem',
-              color: '#374151',
-              mb: 3,
-            }}
-          >
-            Explore
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Link
-              to="/events"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+          {/* Links 1 */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              sx={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: '#94a3b8',
+                mb: 1.5,
+              }}
             >
-              All Events
-            </Link>
-            <Link
-              to="/requests"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+              Explore
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                alignItems: 'center',
+              }}
             >
-              Community Requests
-            </Link>
-            <Link
-              to="/services"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Hire Talent
-            </Link>
-            <Link
-              to="/events/create"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Host an Event
-            </Link>
+              <Link
+                to="/events"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Events
+              </Link>
+              <Link
+                to="/requests"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Requests
+              </Link>
+              <Link
+                to="/services"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Talent
+              </Link>
+              <Link
+                to="/events/create"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Host
+              </Link>
+            </Box>
           </Box>
-        </Box>
 
-        {/* Links 2 */}
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '1.1rem',
-              color: '#374151',
-              mb: 3,
-            }}
-          >
-            Company
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+          {/* Links 2 */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              sx={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: '#94a3b8',
+                mb: 1.5,
+              }}
             >
-              About Us
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+              Company
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                alignItems: 'center',
+              }}
             >
-              Careers
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Contact
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Trust & Safety
-            </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                About
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Careers
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Contact
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Safety
+              </Link>
+            </Box>
           </Box>
-        </Box>
 
-        {/* Links 3 */}
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Permanent Marker"',
-              fontSize: '1.1rem',
-              color: '#374151',
-              mb: 3,
-            }}
-          >
-            Legal
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+          {/* Links 3 */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              sx={{
+                fontFamily: '"Syne", sans-serif',
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: '#94a3b8',
+                mb: 1.5,
+              }}
             >
-              Terms of Service
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
+              Legal
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                alignItems: 'center',
+              }}
             >
-              Privacy Policy
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Cookie Policy
-            </Link>
-            <Link
-              to="#"
-              className="font-serif text-sm text-gray-600 hover:text-primary hover:underline transition-colors w-fit"
-            >
-              Host Agreement
-            </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Terms
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Privacy
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Cookie
+              </Link>
+              <Link
+                to="#"
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Host
+              </Link>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -220,25 +258,26 @@ export function Footer() {
       {/* Bottom Bar */}
       <Box
         sx={{
-          borderTop: '1px solid rgba(0,0,0,0.1)',
-          pt: 4,
+          borderTop: '1px solid rgba(0,0,0,0.05)',
+          pt: 2.5,
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
-          gap: 2,
+          textAlign: 'center',
+          gap: 1,
         }}
       >
-        <Typography sx={{ fontFamily: 'serif', fontSize: '0.85rem', color: '#6b7280' }}>
-          &copy; {currentYear} Outgoing, Inc. All rights reserved.
+        <Typography
+          sx={{
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '0.7rem',
+            color: '#94a3b8',
+            fontWeight: 500,
+          }}
+        >
+          &copy; {currentYear} Outgoing, Inc. &bull; Built for the culture.
         </Typography>
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          <Typography
-            sx={{ fontFamily: 'serif', fontSize: '0.85rem', color: '#6b7280' }}
-          >
-            Built with 💛 for the culture.
-          </Typography>
-        </Box>
       </Box>
     </Box>
   );

@@ -105,7 +105,7 @@ export default function CreateEventPage() {
     try {
       const result = await createEvent(formData);
       toast.success('Event created!');
-      navigate(`/events/${result.data.id}`);
+      navigate(`/events-new/${result.data.id}`);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to create event');
     } finally {

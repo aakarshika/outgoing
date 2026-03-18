@@ -231,4 +231,4 @@ const ComicSinkButton = React.forwardRef<HTMLButtonElement, ComicSinkButtonProps
 );
 ComicSinkButton.displayName = 'ComicSinkButton';
 
-export { ComicSinkButton, comicButtonVariants };
+export { comicButtonVariants, ComicSinkButton };

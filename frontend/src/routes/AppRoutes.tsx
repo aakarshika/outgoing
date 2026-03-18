@@ -13,10 +13,13 @@ const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
+const SettingsNewPage = lazy(() => import('@/pages/profile/settings-new/SettingsNewPage'));
 const HomePage = lazy(() => import('@/pages/home/RootHomePage'));
 const HomePageRenewed = lazy(() => import('@/pages/home/HomePageRenewed'));
 const HighlightsPage = lazy(() => import('@/pages/highlights/HighlightsPage'));
+const HighlightsReelsPage = lazy(() => import('@/pages/highlightsreels/HighlightsReelsPage'));
 const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
+const EventDetailV2Page = lazy(() => import('@/pages/events/EventDetailPageV2'));
 const PlanningWorkspacePage = lazy(
   () => import('@/pages/events/PlanningWorkspacePage'),
 );
@@ -45,9 +48,12 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignIn: SignInPage,
   Profile: ProfilePage,
   UserProfile: UserProfilePage,
+  SettingsNew: SettingsNewPage,
   Home: HomePage,
   Highlights: HighlightsPage,
+  HighlightsReels: HighlightsReelsPage,
   EventDetail: EventDetailNewPage,
+  EventDetailV2: EventDetailV2Page,
   PlanningWorkspace: PlanningWorkspacePage,
   CreateEvent: CreateEventPage,
   ManageForHost: ManageForHostPage,
@@ -72,6 +78,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
 };
 
 import { useAuth } from '@/features/auth/AuthContext';
+import { Box } from '@mui/material';
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -102,7 +109,11 @@ export const AppRoutes = () => {
           >
             {/* shift towards left because sidebar is fixed on the right side. for the paths in : isNativeSidebarPath */}
             <div className={isSidebarActive ? 'md:pr-[22rem]' : ''}>
+              <Box className="relative">
+              <Box className="absolute top-0 right-0 w-full h-full">
               <Component />
+              </Box>
+              </Box>
             </div>
           </Suspense>
         </ThemeWrapper>

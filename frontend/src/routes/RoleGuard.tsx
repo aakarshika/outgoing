@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/AuthContext';
 import { UserRole } from '@/types/roles';
@@ -18,6 +18,7 @@ export const RoleGuard = ({
   children,
 }: RoleGuardProps) => {
   const { user, isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -39,7 +40,8 @@ export const RoleGuard = ({
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/signin" replace />;
+    const redirectTo = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/signin?redirectTo=${redirectTo}`} replace />;
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role || UserRole.USER)) {

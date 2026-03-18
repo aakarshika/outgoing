@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from 'date-fns';
+
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 
 import type { AllChatsListResponse, FriendshipItem } from './api';
@@ -13,6 +15,12 @@ export interface AllChatEntry {
   subtitle: string;
   badgeLabel: string;
   updatedAt: string | null;
+  latestMessageText?: string | null;
+  latestMessageSenderUsername?: string | null;
+  groupRole?: 'hosting' | 'servicing' | null;
+  attendeeCount?: number | null;
+  locationName?: string | null;
+  startTime?: string | null;
   eventId?: number;
   conversationId?: number;
   targetUsername?: string;
@@ -85,6 +93,11 @@ export function buildAllChatEntries({
 }: BuildAllChatEntriesOptions): AllChatEntry[] {
   const baseResponse = response ?? null;
   const entries: AllChatEntry[] = [];
+  const friendUsernames = new Set(
+    currentUsername
+      ? friendships.map((f) => otherUsername(f, currentUsername).trim().toLowerCase())
+      : [],
+  );
   const eventRowsById = new Map(
     eventOverviewRows
       .filter((row) => row.event_details)
@@ -93,19 +106,39 @@ export function buildAllChatEntries({
 
   if (baseResponse) {
     entries.push(
-      ...baseResponse.management_group.map((chat) => ({
-        id: `group-${chat.event_id}`,
-        mode: 'group' as const,
-        section: 'management' as const,
-        title: chat.event_title || 'Event group chat',
-        subtitle: 'Host + vendor group chat',
-        badgeLabel: 'Group',
-        updatedAt: chat.latest_message_at || null,
-        eventId: chat.event_id,
-        eventTitle: chat.event_title,
-        coverImage:
-          eventRowsById.get(chat.event_id)?.event_details?.cover_image || null,
-      })),
+      ...baseResponse.management_group.map((chat) => {
+        const eventRow = eventRowsById.get(chat.event_id);
+        const eventDetails = eventRow?.event_details;
+        const isHost = eventRow?.host_user_id === currentUserId;
+        const isVendor =
+          eventRow?.need_applied_to_user_id === currentUserId ||
+          eventRow?.need_application_requested_by_host_vendor_user_id === currentUserId ||
+          eventRow?.need_assigned_user_id === currentUserId;
+        const groupRole: AllChatEntry['groupRole'] = isHost
+          ? 'hosting'
+          : isVendor
+            ? 'servicing'
+            : null;
+
+        return {
+          id: `group-${chat.event_id}`,
+          mode: 'group' as const,
+          section: 'management' as const,
+          title: chat.event_title || 'Event group chat',
+          subtitle: 'Host + vendor group chat',
+          badgeLabel: 'Group',
+          updatedAt: chat.latest_message_at || null,
+          latestMessageText: chat.latest_message_text || null,
+          latestMessageSenderUsername: chat.latest_message_sender_username || null,
+          groupRole,
+          attendeeCount: eventDetails?.ticket_count ?? null,
+          locationName: eventDetails?.location_name || null,
+          startTime: eventDetails?.start_time || null,
+          eventId: chat.event_id,
+          eventTitle: chat.event_title,
+          coverImage: eventDetails?.cover_image || null,
+        };
+      }),
     );
 
     entries.push(
@@ -119,6 +152,8 @@ export function buildAllChatEntries({
           : 'Private event conversation',
         badgeLabel: 'Event',
         updatedAt: chat.updated_at || null,
+        latestMessageText: chat.latest_message_text || null,
+        latestMessageSenderUsername: chat.latest_message_sender_username || null,
         eventId: chat.event_id ?? undefined,
         conversationId: chat.conversation_id,
         otherUsername: chat.other_username,
@@ -131,21 +166,28 @@ export function buildAllChatEntries({
     );
 
     entries.push(
-      ...baseResponse.network.map((chat) => ({
-        id: `private-${chat.conversation_id}`,
-        mode: 'private' as const,
-        section: 'network' as const,
-        title: chat.other_username ? `@${chat.other_username}` : 'Direct chat',
-        subtitle: chat.event_title ? `Met through ${chat.event_title}` : 'User chat',
-        badgeLabel: 'Direct',
-        updatedAt: chat.updated_at || null,
-        eventId: chat.event_id ?? undefined,
-        conversationId: chat.conversation_id,
-        otherUsername: chat.other_username,
-        otherAvatar: chat.other_avatar,
-        eventTitle: chat.event_title,
-        targetUsername: chat.other_username ?? undefined,
-      })),
+      ...baseResponse.network.map((chat) => {
+        const other = (chat.other_username || '').trim().toLowerCase();
+        const isFriend = other ? friendUsernames.has(other) : false;
+
+        return {
+          id: `private-${chat.conversation_id}`,
+          mode: 'private' as const,
+          section: 'network' as const,
+          title: chat.other_username ? `@${chat.other_username}` : 'Direct chat',
+          subtitle: chat.event_title ? `Met through ${chat.event_title}` : 'User chat',
+          badgeLabel: isFriend ? 'Friend' : 'Direct',
+          updatedAt: chat.updated_at || null,
+          latestMessageText: chat.latest_message_text || null,
+          latestMessageSenderUsername: chat.latest_message_sender_username || null,
+          eventId: chat.event_id ?? undefined,
+          conversationId: chat.conversation_id,
+          otherUsername: chat.other_username,
+          otherAvatar: chat.other_avatar,
+          eventTitle: chat.event_title,
+          targetUsername: chat.other_username ?? undefined,
+        };
+      }),
     );
   }
 
@@ -168,6 +210,10 @@ export function buildAllChatEntries({
     if (entriesByEventId.has(row.event_id)) continue;
 
     const isHost = row.host_user_id === currentUserId;
+    const isVendor =
+      row.need_applied_to_user_id === currentUserId ||
+      row.need_application_requested_by_host_vendor_user_id === currentUserId ||
+      row.need_assigned_user_id === currentUserId;
     entries.push({
       id: `group-${row.event_id}`,
       mode: 'group',
@@ -176,6 +222,12 @@ export function buildAllChatEntries({
       subtitle: isHost ? 'Host' : 'Vendor group chat',
       badgeLabel: 'Group',
       updatedAt: row.event_details?.start_time || row.event_created_date || null,
+      latestMessageText: null,
+      latestMessageSenderUsername: null,
+      groupRole: isHost ? 'hosting' : isVendor ? 'servicing' : null,
+      attendeeCount: row.event_details?.ticket_count ?? row.number_of_tickets_purchased_not_cancelled,
+      locationName: row.event_details?.location_name || null,
+      startTime: row.event_details?.start_time || null,
       eventId: row.event_id,
       eventTitle: row.event_details?.title || null,
       coverImage: row.event_details?.cover_image || null,
@@ -200,6 +252,8 @@ export function buildAllChatEntries({
           : 'Friend',
         badgeLabel: 'Friend',
         updatedAt: friendship.updated_at || friendship.created_at || null,
+        latestMessageText: null,
+        latestMessageSenderUsername: null,
         targetUsername: username,
         otherUsername: username,
         eventId: friendship.met_at_event ?? undefined,
@@ -210,14 +264,7 @@ export function buildAllChatEntries({
     }
   }
 
-  const managementEntries = sortByUpdatedAtDesc(
-    entries.filter((entry) => entry.section === 'management'),
-  );
-  const networkEntries = sortByUpdatedAtDesc(
-    entries.filter((entry) => entry.section === 'network'),
-  );
-
-  return [...managementEntries, ...networkEntries];
+  return sortByUpdatedAtDesc(entries);
 }
 
 export function formatChatTimestamp(value?: string | null) {
@@ -248,4 +295,25 @@ export function formatChatTimestamp(value?: string | null) {
     day: 'numeric',
     ...(isSameYear ? {} : { year: 'numeric' }),
   });
+}
+
+export function formatChatRelativeTime(value?: string | null) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return formatDistanceToNow(date, { addSuffix: true });
+}
+
+export function formatChatMessagePreview(
+  sender?: string | null,
+  text?: string | null,
+  fallback = 'No messages yet',
+) {
+  const cleanText = text?.trim();
+  if (!cleanText) return fallback;
+
+  const cleanSender = sender?.trim();
+  return cleanSender ? `${cleanSender}: ${cleanText}` : cleanText;
 }

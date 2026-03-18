@@ -260,7 +260,7 @@ export default function ManageEventPage() {
     if (!isLoadingEvent && event && user) {
       if (event.host.username !== user.username) {
         toast.error('You are not authorized to manage this event');
-        navigate(`/events/${event.id}`);
+        navigate(`/events-new/${event.id}`);
       }
     }
   }, [event, user, isLoadingEvent, navigate]);
@@ -510,7 +510,7 @@ export default function ManageEventPage() {
       <div className="mx-auto max-w-4xl">
         <div className="relative mb-8 flex items-center gap-4">
           <button
-            onClick={() => navigate(`/events/${event.id}`)}
+            onClick={() => navigate(`/events-new/${event.id}`)}
             className="flex items-center justify-center h-10 w-10 border-2 border-gray-800 rounded-full bg-white shadow-[2px_2px_0px_#333] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#333] transition-all relative z-10"
           >
             <ArrowLeft className="h-5 w-5" />

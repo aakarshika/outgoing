@@ -11,12 +11,16 @@ import Lottie from 'lottie-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useFeed, useIconicHostsFeed, useTrendingHighlights } from '@/features/events/hooks';
-import type { EventListItem } from '@/types/events';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
 import { HostCard } from '@/components/ui/HostCard';
+import {
+  useFeed,
+  useIconicHostsFeed,
+  useTrendingHighlights,
+} from '@/features/events/hooks';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
+import type { EventListItem } from '@/types/events';
 
 const categoryChips = [
   { label: 'Outdoors', icon: '🏃' },
@@ -143,11 +147,12 @@ function EventCard({
   return (
     <Box
       sx={{
-        background: 'var(--color-background-primary)',
+        background: '#F9F9F9',
         border: '0.5px solid var(--color-border-tertiary)',
         borderRadius: '24px',
         overflow: 'hidden',
         minWidth: 0,
+        height: '100%',
       }}
     >
       <Box
@@ -237,7 +242,7 @@ function ThingsToDoCard({
   return (
     <Box
       sx={{
-        background: 'var(--color-background-primary)',
+        background: '#F9F9F9',
         border: '0.5px solid var(--color-border-tertiary)',
         borderLeft: `3px solid ${isOnline ? '#1D9E75' : '#D85A30'}`,
         borderRadius: '24px',
@@ -245,6 +250,7 @@ function ThingsToDoCard({
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
+        height: '100%',
       }}
     >
       {event.cover_image ? (
@@ -446,29 +452,49 @@ function SectionHeader({
   );
 }
 
+function HorizontalScrollRow({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1.75,
+        overflowX: 'auto',
+        pb: 1,
+        scrollSnapType: 'x proximity',
+        WebkitOverflowScrolling: 'touch',
+        '&::-webkit-scrollbar': {
+          height: 8,
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(120, 94, 60, 0.18)',
+          borderRadius: '999px',
+        },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
 export default function GuestLandingPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterChip>('This weekend');
-  const [hasNearbySectionInView, setHasNearbySectionInView] = useState(false);
   const [heroAnimationData, setHeroAnimationData] = useState<object | null>(null);
   const nearbySectionRef = useRef<HTMLDivElement | null>(null);
   const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
   const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
-    sort: 'trending',
-    page_size: 4,
+    sort: 'trending'
   });
   const { data: onlineResponse, isLoading: loadingOnline } = useFeed({
     online: true,
-    sort: 'upcoming',
-    page_size: 4,
+    sort: 'upcoming'
   });
   const { data: discoverResponse, isLoading: loadingDiscover } = useFeed({
     sort: activeFilter === 'Tonight' ? 'upcoming' : 'trending',
     online: activeFilter === 'Contributor spots open' ? undefined : false,
-    weekend: activeFilter === 'This weekend' ? true : undefined,
-    page_size: 4,
+    weekend: activeFilter === 'This weekend' ? true : undefined
   });
 
   const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]).slice(0, 4);
@@ -533,121 +559,15 @@ export default function GuestLandingPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const section = nearbySectionRef.current;
-
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setHasNearbySectionInView(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2,
-        rootMargin: '-72px 0px 0px 0px',
-      },
-    );
-
-    observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <Box sx={{ background: '--var(--color-background-primary)' }}>
-      {false && (<Box
-        component="header"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          // backgroundColor: 'var(--color-background-primary)',
-        }}
-      >
-        <Container
-          maxWidth={false}
-          sx={{
-            maxWidth: 1240,
-            background: hasNearbySectionInView ? 'rgba(255, 233, 205, 0.7)' : '#D85A30',
-            transition: 'background-color 1000ms ease',
-            px: { xs: 1.5, sm: 3 },
-            py: 1.25,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: { xs: 0.75, sm: 1.5 },
-              flexWrap: 'nowrap',
-              minWidth: 0,
-            }}
-          >
-            <Box
-              onClick={() => navigate('/')}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-                pr: 0.5,
-                minWidth: 0,
-              }}
-            >
-              <Typography
-                sx={{
-                  mt: 2,
-                  fontFamily: 'Syne, sans-serif',
-                  fontWeight: 800,
-                  fontSize: { xs: 24, sm: 32 },
-                  letterSpacing: '-0.03em',
-                  color: hasNearbySectionInView ? '#D85A30' : '#ffffff',
-                  transition: 'color 180ms ease',
-                  whiteSpace: 'nowrap',
-                  maxWidth: 580,
-                  mx: 'auto',
-                  lineHeight: 1.65,
-                }}
-              >
-                <span className="">
-                  <strong>out</strong>
-                </span>
-                <Box
-                  component="span"
-                  aria-label="go"
-                  role="img"
-                  sx={{
-                    display: 'inline-block',
-                    width: { xs: 30, md: 36 },
-                    height: { xs: 30, md: 35 },
-                    // pt: 7,
-                    // mx: 0.5,
-                    transform: 'translateY(10px)',
-                    backgroundColor: 'currentColor',
-                    maskImage: "url('/assets/go-symbol.png')",
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                    maskSize: 'contain',
-                    WebkitMaskImage: "url('/assets/go-symbol.png')",
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                  }}
-                />
-                {''}
-                <strong>ing</strong>
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Box>)}
-
+    <Box sx={{ background: '--#F9F9F9' }}>
       <Box
         sx={{
           background: '#D85A30',
           textAlign: 'center',
+          height: '100vh',
           px: 2,
-          py: { xs: 7, md: 10 },
+          pt: 12,
         }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 900, mb: 10 }}>
@@ -659,7 +579,7 @@ export default function GuestLandingPage() {
               color: '#fff',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              mt: 10,
+              mt: 2,
               fontSize: 12,
             }}
           />
@@ -788,28 +708,6 @@ export default function GuestLandingPage() {
         </Container>
       </Box>
 
-      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
-        <SectionHeader label="Explore by interest" title="Popular categories" />
-        <Stack direction="row" flexWrap="wrap" gap={1.25}>
-          {categoryChips.map((chip) => (
-            <Chip
-              key={chip.label}
-              label={`${chip.icon} ${chip.label}`}
-              onClick={() => navigate('/search')}
-              sx={{
-                borderRadius: '999px',
-                px: 1,
-                py: 2.75,
-                border: '0.5px solid var(--color-border-tertiary)',
-                background: 'var(--color-background-primary)',
-                color: 'var(--color-text-primary)',
-                fontSize: 14,
-              }}
-            />
-          ))}
-        </Stack>
-      </Container>
-
       <Box
         sx={{
           height: '0.5px',
@@ -827,35 +725,63 @@ export default function GuestLandingPage() {
         <SectionHeader
           label="Near you"
           title="Events happening in your city"
-          description="Baltimore · This weekend"
+          description="This weekend"
         />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: 1.75,
-          }}
-        >
+        <HorizontalScrollRow>
           {nearbyEvents.map((event) => (
-            <SmallEventCard key={event.id} event={event} />
+            <Box
+              key={event.id}
+              sx={{
+                flex: '0 0 clamp(260px, 32vw, 320px)',
+                minWidth: 0,
+                scrollSnapAlign: 'start',
+              }}
+            >
+              <SmallEventCard event={event} />
+            </Box>
           ))}
-        </Box>
+        </HorizontalScrollRow>
+      </Container>
+
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
+        <SectionHeader label="Explore by interest" title="Popular categories" />
+        <Stack direction="row" flexWrap="wrap" gap={1.25}>
+          {categoryChips.map((chip) => (
+            <Chip
+              key={chip.label}
+              label={`${chip.icon} ${chip.label}`}
+              onClick={() => navigate('/search')}
+              sx={{
+                borderRadius: '999px',
+                px: 1,
+                py: 2.75,
+                border: '0.5px solid var(--color-border-tertiary)',
+                background: '#F9F9F9',
+                color: 'var(--color-text-primary)',
+                fontSize: 14,
+              }}
+            />
+          ))}
+        </Stack>
       </Container>
 
       <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
         <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
           <SectionHeader label="Join from anywhere" title="Events happening online" />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {onlineEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <Box
+                key={event.id}
+                sx={{
+                  flex: '0 0 clamp(260px, 32vw, 320px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <EventCard event={event} />
+              </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         </Container>
       </Box>
 
@@ -870,7 +796,7 @@ export default function GuestLandingPage() {
               sx={{
                 borderRadius: '999px',
                 background:
-                  activeFilter === chip ? '#D85A30' : 'var(--color-background-primary)',
+                  activeFilter === chip ? '#D85A30' : '#F9F9F9',
                 color: activeFilter === chip ? '#fff' : 'var(--color-text-primary)',
                 border:
                   activeFilter === chip
@@ -886,21 +812,23 @@ export default function GuestLandingPage() {
             <CircularProgress sx={{ color: '#D85A30' }} />
           </Box>
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {discoverEvents.map((event) => (
-              <ThingsToDoCard
+              <Box
                 key={event.id}
-                event={event}
-                showNeedCallout={activeFilter === 'Contributor spots open'}
-              />
+                sx={{
+                  flex: '0 0 clamp(260px, 32vw, 320px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <ThingsToDoCard
+                  event={event}
+                  showNeedCallout={activeFilter === 'Contributor spots open'}
+                />
+              </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         )}
       </Container>
 
@@ -956,17 +884,16 @@ export default function GuestLandingPage() {
             label="What people are talking about"
             title="Trending highlights"
           />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 1.75,
-            }}
-          >
+          <HorizontalScrollRow>
             {trendingHighlights.map((highlight: any) => (
               <Box
                 key={highlight.id}
-                sx={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
+                sx={{
+                  flex: '0 0 clamp(200px, 25vw, 260px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                  cursor: 'pointer',
+                }}
                 onClick={() => {
                   setSelectedHighlightId(highlight.id);
                   setIsHighlightViewerOpen(true);
@@ -975,7 +902,7 @@ export default function GuestLandingPage() {
                 <HighlightCard highlight={highlight} disableHover />
               </Box>
             ))}
-          </Box>
+          </HorizontalScrollRow>
         </Container>
       </Box>
 
@@ -1011,7 +938,7 @@ export default function GuestLandingPage() {
                 key={city.name}
                 onClick={() => navigate('/search')}
                 sx={{
-                  background: 'var(--color-background-primary)',
+                  background: '#F9F9F9',
                   border: '0.5px solid var(--color-border-tertiary)',
                   borderRadius: '24px',
                   p: 2,
@@ -1058,7 +985,7 @@ export default function GuestLandingPage() {
             <Box
               key={card.title}
               sx={{
-                background: 'var(--color-background-primary)',
+                background: '#F9F9F9',
                 border: '0.5px solid var(--color-border-tertiary)',
                 borderRadius: '24px',
                 p: 2.5,
@@ -1104,7 +1031,7 @@ export default function GuestLandingPage() {
       </Container>
 
       <Box
-        sx={{ background: '#D85A30', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
+        sx={{ background: '#D85A30', height: '70vh', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 800 }}>
           <Typography

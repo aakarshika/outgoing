@@ -1,6 +1,5 @@
-import type { RefObject } from 'react';
-
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import type { RefObject } from 'react';
 
 import type { CoreNetworkItem, NetworkFilter } from '../types';
 import { BuddySpotlightCard } from './BuddySpotlightCard';

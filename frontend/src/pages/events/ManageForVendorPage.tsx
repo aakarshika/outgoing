@@ -58,7 +58,7 @@ export default function ManageForVendorPage() {
   const vendorStepMatch = useMatch('/events/:id/service-event-management/:step');
   const activeSlug = vendorStepMatch?.params.step;
   const vendorBasePath = id
-    ? `/events/${id}/service-event-management`
+    ? `/events-new/${id}/service-event-management`
     : '/events/service-event-management';
   const fallbackStep = VENDOR_STEPS[0];
   const matchedStep = activeSlug
@@ -98,7 +98,7 @@ export default function ManageForVendorPage() {
         toast.error(
           'You do not have permission to access the vendor management view for this event.',
         );
-        navigate(`/events/${id}`);
+        navigate(`/events-new/${id}`);
       }
     }
   }, [isEventLoading, event, user, id, navigate]);

@@ -8,8 +8,8 @@ import {
   useTrendingHighlights,
 } from '@/features/events/hooks';
 import { HorizontalScrapbookList } from '@/features/events/HorizontalScrapbookList';
-import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { HeroNegativeStripGallery } from '@/pages/events/components/HeroNegativeStripGallery';
+import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { useNearYou } from '@/utils/useNearYou';
 
 // --- Reusable Feed Section ---

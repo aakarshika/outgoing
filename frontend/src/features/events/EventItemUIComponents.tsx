@@ -1,15 +1,15 @@
-import { createContext, useContext, useMemo } from 'react';
-import { formatEventPrice, getEventCardRoles } from './scrapbookCard';
 import { Box, Typography, TypographyProps } from '@mui/material';
 import { Calendar, Globe } from 'lucide-react';
+import { createContext, useContext, useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/hooks';
+import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 import { formatEventRelativeTime } from '@/utils/dateUtils';
 
 import { getCategoryTheme } from './CategoricalBackground';
 import { LocationTag } from './LocationTag';
+import { formatEventPrice, getEventCardRoles } from './scrapbookCard';
 import { ImageWatermarkPlaceholder } from './scrapbookCard';
-import { PosterForEventCard } from '@/pages/events/components/PosterForEventCard';
 
 // Calculate font size based on content length with optional multiplier
 // For title: base 3rem, decreases by 0.06rem per character (1/50 * 3 = 0.06)

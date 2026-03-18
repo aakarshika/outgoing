@@ -114,7 +114,7 @@ export function WrapUpStep({ event, readonly }: WrapUpStepProps) {
       {/* Post-Event Actions */}
       <div className="grid md:grid-cols-2 gap-6">
         <a
-          href={`/events/${event?.id}#highlights`}
+          href={`/events-new/${event?.id}#highlights`}
           className="bg-white border-2 border-gray-800 p-6 shadow-[3px_4px_0px_#333] hover:-translate-y-1 transition-all group"
         >
           <div className="flex items-center gap-4">

@@ -1,7 +1,7 @@
-import { Box, Drawer, IconButton, Typography } from '@mui/material';
-import { X } from 'lucide-react';
+import { Drawer } from '@mui/material';
 
 import { HighlightComments } from './HighlightComments';
+import { HighlightCommentDrawerHeader } from './HighlightCommentSheetParts';
 
 interface HighlightCommentDrawerProps {
   highlightId: number | null;
@@ -23,67 +23,22 @@ export const HighlightCommentDrawer = ({
       onClose={onClose}
       PaperProps={{
         sx: {
-          height: '85%',
-          maxWidth: { md: '600px' },
+          height: { xs: '78%', sm: '74%', md: '78%' },
+          maxWidth: { xs: '100%', md: '640px' },
           mx: 'auto',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: '#f4f1ea',
-          backgroundImage: 'radial-gradient(#d1d5db 0.5px, transparent 0.5px)',
-          backgroundSize: '15px 15px',
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
-          border: '3px solid #333',
-          borderBottom: 'none',
+          bgcolor: '#fff',
+          borderTopLeftRadius: { xs: 24, sm: 28 },
+          borderTopRightRadius: { xs: 24, sm: 28 },
+          border: '1px solid rgba(15, 23, 42, 0.08)',
+          boxShadow: '0 -24px 80px rgba(15, 23, 42, 0.22)',
         },
       }}
-      sx={{
-        zIndex: 10005,
-      }}
+      sx={{ zIndex: 10005 }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          borderBottom: '2px solid #333',
-          position: 'relative',
-          bgcolor: 'white',
-        }}
-      >
-        {/* Washi tape decor */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -10,
-            left: '40%',
-            width: '80px',
-            height: '20px',
-            bgcolor: 'rgba(252, 211, 77, 0.6)',
-            transform: 'rotate(-2deg)',
-            zIndex: 1,
-            border: '1px solid rgba(0,0,0,0.1)',
-          }}
-        />
-
-        <Typography
-          sx={{
-            flex: 1,
-            textAlign: 'center',
-            fontWeight: 700,
-            fontSize: '1.2rem',
-            fontFamily: '"Permanent Marker", cursive',
-            transform: 'rotate(-1deg)',
-          }}
-        >
-          {commentsCount} thoughts ✏️
-        </Typography>
-        <IconButton onClick={onClose} size="small" sx={{ color: '#333' }}>
-          <X size={24} />
-        </IconButton>
-      </Box>
+      <HighlightCommentDrawerHeader commentsCount={commentsCount} onClose={onClose} />
 
       <HighlightComments highlightId={highlightId} commentsCount={commentsCount} />
     </Drawer>

@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -33,13 +33,15 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginSimple() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/';
   const { login } = useAuth();
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: 'shika_a',
-      password: 'password123',
+      username: localStorage.getItem('last_username') || '',
+      password: localStorage.getItem('last_password') || '',
     },
   });
 
@@ -51,9 +53,13 @@ export default function LoginSimple() {
       });
 
       if (res.success) {
+        // Save credentials for autopopulation
+        localStorage.setItem('last_username', values.username);
+        localStorage.setItem('last_password', values.password);
+
         login(res.data.access, res.data.refresh, res.data.user);
         toast.success('Welcome back!');
-        navigate('/');
+        navigate(redirectTo);
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };

@@ -452,7 +452,6 @@ export function buildLocationSearchParams(
     location: string;
     lat?: number | null;
     lng?: number | null;
-    radiusMiles?: number | null;
   },
 ) {
   const next = normalizeSearchPageParams(searchParams);
@@ -477,15 +476,6 @@ export function buildLocationSearchParams(
   ) {
     next.set('lat', String(options.lat));
     next.set('lng', String(options.lng));
-    if (
-      typeof options.radiusMiles === 'number' &&
-      Number.isFinite(options.radiusMiles)
-    ) {
-      const clampedRadius = Math.min(125, Math.max(1, Math.round(options.radiusMiles)));
-      next.set('radius_miles', String(clampedRadius));
-    } else {
-      next.delete('radius_miles');
-    }
   } else {
     next.delete('lat');
     next.delete('lng');

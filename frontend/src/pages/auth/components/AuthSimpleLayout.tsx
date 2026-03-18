@@ -1,7 +1,7 @@
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
 import { Box, Button, Chip, Container, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 type AuthHighlight = {
   icon: ReactNode;
@@ -84,6 +84,12 @@ function AuthFormPanel({
   | 'alternateLinkTo'
   | 'children'
 >) {
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
+  const finalAlternateLink = redirectTo
+    ? `${alternateLinkTo}?redirectTo=${encodeURIComponent(redirectTo)}`
+    : alternateLinkTo;
+
   return (
     <Box
       sx={{
@@ -95,7 +101,7 @@ function AuthFormPanel({
         sx={{
           width: '100%',
           border: '0.5px solid var(--color-border-tertiary)',
-          background: 'rgba(255,255,255,0.92)',
+          // background: 'rgba(255,255,255,0.92)',
           backdropFilter: 'blur(18px)',
           boxShadow: '0 30px 80px rgba(73, 46, 21, 0.10)',
           p: { xs: 3, md: 4 },
@@ -170,7 +176,7 @@ function AuthFormPanel({
           {alternatePrompt}{' '}
           <Box
             component={RouterLink}
-            to={alternateLinkTo}
+            to={finalAlternateLink}
             sx={{
               color: '#D85A30',
               fontSize: 20,
@@ -384,13 +390,12 @@ export function AuthSimpleLayout({
     <Box
       sx={{
         minHeight: '100vh',
-        background:
-          'linear-gradient(180deg, var(--color-background-primary) 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
       }}
     >
-      <Container maxWidth={false} sx={{ maxWidth: 1200 }}>
+      <Container maxWidth={false} disableGutters sx={{ maxWidth: 1200, px: 0 }}>
         <Box
           sx={{
+            pt: 8,
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr',

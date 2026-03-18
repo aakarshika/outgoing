@@ -9,11 +9,9 @@ import {
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Bell,
   LogOut,
   type LucideIcon,
   Menu,
-  MessageCircle,
   Monitor,
   Pencil,
   PlusCircle,
@@ -35,6 +33,7 @@ import {
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
 import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEventTicketTiers } from '@/features/events/api';
@@ -50,7 +49,7 @@ type MenuItem = {
   label: string;
   Icon: LucideIcon;
   to?: string;
-  action?: 'create-event' | 'create-service' | 'logout';
+  action?: 'create-event' | 'create-service' | 'logout' | 'signin' | 'signup';
   muted?: boolean;
 };
 
@@ -64,10 +63,9 @@ export function SimpleNavbar({
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
   const isMobile = useMediaQuery('(max-width:767px)');
-  const eventMatch = matchPath(
-    { path: '/events/:id/*', end: false },
-    location.pathname,
-  );
+  const eventMatch =
+    matchPath({ path: '/events/:id/*', end: false }, location.pathname) ||
+    matchPath({ path: '/events-new/:id/*', end: false }, location.pathname);
   const eventId = eventMatch?.params?.id;
   const { data: eventResponse } = useEvent(Number(eventId));
   const { data: categoriesResponse } = useCategories();
@@ -86,6 +84,9 @@ export function SimpleNavbar({
     !!user &&
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
+  const isGuestLandingPage = location.pathname === '/' && !isAuthenticated;
+  const isOrangePage = isGuestLandingPage || location.pathname === '/network';
+  const hideSearchBar = location.pathname.startsWith('/events') || location.pathname.startsWith('/events-new') || location.pathname.startsWith('/chats');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
@@ -94,23 +95,17 @@ export function SimpleNavbar({
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const hostingAndServicesItems: MenuItem[] = [];
-  if (hasHostedEvents) {
-    hostingAndServicesItems.push({ label: 'Hosting', to: '/managing', Icon: Speech });
-  }
-  if (hasServices) {
-    hostingAndServicesItems.push({
-      label: 'Servicing',
-      to: '/managing/services',
-      Icon: Monitor,
-    });
-  }
-  if (hasTickets) {
-    hostingAndServicesItems.push({
-      label: 'My Tickets',
-      to: '/managing/attending',
-      Icon: Ticket,
-    });
-  }
+  hostingAndServicesItems.push({ label: 'My Events', to: '/managing/hosting', Icon: Speech });
+  hostingAndServicesItems.push({
+    label: 'My Services',
+    to: '/managing/services',
+    Icon: Monitor,
+  });
+  hostingAndServicesItems.push({
+    label: 'My Tickets',
+    to: '/managing/attending',
+    Icon: Ticket,
+  });
 
   const mobileAccountItems: MenuItem[] = [];
   if (isMobile && !isAuthenticated) {
@@ -164,10 +159,17 @@ export function SimpleNavbar({
     ],
     [{ label: 'My Network', to: '/network', Icon: Users }],
     ...(hostingAndServicesItems.length ? [hostingAndServicesItems] : []),
-    [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
+    [{ label: 'Settings', to: '/profile/settings-new', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
-      : []),
+      : !isMobile
+        ? [
+            [
+              { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
+              { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
+            ],
+          ]
+        : []),
   ];
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {
@@ -282,7 +284,7 @@ export function SimpleNavbar({
         navigate(`/events/${result.data.id}/manage`);
       } else {
         toast.success('Event posted');
-        navigate(`/events/${result.data.id}`);
+        navigate(`/events-new/${result.data.id}`);
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Could not create this event');
@@ -313,7 +315,6 @@ export function SimpleNavbar({
       }}
     />
   );
-
   return (
     <Box
       component="header"
@@ -321,7 +322,7 @@ export function SimpleNavbar({
         // position: 'sticky',
         // top: 0,
         zIndex: 40,
-        backgroundColor: 'rgba(255, 255, 255, 0.0)',
+        backgroundColor: 'transparent',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
@@ -337,6 +338,7 @@ export function SimpleNavbar({
             gap: { xs: 0.75, sm: 1.5 },
             flexWrap: 'nowrap',
             minWidth: 0,
+            position: 'relative',
           }}
         >
           <Box
@@ -352,8 +354,8 @@ export function SimpleNavbar({
           >
             <Box
               sx={{
-                color: '#D85A30',
-                display: { xs: 'inline-flex', sm: 'none' },
+                color: isOrangePage ? '#eeeeee' : '#D85A30',
+                display: { xs: isGuestLandingPage ? 'none' : 'inline-flex', sm: 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: 28,
@@ -364,12 +366,12 @@ export function SimpleNavbar({
             </Box>
             <Typography
               sx={{
-                display: { xs: 'none', sm: 'block' },
+                display: { xs: isGuestLandingPage ? 'block' : 'none', sm: 'block' },
                 fontFamily: 'Syne, sans-serif',
                 fontWeight: 800,
-                fontSize: { sm: 24, md: 32 },
+                fontSize: { xs: 20, sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
-                color: '#D85A30',
+                color: isOrangePage ? '#eeeeee' : '#D85A30',
                 whiteSpace: 'nowrap',
                 maxWidth: 580,
                 mx: 'auto',
@@ -383,7 +385,7 @@ export function SimpleNavbar({
                   display: 'inline-flex',
                   alignItems: 'flex-end',
                   mx: 0.15,
-                  transform: 'translateY(4px)',
+                  transform: { xs: 'translateY(2px)', sm: 'translateY(4px)' },
                 }}
               >
                 {goMark}
@@ -392,7 +394,7 @@ export function SimpleNavbar({
             </Typography>
           </Box>
           <NavbarProvider>
-            <SearchBarSimple />
+            {hideSearchBar ? <></> : <SearchBarSimple />}
           </NavbarProvider>
 
           <Box
@@ -405,8 +407,31 @@ export function SimpleNavbar({
               minWidth: 0,
             }}
           >
+            {/* Auth buttons removed from main row on mobile, now in menu */}
             {isAuthenticated ? (
               <>
+                {isMobile && isVendor && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#e6fafa] hover:text-[#008a8a]"
+                    onClick={() =>
+                      navigate(`/managing/services`)
+                    }
+                  >
+                    <Pencil size={14} /> Service
+                  </Button>
+                )}
+                {isMobile && isEventHost && isNotOnManagePage && eventId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-3 text-xs text-[#3f372e] hover:bg-[#f0ebff] hover:text-[#7c5dd6]"
+                    onClick={() => navigate(`/events/${eventId}/manage`)}
+                  >
+                    <Pencil size={14} /> Event
+                  </Button>
+                )}
                 {!isMobile && isVendor && isNotOnManagePage && eventId && (
                   <Button
                     type="button"
@@ -465,6 +490,56 @@ export function SimpleNavbar({
         }}
       >
         <Box sx={{ py: 0.75 }}>
+          {isAuthenticated && user && (
+            <>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  borderBottom: '1px solid rgba(120,94,60,0.1)',
+                  mb: 0.5,
+                }}
+              >
+                <UserAvatar
+                  src={user.avatar}
+                  username={user.username}
+                  size="sm"
+                  className="ring-1 ring-[#D85A30]/20"
+                />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#3D3124',
+                      lineHeight: 1.2,
+                      fontSize: 14,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {user.first_name && user.last_name
+                      ? `${user.first_name} ${user.last_name}`
+                      : user.username}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'rgba(61,49,36,0.6)',
+                      display: 'block',
+                      fontSize: 11,
+                    }}
+                  >
+                    Personal Account
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
           {menuGroups.map((group, groupIndex) => (
             <Box key={`group-${groupIndex}`} sx={{ py: 0.35 }}>
               {group.map((item) => (
@@ -484,6 +559,16 @@ export function SimpleNavbar({
                       if (item.action === 'logout') {
                         closeMenuPopover();
                         logout();
+                        return;
+                      }
+                      if (item.action === 'signin') {
+                        closeMenuPopover();
+                        navigate('/signin');
+                        return;
+                      }
+                      if (item.action === 'signup') {
+                        closeMenuPopover();
+                        navigate('/signup');
                         return;
                       }
                       if (!item.to) {

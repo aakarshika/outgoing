@@ -115,9 +115,7 @@ export default function ManageForHostPage() {
   const queryClient = useQueryClient();
   const hostStepMatch = useMatch('/events/:id/host-event-management/:step');
   const activeSlug = hostStepMatch?.params.step;
-  const hostBasePath = id
-    ? `/events/${id}/host-event-management`
-    : '/events/host-event-management';
+  const hostBasePath = `/events/${id}/manage`;
 
   // ── Remote data ───────────────────────────────────────────────────────────
   const {
@@ -136,7 +134,7 @@ export default function ManageForHostPage() {
       // Compare stringified IDs or usernames since ID can sometimes be omitted on partial populated objects
       if (user.username !== event.host.username) {
         toast.error('You do not have permission to manage this event.');
-        navigate(`/events/${id}`);
+        navigate(`/events-new/${id}`);
       }
     }
   }, [isEventLoading, event, user, id, navigate]);
