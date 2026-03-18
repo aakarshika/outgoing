@@ -265,6 +265,7 @@ export default function SearchPage() {
   return (
     <Box
       sx={{
+        pt: 8,
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #FFF9F0 0%, #F9F1E4 48%, #F7EEE2 100%)',
         pb: 60,

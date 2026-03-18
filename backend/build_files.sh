@@ -12,6 +12,12 @@ else
     DJANGO_SETTINGS_MODULE=config.settings.production python manage.py migrate --noinput
 fi
 
+echo "Generating simple seed data..."
+DJANGO_SETTINGS_MODULE=config.settings.production python manage.py generate_seed_simple
+
+echo "Seeding simple data..."
+DJANGO_SETTINGS_MODULE=config.settings.production python manage.py seed_simple
+
 echo "Collecting static files..."
 DJANGO_SETTINGS_MODULE=config.settings.production python manage.py collectstatic --noinput --clear
 

@@ -44,6 +44,7 @@
     --ring: 240 10% 3.9%;
 
     --radius: 0.5rem;
+    color-scheme: light;
   }
 
   .dark {
@@ -74,6 +75,7 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
+    color-scheme: dark;
   }
 }
 
@@ -84,11 +86,25 @@
 
   html {
     @apply bg-transparent transition-colors duration-300;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
     touch-action: manipulation;
   }
 
   body {
     @apply min-h-screen bg-background text-foreground font-sans transition-colors duration-300;
+    color: hsl(var(--foreground));
     touch-action: manipulation;
+  }
+
+  #root {
+    color: inherit;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    color: inherit;
   }
 }

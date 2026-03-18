@@ -60,11 +60,8 @@ function AppContent() {
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbar />} */}
       {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && (
-        <Box className="relative">
-        <Box className="absolute top-0 right-0 z-50">
+
           <SimpleNavbar />
-        </Box>
-        </Box>
       )}
       
       <Toaster />

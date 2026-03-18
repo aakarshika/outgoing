@@ -85,7 +85,7 @@ export function SimpleNavbar({
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
   const isGuestLandingPage = location.pathname === '/' && !isAuthenticated;
-  const isOrangePage = isGuestLandingPage || location.pathname === '/network';
+  const isOrangePage = false;
   const hideSearchBar = location.pathname.startsWith('/events') || location.pathname.startsWith('/events-new') || location.pathname.startsWith('/chats');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -319,10 +319,13 @@ export function SimpleNavbar({
     <Box
       component="header"
       sx={{
-        // position: 'sticky',
-        // top: 0,
-        zIndex: 40,
-        backgroundColor: 'transparent',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        zIndex: (theme) => theme.zIndex.appBar + 10,
+        backgroundColor: 'rgba(255, 252, 247, 0.8)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}

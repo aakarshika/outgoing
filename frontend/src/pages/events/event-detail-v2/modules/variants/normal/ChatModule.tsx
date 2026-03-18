@@ -1,6 +1,6 @@
 import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
 import { Send, Plus } from 'lucide-react';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import {
@@ -32,11 +32,17 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
   const addMessageMutation = useAddHostVendorMessage();
 
   const [messageText, setMessageText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const messages = useMemo(() => {
     return messagesResponse?.data || [];
   }, [messagesResponse]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages]);
 
   // Group messages by sender and time
   const groupedMessages = useMemo(() => {
@@ -62,14 +68,6 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
       }
     });
     return groups;
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
   }, [messages]);
 
   const handleSendMessage = () => {
@@ -166,6 +164,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
 
         {/* Messages */}
         <Box
+          ref={messagesContainerRef}
           sx={{
             flex: 1,
             overflowY: 'auto',
@@ -327,7 +326,6 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
               );
             })
           )}
-          <div ref={messagesEndRef} />
         </Box>
 
         {/* Input */}
