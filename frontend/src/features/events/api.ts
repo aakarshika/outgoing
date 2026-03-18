@@ -22,6 +22,8 @@ export interface AllChatsListItem {
   other_user_id: number | null;
   other_username: string | null;
   other_avatar: string | null;
+  latest_message_text: string | null;
+  latest_message_sender_username: string | null;
   updated_at: string;
 }
 
@@ -30,6 +32,8 @@ export interface AllChatsListResponse {
     event_id: number;
     event_title: string;
     latest_message_at: string;
+    latest_message_text: string | null;
+    latest_message_sender_username: string | null;
   }[];
   management: AllChatsListItem[];
   network: AllChatsListItem[];

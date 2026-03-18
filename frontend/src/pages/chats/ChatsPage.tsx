@@ -10,16 +10,18 @@ import {
   useTheme,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Inbox, MessageCircle, Send, Users } from 'lucide-react';
+import { ArrowLeft, Inbox, MapPin, MessageCircle, Send, Users } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
+import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
 import {
   type AllChatEntry,
   buildAllChatEntries,
-  formatChatTimestamp,
+  formatChatMessagePreview,
+  formatChatRelativeTime,
 } from '@/features/events/chatList';
 import {
   buildChatTimeline,
@@ -40,32 +42,21 @@ import {
   usePrivateMessages,
 } from '@/features/events/hooks';
 
-function buildChatSearchParams(chat: AllChatEntry) {
-  const params = new URLSearchParams();
-  params.set('mode', chat.mode);
-  params.set('title', chat.title);
-
-  if (chat.eventId) {
-    params.set('eventId', String(chat.eventId));
-  }
-
-  if (chat.conversationId) {
-    params.set('conversationId', String(chat.conversationId));
-  }
-
-  if (chat.targetUsername) {
-    params.set('username', chat.targetUsername);
-  } else if (chat.otherUsername) {
-    params.set('username', chat.otherUsername);
-  }
-
-  return params;
-}
-
 function parseNumberParam(value: string | null) {
   if (!value) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function buildChatPath(chat: AllChatEntry) {
+  if (chat.mode === 'group' && chat.eventId) return `/chats/group/${chat.eventId}`;
+  if (chat.mode === 'private' && chat.conversationId)
+    return `/chats/private/${chat.conversationId}`;
+  if (chat.mode === 'direct') {
+    const username = chat.targetUsername || chat.otherUsername;
+    if (username) return `/chats/direct/${username}`;
+  }
+  return '/chats';
 }
 
 function formatMessageTimestamp(value?: string | null) {
@@ -199,7 +190,58 @@ function ChatMessageBubble({ message }: { message: any }) {
   );
 }
 
-function ChatActivityRow({ label }: { label: string }) {
+function ChatActivityRow({ item }: { item: any }) {
+  const { label, eventId, eventTitle } = item || {};
+
+  if (!eventId || !eventTitle) {
+    return (
+      <Stack alignItems="center" sx={{ py: 0.75 }}>
+        <Box
+          sx={{
+            maxWidth: '80%',
+            px: 1.5,
+            py: 0.7,
+            background: 'rgba(15, 23, 42, 0.05)',
+            color: 'var(--color-text-secondary)',
+            fontSize: 11,
+            textAlign: 'center',
+            borderRadius: '999px',
+          }}
+        >
+          {label}
+        </Box>
+      </Stack>
+    );
+  }
+
+  const text = String(label ?? '');
+  const title = String(eventTitle);
+  const idx = text.indexOf(title);
+
+  if (idx === -1) {
+    return (
+      <Stack alignItems="center" sx={{ py: 0.75 }}>
+        <Box
+          sx={{
+            maxWidth: '80%',
+            px: 1.5,
+            py: 0.7,
+            background: 'rgba(15, 23, 42, 0.05)',
+            color: 'var(--color-text-secondary)',
+            fontSize: 11,
+            textAlign: 'center',
+            borderRadius: '999px',
+          }}
+        >
+          {label}
+        </Box>
+      </Stack>
+    );
+  }
+
+  const before = text.slice(0, idx);
+  const after = text.slice(idx + title.length);
+
   return (
     <Stack alignItems="center" sx={{ py: 0.75 }}>
       <Box
@@ -214,7 +256,20 @@ function ChatActivityRow({ label }: { label: string }) {
           borderRadius: '999px',
         }}
       >
-        {label}
+        {before}
+        <Box
+          component={Link}
+          to={`/events-new/${eventId}`}
+          sx={{
+            color: '#D85A30',
+            fontWeight: 600,
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
+          {title}
+        </Box>
+        {after}
       </Box>
     </Stack>
   );
@@ -225,45 +280,102 @@ function ChatListAvatar({
 }: {
   chat: Pick<
     AllChatEntry,
-    'mode' | 'title' | 'coverImage' | 'otherAvatar' | 'otherUsername'
+    'mode' | 'title' | 'coverImage' | 'otherAvatar' | 'otherUsername' | 'groupRole' | 'badgeLabel'
   >;
 }) {
   if (chat.mode === 'group') {
-    return chat.coverImage ? (
-      <Box
-        component="img"
-        src={chat.coverImage}
-        alt={chat.title}
-        sx={{
-          width: 68,
-          height: 48,
-          objectFit: 'cover',
-          flexShrink: 0,
-        }}
-      />
-    ) : (
+    return (
       <Box
         sx={{
+          position: 'relative',
           width: 68,
           height: 48,
-          display: 'grid',
-          placeItems: 'center',
-          background: '#FAECE7',
-          color: '#D85A30',
           flexShrink: 0,
         }}
       >
-        <Users size={18} />
+        {chat.coverImage ? (
+          <Box
+            component="img"
+            src={chat.coverImage}
+            alt={chat.title}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              borderRadius: '12px',
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'grid',
+              placeItems: 'center',
+              background: '#FAECE7',
+              color: '#D85A30',
+              borderRadius: '12px',
+            }}
+          >
+            <Users size={18} />
+          </Box>
+        )}
+        {chat.groupRole ? (
+          <HostVendorBadge
+            isHost={chat.groupRole === 'hosting'}
+            variant="short"
+            sx={{
+              left: -6,
+              bottom: -6,
+              zIndex: 2,
+              pointerEvents: 'none',
+              px: '4px',
+              py: '1px',
+              fontSize: '0.52rem',
+              lineHeight: 1.05,
+              borderRadius: '4px',
+            }}
+          />
+        ) : null}
       </Box>
     );
   }
 
+  const isFriend = chat.badgeLabel === 'Friend';
+
   return (
-    <UserAvatar
-      src={chat.otherAvatar}
-      username={chat.otherUsername || chat.title}
-      size="md"
-    />
+    <Box sx={{ position: 'relative', flexShrink: 0 }}>
+      {isFriend ? (
+        <>
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: -2,
+              borderRadius: '999px',
+              border: '1.25px solid rgba(216, 90, 48, 0.28)',
+              transform: 'translate(-2px, -1px) rotate(-8deg)',
+              pointerEvents: 'none',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: -2,
+              borderRadius: '999px',
+              border: '1.25px solid rgba(216, 90, 48, 0.18)',
+              transform: 'translate(2px, 1px) rotate(6deg)',
+              pointerEvents: 'none',
+            }}
+          />
+        </>
+      ) : null}
+      <UserAvatar
+        src={chat.otherAvatar}
+        username={chat.otherUsername || chat.title}
+        size="md"
+      />
+    </Box>
   );
 }
 
@@ -397,7 +509,8 @@ function ChatThread({
         border: '0.5px solid var(--color-border-tertiary)',
         background: 'rgba(255, 255, 255, 0.72)',
         overflow: 'hidden',
-        minHeight: { xs: 'calc(100vh - 11rem)', md: 680 },
+        height: { xs: '100%', md: 680 },
+        minHeight: { xs: '100%', md: 680 },
       }}
     >
       <Stack
@@ -489,6 +602,7 @@ function ChatThread({
           overflowY: 'auto',
           px: { xs: 1.5, sm: 2.5 },
           py: 2,
+          pb: { xs: 12, sm: 2 },
           background:
             'linear-gradient(180deg, rgba(255,248,241,0.55) 0%, rgba(255,255,255,0.88) 100%)',
         }}
@@ -522,7 +636,7 @@ function ChatThread({
           <Stack spacing={1.25}>
             {timelineItems.map((item, index) =>
               item.type === 'activity' ? (
-                <ChatActivityRow key={`${item.id}-${index}`} label={item.label} />
+                <ChatActivityRow key={`${item.id}-${index}`} item={item} />
               ) : (
                 <ChatMessageBubble key={`${item.id}-${index}`} message={item.message} />
               ),
@@ -536,6 +650,11 @@ function ChatThread({
           p: { xs: 1.25, sm: 1.5 },
           borderTop: '0.5px solid var(--color-border-tertiary)',
           background: 'rgba(255,255,255,0.92)',
+          flexShrink: 0,
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 2,
+          pb: { xs: 'calc(10px + env(safe-area-inset-bottom, 0px))', sm: 1.5 },
         }}
       >
         <Box
@@ -595,7 +714,8 @@ function ChatThread({
 export default function ChatsPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const params = useParams();
   const { user, isAuthenticated } = useAuth();
   const { data, isLoading } = useAllChatsList(true);
   const { data: friendships, isLoading: friendshipsLoading } = useMyFriendships(
@@ -620,112 +740,75 @@ export default function ChatsPage() {
   const isListLoading = isLoading || friendshipsLoading || eventOverviewLoading;
 
   const selectedChat = useMemo(() => {
-    const mode = searchParams.get('mode');
-    if (!mode) return null;
+    const eventId = parseNumberParam((params.eventId as string | undefined) ?? null);
+    const conversationId = parseNumberParam(
+      (params.conversationId as string | undefined) ?? null,
+    );
+    const username = (params.username as string | undefined) ?? undefined;
 
-    const eventId = parseNumberParam(searchParams.get('eventId'));
-    const conversationId = parseNumberParam(searchParams.get('conversationId'));
-    const targetUsername = searchParams.get('username') || undefined;
-
-    const matchingChat =
-      chatEntries.find((chat) => {
-        if (mode === 'group') {
-          return chat.mode === 'group' && chat.eventId === eventId;
-        }
-
-        if (mode === 'private') {
-          return chat.mode === 'private' && chat.conversationId === conversationId;
-        }
-
-        if (mode === 'direct') {
-          return chat.mode === 'direct' && chat.targetUsername === targetUsername;
-        }
-
-        return false;
-      }) || null;
-
-    if (matchingChat) return matchingChat;
-
-    if (mode === 'group' && eventId) {
-      return {
-        id: `group-${eventId}`,
-        mode: 'group',
-        section: 'management',
-        title: searchParams.get('title') || 'Event group chat',
-        subtitle: 'Group chat',
-        badgeLabel: 'Group',
-        updatedAt: null,
-        eventId,
-      } satisfies AllChatEntry;
+    if (eventId) {
+      return (
+        chatEntries.find((chat) => chat.mode === 'group' && chat.eventId === eventId) ||
+        null
+      );
     }
 
-    if (mode === 'private' && conversationId) {
-      return {
-        id: `private-${conversationId}`,
-        mode: 'private',
-        section: 'management',
-        title: searchParams.get('title') || 'Conversation',
-        subtitle: targetUsername
-          ? `Private chat with @${targetUsername}`
-          : 'Private conversation',
-        badgeLabel: 'Event',
-        updatedAt: null,
-        conversationId,
-        eventId,
-        otherUsername: targetUsername,
-      } satisfies AllChatEntry;
+    if (conversationId) {
+      return (
+        chatEntries.find(
+          (chat) => chat.mode === 'private' && chat.conversationId === conversationId,
+        ) || null
+      );
     }
 
-    if (mode === 'direct' && targetUsername) {
-      return {
-        id: `direct-${targetUsername}`,
-        mode: 'direct',
-        section: 'network',
-        title: searchParams.get('title') || `@${targetUsername}`,
-        subtitle: 'Direct conversation',
-        badgeLabel: 'Direct',
-        updatedAt: null,
-        targetUsername,
-        otherUsername: targetUsername,
-      } satisfies AllChatEntry;
+    if (username) {
+      return (
+        chatEntries.find(
+          (chat) =>
+            chat.mode === 'direct' &&
+            (chat.targetUsername || chat.otherUsername) === username,
+        ) || null
+      );
     }
 
     return null;
-  }, [chatEntries, searchParams]);
+  }, [chatEntries, params.conversationId, params.eventId, params.username]);
 
   useEffect(() => {
     if (isMobile || chatEntries.length === 0 || selectedChat) return;
-    setSearchParams(buildChatSearchParams(chatEntries[0]), { replace: true });
-  }, [chatEntries, isMobile, selectedChat, setSearchParams]);
+    navigate(buildChatPath(chatEntries[0]), { replace: true });
+  }, [chatEntries, isMobile, navigate, selectedChat]);
 
-  const managementChats = chatEntries.filter((chat) => chat.section === 'management');
-  const networkChats = chatEntries.filter((chat) => chat.section === 'network');
-  const sections = [
-    { label: 'Management', chats: managementChats },
-    { label: 'Network', chats: networkChats },
-  ];
   const showList = !isMobile || !selectedChat;
   const showThread = !isMobile || Boolean(selectedChat);
 
   const handleSelectChat = (chat: AllChatEntry) => {
-    setSearchParams(buildChatSearchParams(chat));
+    navigate(buildChatPath(chat));
   };
 
   const handleBack = () => {
-    setSearchParams({});
+    navigate('/chats');
   };
+
+  const isMobileThread = isMobile && Boolean(selectedChat);
 
   return (
     <Box
       sx={{
-        minHeight: 'calc(100vh - 4rem)',
-        pb: { xs: 12, md: 4 },
-        pt: 8,
+        minHeight: isMobileThread ? '100dvh' : 'calc(100vh - 4rem)',
+        height: isMobileThread ? '100dvh' : 'auto',
+        pb: isMobileThread ? 0 : { xs: 12, md: 4 },
+        pt: isMobileThread ? 0 : 8,
         background: '#fff8f1',
+        overflow: isMobileThread ? 'hidden' : 'visible',
       }}
     >
-      <Container maxWidth={false} disableGutters sx={{ py: 0 }}>
-        <Stack spacing={0}>
+      <Container
+        maxWidth={false}
+        disableGutters
+        sx={{ py: 0, height: isMobileThread ? '100%' : 'auto' }}
+      >
+        <Stack spacing={0} sx={{ height: isMobileThread ? '100%' : 'auto' }}>
           <Box
             sx={{
               display: 'grid',
@@ -735,6 +818,7 @@ export default function ChatsPage() {
                   : '1fr',
               gap: 0,
               alignItems: 'stretch',
+              height: isMobileThread ? '100%' : 'auto',
             }}
           >
             {showList && (
@@ -779,90 +863,96 @@ export default function ChatsPage() {
                     </Stack>
                   ) : (
                     <Stack spacing={0.5}>
-                      {sections.map((section) =>
-                        section.chats.length ? (
-                          <Stack key={section.label} spacing={0}>
-                            <Typography
-                              sx={{
-                                px: 1,
-                                pt: 1.25,
-                                pb: 0.25,
-                                fontSize: 10,
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.08em',
-                                color: 'var(--color-text-secondary)',
-                              }}
-                            >
-                              {section.label}
-                            </Typography>
-                            {section.chats.map((chat) => {
-                              const isActive = selectedChat?.id === chat.id;
+                      {chatEntries.map((chat) => {
+                        const isActive = selectedChat?.id === chat.id;
+                        const isGroupCard = chat.badgeLabel === 'Group';
 
-                              return (
-                                <Box
-                                  key={chat.id}
-                                  component="button"
-                                  type="button"
-                                  onClick={() => handleSelectChat(chat)}
-                                  sx={{
-                                    width: '100%',
-                                    textAlign: 'left',
-                                    border: 'none',
-                                    borderRadius: 0,
-                                    px: 1,
-                                    py: 1,
-                                    background: isActive
-                                      ? 'rgba(216, 90, 48, 0.08)'
-                                      : chat.isPlaceholder
-                                        ? 'rgba(0,0,0,0.02)'
-                                        : 'transparent',
-                                    boxShadow: 'none',
-                                    transition: 'background 0.18s ease',
-                                    '&:hover': {
-                                      background: 'rgba(216, 90, 48, 0.06)',
-                                    },
-                                  }}
-                                >
-                                  <Stack
-                                    direction="row"
-                                    spacing={1.2}
-                                    alignItems="center"
-                                  >
-                                    <ChatListAvatar chat={chat} />
-                                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                                      <Stack
-                                        direction="row"
-                                        justifyContent="space-between"
-                                        spacing={1}
-                                      >
-                                        <Typography
-                                          sx={{
-                                            fontFamily: 'Syne, sans-serif',
-                                            fontSize: 13,
-                                            fontWeight: 700,
-                                            color: 'var(--color-text-primary)',
-                                            lineHeight: 1.25,
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                          }}
-                                        >
-                                          {chat.title}
-                                        </Typography>
-                                        <Typography
-                                          sx={{
-                                            fontSize: 11,
-                                            flexShrink: 0,
-                                            color: 'var(--color-text-secondary)',
-                                          }}
-                                        >
-                                          {formatChatTimestamp(chat.updatedAt)}
-                                        </Typography>
-                                      </Stack>
+                        return (
+                          <Box
+                            key={chat.id}
+                            component="button"
+                            type="button"
+                            onClick={() => handleSelectChat(chat)}
+                            sx={{
+                              width: '100%',
+                              textAlign: 'left',
+                              border: 'none',
+                              borderLeft: isGroupCard ? '4px solid #D85A30' : 'none',
+                              borderRadius: isGroupCard ? '18px 0 0 18px' : 0,
+                              px: 1,
+                              py: 1,
+                              background: isGroupCard
+                                ? isActive
+                                  ? 'rgba(255, 248, 241, 0.96)'
+                                  : 'rgba(255,255,255,0.9)'
+                                : isActive
+                                  ? 'rgba(255, 248, 241, 0.9)'
+                                  : 'rgba(255,255,255,0.82)',
+                              boxShadow: 'none',
+                              transition: 'background 0.18s ease, box-shadow 0.18s ease',
+                              '&:hover': {
+                                background: isGroupCard
+                                  ? 'rgba(255, 248, 241, 0.98)'
+                                  : 'rgba(255,255,255,0.94)',
+                                boxShadow: isGroupCard
+                                  ? '0 12px 26px rgba(108, 71, 33, 0.08)'
+                                  : 'none',
+                              },
+                            }}
+                          >
+                            <Stack direction="row" spacing={1.2} alignItems="center">
+                              <ChatListAvatar chat={chat} />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                {chat.badgeLabel === 'Group' ? (
+                                  <Stack spacing={0.15} sx={{ minWidth: 0 }}>
+                                    <Stack
+                                      direction="row"
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                      spacing={1}
+                                    >
                                       <Typography
                                         sx={{
-                                          mt: 0.25,
+                                          fontFamily: 'Syne, sans-serif',
+                                          fontSize: 13,
+                                          fontWeight: 700,
+                                          color: 'var(--color-text-primary)',
+                                          lineHeight: 1.2,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {chat.title}
+                                      </Typography>
+                                      <Box
+                                        sx={{
+                                          flexShrink: 0,
+                                          borderRadius: '999px',
+                                          background: '#EAF3DE',
+                                          color: '#3B6D11',
+                                          px: 0.9,
+                                          py: 0.35,
+                                          fontSize: 9,
+                                          fontWeight: 700,
+                                          lineHeight: 1,
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {(chat.attendeeCount ?? 0).toLocaleString()} going
+                                      </Box>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      justifyContent="space-between"
+                                      spacing={1}
+                                      sx={{ mt: 0.15, minWidth: 0 }}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          minWidth: 0,
+                                          flex: 1,
                                           fontSize: 11,
                                           color: 'var(--color-text-secondary)',
                                           overflow: 'hidden',
@@ -870,16 +960,114 @@ export default function ChatsPage() {
                                           whiteSpace: 'nowrap',
                                         }}
                                       >
-                                        {chat.subtitle}
+                                        {formatChatMessagePreview(
+                                          chat.latestMessageSenderUsername,
+                                          chat.latestMessageText,
+                                        )}
                                       </Typography>
-                                    </Box>
+                                      {chat.updatedAt ? (
+                                        <Typography
+                                          sx={{
+                                            flexShrink: 0,
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.02em',
+                                            color: 'rgba(66, 50, 28, 0.52)',
+                                            whiteSpace: 'nowrap',
+                                            textAlign: 'right',
+                                          }}
+                                        >
+                                          {formatChatRelativeTime(chat.updatedAt)}
+                                        </Typography>
+                                      ) : null}
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={0.4}
+                                      sx={{ minWidth: 0 }}
+                                    >
+                                      <MapPin size={10} color="gray" />
+                                      <Typography
+                                        sx={{
+                                          minWidth: 0,
+                                          fontSize: 10.5,
+                                          color: 'gray',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {chat.locationName || 'Location TBD'}
+                                      </Typography>
+                                    </Stack>
                                   </Stack>
-                                </Box>
-                              );
-                            })}
-                          </Stack>
-                        ) : null,
-                      )}
+                                ) : (
+                                  <Stack spacing={0.15} sx={{ minWidth: 0 }}>
+                                    <Stack
+                                      direction="row"
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                      spacing={1}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          fontFamily: 'Syne, sans-serif',
+                                          fontSize: 13,
+                                          fontWeight: 700,
+                                          color: 'var(--color-text-primary)',
+                                          lineHeight: 1.25,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {chat.title}
+                                      </Typography>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      justifyContent="space-between"
+                                      spacing={1}
+                                      sx={{ minWidth: 0 }}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          minWidth: 0,
+                                          flex: 1,
+                                          fontSize: 11,
+                                          color: 'var(--color-text-secondary)',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {chat.latestMessageText || chat.subtitle}
+                                      </Typography>
+                                      {chat.updatedAt ? (
+                                        <Typography
+                                          sx={{
+                                            flexShrink: 0,
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.02em',
+                                            color: 'rgba(66, 50, 28, 0.52)',
+                                            whiteSpace: 'nowrap',
+                                            textAlign: 'right',
+                                          }}
+                                        >
+                                          {formatChatRelativeTime(chat.updatedAt)}
+                                        </Typography>
+                                      ) : null}
+                                    </Stack>
+                                  </Stack>
+                                )}
+                              </Box>
+                            </Stack>
+                          </Box>
+                        );
+                      })}
                     </Stack>
                   )}
                 </Box>

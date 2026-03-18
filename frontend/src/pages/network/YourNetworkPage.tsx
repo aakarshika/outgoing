@@ -775,7 +775,7 @@ export default function YourNetworkPage() {
           zIndex: 1,
           maxWidth: 1300,
           px: { xs: 2, md: 4 },
-          py: { xs: 2.5, md: 4 },
+          pt: 8
         }}
       >
         <NetworkHeroSection

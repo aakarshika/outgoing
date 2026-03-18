@@ -8,6 +8,8 @@ export interface ChatActivityItem {
   occurredAt: string;
   label: string;
   detail?: string;
+  eventId?: number;
+  eventTitle?: string;
 }
 
 export interface ChatMessageItem {
@@ -57,6 +59,8 @@ function pushActivity(
     occurredAt?: string | null;
     label: string;
     detail?: string;
+    eventId?: number;
+    eventTitle?: string;
   },
 ) {
   if (!next.occurredAt) return;
@@ -70,6 +74,8 @@ function pushActivity(
     occurredAt: occurredAt.toISOString(),
     label: next.label,
     detail: next.detail,
+    eventId: next.eventId,
+    eventTitle: next.eventTitle,
   });
 }
 
@@ -115,6 +121,8 @@ export function buildUserChatActivities({
           friendship.accepted_at ||
           friendship.created_at,
         label: `Met at ${friendship.met_at_event_title}`,
+        eventId: friendship.met_at_event,
+        eventTitle: friendship.met_at_event_title,
       });
     }
   }
@@ -132,6 +140,8 @@ export function buildUserChatActivities({
       id: `went-${person.event_id}`,
       occurredAt: eventStartTime,
       label: `Went to ${person.event_title} together`,
+      eventId: person.event_id,
+      eventTitle: person.event_title,
     });
 
     const eventHostUsername = normalizeUsername(
@@ -164,6 +174,8 @@ export function buildUserChatActivities({
         id: `going-${item.event_id}`,
         occurredAt: item.happened_at,
         label: `Going to ${item.event_title} together`,
+        eventId: item.event_id,
+        eventTitle: item.event_title,
       });
     }
 

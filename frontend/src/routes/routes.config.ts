@@ -47,6 +47,21 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
+    path: '/chats/group/:eventId',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats/private/:conversationId',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/chats/direct/:username',
+    componentName: 'Chats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
     path: '/special',
     componentName: 'EventsSpecial',
     roles: [UserRole.USER, UserRole.ADMIN],

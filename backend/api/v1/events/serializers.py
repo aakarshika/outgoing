@@ -1013,6 +1013,8 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
     other_user_id = serializers.SerializerMethodField()
     other_username = serializers.SerializerMethodField()
     other_avatar = serializers.SerializerMethodField()
+    latest_message_text = serializers.CharField(read_only=True, allow_null=True)
+    latest_message_sender_username = serializers.CharField(read_only=True, allow_null=True)
 
     class Meta:
         model = EventPrivateConversation
@@ -1023,6 +1025,8 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
             "other_user_id",
             "other_username",
             "other_avatar",
+            "latest_message_text",
+            "latest_message_sender_username",
             "updated_at",
         ]
         read_only_fields = fields
@@ -1058,10 +1062,18 @@ class EventGroupChatListSerializer(serializers.ModelSerializer):
     event_id = serializers.IntegerField(source="id", read_only=True)
     event_title = serializers.CharField(source="title", read_only=True)
     latest_message_at = serializers.DateTimeField(read_only=True)
+    latest_message_text = serializers.CharField(read_only=True, allow_null=True)
+    latest_message_sender_username = serializers.CharField(read_only=True, allow_null=True)
 
     class Meta:
         model = Event
-        fields = ["event_id", "event_title", "latest_message_at"]
+        fields = [
+            "event_id",
+            "event_title",
+            "latest_message_at",
+            "latest_message_text",
+            "latest_message_sender_username",
+        ]
         read_only_fields = fields
 
 

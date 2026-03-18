@@ -4,7 +4,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import F, Max, Q
+from django.db.models import F, Max, OuterRef, Q, Subquery
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -1013,6 +1013,20 @@ class EventPrivateConversationListView(APIView):
             EventPrivateConversation.objects.filter(
                 Q(participant1=request.user) | Q(participant2=request.user)
             )
+            .annotate(
+                latest_message_text=Subquery(
+                    EventPrivateMessage.objects.filter(conversation=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("text")[:1]
+                )
+            )
+            .annotate(
+                latest_message_sender_username=Subquery(
+                    EventPrivateMessage.objects.filter(conversation=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("sender__username")[:1]
+                )
+            )
             .select_related(
                 "event",
                 "participant1",
@@ -1034,6 +1048,20 @@ class EventPrivateConversationListView(APIView):
                 | Q(tickets__goer=request.user, tickets__status__in=["active", "used"])
             )
             .annotate(latest_message_at=Max("host_vendor_messages__created_at"))
+            .annotate(
+                latest_message_text=Subquery(
+                    EventHostVendorMessage.objects.filter(event=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("text")[:1]
+                )
+            )
+            .annotate(
+                latest_message_sender_username=Subquery(
+                    EventHostVendorMessage.objects.filter(event=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("sender__username")[:1]
+                )
+            )
             .distinct()
             .order_by("-latest_message_at")
         )
