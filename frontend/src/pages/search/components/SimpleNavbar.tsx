@@ -159,7 +159,7 @@ export function SimpleNavbar({
     ],
     [{ label: 'My Network', to: '/network', Icon: Users }],
     ...(hostingAndServicesItems.length ? [hostingAndServicesItems] : []),
-    [{ label: 'Settings', to: '/profile/settings', Icon: Settings }],
+    [{ label: 'Settings', to: '/profile/settings-new', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
       : !isMobile
