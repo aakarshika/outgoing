@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import {
-  TicketStatusBadge,
   TicketStatusBadgeSimple,
 } from '@/features/events/TicketStatusBadge';
+import { EventStatusBadge } from '@/features/events/EventStatusBadge';
 import type { EventListItem } from '@/types/events';
 
 function formatCardDate(dateString: string | undefined | null) {
@@ -40,9 +40,7 @@ export function SmallEventCard({
   sx?: any;
 }) {
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
-  const hostInitial = event.host.first_name?.[0] || event.host.username[0] || '?';
-  const engagementCount = Math.max(event.ticket_count, event.interest_count);
-
+  
   return (
     <Box
       component={Link}
@@ -101,17 +99,25 @@ export function SmallEventCard({
       </Box>
 
       <Stack spacing={1.1} sx={{ p: 1.6 }}>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'rgba(66, 50, 28, 0.56)',
-          }}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={1}
         >
-          {event.category?.name || 'Event'}
-        </Typography>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'rgba(66, 50, 28, 0.56)',
+            }}
+          >
+            {event.category?.name || 'Event'}
+          </Typography>
+          <EventStatusBadge status={event.lifecycle_state} />
+        </Stack>
         <Typography
           sx={{
             fontFamily: 'Syne, sans-serif',
