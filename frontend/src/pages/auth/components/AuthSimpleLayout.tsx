@@ -101,7 +101,7 @@ function AuthFormPanel({
         sx={{
           width: '100%',
           border: '0.5px solid var(--color-border-tertiary)',
-          background: 'rgba(255,255,255,0.92)',
+          // background: 'rgba(255,255,255,0.92)',
           backdropFilter: 'blur(18px)',
           boxShadow: '0 30px 80px rgba(73, 46, 21, 0.10)',
           p: { xs: 3, md: 4 },
@@ -390,13 +390,12 @@ export function AuthSimpleLayout({
     <Box
       sx={{
         minHeight: '100vh',
-        background:
-          'linear-gradient(180deg, #F9F9F9 0%, #FFF8F1 52%, var(--color-background-secondary) 100%)',
       }}
     >
-      <Container maxWidth={false} sx={{ maxWidth: 1200 }}>
+      <Container maxWidth={false} disableGutters sx={{ maxWidth: 1200, px: 0 }}>
         <Box
           sx={{
+            pt: 8,
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr',

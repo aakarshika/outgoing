@@ -58,6 +58,7 @@ export function SmallEventCard({
         color: 'inherit',
         display: 'block',
         width: '100%',
+        minWidth: 250,
         height: '100%',
         '&:hover': { boxShadow: '0 22px 52px rgba(108, 71, 33, 0.12)' },
         ...(Array.isArray(sx) ? sx : [sx]),

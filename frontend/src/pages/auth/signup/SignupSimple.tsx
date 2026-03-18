@@ -124,6 +124,24 @@ export default function SignupSimple() {
             sx={authFieldSx}
           />
           <TextField
+            label="First name"
+            autoComplete="given-name"
+            fullWidth
+            {...register('firstName')}
+            error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+            sx={authFieldSx}
+          />
+          <TextField
+            label="Last name"
+            autoComplete="family-name"
+            fullWidth
+            {...register('lastName')}
+            error={!!errors.lastName}
+            helperText={errors.lastName?.message}
+            sx={authFieldSx}
+          />
+          <TextField
             label="Username"
             autoComplete="username"
             fullWidth
@@ -140,6 +158,16 @@ export default function SignupSimple() {
             {...register('password')}
             error={!!errors.password}
             helperText={errors.password?.message}
+            sx={authFieldSx}
+          />
+          <TextField
+            label="Phone number (optional)"
+            type="tel"
+            autoComplete="tel"
+            fullWidth
+            {...register('phoneNumber')}
+            error={!!errors.phoneNumber}
+            helperText={errors.phoneNumber?.message}
             sx={authFieldSx}
           />
 

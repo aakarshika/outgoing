@@ -84,9 +84,11 @@
 
   html {
     @apply bg-transparent transition-colors duration-300;
+    touch-action: manipulation;
   }
 
   body {
     @apply min-h-screen bg-background text-foreground font-sans transition-colors duration-300;
+    touch-action: manipulation;
   }
 }

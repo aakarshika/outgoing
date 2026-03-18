@@ -565,8 +565,9 @@ export default function GuestLandingPage() {
         sx={{
           background: '#D85A30',
           textAlign: 'center',
+          height: '100vh',
           px: 2,
-          py: { xs: 4, md: 6 },
+          pt: 12,
         }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 900, mb: 10 }}>
@@ -1030,7 +1031,7 @@ export default function GuestLandingPage() {
       </Container>
 
       <Box
-        sx={{ background: '#D85A30', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
+        sx={{ background: '#D85A30', height: '70vh', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 800 }}>
           <Typography

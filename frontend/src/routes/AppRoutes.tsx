@@ -76,6 +76,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
 };
 
 import { useAuth } from '@/features/auth/AuthContext';
+import { Box } from '@mui/material';
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -106,7 +107,11 @@ export const AppRoutes = () => {
           >
             {/* shift towards left because sidebar is fixed on the right side. for the paths in : isNativeSidebarPath */}
             <div className={isSidebarActive ? 'md:pr-[22rem]' : ''}>
+              <Box className="relative">
+              <Box className="absolute top-0 right-0 w-full h-full">
               <Component />
+              </Box>
+              </Box>
             </div>
           </Suspense>
         </ThemeWrapper>

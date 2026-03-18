@@ -12,12 +12,12 @@ export const TABS: Array<{
   icon: string;
   badge?: number;
 }> = [
-  {
-    id: 'all',
-    label: 'All Events',
-    note: 'Everything, with no default filters applied.',
-    icon: '✦',
-  },
+  // {
+  //   id: 'all',
+  //   label: 'All Events',
+  //   note: 'Everything, with no default filters applied.',
+  //   icon: '✦',
+  // },
   {
     id: 'tonight-weekend',
     label: 'Tonight',

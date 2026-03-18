@@ -24,7 +24,7 @@ export const SearchBarSimple = () => {
   } = useNavbarContext();
 
   return (
-    <div className="sm:relative min-w-0 flex-1 bg-white">
+    <div className="sm:relative min-w-0 flex-1 bg-white/80">
       <form
         onSubmit={handleSearchSubmit}
         className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2"
@@ -36,18 +36,18 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full min-w-0 bg-white py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
+            className="h-10 w-full min-w-0 py-1 px-3 text-sm text-[var(--color-text-primary)] outline-none border-b border-gray-100 transition-colors focus:border-[#D85A30]"
           />
         </div>
 
         <div
-          className="sm:relative flex-shrink-0 cursor-pointer rounded-full bg-white"
+          className="sm:relative flex-shrink-0 cursor-pointer rounded-full"
           ref={locationDropdownRef}
         >
           <button
             type="button"
             onClick={() => setLocationDropdownOpen((open) => !open)}
-            className="flex h-10 items-center justify-end gap-2 rounded-full bg-white px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)] md:hidden"
+            className="flex h-10 items-center justify-end gap-2 rounded-full  px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-secondary)] md:hidden"
           >
             <span className="flex items-center gap-1.5 truncate">
               <MapPin size={16} className="shrink-0 text-[#D85A30]" />

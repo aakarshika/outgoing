@@ -24,6 +24,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
+import { Box } from '@mui/material';
 
 function GlobalChatDrawer() {
   const { isOpen, closeChat, params } = useChatDrawer();
@@ -51,7 +52,15 @@ function AppContent() {
   return (
     <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {!isSearchRoute && <SimpleNavbar />}
+      {/* {!isSearchRoute && <SimpleNavbar />} */}
+      {!isSearchRoute && (
+        <Box className="relative">
+        <Box className="absolute top-0 right-0 z-50">
+          <SimpleNavbar />
+        </Box>
+        </Box>
+      )}
+      
       <Toaster />
       <main className="flex-1 bg-transparent">
         <AppRoutes />

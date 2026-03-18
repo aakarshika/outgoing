@@ -84,6 +84,8 @@ export function SimpleNavbar({
     !!user &&
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
+  const isLandingPage = location.pathname === '/' && !isAuthenticated;
+  const isEventPage = location.pathname.startsWith('/events');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
@@ -92,14 +94,14 @@ export function SimpleNavbar({
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const hostingAndServicesItems: MenuItem[] = [];
-  hostingAndServicesItems.push({ label: 'My Events', to: '/managing', Icon: Speech });
+  hostingAndServicesItems.push({ label: 'My Events', to: '/managing/hosting', Icon: Speech });
   hostingAndServicesItems.push({
     label: 'My Services',
     to: '/managing/services',
     Icon: Monitor,
   });
   hostingAndServicesItems.push({
-    label: 'My Ticket',
+    label: 'My Tickets',
     to: '/managing/attending',
     Icon: Ticket,
   });
@@ -312,7 +314,6 @@ export function SimpleNavbar({
       }}
     />
   );
-
   return (
     <Box
       component="header"
@@ -320,7 +321,7 @@ export function SimpleNavbar({
         // position: 'sticky',
         // top: 0,
         zIndex: 40,
-        backgroundColor: 'rgba(255, 255, 255, 0.0)',
+        backgroundColor: 'transparent',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
@@ -352,7 +353,7 @@ export function SimpleNavbar({
           >
             <Box
               sx={{
-                color: '#D85A30',
+                color: isLandingPage ? '#eeeeee' : '#D85A30',
                 display: { xs: 'inline-flex', sm: 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -369,7 +370,7 @@ export function SimpleNavbar({
                 fontWeight: 800,
                 fontSize: { sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
-                color: '#D85A30',
+                color: isLandingPage ? '#eeeeee' : '#D85A30',
                 whiteSpace: 'nowrap',
                 maxWidth: 580,
                 mx: 'auto',
@@ -392,7 +393,7 @@ export function SimpleNavbar({
             </Typography>
           </Box>
           <NavbarProvider>
-            <SearchBarSimple />
+            {isEventPage ? <></> : <SearchBarSimple />}
           </NavbarProvider>
 
           <Box
