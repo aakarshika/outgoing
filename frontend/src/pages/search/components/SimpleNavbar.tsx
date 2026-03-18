@@ -84,7 +84,7 @@ export function SimpleNavbar({
     !!user &&
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
-  const isLandingPage = location.pathname === '/' && !isAuthenticated;
+  const isOrangePage = (location.pathname === '/'  && !isAuthenticated) || location.pathname === '/network';
   const isEventPage = location.pathname.startsWith('/events');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -353,7 +353,7 @@ export function SimpleNavbar({
           >
             <Box
               sx={{
-                color: isLandingPage ? '#eeeeee' : '#D85A30',
+                color: isOrangePage ? '#eeeeee' : '#D85A30',
                 display: { xs: 'inline-flex', sm: 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -370,7 +370,7 @@ export function SimpleNavbar({
                 fontWeight: 800,
                 fontSize: { sm: 24, md: 32 },
                 letterSpacing: '-0.03em',
-                color: isLandingPage ? '#eeeeee' : '#D85A30',
+                color: isOrangePage ? '#eeeeee' : '#D85A30',
                 whiteSpace: 'nowrap',
                 maxWidth: 580,
                 mx: 'auto',

@@ -143,8 +143,8 @@ export function HostVendorBadge({
   const label =
     variant === 'short'
       ? isHost
-        ? 'HOST'
-        : 'VENDOR'
+        ? 'HOSTING'
+        : 'SERVICING'
       : isHost
         ? 'YOU ARE HOSTING'
         : 'YOU ARE SERVICING';

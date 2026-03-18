@@ -1978,7 +1978,7 @@ export function ServiceApplicationCard({
                       backgroundColor: '#F6F0E8',
                     }}
                   >
-                    {formatLifecycleLabel(event.lifecycle_state)}
+                    {event.lifecycle_state}
                   </Box>
                 </Stack>
               </Box>

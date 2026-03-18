@@ -47,13 +47,17 @@ function AppContent() {
   const { backgroundComponent } = useBackground();
   const isGallery = location.pathname.includes('/gallery/');
   const isSearchRoute = location.pathname.startsWith('/search');
+  const isChatThreadRoute =
+    location.pathname.startsWith('/chats/group/') ||
+    location.pathname.startsWith('/chats/private/') ||
+    location.pathname.startsWith('/chats/direct/');
   const isSignedOutRoot = !isAuthenticated;
 
   return (
     <div className="relative flex min-h-screen flex-col pb-24 text-foreground transition-colors duration-300">
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && (
+      {!isSearchRoute && !isChatThreadRoute && (
         <Box className="relative">
         <Box className="absolute top-0 right-0 z-50">
           <SimpleNavbar />
@@ -66,7 +70,7 @@ function AppContent() {
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      <AppBottomNav />
+      {!isChatThreadRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />
