@@ -103,3 +103,13 @@ export const DetailsSection = ({
 
   return null;
 };
+
+export const CoverPhotoModule = ({ event }: { event: any }) => (
+  <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: 2 }}>
+    <Media
+      src={event?.cover_image || undefined}
+      alt={event?.title || 'Event cover'}
+      className="h-full w-full object-cover"
+    />
+  </Box>
+);

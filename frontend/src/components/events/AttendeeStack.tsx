@@ -214,17 +214,18 @@ export const AttendeeStack = ({
                 />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      color: '#111827',
-                      noWrap: true,
-                    }}
+                      noWrap
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '0.95rem',
+                        color: '#111827',
+                      }}
                   >
                     {attendee.name || attendee.username}
                   </Typography>
                   <Typography
-                    sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}
+                    noWrap
+                    sx={{ fontSize: '0.8rem', color: '#6b7280' }}
                   >
                     @{attendee.username}
                   </Typography>

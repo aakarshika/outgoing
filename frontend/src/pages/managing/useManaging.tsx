@@ -22,12 +22,77 @@ import {
   MapPin,
   Receipt,
   Ticket,
+  TicketIcon,
   Wallet,
 } from 'lucide-react';
-import { type ReactNode, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  formatMoney as formatMoneyUtil,
+  parseMoney as parseMoneyUtil,
+} from '@/utils/money';
+import { formatShortDate, formatTime } from '@/utils/date';
+import type { ApiResponse } from '@/api/types';
+import type { EventDetail, EventOverviewRow, NeedApplication } from '@/types/events';
+import type { ManagingKind, ManagingItem } from './MyUpcoming';
 
-import client from '@/api/client';
+// Add missing internal types
+export interface EarningsItem {
+  id: string;
+  kind: ManagingKind;
+  event: EventDetail;
+  eventTime: string;
+  isPast: boolean;
+  title?: string;
+  location?: string;
+  route: string;
+  role?: EarningsRole;
+  totalEarned?: number;
+  totalSaved?: number;
+  netRevenue?: number;
+  serviceRevenue?: number;
+  ticketRevenue?: number;
+  vendorCosts?: number;
+  status?: string;
+  ticketLines?: EarningsLineItem[];
+  vendorLines?: EarningsLineItem[];
+  serviceLines?: EarningsLineItem[];
+}
+
+export type EarningsRole = 'hosted' | 'serviced';
+
+export interface EarningsLineItem {
+  label: string;
+  amount: number;
+  detail?: string;
+}
+
+export interface ServiceWithApplications {
+  id: string;
+  title: string;
+  category: string;
+  portfolio_image: string | null;
+  location_city: string;
+  created_at: string;
+  is_active: boolean;
+  isDetached?: boolean;
+  base_price: string;
+  applications: any[];
+}
+
+export interface ServiceApplicationItem {
+  id: string;
+  status: string;
+  eventDetail: EventDetail | null;
+  event_id: string;
+  event_title: string;
+  created_at: string;
+  need_title: string;
+  proposed_price: string;
+  barcode: string;
+  qr_token: string;
+  message: string;
+}
 import { EditApplicationModal } from '@/components/events/EditApplicationModal';
 import { useAuth } from '@/features/auth/hooks';
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
@@ -43,13 +108,12 @@ import {
 import { fetchEventNeeds } from '@/features/needs/api';
 import { useMyApplications } from '@/features/needs/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
-import type { EventOverviewRow } from '@/pages/alerts/utils';
 import { VendorAgreement } from '@/pages/events/components/manage-vendor/VendorAgreement';
-import type { ApiResponse, EventDetail } from '@/types/events';
-import type { NeedApplication } from '@/types/needs';
-import { ManagingItem } from './MyUpcoming';
 
-  
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMemo, type ReactNode } from 'react';
+import client from '@/api/client';
+
 export function toDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate(),
@@ -60,22 +124,6 @@ export function monthLabel(date: Date) {
   return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
-export function formatTime(dateString: string | undefined | null) {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-export function formatShortDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 export function formatCalendarSelection(dateKey: string) {
   const [year, month, day] = dateKey.split('-').map(Number);
   return new Date(year, (month || 1) - 1, day || 1).toLocaleDateString(undefined, {
@@ -84,21 +132,8 @@ export function formatCalendarSelection(dateKey: string) {
     day: 'numeric',
   });
 }
-
-export function formatMoney(value: number) {
-  return `Rs ${new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: 0,
-  }).format(Math.max(0, Math.round(value)))}`;
-}
-
-export function parseMoney(value: unknown) {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-}
+export const formatMoney = formatMoneyUtil;
+export const parseMoney = parseMoneyUtil;
 
 export function getEventPriceLabel(event: EventDetail) {
   const prices = [
@@ -247,7 +282,7 @@ export function ManagingEventCard({
 
   const event = item.event;
   const style = KIND_STYLES[item.kind];
-  const categoryTheme = getCategoryTheme(event.category ?? undefined);
+  const categoryTheme = getCategoryTheme(event?.category ?? undefined);
   const stepLabel =
     item.kind === 'hosting'
       ? 'hosting'
@@ -286,7 +321,7 @@ export function ManagingEventCard({
           <Box
             component="img"
             src={event.cover_image}
-            alt={event.title}
+            alt={event.title || 'Event'}
             sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : null}
@@ -896,7 +931,7 @@ export function ExpandableManagingEventCard({
 
 export function buildHostedVendorLines(event: EventDetail) {
   const participatingVendorLines = (
-    Array.isArray(event.participating_vendors) ? event.participating_vendors : []
+    Array.isArray((event as any).participating_vendors) ? (event as any).participating_vendors : []
   )
     .map((vendor: any, index: number) => ({
       label:
@@ -914,7 +949,7 @@ export function buildHostedVendorLines(event: EventDetail) {
         vendor?.amount,
       ),
     }))
-    .filter((line) => line.amount > 0);
+    .filter((line: any) => line.amount > 0);
 
   if (participatingVendorLines.length > 0) return participatingVendorLines;
 
@@ -925,8 +960,9 @@ export function buildHostedVendorLines(event: EventDetail) {
       detail: application.vendor_name || 'Vendor payout placeholder',
       amount: parseMoney(application.proposed_price),
     }))
-    .filter((line) => line.amount > 0);
+    .filter((line: any) => line.amount > 0);
 }
+
 
 export function buildServiceLines(event: EventDetail) {
   return (event.user_applications || [])
@@ -936,7 +972,7 @@ export function buildServiceLines(event: EventDetail) {
       detail: application.vendor_name || 'Accepted service',
       amount: parseMoney(application.proposed_price),
     }))
-    .filter((line) => line.amount > 0);
+    .filter((line: any) => line.amount > 0);
 }
 
 export function buildEarningsItem(item: ManagingItem): EarningsItem | null {
@@ -950,7 +986,7 @@ export function buildEarningsItem(item: ManagingItem): EarningsItem | null {
   }
 
   const ticketLines = (item.event.ticket_tiers || [])
-    .map((tier) => {
+    .map((tier: any) => {
       const sold = tier.sold_count || 0;
       const price = parseMoney(tier.price);
       return {
@@ -959,20 +995,22 @@ export function buildEarningsItem(item: ManagingItem): EarningsItem | null {
         amount: sold * price,
       };
     })
-    .filter((line) => line.amount > 0);
+    .filter((line: any) => line.amount > 0);
 
-  const vendorLines = buildHostedVendorLines(item.event);
-  const serviceLines = buildServiceLines(item.event);
+  const vendorLines = buildHostedVendorLines(item.event as EventDetail);
+  const serviceLines = buildServiceLines(item.event as EventDetail);
 
-  const ticketRevenue = ticketLines.reduce((sum, line) => sum + line.amount, 0);
-  const vendorCosts = vendorLines.reduce((sum, line) => sum + line.amount, 0);
-  const serviceRevenue = serviceLines.reduce((sum, line) => sum + line.amount, 0);
+  const ticketRevenue = ticketLines.reduce((sum: number, line: any) => sum + line.amount, 0);
+  const vendorCosts = vendorLines.reduce((sum: number, line: any) => sum + line.amount, 0);
+  const serviceRevenue = serviceLines.reduce((sum: number, line: any) => sum + line.amount, 0);
   const role: EarningsRole = item.kind === 'hosting' ? 'hosted' : 'serviced';
   const totalEarned = role === 'hosted' ? ticketRevenue - vendorCosts : serviceRevenue;
 
   return {
     id: item.id,
+    kind: item.kind,
     route: item.route,
+    isPast: item.isPast,
     role,
     event: item.event,
     title: item.title,
@@ -1381,14 +1419,14 @@ export function EarningsEventRow({
                 <EarningsBreakdownSection
                   title="Tickets sold"
                   hint="Revenue is estimated from sold ticket tiers."
-                  lines={item.ticketLines}
+                  lines={item.ticketLines || []}
                   accent="#2B2118"
                   emptyText="Ticket-tier earnings will appear here once ticket sales are wired in."
                 />
                 <EarningsBreakdownSection
                   title="Vendors paid"
                   hint="Accepted service payouts will reduce host earnings."
-                  lines={item.vendorLines}
+                  lines={item.vendorLines || []}
                   accent="#7C3E1D"
                   emptyText="Vendor cost details will appear here when pricing data is wired."
                 />
@@ -1397,7 +1435,7 @@ export function EarningsEventRow({
               <EarningsBreakdownSection
                 title="Services delivered"
                 hint="Accepted service payouts are grouped here for this event."
-                lines={item.serviceLines}
+                lines={item.serviceLines || []}
                 accent="#0F6E56"
                 emptyText="Service earnings will appear here once payout details are wired."
               />
@@ -1745,7 +1783,10 @@ export function ServiceApplicationCard({
   const [agreementOpen, setAgreementOpen] = useState(false);
   const event = application.eventDetail;
   const categoryTheme = getCategoryTheme(event?.category ?? undefined);
-  const statusStyle = APPLICATION_STATUS_STYLES[application.status];
+  const statusStyle =
+    APPLICATION_STATUS_STYLES[
+      application.status as keyof typeof APPLICATION_STATUS_STYLES
+    ];
   const eventPriceLabel = event ? getEventPriceLabel(event) : null;
 
   return (

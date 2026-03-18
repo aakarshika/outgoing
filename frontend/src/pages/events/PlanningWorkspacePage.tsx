@@ -397,9 +397,9 @@ export default function PlanningWorkspacePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { openChat } = useChatDrawer();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { openChat } = useChatDrawer();
   const eventId = Number(id || 0);
   const isCreateMode = !id;
   const pathSegments = useMemo(
@@ -1412,11 +1412,6 @@ export default function PlanningWorkspacePage() {
       ),
     );
     await updateEvent(event.id, formData);
-    setOutsourcedFeatures(
-      Object.fromEntries(
-        features.map((feature) => [feature.name, !!feature.outsourced]),
-      ),
-    );
     await queryClient.invalidateQueries({ queryKey: ['event', event.id] });
     toast.success('Features updated');
   };
@@ -1725,17 +1720,17 @@ export default function PlanningWorkspacePage() {
       ) : null}
       {isFeaturesOpen ? (
         <FeaturesOverlay
-          initialFeatures={editableFeatures}
+          initialFeatures={editableFeatures as any}
           onClose={() => setIsFeaturesOpen(false)}
-          onSave={handleSaveFeatures}
+          onSave={handleSaveFeatures as any}
         />
       ) : null}
       {isTicketsOpen ? (
         <TicketsOverlay
           initialCapacity={event.capacity ? String(event.capacity) : ''}
-          initialTiers={realTicketRows}
+          initialTiers={realTicketRows as any}
           onClose={() => setIsTicketsOpen(false)}
-          onSave={handleSaveTickets}
+          onSave={handleSaveTickets as any}
         />
       ) : null}
       {isAddNeedOpen ? (

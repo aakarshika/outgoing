@@ -106,6 +106,10 @@ function buildPrimaryTicketTier(): TicketTier {
   };
 }
 
+function toTierCapacity(value: string): TicketTier['capacity'] {
+  return value === '' ? '' : Number(value);
+}
+
 function buildVenueName(address: string) {
   return address.split(',')[0]?.trim() || 'TBD';
 }
@@ -247,7 +251,7 @@ export function QuickCreateSpark({
       price: isPaidTicket ? Number(primaryTier.price || 0) : 0,
       admits: primaryTier.admits || '1',
       max_passes_per_ticket: primaryTier.max_passes_per_ticket || '6',
-      capacity: capacity === '' ? '' : capacity,
+      capacity: toTierCapacity(capacity),
     };
   }, [capacity, isPaidTicket, primaryTier]);
   const resolvedTicketTiers = useMemo(
@@ -567,10 +571,14 @@ export function QuickCreateSpark({
       onlineUrl: onlineUrl.trim(),
       coverFile,
       ticketPriceStandard: isPaidTicket
-        ? String(resolvedPrimaryTier.price ?? '0')
+        ? String(resolvedPrimaryTier.price)
         : null,
-      capacity,
-      ticketTiers: resolvedTicketTiers,
+      capacity: String(capacity),
+      ticketTiers: resolvedTicketTiers.map(t => ({
+        ...t,
+        price: Number(t.price),
+        capacity: t.capacity === "" ? null : Number(t.capacity)
+      })) as any[],
       features: eventFeatures,
     });
   };
@@ -1158,7 +1166,7 @@ export function QuickCreateSpark({
               return [
                 {
                   ...tier,
-                  capacity: nextCapacity === '' ? '' : nextCapacity,
+                  capacity: toTierCapacity(nextCapacity),
                 },
               ];
             });
@@ -1213,7 +1221,7 @@ export function QuickCreateSpark({
                       {
                         ...tier,
                         price: nextIsPaid ? Number(tier.price || 0) : 0,
-                        capacity: capacity === '' ? '' : capacity,
+                        capacity: toTierCapacity(capacity),
                       },
                     ];
                   });

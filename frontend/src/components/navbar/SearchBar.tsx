@@ -1,21 +1,7 @@
 import {
-  ArrowLeft,
-  Briefcase,
-  Calendar,
-  CalendarDays,
   LocateFixed,
   MapPin,
-  Menu,
-  MessageSquare,
-  MessageSquareIcon,
-  Pencil,
-  Plus,
   Search,
-  Settings,
-  Shield,
-  Ticket,
-  User,
-  UserPlus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -47,8 +33,6 @@ export const SearchBar = () => {
     handleLocationSuggestionClick,
     clearLocationSelection,
     suggestions,
-    navigate,
-    location,
     navigateToSearch,
   } = useNavbarContext();
 

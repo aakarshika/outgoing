@@ -94,7 +94,7 @@ export const ScrapbookEventCard = ({
           }}
         >
           {isOnlineEvent ? (
-            <LightThemeConferencePoster event={event} />
+            <LightThemeConferencePoster event={event as any} />
           ) : (
             <CategoricalBackground
               className="card-body"

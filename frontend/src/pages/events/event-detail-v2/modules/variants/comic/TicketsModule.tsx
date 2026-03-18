@@ -28,7 +28,6 @@ export function ComicTicketsModule({
       handleBuyTicket={handleBuyTicket}
       handleOneClickBuy={handleOneClickBuy}
       clearTicketformTrigger={clearTicketformTrigger}
-      onViewTicket={onViewTicket}
     />
   );
 }

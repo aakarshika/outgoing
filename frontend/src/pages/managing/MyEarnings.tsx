@@ -2,13 +2,12 @@ import { Box, Stack, Typography } from '@mui/material';
 import { CircleDollarSign, Receipt, Wallet } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { EarningsEventRow, SummaryValueCard, formatMoney } from './useManaging';
-
-export interface EarningsItem {
-  id: string;
-  eventTime: string;
-  totalEarned: number;
-}
+import {
+  EarningsEventRow,
+  SummaryValueCard,
+  formatMoney,
+  type EarningsItem,
+} from './useManaging';
 
 interface MyEarningsProps {
   lifetimeEarned: number;

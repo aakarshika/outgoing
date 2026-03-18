@@ -1,3 +1,4 @@
+import { Box, type SxProps, type Theme } from '@mui/material';
 import React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ interface UserAvatarProps {
   username?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
+  sx?: SxProps<Theme>;
   showBorder?: boolean;
   borderGradient?: boolean;
 }
@@ -27,6 +29,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   username,
   size = 'md',
   className,
+  sx,
   showBorder = false,
   borderGradient = false,
 }) => {
@@ -62,19 +65,24 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   if (borderGradient) {
     return (
-      <div
+      <Box
         className={cn(
           'rounded-full p-[3px] bg-gradient-to-tr from-primary via-primary/60 to-background shadow-md',
           sizeClasses[size],
           className,
         )}
+        sx={sx}
       >
         <div className="h-full w-full rounded-full bg-card border-[2px] border-background flex items-center justify-center overflow-hidden relative">
           {renderContent()}
         </div>
-      </div>
+      </Box>
     );
   }
 
-  return <div className={containerClasses}>{renderContent()}</div>;
+  return (
+    <Box className={containerClasses} sx={sx}>
+      {renderContent()}
+    </Box>
+  );
 };

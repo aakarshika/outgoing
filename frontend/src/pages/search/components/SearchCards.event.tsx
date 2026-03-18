@@ -81,7 +81,7 @@ export function EventCard({
     if (!opportunity) return null;
     const applications = applicationsData?.data || [];
     return (
-      applications.find((application) => application.need === opportunity.need_id) ||
+      applications.find((application) => application.need_id === opportunity.need_id) ||
       null
     );
   }, [applicationsData, opportunity]);
@@ -461,7 +461,7 @@ function EventCardHero({ countdown, event, price, tab }: EventCardHeroProps) {
 type EventOpportunityBannerProps = {
   ctaLabel: string | null;
   isLandscape: boolean;
-  needRewardValue?: number | null;
+  needRewardValue?: string | number | null;
   onClick: (event: MouseEvent) => void;
   opportunity: VendorOpportunity;
 };

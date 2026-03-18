@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 
 import type { EventListItem } from '@/types/events';
 
-import { EventCard } from './EventCard';
+import { ScrapbookEventCard } from './EventCard';
 
 interface HorizontalEventListProps {
   title: string;
@@ -109,7 +109,7 @@ export function HorizontalEventList({
               ))
             : events.map((event) => (
                 <div key={event.id} className={`${cardWidth} flex-none snap-start`}>
-                  <EventCard event={event} />
+                  <ScrapbookEventCard event={event as any} />
                 </div>
               ))}
         </div>

@@ -58,6 +58,8 @@ interface EarningsLineItem {
 interface EarningsItem {
   id: string;
   route: string;
+  kind: ManagingKind;
+  isPast: boolean;
   role: EarningsRole;
   event: EventDetail;
   title: string;

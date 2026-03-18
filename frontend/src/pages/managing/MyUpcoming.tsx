@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { PlanningChecklistItem } from '@/features/events/planningChecklist';
+import type { EventDetail } from '@/types/events';
 import { buildMonthGrid, formatCalendarSelection, monthLabel } from './useManaging';
 import { CompactManagingEventCard } from './useManaging';
 
@@ -11,9 +12,13 @@ export type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application' |
 export interface ManagingItem {
   id: string;
   kind: ManagingKind;
-  event?: unknown;
+  event?: EventDetail | null;
   eventTime: string;
   isPast: boolean;
+  title?: string;
+  location?: string;
+  subtitle?: string;
+  route: string;
 }
 
 type DayGridItem = { date: Date; key: string; inMonth: boolean; isToday: boolean };

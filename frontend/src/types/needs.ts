@@ -12,6 +12,7 @@ export interface NeedApplication {
   event_id?: number;
   service: number | null; // ID of the VendorService
   message: string;
+  cover_letter?: string;
   proposed_price: string | null;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
   barcode?: string;
@@ -28,7 +29,7 @@ export interface EventNeed {
   criticality: 'essential' | 'replaceable' | 'non_substitutable';
   budget_min: string | null;
   budget_max: string | null;
-  status: 'open' | 'filled' | 'cancelled' | 'override_filled';
+  status: 'open' | 'pending' | 'filled' | 'cancelled' | 'override_filled';
   assigned_vendor: number | null;
   application_count: number;
   applications: NeedApplication[];

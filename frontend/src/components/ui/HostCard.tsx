@@ -1,12 +1,12 @@
 import { Box, Typography } from '@mui/material';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Media } from '@/components/ui/media';
 
 interface HostCardProps {
   host: {
-    published_event_count: ReactNode;
+    published_event_count?: ReactNode;
     username: string;
     avatar: string | null;
   };
@@ -116,7 +116,7 @@ export const HostCard = ({
               transform: 'rotate(-2deg)',
             }}
           >
-            {host.published_event_count}
+            {host.published_event_count ?? 0}
           </Box>
           <Box
             sx={{

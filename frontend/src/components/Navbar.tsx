@@ -1,31 +1,21 @@
 import {
-  Briefcase,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Menu,
-  MessageSquare,
-  Settings,
-  Shield,
-  Ticket,
-  User,
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { QuickCreateEventModal } from '@/components/events/QuickCreateEventModal';
 import { ComicIconButton } from '@/components/ui/ComicIconButton';
-
 import {
   CreateEventButton,
   EventManagementHeader,
   IconButtonsSection,
   LogoSection,
   ManageEventButton,
-  SearchBar,
   SidebarLinkItem,
   UserInfoSection,
 } from './navbar/NavbarComponents';
+import { SearchBar } from './navbar/SearchBar';
 import { NavbarProvider, useNavbarContext } from './navbar/NavbarContext';
 
 function SidebarContent() {
@@ -137,7 +127,7 @@ function NavbarLayout() {
     isVendor,
     isNotOnManagePage,
     isEventHost,
-    sidebarExpanded,
+    // sidebarExpanded,
     // setSidebarExpanded,
     isNativeSidebarRoute,
   } = useNavbarContext();

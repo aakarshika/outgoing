@@ -2,7 +2,7 @@ import { CheckCircle2, ClipboardList } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useTransitionEventLifecycle, useUpdateEvent } from '@/features/events/hooks';
+import { useTransitionEventLifecycle } from '@/features/events/hooks';
 import { useEventNeeds } from '@/features/needs/hooks';
 import { EventDetail } from '@/types/events';
 

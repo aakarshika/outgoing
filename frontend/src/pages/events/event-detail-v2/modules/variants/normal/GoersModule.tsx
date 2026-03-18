@@ -250,17 +250,18 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
                 />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
+                    noWrap
                     sx={{
                       fontWeight: 700,
                       fontSize: '0.95rem',
                       color: '#111827',
-                      noWrap: true,
                     }}
                   >
                     {attendee.name || attendee.username}
                   </Typography>
                   <Typography
-                    sx={{ fontSize: '0.8rem', color: '#6b7280', noWrap: true }}
+                    noWrap
+                    sx={{ fontSize: '0.8rem', color: '#6b7280' }}
                   >
                     @{attendee.username}
                   </Typography>

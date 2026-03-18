@@ -1,5 +1,8 @@
 /** Shared types for the events domain. */
 
+import type { EventOverviewRow as AlertsEventOverviewRow } from '@/pages/alerts/utils';
+import type { NeedApplication as EventNeedApplication } from './needs';
+
 export interface EventCategory {
   id: number;
   name: string;
@@ -143,6 +146,9 @@ export interface EventLifecycleTransition {
   actor_username: string | null;
   created_at: string;
 }
+
+export type EventOverviewRow = AlertsEventOverviewRow;
+export type NeedApplication = EventNeedApplication;
 
 export interface VendorApplicationInfo {
   id: number;

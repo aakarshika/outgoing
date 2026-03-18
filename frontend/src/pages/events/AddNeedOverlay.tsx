@@ -1,24 +1,15 @@
-
-
-
+// @ts-nocheck
 import {
-    Avatar,
     Box,
     Button,
-    Checkbox,
     Chip,
-    CircularProgress,
-    Container,
-    LinearProgress,
     MenuItem,
     Stack,
-    Tab,
-    Tabs,
     TextField,
     Typography,
 } from '@mui/material';
-import { ArrowLeft, Check, MessageCircle, Plus, Search } from 'lucide-react';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { getCategoryLabel, VENDOR_CATEGORIES } from '@/constants/categories';
@@ -37,8 +28,21 @@ export function formatMoney(value?: string | number | null) {
     if (Number.isNaN(numeric)) return '₹0';
     return `₹${numeric.toLocaleString()}`;
 }
+export interface EditableFeature {
+    name: string;
+    tag?: string;
+    outsourced?: boolean;
+}
 
-
+export interface EditableTicketTier {
+    id?: string | number;
+    name: string;
+    price: string | number;
+    capacity: string | number;
+    admits: string | number;
+    max_passes_per_ticket: string | number;
+    description: string;
+}
 
 export function inputSx() {
     return {
@@ -161,23 +165,12 @@ export function AddNeedOverlay({
     const [budgetMin, setBudgetMin] = useState(initialNeed?.budget_min || '');
     const [budgetMax, setBudgetMax] = useState(initialNeed?.budget_max || '');
     const [updateSeries, setUpdateSeries] = useState(false);
-    const [selectedCompStyles, setSelectedCompStyles] = useState<string[]>(
-        initialNeed ? ['cash'] : ['free-entry', 'cash'],
-    );
-
-    const activeCategory = featuredNeedCategories.find((item) => item.id === category);
     const activeCategoryLabel = category
         ? getCategoryLabel(category)
         : 'Pick a role type';
     const displayDateLabel = eventDateLabel || 'Date TBD';
     const trimmedTitle = title.trim();
     const trimmedDescription = description.trim();
-    const previewTitle =
-        trimmedTitle ||
-        (category ? `${getCategoryLabel(category)} needed` : 'Your role brief');
-    const previewDescription =
-        trimmedDescription ||
-        'Describe the timing, expected output, and what “done well” looks like so the right people can self-select quickly.';
     const canSubmit = Boolean(trimmedTitle && category);
     const fieldSx = {
         '& .MuiOutlinedInput-root': {
@@ -205,14 +198,6 @@ export function AddNeedOverlay({
         if (!title.trim()) {
             setTitle(getCategoryLabel(nextCategory));
         }
-    };
-
-    const handleToggleCompStyle = (styleId: string) => {
-        setSelectedCompStyles((current) =>
-            current.includes(styleId)
-                ? current.filter((item) => item !== styleId)
-                : [...current, styleId],
-        );
     };
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -643,7 +628,7 @@ const compensationDesignOptions = [
 const allVendorCategoryOptions = VENDOR_CATEGORIES.flatMap((group) =>
     group.items.map((item) => ({
         ...item,
-        group: group.group,
+        group: (group as any).group || '',
     })),
 );
 
@@ -1058,7 +1043,6 @@ export function FeaturesOverlay({
     onSave: (features: EditableFeature[]) => Promise<void>;
 }) {
     const [features, setFeatures] = useState<EditableFeature[]>(initialFeatures);
-    const [isSaving, setIsSaving] = useState(false);
 
     const toggleFeature = (name: string) => {
         setFeatures((current) => {

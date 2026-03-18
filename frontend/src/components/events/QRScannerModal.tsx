@@ -36,7 +36,6 @@ export function QRScannerModal({
   const [isSecure, setIsSecure] = useState(true);
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Check for secure context
   useEffect(() => {
@@ -62,6 +61,7 @@ export function QRScannerModal({
     try {
       if (!html5QrCodeRef.current) {
         html5QrCodeRef.current = new Html5Qrcode('reader', {
+          verbose: false,
           formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
         });
       }
