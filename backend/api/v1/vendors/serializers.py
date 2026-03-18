@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from api.v1.events.serializers import EventListSerializer
 from apps.vendors.models import VendorReview, VendorService
+from core.utils import resolve_media_url
 
 
 class VendorServiceSerializer(serializers.ModelSerializer):
@@ -71,10 +72,7 @@ class VendorServiceSerializer(serializers.ModelSerializer):
         """Return vendor's avatar URL."""
         profile = getattr(obj.vendor, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -133,8 +131,5 @@ class VendorReviewSerializer(serializers.ModelSerializer):
         """Return the reviewer's avatar URL or None."""
         profile = getattr(obj.reviewer, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None

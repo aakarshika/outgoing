@@ -162,11 +162,40 @@ export function useHighlightsFeed() {
   });
 }
 
+const trendingHighlightsOrderByPageSize = new Map<number, number[]>();
+
 export function useTrendingHighlights(pageSize = 20) {
   return useQuery({
     queryKey: ['feed', 'trending-highlights', pageSize],
     queryFn: () => fetchTrendingHighlights(pageSize),
     staleTime: 1000 * 60 * 5,
+    select: (response) => {
+      const items = (response?.data || []) as any[];
+      if (!items.length) return response;
+
+      const storedOrder = trendingHighlightsOrderByPageSize.get(pageSize);
+      if (!storedOrder) {
+        trendingHighlightsOrderByPageSize.set(
+          pageSize,
+          items.map((item) => item?.id).filter((id): id is number => typeof id === 'number'),
+        );
+        return response;
+      }
+
+      const itemById = new Map<number, any>();
+      for (const item of items) {
+        if (item?.id != null) itemById.set(item.id, item);
+      }
+
+      const ordered: any[] = [];
+      for (const id of storedOrder) {
+        const item = itemById.get(id);
+        if (item) ordered.push(item);
+      }
+
+      const remaining = items.filter((item) => !storedOrder.includes(item?.id));
+      return { ...response, data: [...ordered, ...remaining] };
+    },
   });
 }
 

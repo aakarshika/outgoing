@@ -18,6 +18,7 @@ from apps.events.models import Event, EventHighlight, EventView
 from apps.profiles.models import UserProfile
 from apps.vendors.models import VendorService
 from core.responses import success_response
+from core.utils import resolve_media_url
 
 
 class FeedView(APIView):
@@ -371,7 +372,7 @@ class IconicHostsFeedView(APIView):
             {
                 "id": host.id,
                 "username": host.username,
-                "avatar": host.avatar.url if host.avatar else None,
+                "avatar": resolve_media_url(host.avatar, request) if host.avatar else None,
                 "headline": host.headline,
                 "location_city": host.location_city,
                 "published_event_count": host.published_event_count,

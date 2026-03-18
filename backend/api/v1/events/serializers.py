@@ -29,6 +29,7 @@ from apps.events.models import (
     Friendship,
 )
 from apps.tickets.models import Ticket
+from core.utils import resolve_media_url
 
 
 class EventCategorySerializer(serializers.ModelSerializer):
@@ -75,10 +76,7 @@ class EventHostSerializer(serializers.Serializer):
         """Return the host's avatar URL or None."""
         profile = getattr(obj, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -148,13 +146,7 @@ class EventListSerializer(serializers.ModelSerializer):
         """Return the frontend asset path or absolute backend media URL."""
         if not obj.cover_image:
             return None
-        url = obj.cover_image.name
-        if url.startswith("/assets/"):
-            return url
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(obj.cover_image.url)
-        return obj.cover_image.url
+        return resolve_media_url(obj.cover_image, self.context.get("request"))
 
     def get_user_is_interested(self, obj):
         """Check if the current user is interested in this event."""
@@ -422,11 +414,7 @@ class EventDetailSerializer(EventListSerializer):
                 profile = getattr(vendor, "profile", None)
                 vendor_avatar = None
                 if profile and profile.avatar:
-                    request = self.context.get("request")
-                    if request:
-                        vendor_avatar = request.build_absolute_uri(profile.avatar.url)
-                    else:
-                        vendor_avatar = profile.avatar.url
+                    vendor_avatar = resolve_media_url(profile.avatar, self.context.get("request"))
 
                 vendors.append(
                     {
@@ -469,11 +457,7 @@ class EventDetailSerializer(EventListSerializer):
             if is_visible:
                 avatar_url = None
                 if profile and profile.avatar:
-                    request = self.context.get("request")
-                    if request:
-                        avatar_url = request.build_absolute_uri(profile.avatar.url)
-                    else:
-                        avatar_url = profile.avatar.url
+                    avatar_url = resolve_media_url(profile.avatar, self.context.get("request"))
 
                 attendees.append(
                     {
@@ -709,6 +693,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
     event_id = serializers.IntegerField(source="event.id", read_only=True)
+    media_file = serializers.SerializerMethodField()
     # Basic event card details for scrapbook components on the frontend
     event = serializers.SerializerMethodField()
 
@@ -741,9 +726,11 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "user_has_liked",
-            "event_id",
             "event",
         ]
+
+    def get_media_file(self, obj):
+        return resolve_media_url(obj.media_file, self.context.get("request"))
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -761,10 +748,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         """Return the author's avatar URL or None."""
         profile = getattr(obj.author, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
     def get_event(self, obj):
@@ -949,10 +933,7 @@ class EventReviewSerializer(serializers.ModelSerializer):
         """Return the reviewer's avatar URL or None."""
         profile = getattr(obj.reviewer, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 
@@ -1067,10 +1048,7 @@ class EventPrivateConversationListSerializer(serializers.ModelSerializer):
         other_user = self._get_other_user(obj)
         profile = getattr(other_user, "profile", None)
         if profile and profile.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(profile.avatar.url)
-            return profile.avatar.url
+            return resolve_media_url(profile.avatar, self.context.get("request"))
         return None
 
 

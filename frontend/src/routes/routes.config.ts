@@ -22,6 +22,16 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/highlightsreels',
+    componentName: 'HighlightsReels',
+    isPublic: true,
+  },
+  {
+    path: '/highlightsreels/:highlightId',
+    componentName: 'HighlightsReels',
+    isPublic: true,
+  },
+  {
     path: '/homerenewed',
     componentName: 'HomeRenewed',
     isPublic: true,

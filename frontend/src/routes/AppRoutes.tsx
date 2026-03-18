@@ -16,6 +16,7 @@ const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
 const HomePage = lazy(() => import('@/pages/home/RootHomePage'));
 const HomePageRenewed = lazy(() => import('@/pages/home/HomePageRenewed'));
 const HighlightsPage = lazy(() => import('@/pages/highlights/HighlightsPage'));
+const HighlightsReelsPage = lazy(() => import('@/pages/highlightsreels/HighlightsReelsPage'));
 const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
 const EventDetailV2Page = lazy(() => import('@/pages/events/EventDetailPageV2'));
 const PlanningWorkspacePage = lazy(
@@ -48,6 +49,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   UserProfile: UserProfilePage,
   Home: HomePage,
   Highlights: HighlightsPage,
+  HighlightsReels: HighlightsReelsPage,
   EventDetail: EventDetailNewPage,
   EventDetailV2: EventDetailV2Page,
   PlanningWorkspace: PlanningWorkspacePage,

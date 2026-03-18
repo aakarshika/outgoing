@@ -11,6 +11,7 @@ from apps.tickets.models import Ticket
 from apps.vendors.models import VendorReview, VendorService
 from core.responses import error_response, success_response
 from core.serializers import SuccessResponseSerializer
+from core.utils import resolve_media_url
 
 from .serializers import UserProfileSerializer
 
@@ -81,7 +82,7 @@ class PublicShowcaseView(APIView):
                     "slug": t.event.slug,
                     "start_time": t.event.start_time,
                     "location_name": t.event.location_name,
-                    "cover_image": request.build_absolute_uri(t.event.cover_image.url)
+                    "cover_image": resolve_media_url(t.event.cover_image, request)
                     if t.event.cover_image
                     else None,
                 }
@@ -99,7 +100,7 @@ class PublicShowcaseView(APIView):
                     "slug": e.slug,
                     "start_time": e.start_time,
                     "location_name": e.location_name,
-                    "cover_image": request.build_absolute_uri(e.cover_image.url)
+                    "cover_image": resolve_media_url(e.cover_image, request)
                     if e.cover_image
                     else None,
                 }
@@ -120,7 +121,7 @@ class PublicShowcaseView(APIView):
                 "title": s.title,
                 "category": s.category,
                 "base_price": str(s.base_price) if s.base_price else None,
-                "portfolio_image": request.build_absolute_uri(s.portfolio_image.url)
+                "portfolio_image": resolve_media_url(s.portfolio_image, request)
                 if s.portfolio_image
                 else None,
             }
@@ -209,12 +210,8 @@ class PublicShowcaseView(APIView):
             "email": user.email if profile.privacy_email else "",
             "headline": profile.headline,
             "showcase_bio": profile.showcase_bio,
-            "avatar": request.build_absolute_uri(profile.avatar.url)
-            if profile.avatar and not profile.avatar.url.startswith(("http://", "https://"))
-            else profile.avatar.url if profile.avatar else None,
-            "cover_photo": request.build_absolute_uri(profile.cover_photo.url)
-            if profile.cover_photo and not profile.cover_photo.url.startswith(("http://", "https://"))
-            else profile.cover_photo.url if profile.cover_photo else None,
+            "avatar": resolve_media_url(profile.avatar, request),
+            "cover_photo": resolve_media_url(profile.cover_photo, request),
             "location_city": profile.location_city,
             "hosted_events": hosted_events,
             "attended_events": attended_events,

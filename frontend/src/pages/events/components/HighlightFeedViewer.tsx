@@ -18,6 +18,7 @@ interface HighlightFeedViewerProps {
   isOpen: boolean;
   onClose: () => void;
   initialHighlightId?: number;
+  urlPattern?: 'gallery' | 'highlightsreels' | ((highlight: any) => string);
 }
 
 function FrostedActionButton({
@@ -72,6 +73,7 @@ export const HighlightFeedViewer = ({
   isOpen,
   onClose,
   initialHighlightId,
+  urlPattern = 'gallery',
 }: HighlightFeedViewerProps) => {
   const { id: routeEventId } = useParams();
   const navigate = useNavigate();
@@ -82,6 +84,7 @@ export const HighlightFeedViewer = ({
   const [activeHighlightId, setActiveHighlightId] = useState<number | null>(
     initialHighlightId || null,
   );
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
   const activeIndex = useMemo(
     () => highlights.findIndex((highlight) => highlight.id === activeHighlightId),
@@ -90,11 +93,28 @@ export const HighlightFeedViewer = ({
 
   const activeHighlight = highlights[activeIndex] || highlights[0];
 
-  const syncHighlightUrl = (highlight: any) => {
+  const getHighlightUrl = (highlight: any) => {
     const eventId = highlight?.event?.id ?? highlight?.event_id ?? routeEventId;
-    if (!eventId || !highlight?.id) return;
+    if (!eventId || !highlight?.id) return '';
 
-    window.history.replaceState(null, '', `/events/${eventId}/gallery/${highlight.id}`);
+    if (typeof urlPattern === 'function') {
+      return urlPattern(highlight);
+    }
+
+    switch (urlPattern) {
+      case 'highlightsreels':
+        return `/highlightsreels/${highlight.id}`;
+      case 'gallery':
+      default:
+        return `/events/${eventId}/gallery/${highlight.id}`;
+    }
+  };
+
+  const syncHighlightUrl = (highlight: any) => {
+    const url = getHighlightUrl(highlight);
+    if (url) {
+      window.history.replaceState(null, '', url);
+    }
   };
 
   useEffect(() => {
@@ -115,7 +135,19 @@ export const HighlightFeedViewer = ({
   }, [activeHighlightId, highlights, initialHighlightId, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !scrollContainerRef.current || highlights.length === 0) return;
+    if (!isOpen) {
+      setHasInitialScrolled(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !scrollContainerRef.current ||
+      highlights.length === 0 ||
+      hasInitialScrolled
+    )
+      return;
 
     const targetId = initialHighlightId || highlights[0]?.id;
     if (!targetId) return;
@@ -128,8 +160,9 @@ export const HighlightFeedViewer = ({
       scrollContainerRef.current.scrollTop =
         index * scrollContainerRef.current.clientHeight;
       setActiveHighlightId(targetId);
+      setHasInitialScrolled(true);
     });
-  }, [highlights, initialHighlightId, isOpen]);
+  }, [highlights, initialHighlightId, isOpen, hasInitialScrolled]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const container = event.currentTarget;
@@ -148,10 +181,8 @@ export const HighlightFeedViewer = ({
   };
 
   const handleShare = async (highlight: any) => {
-    const eventId = highlight?.event?.id ?? highlight?.event_id ?? routeEventId;
-    if (!eventId || !highlight?.id) return;
-
-    const shareUrl = `${window.location.origin}/events/${eventId}/gallery/${highlight.id}`;
+    const shareUrl = getHighlightUrl(highlight);
+    if (!shareUrl) return;
 
     try {
       if (navigator.share) {

@@ -1,11 +1,8 @@
 import { Home, type LucideIcon, MessageCircle, Sparkles, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
-import { useTrendingHighlights } from '@/features/events/hooks';
 import { cn } from '@/lib/utils';
-import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
 
 type NavItem = {
   key: string;
@@ -25,11 +22,11 @@ const navItems: NavItem[] = [
     match: (pathname) => pathname === '/',
   },
   {
-    key: 'highlights',
+    key: 'highlightsreels',
     label: 'Highlights',
     Icon: Sparkles,
-    to: '/highlights',
-    match: (pathname) => pathname === '/highlights',
+    to: '/highlightsreels',
+    match: (pathname) => pathname.startsWith('/highlightsreels'),
   },
   {
     key: 'chats',
@@ -53,19 +50,6 @@ export function AppBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { data: trendingData, isLoading: loadingTrending } = useTrendingHighlights(24);
-  const trendingHighlights = trendingData?.data || [];
-  const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
-  const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
-  const [pendingOpenHighlight, setPendingOpenHighlight] = useState(false);
-
-  useEffect(() => {
-    if (pendingOpenHighlight && !loadingTrending && trendingHighlights.length > 0) {
-      setSelectedHighlightId(trendingHighlights[0].id);
-      setIsHighlightViewerOpen(true);
-      setPendingOpenHighlight(false);
-    }
-  }, [pendingOpenHighlight, loadingTrending, trendingHighlights]);
 
   return (
     <nav
@@ -97,20 +81,7 @@ export function AppBottomNav() {
                 type="button"
                 aria-label={label}
                 aria-current={isActive ? 'page' : undefined}
-                onClick={() => {
-                  if (key === 'highlights') {
-                    // Open highlight feed viewer starting from first trending highlight
-                    if (!loadingTrending && trendingHighlights.length > 0) {
-                      setSelectedHighlightId(trendingHighlights[0].id);
-                      setIsHighlightViewerOpen(true);
-                    } else {
-                      setPendingOpenHighlight(true);
-                    }
-                    return;
-                  }
-
-                  navigate(target);
-                }}
+                onClick={() => navigate(target)}
                 className={cn(
                   'relative flex h-14 items-center justify-center rounded-[22px]  transition-all duration-200',
                   isActive
@@ -137,14 +108,6 @@ export function AppBottomNav() {
           })}
         </div>
       </div>
-
-      {selectedHighlightId && (
-        <HighlightChainViewer
-          initialHighlightId={selectedHighlightId}
-          isOpen={isHighlightViewerOpen}
-          onClose={() => setIsHighlightViewerOpen(false)}
-        />
-      )}
     </nav>
   );
 }
