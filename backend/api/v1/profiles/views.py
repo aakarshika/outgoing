@@ -4,7 +4,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.events.models import Event, EventReview
+from apps.events.models import Event, EventReview, Friendship
 from apps.profiles.services import get_or_create_profile
 from apps.profiles.user_tags import get_user_tags
 from apps.tickets.models import Ticket
@@ -51,6 +51,48 @@ class PublicShowcaseView(APIView):
 
     permission_classes = [AllowAny]
 
+    @staticmethod
+    def _serialize_shared_events(viewer, target_user, request):
+        viewer_event_ids = set(
+            Ticket.objects.filter(goer=viewer, status="used")
+            .values_list("event_id", flat=True)
+            .distinct()
+        )
+        if not viewer_event_ids:
+            return []
+
+        target_tickets = (
+            Ticket.objects.select_related("event")
+            .filter(
+                goer=target_user,
+                status="used",
+                event_id__in=viewer_event_ids,
+            )
+            .order_by("-event__start_time", "-event_id")
+        )
+
+        seen_event_ids = set()
+        shared_events = []
+        for ticket in target_tickets:
+            if ticket.event_id in seen_event_ids or not ticket.event:
+                continue
+            seen_event_ids.add(ticket.event_id)
+            shared_events.append(
+                {
+                    "id": ticket.event.id,
+                    "title": ticket.event.title,
+                    "start_time": ticket.event.start_time,
+                    "location_name": ticket.event.location_name,
+                    "cover_image": (
+                        resolve_media_url(ticket.event.cover_image, request)
+                        if ticket.event.cover_image
+                        else None
+                    ),
+                }
+            )
+
+        return shared_events
+
     def get(self, request, username):
         """Get public showcase data for a user."""
         try:
@@ -59,6 +101,88 @@ class PublicShowcaseView(APIView):
             return error_response(message="User not found", status=404)
 
         profile = get_or_create_profile(user)
+
+        is_authenticated_viewer = request.user.is_authenticated
+        is_self_profile = is_authenticated_viewer and request.user.id == user.id
+
+        shared_events = []
+        friendship = None
+
+        if is_authenticated_viewer and not is_self_profile:
+            shared_events = self._serialize_shared_events(request.user, user, request)
+
+            user1_id, user2_id = sorted([request.user.id, user.id])
+            friendship = Friendship.objects.select_related("met_at_event").filter(
+                user1_id=user1_id,
+                user2_id=user2_id,
+            ).first()
+
+        has_shared_events = bool(shared_events)
+
+        incoming_request = bool(
+            friendship
+            and friendship.status == Friendship.STATUS_PENDING
+            and friendship.request_sender_id != request.user.id
+            if is_authenticated_viewer and friendship
+            else False
+        )
+        outgoing_request = bool(
+            friendship
+            and friendship.status == Friendship.STATUS_PENDING
+            and friendship.request_sender_id == request.user.id
+            if is_authenticated_viewer and friendship
+            else False
+        )
+
+        can_view_full_profile = is_self_profile or (
+            is_authenticated_viewer and has_shared_events
+        )
+
+        if not is_authenticated_viewer:
+            cta = "login_required"
+        elif is_self_profile:
+            cta = "none"
+        elif not has_shared_events:
+            cta = "no_shared_events"
+        elif incoming_request:
+            cta = "accept_invitation"
+        elif outgoing_request:
+            cta = "request_sent"
+        elif friendship and friendship.status == Friendship.STATUS_ACCEPTED:
+            cta = "none"
+        else:
+            cta = "add_friend"
+
+        access = {
+            "is_authenticated_viewer": is_authenticated_viewer,
+            "is_self_profile": is_self_profile,
+            "has_shared_events": has_shared_events,
+            "shared_events": shared_events,
+            "latest_shared_event_id": shared_events[0]["id"] if shared_events else None,
+            "friendship_status": friendship.status if friendship else "none",
+            "incoming_request": incoming_request,
+            "outgoing_request": outgoing_request,
+            "incoming_request_event_id": (
+                friendship.met_at_event_id if friendship and incoming_request else None
+            ),
+            "met_at_event_title": (
+                friendship.met_at_event.title if friendship and friendship.met_at_event else None
+            ),
+            "can_view_full_profile": can_view_full_profile,
+            "cta": cta,
+        }
+
+        base_data = {
+            "username": user.username,
+            "first_name": user.first_name if profile.privacy_name else "",
+            "last_name": user.last_name if profile.privacy_name else "",
+            "date_joined": user.date_joined,
+            "avatar": resolve_media_url(profile.avatar, request),
+            "access": access,
+        }
+
+        if not can_view_full_profile:
+            return success_response(data=base_data)
 
         # Hosted Events
         if profile.privacy_events_attending or profile.privacy_events_attended:
@@ -204,17 +328,18 @@ class PublicShowcaseView(APIView):
         testimonials = testimonials[:8]
 
         data = {
-            "username": user.username,
-            "first_name": user.first_name if profile.privacy_name else "",
-            "last_name": user.last_name if profile.privacy_name else "",
+            **base_data,
             "email": user.email if profile.privacy_email else "",
             "headline": profile.headline,
             "showcase_bio": profile.showcase_bio,
-            "avatar": resolve_media_url(profile.avatar, request),
             "cover_photo": resolve_media_url(profile.cover_photo, request),
             "location_city": profile.location_city,
             "hosted_events": hosted_events,
             "attended_events": attended_events,
+            "hosted_count": user.hosted_events.filter(lifecycle_state='completed').count(),
+            "attended_count": Ticket.objects.filter(goer=user, status__in=['active', 'used']).count(),
+            "total_goers": sum(e.attendees_count or 0 for e in user.hosted_events.all()),
+            "total_reviews": len(testimonials),
             "services": services,
             "badges": badges,
             "user_tags": user_tags,

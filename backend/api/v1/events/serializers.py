@@ -1126,4 +1126,4 @@ class FriendshipRequestCreateSerializer(serializers.Serializer):
 class FriendshipActionSerializer(serializers.Serializer):
     """Validate supported friendship state transitions."""
 
-    action = serializers.ChoiceField(choices=["accept", "withdraw"])
+    action = serializers.ChoiceField(choices=["accept", "withdraw", "unfriend"])

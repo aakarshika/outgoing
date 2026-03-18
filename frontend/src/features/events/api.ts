@@ -623,7 +623,7 @@ export async function fetchFriendRequestStatus(
 export async function updateFriendRequest(
   eventId: number,
   targetUsername: string,
-  payload: { action: 'accept' | 'withdraw' },
+  payload: { action: 'accept' | 'withdraw' | 'unfriend' },
 ) {
   const { data } = await client.patch<ApiResponse<any>>(
     `/events/${eventId}/friendships/${targetUsername}/`,

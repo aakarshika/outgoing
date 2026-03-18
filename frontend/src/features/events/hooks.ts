@@ -902,7 +902,7 @@ export function useUpdateFriendRequest() {
     }: {
       eventId: number;
       targetUsername: string;
-      payload: { action: 'accept' | 'withdraw' };
+      payload: { action: 'accept' | 'withdraw' | 'unfriend' };
     }) => updateFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

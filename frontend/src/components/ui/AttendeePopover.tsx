@@ -182,116 +182,68 @@ export function AttendeePopover({
         }}
         sx={{
           '& .MuiPaper-root': {
-            width: 280,
+            width: 210,
             overflow: 'hidden',
-            borderRadius: '24px',
+            borderRadius: '20px',
             border: 'none',
             boxShadow:
-              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
           },
         }}
       >
         {/* Header Background */}
         <Box
           sx={{
-            height: 80,
+            height: 48,
             background: attendee.cover_photo
               ? `url(${attendee.cover_photo}) center/cover no-repeat`
               : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
             position: 'relative',
-            px: 2,
-            pt: 1.5,
+            px: 1.5,
+            pt: 1,
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-end',
             alignItems: 'flex-start',
           }}
         >
-          <Typography
-            sx={{
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              opacity: 0.9,
-              textShadow: attendee.cover_photo ? '0 1px 4px rgba(0,0,0,0.4)' : 'none',
-            }}
-          >
-            Profile
-          </Typography>
+
           <Box sx={{ color: 'white', opacity: 0.8, cursor: 'pointer' }}>
             <MoreHorizontal size={20} />
           </Box>
         </Box>
 
         {/* Content Area */}
-        <Box sx={{ px: 3, pb: 3, pt: 0, textAlign: 'center', position: 'relative' }}>
+        <Box sx={{ px: 2, pb: 2, pt: 0, textAlign: 'center', position: 'relative' }}>
           {/* Overlapping Avatar */}
           <Box
             sx={{
-              marginTop: '-42px',
+              marginTop: '-32px',
               display: 'flex',
               justifyContent: 'center',
-              mb: 1.5,
+              mb: 1,
             }}
           >
             <Box
               sx={{
-                p: 0.5,
+                p: 0.4,
                 bgcolor: 'white',
                 borderRadius: '50%',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 display: 'inline-flex',
               }}
             >
               <UserAvatar
                 src={attendee.avatar}
                 username={attendee.username}
-                size="xl"
+                size="lg"
               />
             </Box>
           </Box>
 
-          {/* Stats Row */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, px: 1 }}>
-            <Box>
-              <Typography
-                sx={{
-                  fontSize: '0.7rem',
-                  color: '#9ca3af',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                Events
-              </Typography>
-              <Typography
-                sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}
-              >
-                {Math.floor(Math.random() * 50) + 10}
-              </Typography>
-            </Box>
-            <Box>
-              <Typography
-                sx={{
-                  fontSize: '0.7rem',
-                  color: '#9ca3af',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                Goers
-              </Typography>
-              <Typography
-                sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}
-              >
-                {Math.floor(Math.random() * 500) + 100}
-              </Typography>
-            </Box>
-          </Box>
+
 
           {/* User Info */}
-          <Box sx={{ mb: 2.5 }}>
+          <Box sx={{ mb: 1.5 }}>
             <Box
               sx={{
                 display: 'flex',
@@ -303,7 +255,7 @@ export function AttendeePopover({
               <Typography
                 sx={{
                   fontWeight: 800,
-                  fontSize: '1.4rem',
+                  fontSize: '1.1rem',
                   color: '#111827',
                   lineHeight: 1.2,
                 }}
@@ -311,10 +263,20 @@ export function AttendeePopover({
                 {displayName}
               </Typography>
               {attendee.is_verified && (
-                <BadgeCheck className="text-blue-500 fill-blue-500/10" size={20} />
+                <BadgeCheck className="text-blue-500 fill-blue-500/10" size={16} />
               )}
             </Box>
-            <Typography sx={{ fontSize: '0.9rem', color: '#6b7280', mt: 0.5 }}>
+            <Typography
+              sx={{
+                fontSize: '0.75rem',
+                color: '#6b7280',
+                fontWeight: 600,
+                mt: 0.15,
+              }}
+            >
+              @{attendee.username}
+            </Typography>
+            <Typography sx={{ fontSize: '0.8rem', color: '#6b7280', mt: 0.75 }}>
               {attendee.headline ||
                 (attendee.bio && attendee.bio.length > 50
                   ? attendee.bio.slice(0, 50) + '...'
@@ -325,19 +287,19 @@ export function AttendeePopover({
 
           <Box
             component="a"
-            href={`/profile/${attendee.username}`}
+            href={`/user/${attendee.username}`}
             sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 0.75,
+              gap: 0.5,
               width: '100%',
-              py: 1.25,
-              px: 2,
+              py: 1,
+              px: 1.5,
               bgcolor: '#f3f4f6',
-              borderRadius: '12px',
+              borderRadius: '10px',
               color: '#374151',
-              fontSize: '0.9rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
               textDecoration: 'none',
               transition: 'all 0.2s',
@@ -350,7 +312,7 @@ export function AttendeePopover({
               },
             }}
           >
-            View Profile <ExternalLink size={16} />
+            View Profile <ExternalLink size={14} />
           </Box>
         </Box>
       </Popover>

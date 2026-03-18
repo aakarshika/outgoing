@@ -241,7 +241,7 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
                   '&:hover': { bgcolor: '#f9fafb' },
                 }}
                 component="a"
-                href={`/profile/${attendee.username}`}
+                href={`/user/${attendee.username}`}
               >
                 <UserAvatar
                   src={attendee.avatar}
