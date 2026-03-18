@@ -338,7 +338,7 @@ class PublicShowcaseView(APIView):
             "attended_events": attended_events,
             "hosted_count": user.hosted_events.filter(lifecycle_state='completed').count(),
             "attended_count": Ticket.objects.filter(goer=user, status__in=['active', 'used']).count(),
-            "total_goers": sum(e.attendees_count or 0 for e in user.hosted_events.all()),
+            "total_goers": sum(e.ticket_count or 0 for e in user.hosted_events.all()),
             "total_reviews": len(testimonials),
             "services": services,
             "badges": badges,
