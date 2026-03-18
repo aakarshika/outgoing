@@ -1,20 +1,118 @@
 import { Box, Typography } from '@mui/material';
-import { Navigation } from 'lucide-react';
+import { Globe, MapPin, Navigation } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { buildGoogleEmbedUrl, buildGoogleExternalUrl } from '@/utils/mapEmbed';
+import { getNearYouCoords, getStoredSearchLocation } from '@/utils/locationPrefs';
+import { buildGoogleExternalUrl } from '@/utils/mapEmbed';
 
 interface NormalCalendarMapModuleProps {
   event: any;
 }
+
+type Coords = {
+  lat: number;
+  lng: number;
+};
 
 function parseCoordinate(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function buildGoogleCoordinateEmbedUrl(lat: number, lng: number) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=13&output=embed`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function buildGoogleDirectionsUrl(destination: Coords, origin?: Coords | null) {
+  if (!origin) {
+    return buildGoogleExternalUrl(`${destination.lat},${destination.lng}`);
+  }
+
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`;
+}
+
+function getRelativeMarkerPosition(center: Coords, target: Coords) {
+  const latWindow = 0.16;
+  const lngWindow = latWindow / Math.max(0.35, Math.cos((center.lat * Math.PI) / 180));
+  const left = 50 + ((target.lng - center.lng) / lngWindow) * 50;
+  const top = 50 - ((target.lat - center.lat) / latWindow) * 50;
+
+  return {
+    left: `${clamp(left, 8, 92)}%`,
+    top: `${clamp(top, 14, 86)}%`,
+  };
+}
+
+function Marker({
+  label,
+  color,
+  left,
+  top,
+}: {
+  label: string;
+  color: string;
+  left: string;
+  top: string;
+}) {
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        left,
+        top,
+        transform: 'translate(-50%, -100%)',
+        pointerEvents: 'none',
+        zIndex: 2,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0.35,
+        }}
+      >
+        <Typography
+          sx={{
+            px: 0.8,
+            py: 0.2,
+            borderRadius: '999px',
+            bgcolor: 'rgba(255,255,255,0.96)',
+            border: '1px solid rgba(17,24,39,0.15)',
+            fontSize: '0.6rem',
+            fontWeight: 800,
+            lineHeight: 1.1,
+            color: '#111827',
+            boxShadow: '0 4px 10px rgba(15, 23, 42, 0.12)',
+          }}
+        >
+          {label}
+        </Typography>
+        <Box
+          sx={{
+            width: 11,
+            height: 11,
+            borderRadius: '999px',
+            bgcolor: color,
+            border: '2px solid white',
+            boxShadow: '0 0 0 1px rgba(17,24,39,0.2)',
+          }}
+        />
+      </Box>
+    </Box>
+  );
+}
+
 export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps) {
-  const startDate = new Date(event.start_time);
-  const endDate = new Date(event.end_time);
+  const [userCoords, setUserCoords] = useState<Coords | null>(null);
+
+  const startDate = useMemo(() => new Date(event.start_time), [event.start_time]);
+  const endDate = useMemo(() => new Date(event.end_time), [event.end_time]);
 
   const month = startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const day = startDate.getDate();
@@ -36,9 +134,28 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
   const lng = parseCoordinate(event.location?.lng ?? event.longitude);
   const hasCoords = lat !== null && lng !== null;
 
-  const coordsString = hasCoords ? `${lat},${lng}` : null;
-  const mapUrl = hasCoords ? buildGoogleExternalUrl(coordsString) : null;
-  const embedUrl = hasCoords ? buildGoogleEmbedUrl(coordsString) : null;
+  const eventCoords: Coords | null = hasCoords ? { lat, lng } : null;
+
+  useEffect(() => {
+    const storedCoords =
+      getNearYouCoords() ?? getStoredSearchLocation()?.coords ?? null;
+    setUserCoords(storedCoords);
+  }, []);
+
+  const userMarkerPosition = useMemo(() => {
+    if (!eventCoords || !userCoords) return null;
+    return getRelativeMarkerPosition(eventCoords, userCoords);
+  }, [eventCoords, userCoords]);
+
+  const mapUrl = useMemo(() => {
+    if (!eventCoords) return null;
+    return buildGoogleDirectionsUrl(eventCoords, userCoords);
+  }, [eventCoords, userCoords]);
+
+  const embedUrl = useMemo(() => {
+    if (!eventCoords) return null;
+    return buildGoogleCoordinateEmbedUrl(eventCoords.lat, eventCoords.lng);
+  }, [eventCoords]);
 
   const handleOpenMap = () => {
     if (mapUrl) {
@@ -95,100 +212,139 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
           </Typography>
         </Box>
 
-        {/* Map Card - Clickable */}
+        {/* Map Card */}
         <Box
           onClick={handleOpenMap}
           sx={{
             bgcolor: '#E1F5EE',
             borderRadius: 'var(--border-radius-lg, 12px)',
-            p: 1.5,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
             position: 'relative',
             overflow: 'hidden',
             cursor: mapUrl ? 'pointer' : 'default',
             minHeight: 120,
           }}
         >
-          {embedUrl && (
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                '& iframe': {
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                },
-              }}
-            >
-              <iframe
-                src={embedUrl}
-                loading="lazy"
-                title="Event location"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  filter: 'grayscale(20%) contrast(1.1)',
+          {embedUrl ? (
+            <>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
                 }}
-              />
-            </Box>
-          )}
-          {!hasCoords && (
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.3,
-              }}
-            >
-              <svg viewBox="0 0 160 120" width="100%" height="100%">
-                <rect width="160" height="120" fill="#9FE1CB" opacity="0.4" />
-                <rect
-                  x="20"
-                  y="30"
-                  width="40"
-                  height="20"
-                  rx="2"
-                  fill="#085041"
-                  opacity="0.2"
+              >
+                <iframe
+                  src={embedUrl}
+                  loading="lazy"
+                  title="Event location"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    filter: 'grayscale(20%) contrast(1.1)',
+                    pointerEvents: 'none',
+                  }}
                 />
-                <circle cx="90" cy="52" r="6" fill="#D85A30" />
-                <circle cx="90" cy="52" r="3" fill="#fff" />
-              </svg>
-            </Box>
-          )}
-          <Box sx={{ position: 'relative', zIndex: 1, pointerEvents: 'none' }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#085041' }}>
-              {isOnline ? 'Online Event' : locationName || 'View map'}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: '#0F6E56', mt: 0.25 }}>
-              {isOnline
-                ? 'Link sent after RSVP'
-                : locationAddress?.slice(0, 30) ||
-                  (hasCoords ? 'Get directions' : 'View map')}
-            </Typography>
-          </Box>
-          {!isOnline && hasCoords && (
+              </Box>
+              {eventCoords && (
+                <Marker label="Event" color="#dc2626" left="50%" top="50%" />
+              )}
+              {userMarkerPosition && (
+                <Marker
+                  label="You"
+                  color="#2563eb"
+                  left={userMarkerPosition.left}
+                  top={userMarkerPosition.top}
+                />
+              )}
+            </>
+          ) : (
             <Box
               sx={{
-                fontSize: 11,
-                fontWeight: 500,
-                color: '#085041',
-                mt: 'auto',
-                pt: 0.5,
-                position: 'relative',
-                zIndex: 1,
-                pointerEvents: 'none',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Navigation size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Directions →
+              <MapPin size={20} color="#085041" opacity={0.35} />
             </Box>
           )}
         </Box>
+      </Box>
+
+      {/* Location strip */}
+      <Box
+        component={mapUrl ? 'a' : 'div'}
+        {...(mapUrl
+          ? { href: mapUrl, target: '_blank', rel: 'noopener noreferrer' }
+          : {})}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mt: 1.25,
+          px: 0.5,
+          py: 0.75,
+          textDecoration: 'none',
+          color: 'inherit',
+          borderRadius: 'var(--border-radius-md, 8px)',
+          transition: 'background 0.15s',
+          '&:hover': mapUrl
+            ? { bgcolor: 'rgba(0,0,0,0.03)' }
+            : undefined,
+        }}
+      >
+        {isOnline ? (
+          <Globe size={14} color="#2563eb" style={{ flexShrink: 0 }} />
+        ) : (
+          <MapPin size={14} color="#D85A30" style={{ flexShrink: 0 }} />
+        )}
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography
+            sx={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--color-text-primary, #111)',
+              lineHeight: 1.3,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isOnline ? 'Online Event' : locationName || 'Location'}
+          </Typography>
+          {!isOnline && locationAddress && (
+            <Typography
+              sx={{
+                fontSize: 11,
+                color: 'var(--color-text-secondary, #6b7280)',
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {locationAddress.slice(0, 50)}
+            </Typography>
+          )}
+        </Box>
+        {!isOnline && hasCoords && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.4,
+              flexShrink: 0,
+              fontSize: 11,
+              fontWeight: 500,
+              color: 'var(--color-text-secondary, #6b7280)',
+            }}
+          >
+            <Navigation size={11} />
+            Directions
+          </Box>
+        )}
       </Box>
     </Box>
   );

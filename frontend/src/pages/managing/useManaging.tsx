@@ -1,51 +1,52 @@
 import {
-    Box,
-    Button,
-    Chip,
-    CircularProgress,
-    Collapse,
-    Container,
-    Stack,
-    Typography,
-  } from '@mui/material';
-  import { useQueries, useQuery } from '@tanstack/react-query';
-  import {
-    Briefcase,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    CircleDollarSign,
-    Clock3,
-    Coins,
-    Edit2,
-    ExternalLink,
-    MapPin,
-    Receipt,
-    Ticket,
-    Wallet,
-  } from 'lucide-react';
-  import { type ReactNode, useMemo, useState } from 'react';
-  import { Link, useNavigate, useParams } from 'react-router-dom';
-  
-  import client from '@/api/client';
-  import { EditApplicationModal } from '@/components/events/EditApplicationModal';
-  import { useAuth } from '@/features/auth/hooks';
-  import { getCategoryTheme } from '@/features/events/CategoricalBackground';
-  import {
-    getChecklistFocusItem,
-    type PlanningChecklistItem,
-  } from '@/features/events/planningChecklist';
-  import {
-    CompletedRatedBadge,
-    LiveBadge,
-    PriceBadge,
-  } from '@/features/events/scrapbookCard';
-  import { fetchEventNeeds } from '@/features/needs/api';
-  import { useMyApplications } from '@/features/needs/hooks';
-  import { useMyServices } from '@/features/vendors/hooks';
-  import type { EventOverviewRow } from '@/pages/alerts/utils';
-  import { VendorAgreement } from '@/pages/events/components/manage-vendor/VendorAgreement';
-  import type { ApiResponse, EventDetail } from '@/types/events';
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Collapse,
+  Container,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import {
+  Briefcase,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Clock3,
+  Coins,
+  Edit2,
+  ExternalLink,
+  MapPin,
+  Receipt,
+  Ticket,
+  Wallet,
+} from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+
+import client from '@/api/client';
+import { EditApplicationModal } from '@/components/events/EditApplicationModal';
+import { useAuth } from '@/features/auth/hooks';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import {
+  getChecklistFocusItem,
+  type PlanningChecklistItem,
+} from '@/features/events/planningChecklist';
+import {
+  CompletedRatedBadge,
+  LiveBadge,
+  PriceBadge,
+} from '@/features/events/scrapbookCard';
+import { fetchEventNeeds } from '@/features/needs/api';
+import { useMyApplications } from '@/features/needs/hooks';
+import { useMyServices } from '@/features/vendors/hooks';
+import type { EventOverviewRow } from '@/pages/alerts/utils';
+import { VendorAgreement } from '@/pages/events/components/manage-vendor/VendorAgreement';
+import type { ApiResponse, EventDetail } from '@/types/events';
+import type { NeedApplication } from '@/types/needs';
 import { ManagingItem } from './MyUpcoming';
 
   
@@ -205,6 +206,36 @@ export const KIND_STYLES: Record<
   },
 };
 
+export const APPLICATION_STATUS_STYLES: Record<
+  NeedApplication['status'],
+  { label: string; bg: string; color: string; border?: string }
+> = {
+  pending: {
+    label: 'Pending decision',
+    bg: '#FFF4E6',
+    color: '#7C3E1D',
+    border: '1px solid rgba(216, 90, 48, 0.35)',
+  },
+  accepted: {
+    label: 'Accepted',
+    bg: '#E1F5EE',
+    color: '#0F6E56',
+    border: '1px solid rgba(15, 110, 86, 0.35)',
+  },
+  rejected: {
+    label: 'Rejected',
+    bg: '#FEE2E2',
+    color: '#B91C1C',
+    border: '1px solid rgba(185, 28, 28, 0.25)',
+  },
+  withdrawn: {
+    label: 'Withdrawn',
+    bg: '#E5E7EB',
+    color: '#374151',
+    border: '1px solid rgba(156, 163, 175, 0.4)',
+  },
+};
+
 export function ManagingEventCard({
   item,
   nextChecklistItem,
@@ -232,13 +263,10 @@ export function ManagingEventCard({
         flexDirection: { xs: 'column', sm: 'row' },
         alignItems: 'stretch',
         overflow: 'hidden',
-        borderRadius: '24px',
         border: '1px solid rgba(17,24,39,0.08)',
         borderLeft: `4px solid ${categoryTheme.accent}`,
-        backgroundColor: 'rgba(255,255,255,0.96)',
         textDecoration: 'none',
         color: 'inherit',
-        boxShadow: '0 10px 28px rgba(108, 71, 33, 0.06)',
       }}
     >
       <Box
@@ -353,8 +381,6 @@ export function ManagingEventCard({
             sx={{
               px: 1.1,
               py: 0.95,
-              borderRadius: '16px',
-              background: checklistTone.bg,
               border: `1px solid ${checklistTone.border}`,
             }}
           >
@@ -396,8 +422,6 @@ export function ManagingEventCard({
               minWidth: 0,
               px: 1,
               py: 0.85,
-              borderRadius: '12px',
-              backgroundColor: '#F9FAFB',
             }}
           >
             <Clock3 size={14} color="#6b7280" />
@@ -413,8 +437,6 @@ export function ManagingEventCard({
               minWidth: 0,
               px: 1,
               py: 0.85,
-              borderRadius: '12px',
-              backgroundColor: '#F9FAFB',
             }}
           >
             <MapPin size={14} color="#6b7280" />
@@ -534,19 +556,10 @@ export function CompactManagingEventCard({
     gap: { xs: 1, sm: 1.25 },
     p: { xs: 1, sm: 1.25 },
     width: '100%',
-    borderRadius: '24px',
-    background: 'rgba(255,255,255,0.88)',
     border: '1px solid rgba(143, 105, 66, 0.12)',
     borderLeft: `4px solid ${categoryTheme.accent}`,
     textDecoration: 'none',
     color: 'inherit',
-    boxShadow: '0 10px 28px rgba(108, 71, 33, 0.06)',
-    transition: 'background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
-    '&:hover': {
-      background: 'rgba(255,255,255,0.96)',
-      boxShadow: '0 8px 24px rgba(108, 71, 33, 0.08)',
-      transform: 'translateY(-1px)',
-    },
   };
 
   const content = (
@@ -556,8 +569,6 @@ export function CompactManagingEventCard({
           minWidth: { xs: 40, sm: 48 },
           px: { xs: 0.6, sm: 0.85 },
           py: { xs: 0.6, sm: 0.8 },
-          borderRadius: '16px',
-          background: '#FAECE7',
           textAlign: 'center',
         }}
       >
@@ -656,8 +667,6 @@ export function CompactManagingEventCard({
               mt: { xs: 0.35, sm: 0.45 },
               px: 0.8,
               py: 0.45,
-              borderRadius: '12px',
-              background: checklistTone.bg,
               border: `1px solid ${checklistTone.border}`,
               overflow: 'hidden',
             }}
@@ -850,17 +859,9 @@ export function ExpandableManagingEventCard({
               width: 34,
               height: 34,
               border: '1px solid rgba(17,24,39,0.08)',
-              borderRadius: '999px',
-              background: 'rgba(255,255,255,0.94)',
               display: 'grid',
               placeItems: 'center',
               cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(108, 71, 33, 0.1)',
-              transition: 'transform 0.2s ease, background 0.2s ease',
-              '&:hover': {
-                background: '#fff',
-                transform: 'translateY(-1px)',
-              },
             }}
           >
             <ChevronDown size={16} style={{ transform: 'rotate(180deg)' }} />
@@ -1007,12 +1008,7 @@ export function SummaryValueCard({
     <Box
       sx={{
         p: compact ? 1.4 : 2,
-        borderRadius: compact ? '20px' : '24px',
-        background: 'rgba(255,255,255,0.88)',
         border: '1px solid rgba(143, 105, 66, 0.12)',
-        boxShadow: compact
-          ? '0 10px 24px rgba(108, 71, 33, 0.05)'
-          : '0 14px 32px rgba(108, 71, 33, 0.06)',
       }}
     >
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
@@ -1020,10 +1016,8 @@ export function SummaryValueCard({
           sx={{
             width: compact ? 36 : 42,
             height: compact ? 36 : 42,
-            borderRadius: compact ? '12px' : '14px',
             display: 'grid',
             placeItems: 'center',
-            background: '#FAECE7',
             color: '#993C1D',
           }}
         >
@@ -1081,14 +1075,7 @@ export function EarningsBreakdownSection({
   emptyText: string;
 }) {
   return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderRadius: '18px',
-        background: 'rgba(255,255,255,0.74)',
-        border: '1px solid rgba(143, 105, 66, 0.12)',
-      }}
-    >
+    <Box sx={{ p: 1.5, border: '1px solid rgba(143, 105, 66, 0.12)' }}>
       <Typography
         sx={{
           fontSize: 11,
@@ -1118,12 +1105,7 @@ export function EarningsBreakdownSection({
               justifyContent="space-between"
               alignItems="flex-start"
               spacing={1.5}
-              sx={{
-                p: 1.2,
-                borderRadius: '14px',
-                background: '#FFFDF8',
-                border: '1px solid rgba(143, 105, 66, 0.1)',
-              }}
+              sx={{ p: 1.2, border: '1px solid rgba(143, 105, 66, 0.1)' }}
             >
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#2B2118' }}>
@@ -1169,15 +1151,7 @@ export function EarningsEventRow({
   const primaryAmount = isHosted ? item.netRevenue : item.serviceRevenue;
 
   return (
-    <Box
-      sx={{
-        borderRadius: '26px',
-        background: 'rgba(255,255,255,0.88)',
-        border: '1px solid rgba(143, 105, 66, 0.12)',
-        boxShadow: '0 14px 36px rgba(108, 71, 33, 0.08)',
-        overflow: 'hidden',
-      }}
-    >
+    <Box sx={{ border: '1px solid rgba(143, 105, 66, 0.12)', overflow: 'hidden' }}>
       <Box
         component="button"
         onClick={onToggle}
@@ -1195,16 +1169,7 @@ export function EarningsEventRow({
           spacing={1.5}
           alignItems={{ xs: 'stretch', sm: 'center' }}
         >
-          <Box
-            sx={{
-              minWidth: 62,
-              px: 1,
-              py: 1,
-              borderRadius: '18px',
-              background: '#FAECE7',
-              textAlign: 'center',
-            }}
-          >
+          <Box sx={{ minWidth: 62, px: 1, py: 1, textAlign: 'center' }}>
             <Typography
               sx={{
                 fontSize: 10,
@@ -1332,8 +1297,6 @@ export function EarningsEventRow({
             pb: { xs: 1.5, sm: 1.8 },
             pt: 0.2,
             borderTop: '1px solid rgba(143, 105, 66, 0.1)',
-            background:
-              'linear-gradient(180deg, rgba(255,250,243,0.72) 0%, rgba(255,255,255,0.9) 100%)',
           }}
         >
           <Box
@@ -1344,14 +1307,7 @@ export function EarningsEventRow({
               mt: 1.4,
             }}
           >
-            <Box
-              sx={{
-                p: 1.4,
-                borderRadius: '18px',
-                background: '#FFFDF8',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-              }}
-            >
+            <Box sx={{ p: 1.4, border: '1px solid rgba(143, 105, 66, 0.12)' }}>
               <Stack direction="row" spacing={0.8} alignItems="center">
                 <Ticket size={16} color="#7C3E1D" />
                 <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#7C3E1D' }}>
@@ -1371,14 +1327,7 @@ export function EarningsEventRow({
               </Typography>
             </Box>
 
-            <Box
-              sx={{
-                p: 1.4,
-                borderRadius: '18px',
-                background: '#FFFDF8',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-              }}
-            >
+            <Box sx={{ p: 1.4, border: '1px solid rgba(143, 105, 66, 0.12)' }}>
               <Stack direction="row" spacing={0.8} alignItems="center">
                 <Coins size={16} color="#7C3E1D" />
                 <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#7C3E1D' }}>
@@ -1398,14 +1347,7 @@ export function EarningsEventRow({
               </Typography>
             </Box>
 
-            <Box
-              sx={{
-                p: 1.4,
-                borderRadius: '18px',
-                background: '#FFFDF8',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-              }}
-            >
+            <Box sx={{ p: 1.4, border: '1px solid rgba(143, 105, 66, 0.12)' }}>
               <Stack direction="row" spacing={0.8} alignItems="center">
                 <CircleDollarSign size={16} color="#7C3E1D" />
                 <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#7C3E1D' }}>
@@ -1486,15 +1428,7 @@ export function ServiceApplicationsRow({
   if (isDetached) return null;
 
   return (
-    <Box
-      sx={{
-        borderRadius: '26px',
-        background: 'rgba(255,255,255,0.88)',
-        border: '1px solid rgba(143, 105, 66, 0.12)',
-        boxShadow: '0 14px 36px rgba(108, 71, 33, 0.08)',
-        overflow: 'hidden',
-      }}
-    >
+    <Box sx={{ border: '1px solid rgba(143, 105, 66, 0.12)', overflow: 'hidden' }}>
       <Box
         component="button"
         onClick={onToggle}
@@ -1517,7 +1451,6 @@ export function ServiceApplicationsRow({
               width: { xs: '100%', sm: 118 },
               minWidth: { sm: 118 },
               height: { xs: 120, sm: 118 },
-              borderRadius: '18px',
               overflow: 'hidden',
               background: service.portfolio_image
                 ? '#E9E1D8'
@@ -1610,43 +1543,13 @@ export function ServiceApplicationsRow({
               useFlexGap
               sx={{ mt: 1.1 }}
             >
-              <Box
-                sx={{
-                  px: 1.1,
-                  py: 0.65,
-                  borderRadius: '12px',
-                  background: '#FFF4E6',
-                  fontSize: 12,
-                  color: '#7C3E1D',
-                  fontWeight: 700,
-                }}
-              >
+              <Box sx={{ px: 1.1, py: 0.65, fontSize: 12, color: '#7C3E1D', fontWeight: 700 }}>
                 {service.applications.length} applications
               </Box>
-              <Box
-                sx={{
-                  px: 1.1,
-                  py: 0.65,
-                  borderRadius: '12px',
-                  background: '#F6F0E8',
-                  fontSize: 12,
-                  color: '#5C4B3A',
-                  fontWeight: 700,
-                }}
-              >
+              <Box sx={{ px: 1.1, py: 0.65, fontSize: 12, color: '#5C4B3A', fontWeight: 700 }}>
                 {pendingCount} pending
               </Box>
-              <Box
-                sx={{
-                  px: 1.1,
-                  py: 0.65,
-                  borderRadius: '12px',
-                  background: '#EAF7F0',
-                  fontSize: 12,
-                  color: '#0F6E56',
-                  fontWeight: 700,
-                }}
-              >
+              <Box sx={{ px: 1.1, py: 0.65, fontSize: 12, color: '#0F6E56', fontWeight: 700 }}>
                 {acceptedCount} accepted
               </Box>
             </Stack>
@@ -1714,8 +1617,6 @@ export function ServiceApplicationsRow({
             pb: { xs: 1.5, sm: 1.8 },
             pt: 0.2,
             borderTop: '1px solid rgba(143, 105, 66, 0.1)',
-            background:
-              'linear-gradient(180deg, rgba(255,250,243,0.72) 0%, rgba(255,255,255,0.9) 100%)',
           }}
         >
           <Stack
@@ -1776,10 +1677,10 @@ export function ServiceApplicationsRow({
 
           <Box
             sx={{
-              borderRadius: '18px',
-              border: '1px solid rgba(143, 105, 66, 0.12)',
-              background: 'rgba(255,255,255,0.72)',
-              p: 1.2,
+              borderRadius: '10px',
+              border: '1px solid rgba(143, 105, 66, 0.1)',
+              background: 'rgba(255,255,255,0.88)',
+              p: 0.75,
             }}
           >
             {service.applications.length === 0 ? (
@@ -1819,7 +1720,7 @@ export function ServiceApplicationsRow({
                 </Button>
               </Stack>
             ) : (
-              <Stack spacing={1.2}>
+              <Stack spacing={0.75}>
                 {service.applications.map((application) => (
                   <ServiceApplicationCard
                     key={application.id}
@@ -1846,514 +1747,262 @@ export function ServiceApplicationCard({
   const categoryTheme = getCategoryTheme(event?.category ?? undefined);
   const statusStyle = APPLICATION_STATUS_STYLES[application.status];
   const eventPriceLabel = event ? getEventPriceLabel(event) : null;
-  const isOnline = event ? isOnlineEventLocation(event) : false;
 
   return (
     <>
-      <Box
-        sx={{
-          borderRadius: '22px',
-          border: '1px solid rgba(143, 105, 66, 0.14)',
-          background: 'rgba(255,255,255,0.92)',
-          boxShadow: '0 12px 30px rgba(108, 71, 33, 0.06)',
-          overflow: 'hidden',
-        }}
-      >
-        {event ? (
+      <Box sx={{ border: '1px solid rgba(143, 105, 66, 0.12)', overflow: 'hidden' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'stretch',
+            minHeight: 0,
+          }}
+        >
+          {/* Compact thumbnail */}
           <Box
-            component={Link}
-            to={`/events-new/${application.event_id}`}
+            component={event && application.event_id ? Link : 'div'}
+            to={event && application.event_id ? `/events-new/${application.event_id}` : undefined}
             sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: 'stretch',
+              position: 'relative',
+              width: 72,
+              minWidth: 72,
+              height: 72,
+              flexShrink: 0,
+              background: categoryTheme.bg,
+              backgroundImage: categoryTheme.pattern,
+              backgroundSize: '12px 12px',
               textDecoration: 'none',
               color: 'inherit',
-              transition: 'background-color 0.18s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(250, 236, 231, 0.2)',
-              },
+            }}
+          >
+            {event?.cover_image ? (
+              <Box
+                component="img"
+                src={event.cover_image}
+                alt={event.title}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            ) : null}
+            {event?.lifecycle_state === 'live' ? (
+              <LiveBadge
+                sx={{ position: 'absolute', bottom: 4, left: 4, zIndex: 1 }}
+              />
+            ) : null}
+            {eventPriceLabel &&
+              event &&
+              (event.lifecycle_state === 'published' || event.lifecycle_state === 'live') ? (
+              <PriceBadge
+                price={eventPriceLabel}
+                variant="landscape"
+                sx={{ position: 'absolute', bottom: 4, right: 4, zIndex: 1 }}
+              />
+            ) : null}
+          </Box>
+
+          {/* Main content - compact row */}
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              py: 0.75,
+              px: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 0.4,
             }}
           >
             <Box
               sx={{
-                position: 'relative',
-                width: { xs: '100%', sm: 210 },
-                minWidth: { sm: 210 },
-                height: { xs: 150, sm: 'auto' },
-                minHeight: { sm: 220 },
-                flexShrink: 0,
-                background: categoryTheme.bg,
-                backgroundImage: categoryTheme.pattern,
-                backgroundSize: '20px 20px',
-              }}
-            >
-              {event.cover_image ? (
-                <Box
-                  component="img"
-                  src={event.cover_image}
-                  alt={event.title}
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-              ) : null}
-              {event.lifecycle_state === 'live' ? (
-                <LiveBadge
-                  sx={{ position: 'absolute', bottom: 8, left: 8, zIndex: 1 }}
-                />
-              ) : null}
-              {event.lifecycle_state === 'completed' ? (
-                <CompletedRatedBadge
-                  sx={{ position: 'absolute', bottom: 8, right: 8, zIndex: 1 }}
-                />
-              ) : null}
-              {eventPriceLabel &&
-                (event.lifecycle_state === 'published' ||
-                  event.lifecycle_state === 'live') ? (
-                <PriceBadge
-                  price={eventPriceLabel}
-                  variant="landscape"
-                  sx={{ position: 'absolute', bottom: 8, right: 8, zIndex: 1 }}
-                />
-              ) : null}
-            </Box>
-
-            <Box
-              sx={{
-                p: 1.7,
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 1.1,
-                flex: 1,
-                minWidth: 0,
+                alignItems: 'center',
+                gap: 0.6,
+                flexWrap: 'wrap',
               }}
             >
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 1,
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: '#6b7280',
-                  }}
-                >
-                  {event.category?.name || 'Event'}
-                </Typography>
-                <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
-                  <Box
-                    sx={{
-                      px: 0.9,
-                      py: 0.35,
-                      borderRadius: '999px',
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: isOnline ? '#085041' : '#7a271a',
-                      backgroundColor: isOnline ? '#E1F5EE' : '#FAECE7',
-                    }}
-                  >
-                    {isOnline ? 'Online' : 'In person'}
-                  </Box>
-                  <Box
-                    sx={{
-                      px: 0.9,
-                      py: 0.35,
-                      borderRadius: '999px',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      textTransform: 'capitalize',
-                      color: '#5C4B3A',
-                      backgroundColor: '#F6F0E8',
-                    }}
-                  >
-                    {event.lifecycle_state}
-                  </Box>
-                </Stack>
-              </Box>
-
               <Typography
                 sx={{
                   fontFamily: 'Syne, sans-serif',
-                  fontSize: { xs: 18, sm: 20 },
-                  lineHeight: 1.2,
+                  fontSize: 14,
                   fontWeight: 700,
                   color: '#111827',
-                }}
-              >
-                {event.title}
-              </Typography>
-
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  lineHeight: 1.5,
-                  color: '#6b7280',
-                  display: '-webkit-box',
                   overflow: 'hidden',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {event.description ||
-                  application.need_title ||
-                  'Open service opportunity'}
+                {event?.title || application.event_title || 'Event'}
               </Typography>
-
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} useFlexGap>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    minWidth: 0,
-                    px: 1,
-                    py: 0.85,
-                    borderRadius: '12px',
-                    backgroundColor: '#F9FAFB',
-                  }}
-                >
-                  <Clock3 size={14} color="#6b7280" />
-                  <Typography sx={{ fontSize: 12, color: '#374151', minWidth: 0 }}>
-                    {formatShortDate(event.start_time)} · {formatTime(event.start_time)}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    minWidth: 0,
-                    px: 1,
-                    py: 0.85,
-                    borderRadius: '12px',
-                    backgroundColor: '#F9FAFB',
-                  }}
-                >
-                  <MapPin size={14} color="#6b7280" />
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      color: '#374151',
-                      minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {event.location_name || 'Location TBD'}
-                  </Typography>
-                </Box>
-              </Stack>
-
               <Box
                 sx={{
-                  mt: 'auto',
-                  pt: 1,
-                  borderTop: '1px solid rgba(17,24,39,0.08)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 1,
-                  flexWrap: 'wrap',
+                  px: 0.6,
+                  py: 0.2,
+                  borderRadius: '6px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  background: statusStyle.bg,
+                  color: statusStyle.color,
                 }}
               >
-                <Typography sx={{ fontSize: 11.5, color: '#6b7280' }}>
-                  Attached to your application for{' '}
-                  <Box component="span" sx={{ fontWeight: 700, color: '#2B2118' }}>
-                    {application.need_title || 'General service'}
-                  </Box>
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: '#7C3E1D',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  View event
-                </Typography>
+                {statusStyle.label}
               </Box>
             </Box>
-          </Box>
-        ) : (
-          <Box sx={{ p: 1.7, borderBottom: '1px solid rgba(143, 105, 66, 0.1)' }}>
-            <Typography
+            <Box
               sx={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.2,
+                fontSize: 11,
                 color: '#6b7280',
               }}
             >
-              Event
-            </Typography>
-            <Typography
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <Clock3 size={12} color="#6b7280" />
+                <span>
+                  {event?.start_time
+                    ? `${formatShortDate(event.start_time)} · ${formatTime(event.start_time)}`
+                    : formatShortDate(application.created_at)}
+                </span>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <MapPin size={12} color="#6b7280" />
+                <span
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {event?.location_name || 'TBD'}
+                </span>
+              </Box>
+            </Box>
+            <Box
               sx={{
-                mt: 0.7,
-                fontFamily: 'Syne, sans-serif',
-                fontSize: { xs: 18, sm: 20 },
-                fontWeight: 700,
-                color: '#111827',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 0.75,
+                flexWrap: 'wrap',
               }}
             >
-              {application.event_title || 'Attached event'}
-            </Typography>
+              <Typography sx={{ fontSize: 11, color: '#6b7280' }}>
+                {application.need_title || 'General'} ·{' '}
+                {application.proposed_price
+                  ? formatMoney(parseMoney(application.proposed_price))
+                  : 'Rs 0'}
+              </Typography>
+              <Stack direction="row" spacing={0.5} useFlexGap>
+                {application.event_id ? (
+                  <Chip
+                    component={Link}
+                    to={`/events-new/${application.event_id}`}
+                    clickable
+                    size="small"
+                    icon={<ExternalLink size={12} />}
+                    label="Open"
+                    sx={{
+                      height: 24,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      bgcolor: '#FFF4E6',
+                      color: '#7C3E1D',
+                      textDecoration: 'none',
+                      '& .MuiChip-icon': { fontSize: 12 },
+                    }}
+                  />
+                ) : null}
+                {application.status === 'pending' ? (
+                  <Chip
+                    clickable
+                    onClick={() => setEditing(true)}
+                    size="small"
+                    icon={<Edit2 size={12} />}
+                    label="Edit"
+                    sx={{
+                      height: 24,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      bgcolor: '#FAE6C7',
+                      color: '#7C3E1D',
+                      '& .MuiChip-icon': { fontSize: 12 },
+                    }}
+                  />
+                ) : null}
+                {application.status === 'accepted' ? (
+                  <Chip
+                    clickable
+                    onClick={() => setAgreementOpen((prev) => !prev)}
+                    size="small"
+                    icon={<Ticket size={12} />}
+                    label={agreementOpen ? 'Hide pass' : 'Pass'}
+                    sx={{
+                      height: 24,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      bgcolor: '#EAF7F0',
+                      color: '#0F6E56',
+                      '& .MuiChip-icon': { fontSize: 12 },
+                    }}
+                  />
+                ) : null}
+              </Stack>
+            </Box>
           </Box>
-        )}
+        </Box>
 
-        <Box
-          sx={{
-            p: 1.5,
-            background:
-              'linear-gradient(180deg, rgba(255,249,240,0.9) 0%, rgba(255,255,255,0.96) 100%)',
-            borderTop: '1px solid rgba(143, 105, 66, 0.1)',
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            spacing={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', lg: 'center' }}
+        {/* Message - compact, only when present */}
+        {application.message ? (
+          <Box
+            sx={{
+              px: 1,
+              py: 0.6,
+              borderTop: '1px solid rgba(143, 105, 66, 0.08)',
+            }}
           >
             <Typography
               sx={{
                 fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: 'rgba(66, 50, 28, 0.52)',
-              }}
-            >
-              Application details
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {application.event_id ? (
-                <Chip
-                  component={Link}
-                  to={`/events-new/${application.event_id}`}
-                  clickable
-                  icon={<ExternalLink size={14} />}
-                  label="Open event"
-                  sx={{
-                    bgcolor: '#FFF4E6',
-                    color: '#7C3E1D',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                  }}
-                />
-              ) : null}
-              {application.status === 'pending' ? (
-                <Chip
-                  clickable
-                  onClick={() => setEditing(true)}
-                  icon={<Edit2 size={14} />}
-                  label="Edit application"
-                  sx={{
-                    bgcolor: '#FAE6C7',
-                    color: '#7C3E1D',
-                    fontWeight: 700,
-                  }}
-                />
-              ) : null}
-              {application.status === 'accepted' ? (
-                <Chip
-                  clickable
-                  onClick={() => setAgreementOpen((prev) => !prev)}
-                  icon={<Ticket size={14} />}
-                  label={agreementOpen ? 'Hide vendor pass' : 'Show vendor pass'}
-                  sx={{
-                    bgcolor: '#EAF7F0',
-                    color: '#0F6E56',
-                    fontWeight: 700,
-                  }}
-                />
-              ) : null}
-            </Stack>
-          </Stack>
-
-          <Stack
-            direction="row"
-            spacing={1}
-            flexWrap="wrap"
-            useFlexGap
-            sx={{ mt: 1.2 }}
-          >
-            <Box
-              sx={{
-                px: 1.15,
-                py: 0.9,
-                borderRadius: '14px',
-                background: statusStyle.bg,
-                color: statusStyle.color,
-                minWidth: { xs: 'calc(50% - 8px)', sm: 0 },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Status
-              </Typography>
-              <Typography sx={{ mt: 0.35, fontSize: 13, fontWeight: 800 }}>
-                {statusStyle.label}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                px: 1.15,
-                py: 0.9,
-                borderRadius: '14px',
-                background: '#FFF4E6',
-                color: '#7C3E1D',
-                minWidth: { xs: 'calc(50% - 8px)', sm: 0 },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Need
-              </Typography>
-              <Typography sx={{ mt: 0.35, fontSize: 13, fontWeight: 800 }}>
-                {application.need_title || 'General'}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                px: 1.15,
-                py: 0.9,
-                borderRadius: '14px',
-                background: '#F6F0E8',
-                color: '#5C4B3A',
-                minWidth: { xs: 'calc(50% - 8px)', sm: 0 },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Proposed price
-              </Typography>
-              <Typography sx={{ mt: 0.35, fontSize: 13, fontWeight: 800 }}>
-                {application.proposed_price
-                  ? formatMoney(parseMoney(application.proposed_price))
-                  : 'Not set'}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                px: 1.15,
-                py: 0.9,
-                borderRadius: '14px',
-                background: '#F9FAFB',
-                color: '#374151',
-                minWidth: { xs: 'calc(50% - 8px)', sm: 0 },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Applied on
-              </Typography>
-              <Typography sx={{ mt: 0.35, fontSize: 13, fontWeight: 800 }}>
-                {formatShortDate(application.created_at)}
-              </Typography>
-            </Box>
-          </Stack>
-
-          {application.message ? (
-            <Box
-              sx={{
-                mt: 1.2,
-                p: 1.25,
-                borderRadius: '16px',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-                background: 'rgba(255,244,230,0.82)',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(66, 50, 28, 0.52)',
-                }}
-              >
-                Message
-              </Typography>
-              <Typography
-                sx={{
-                  mt: 0.55,
-                  fontSize: 13,
-                  lineHeight: 1.65,
-                  color: '#6B4F34',
-                  fontStyle: 'italic',
-                }}
-              >
-                "{application.message}"
-              </Typography>
-            </Box>
-          ) : null}
-
-          {application.status === 'accepted' && agreementOpen ? (
-            <Box
-              sx={{
-                mt: 1.25,
-                borderRadius: '18px',
+                color: '#6B4F34',
+                fontStyle: 'italic',
                 overflow: 'hidden',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-                background: '#fff',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <VendorAgreement
-                applicationStatus={application.status}
-                vendorSigned={true}
-                hostSigned={true}
-                price={
-                  application.proposed_price
-                    ? parseFloat(application.proposed_price)
-                    : 0
-                }
-                barcode={application.barcode}
-                qrToken={application.qr_token}
-                isHostView={false}
-              />
-            </Box>
-          ) : null}
-        </Box>
+              "{application.message}"
+            </Typography>
+          </Box>
+        ) : null}
+
+        {application.status === 'accepted' && agreementOpen ? (
+          <Box
+            sx={{
+              borderTop: '1px solid rgba(143, 105, 66, 0.1)',
+              background: '#fff',
+            }}
+          >
+            <VendorAgreement
+              applicationStatus={application.status}
+              vendorSigned={true}
+              hostSigned={true}
+              price={
+                application.proposed_price
+                  ? parseFloat(application.proposed_price)
+                  : 0
+              }
+              barcode={application.barcode}
+              qrToken={application.qr_token}
+              isHostView={false}
+            />
+          </Box>
+        ) : null}
       </Box>
 
       <EditApplicationModal

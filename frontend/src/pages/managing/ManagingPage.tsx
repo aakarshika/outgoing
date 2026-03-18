@@ -448,30 +448,16 @@ export default function ManagingPage() {
       sx={{
         maxWidth: 1240,
         mx: 'auto',
+        pt:8,
+        pb: 20,
         minHeight: '100vh',
         background:
           'radial-gradient(circle at top, rgba(255, 244, 227, 0.9), transparent 32%), linear-gradient(180deg, #FFFDF8 0%, #FFF6EA 48%, #FFFDF8 100%)',
       }}
     >
       <Container maxWidth={false}>
-        <Box
-          sx={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,250,243,0.92) 100%)',
-            boxShadow: '0 32px 90px rgba(113, 74, 35, 0.10)',
-            backdropFilter: 'blur(14px)',
-          }}
-        >
-          <Box
-            sx={{
-              px: { xs: 2, sm: 3, md: 4 },
-              pt: { xs: 3, md: 4 },
-              pb: 2,
-              borderBottom: '1px solid rgba(143, 105, 66, 0.10)',
-              background:
-                'linear-gradient(135deg, rgba(216,90,48,0.08) 0%, rgba(250,238,218,0.2) 60%, rgba(255,255,255,0.12) 100%)',
-            }}
-          >
+        <Box>
+          <Box sx={{ borderBottom: '1px solid rgba(143, 105, 66, 0.10)' }}>
             <Stack spacing={2}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {(
@@ -489,7 +475,6 @@ export default function ManagingPage() {
                     onClick={() => setTab(pageTab.key)}
                     sx={{
                       height: 36,
-                      borderRadius: '999px',
                       bgcolor:
                         tab === pageTab.key ? '#2B2118' : 'rgba(255,255,255,0.82)',
                       color: tab === pageTab.key ? '#fff' : '#4A3827',

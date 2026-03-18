@@ -50,12 +50,7 @@ export function MyUpcoming({
   const monthDays = buildMonthGrid(visibleMonth) as DayGridItem[];
 
   return (
-    <Box
-      sx={{
-        px: { xs: 2, sm: 3, md: 4 },
-        py: { xs: 2.5, md: 3 },
-      }}
-    >
+    <Box>
       <Box
         sx={{
           display: 'grid',
@@ -79,14 +74,7 @@ export function MyUpcoming({
             Coming up next
           </Typography>
           {topUpcoming.length === 0 ? (
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: '24px',
-                background: 'rgba(255,255,255,0.88)',
-                border: '1px solid rgba(143, 105, 66, 0.12)',
-              }}
-            >
+            <Box sx={{ p: 3 }}>
               <Typography sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}>
                 No upcoming events you're hosting or servicing.
               </Typography>
@@ -104,16 +92,7 @@ export function MyUpcoming({
           )}
         </Box>
 
-        <Box
-          sx={{
-            order: 1,
-            borderRadius: '24px',
-            background: 'rgba(255,255,255,0.92)',
-            border: '1px solid rgba(143, 105, 66, 0.12)',
-            p: { xs: 1.5, sm: 2 },
-            boxShadow: '0 8px 28px rgba(108, 71, 33, 0.06)',
-          }}
-        >
+        <Box sx={{ order: 1, p: { xs: 1.5, sm: 2 } }}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -151,13 +130,10 @@ export function MyUpcoming({
                 sx={{
                   width: 28,
                   height: 28,
-                  borderRadius: '10px',
                   border: '1px solid rgba(143, 105, 66, 0.14)',
-                  background: 'rgba(255,255,255,0.9)',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
-                  '&:hover': { background: '#FAECE7' },
                 }}
               >
                 <ChevronLeft size={14} color="#4A3827" />
@@ -170,13 +146,10 @@ export function MyUpcoming({
                 sx={{
                   width: 28,
                   height: 28,
-                  borderRadius: '10px',
                   border: '1px solid rgba(143, 105, 66, 0.14)',
-                  background: 'rgba(255,255,255,0.9)',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
-                  '&:hover': { background: '#FAECE7' },
                 }}
               >
                 <ChevronRight size={14} color="#4A3827" />
@@ -220,7 +193,6 @@ export function MyUpcoming({
                     position: 'relative',
                     width: '100%',
                     py: 0.6,
-                    borderRadius: '10px',
                     border: 'none',
                     cursor: 'pointer',
                     background: 'transparent',

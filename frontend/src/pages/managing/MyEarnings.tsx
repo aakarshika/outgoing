@@ -24,7 +24,7 @@ export function MyEarnings({
   setExpandedEarningId,
 }: MyEarningsProps) {
   return (
-    <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2.5, md: 3.5 } }}>
+    <Box>
       <Box
         sx={{
           display: 'flex',
@@ -91,15 +91,7 @@ export function MyEarnings({
       </Box>
 
       {earningsItems.length === 0 ? (
-        <Box
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            borderRadius: '28px',
-            background: 'rgba(255,255,255,0.88)',
-            border: '1px solid rgba(143, 105, 66, 0.12)',
-          }}
-        >
+        <Box sx={{ p: 4, textAlign: 'center' }}>
           <Typography
             sx={{
               fontFamily: 'Syne, sans-serif',
