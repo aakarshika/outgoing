@@ -1,371 +1,544 @@
-import { Box, Container } from '@mui/material';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Box, CircularProgress, Container, Stack, Typography } from '@mui/material';
+import { CalendarClock, Flame, Coins, MonitorPlay, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
-import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';
-import { useAuth } from '@/features/auth/hooks';
-import { useCategories, useFeed } from '@/features/events/hooks';
-import {
-  fetchAllOpenOpportunities,
-  fetchMyPotentialOpportunities,
-  fetchMyVendorOpportunities,
-} from '@/features/needs/api';
-import type { EventLifecycleState, EventListItem } from '@/types/events';
+import { LargeEventCard } from '@/components/events/LargeEventCard';
+import { useBaseFeed } from '@/features/events/hooks';
+import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
 
-import { SearchResults } from './components/SearchResults';
-import { SearchToolbar } from './components/SearchToolbar';
 import { SimpleNavbar } from './components/SimpleNavbar';
-import type {
-  FormatFilterId,
-  RoleFilterId,
-  SearchTabId,
-  WhenFilterId,
-} from './searchTypes';
-import {
-  buildClearFiltersSearchParams,
-  buildDateSearchParams,
-  buildTabSearchParams,
-  filterEvents,
-  filterOpportunities,
-  getEffectiveFormatFilters,
-  getEffectiveWhenFilters,
-  getFeedSort,
-  getFeedTimeRange,
-  getSectionCount,
-  normalizeSearchPageParams,
-  toggleListValue,
-  updateListParam,
-} from './searchUtils';
 
-const SEARCH_THEME = {
-  bgBase: '#F9F4EA',
-  bgPanel: '#FFFCF7',
-  bgMuted: '#F7EEDF',
-  border: 'rgba(120,94,60,0.2)',
-  borderSoft: 'rgba(120,94,60,0.14)',
-  text: '#3F3123',
-  textMuted: '#7A6A55',
-  accent: '#D85A30',
+const DISCOVERABLE_STATUSES = ['published', 'event_ready', 'live'] as const;
+
+const exploreTabs = [
+  {
+    id: 'trending',
+    label: 'Trending',
+    Icon: Flame,
+    accent: '#D85A30',
+    wash: '#FAECE7',
+  },
+  {
+    id: 'upcoming',
+    label: 'Upcoming',
+    Icon: CalendarClock,
+    accent: '#2C7BE5',
+    wash: '#E6F1FB',
+  },
+  {
+    id: 'free',
+    label: 'Free',
+    Icon: Sparkles,
+    accent: '#2F8F4E',
+    wash: '#EAF3DE',
+  },
+  {
+    id: 'opportunities',
+    label: 'Opprtunities',
+    Icon: Coins,
+    accent: '#A258C6',
+    wash: '#F3E7FB',
+  },
+  {
+    id: 'online',
+    label: 'Online',
+    Icon: MonitorPlay,
+    accent: '#C78319',
+    wash: '#FAEEDA',
+  },
+] as const;
+
+type ExploreTabId = (typeof exploreTabs)[number]['id'];
+
+const tabAliases: Record<string, ExploreTabId> = {
+  all: 'trending',
+  trending: 'trending',
+  upcoming: 'upcoming',
+  'tonight-weekend': 'upcoming',
+  free: 'free',
+  'free-cheap': 'free',
+  opportunities: 'opportunities',
+  'chip-in': 'opportunities',
+  online: 'online',
+  'my-network': 'trending',
 };
-export default function SearchPage() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
-  const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
-  const normalizedSearchParams = useMemo(() => {
-    const params = normalizeSearchPageParams(searchParams);
-    params.delete('radius_miles');
-    return params;
-  }, [searchParams]);
 
-  const tab = (normalizedSearchParams.get('tab') as SearchTabId) || 'trending';
-  const search = normalizedSearchParams.get('search') || '';
-  const location = normalizedSearchParams.get('location') || '';
-  const lat = normalizedSearchParams.get('lat');
-  const lng = normalizedSearchParams.get('lng');
-  const selectedDate = normalizedSearchParams.get('date') || '';
-  const selectedWhenParam = normalizedSearchParams.get('when') || '';
-  const selectedCategoriesParam = normalizedSearchParams.get('categories') || '';
-  const selectedFormatsParam = normalizedSearchParams.get('formats') || '';
-  const selectedRolesParam = normalizedSearchParams.get('roles') || '';
+function normalizeTab(value: string | null): ExploreTabId {
+  if (!value) return 'trending';
+  return tabAliases[value] || 'trending';
+}
+
+function formatTime(dateString: string | undefined | null) {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function mapBaseFeedItemForCard(item: BaseFeedEventItem) {
+  const date = new Date(item.event.start_time);
+
+  return {
+    ...item,
+    ...item.event,
+    month: date.toLocaleDateString(undefined, { month: 'short' }),
+    day: String(date.getDate()).padStart(2, '0'),
+    subtitle: `${item.event.location_name || 'Location TBD'} · ${formatTime(item.event.start_time)}`,
+  } as BaseFeedEventItem;
+}
+
+function isOnlineEvent(event: BaseFeedEventItem) {
+  const locationName = (event.location_name || event.event.location_name || '')
+    .trim()
+    .toLowerCase();
+  const locationAddress = (event.location_address || event.event.location_address || '')
+    .trim()
+    .toLowerCase();
+
+  return (
+    locationName.includes('online') ||
+    locationAddress === 'online event' ||
+    locationAddress.includes('online')
+  );
+}
+
+function getOpenNeedsCount(event: BaseFeedEventItem) {
+  return event.needs.filter(
+    (need) =>
+      need.status !== 'filled' &&
+      need.status !== 'override_filled' &&
+      !need.assigned_vendor,
+  ).length;
+}
+
+function buildSearchHaystack(event: BaseFeedEventItem) {
+  return [
+    event.title,
+    event.description,
+    event.location_name,
+    event.location_address,
+    event.category?.name,
+    event.category?.slug,
+    event.host?.username,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+const TAB_SHRINK_DISTANCE = 180;
+
+function ExploreEmptyState({ message }: { message: string }) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: 220,
+        px: 3,
+        borderRadius: '24px',
+        border: '1px solid rgba(120, 94, 60, 0.14)',
+        background: '#FFFCF7',
+        boxShadow: '0 20px 40px rgba(86, 58, 28, 0.06)',
+      }}
+    >
+      <Typography
+        sx={{
+          maxWidth: 420,
+          textAlign: 'center',
+          color: 'var(--color-text-secondary)',
+          lineHeight: 1.6,
+        }}
+      >
+        {message}
+      </Typography>
+    </Box>
+  );
+}
+
+function ExploreStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <Box
+      sx={{
+        minWidth: 0,
+        flex: 1,
+        borderRadius: '20px',
+        border: '1px solid rgba(120, 94, 60, 0.12)',
+        background: '#fff7ed',
+        px: 2,
+        py: 1.75,
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'rgba(61, 49, 36, 0.55)',
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          mt: 0.4,
+          fontFamily: 'Syne, sans-serif',
+          fontSize: { xs: 22, md: 28 },
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          color: accent,
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+export default function SearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tabShrinkProgress, setTabShrinkProgress] = useState(0);
+  const rawTab = searchParams.get('tab');
+  const tab = normalizeTab(rawTab);
+  const search = (searchParams.get('search') || '').trim().toLowerCase();
+  const locationLabel = (searchParams.get('location') || '').trim();
+  const lat = Number(searchParams.get('lat'));
+  const lng = Number(searchParams.get('lng'));
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+  const nowIso = useMemo(() => new Date().toISOString(), []);
 
   useEffect(() => {
-    if (normalizedSearchParams.toString() !== searchParams.toString()) {
-      setSearchParams(normalizedSearchParams, { replace: true });
+    if (rawTab === tab) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    setSearchParams(next, { replace: true });
+  }, [rawTab, searchParams, setSearchParams, tab]);
+
+  useEffect(() => {
+    const updateTabShrinkProgress = () => {
+      const nextProgress = Math.min(window.scrollY / TAB_SHRINK_DISTANCE, 1);
+      setTabShrinkProgress(nextProgress);
+    };
+
+    updateTabShrinkProgress();
+    window.addEventListener('scroll', updateTabShrinkProgress, { passive: true });
+
+    return () => window.removeEventListener('scroll', updateTabShrinkProgress);
+  }, []);
+
+  const activeTab = exploreTabs.find((item) => item.id === tab) || exploreTabs[0];
+  const tabMetrics = useMemo(() => {
+    const progress = tabShrinkProgress;
+
+    return {
+      borderRadius: 22 - progress * 4,
+      px: 1.4 - progress * 0.3,
+      py: 1.2 - progress * 0.35,
+      my: 2 - progress * 0.6,
+      minWidthXs: 118 - progress * 18,
+      minWidthMd: 128 - progress * 18,
+      iconSize: 44 - progress * 10,
+      iconRadius: 16 - progress * 4,
+      iconStroke: 2.4 - progress * 0.3,
+      glyphSize: 24 - progress * 4,
+      labelFontSize: 13 - progress,
+      stackSpacing: 0.8 - progress * 0.35,
+    };
+  }, [tabShrinkProgress]);
+
+  const feedParams = useMemo<BaseFeedParams>(() => {
+    const params: BaseFeedParams = {
+      sort: tab === 'upcoming' ? 'start_time' : 'popularity',
+      status: [...DISCOVERABLE_STATUSES],
+      start_time_gte: nowIso,
+      page_size: 100,
+      lat: hasCoords && tab !== 'online' ? lat : undefined,
+      lng: hasCoords && tab !== 'online' ? lng : undefined,
+    };
+
+    if (tab === 'free') {
+      params.free_only = true;
     }
-  }, [normalizedSearchParams, searchParams, setSearchParams]);
-
-  const selectedWhen = useMemo(
-    () =>
-      selectedWhenParam
-        .split(',')
-        .map((value) => value.trim())
-        .filter(Boolean) as WhenFilterId[],
-    [selectedWhenParam],
-  );
-  const selectedCategories = useMemo(
-    () =>
-      selectedCategoriesParam
-        .split(',')
-        .map((value) => value.trim())
-        .filter(Boolean),
-    [selectedCategoriesParam],
-  );
-  const selectedFormats = useMemo(
-    () =>
-      selectedFormatsParam
-        .split(',')
-        .map((value) => value.trim())
-        .filter(Boolean) as FormatFilterId[],
-    [selectedFormatsParam],
-  );
-  const selectedRoles = useMemo(
-    () =>
-      selectedRolesParam
-        .split(',')
-        .map((value) => value.trim())
-        .filter(Boolean) as RoleFilterId[],
-    [selectedRolesParam],
-  );
-
-  const effectiveWhen = useMemo(
-    () => getEffectiveWhenFilters(tab, selectedWhen, selectedDate),
-    [selectedDate, selectedWhen, tab],
-  );
-
-  const effectiveFormats = useMemo(
-    () => getEffectiveFormatFilters(tab, selectedFormats),
-    [selectedFormats, tab],
-  );
-  const feedTimeRange = useMemo(
-    () =>
-      tab === 'tonight-weekend' ? getFeedTimeRange(effectiveWhen, selectedDate) : null,
-    [effectiveWhen, selectedDate, tab],
-  );
-  const trendingLifecycleStates = useMemo<EventLifecycleState[] | undefined>(() => {
-    if (tab !== 'trending') return undefined;
-    return ['published', 'event_ready', 'live'];
-  }, [tab]);
-
-  const feedSort = getFeedSort(tab);
-  const isOnlineTab = tab === 'online';
-
-  const { data: feedResponse, isLoading: isFeedLoading } = useFeed({
-    search: search || undefined,
-    location: isOnlineTab ? undefined : lat && lng ? undefined : location || undefined,
-    lat: isOnlineTab ? undefined : lat ? Number(lat) : undefined,
-    lng: isOnlineTab ? undefined : lng ? Number(lng) : undefined,
-    online: isOnlineTab ? true : undefined,
-    sort: feedSort,
-    lifecycle_states: trendingLifecycleStates,
-    start_time_gte: feedTimeRange?.start_time_gte,
-    start_time_lte: feedTimeRange?.start_time_lte,
-    page_size: 120,
-  });
-
-  const { data: categoryResponse } = useCategories();
-  const categories = categoryResponse?.data || [];
-
-  const { data: opportunities = [], isLoading: isOpportunitiesLoading } = useQuery({
-    queryKey: ['search', 'opportunities', tab, isAuthenticated],
-    enabled: tab === 'chip-in' || (isAuthenticated && tab === 'free-cheap'),
-    queryFn: async () => {
-      if (tab === 'chip-in') {
-        const response = await fetchAllOpenOpportunities();
-        return response.data || [];
-      }
-
-      const [matched, potential] = await Promise.all([
-        fetchMyVendorOpportunities(),
-        fetchMyPotentialOpportunities(),
-      ]);
-
-      const seen = new Set<number>();
-      return [...(matched.data || []), ...(potential.data || [])].filter((item) => {
-        if (seen.has(item.need_id)) return false;
-        seen.add(item.need_id);
-        return true;
-      });
-    },
-  });
-
-  const { data: openEventCardOpportunities = [] } = useQuery({
-    queryKey: ['search', 'event-card-opportunities'],
-    queryFn: async () => {
-      const response = await fetchAllOpenOpportunities();
-      return response.data || [];
-    },
-  });
-
-  const { data: matchedOpportunities = [] } = useQuery({
-    queryKey: ['search', 'opportunities', 'matched', isAuthenticated],
-    enabled: isAuthenticated,
-    queryFn: async () => {
-      const response = await fetchMyVendorOpportunities();
-      return response.data || [];
-    },
-  });
-
-  const filteredEvents = useMemo(() => {
-    return filterEvents({
-      events: (feedResponse?.data || []) as EventListItem[],
-      selectedCategories,
-      effectiveWhen,
-      selectedDate,
-      effectiveFormats,
-      tab,
-    });
-  }, [
-    effectiveFormats,
-    effectiveWhen,
-    feedResponse,
-    selectedCategories,
-    selectedDate,
-    tab,
-  ]);
-
-  const filteredOpportunities = useMemo(() => {
-    return filterOpportunities({
-      opportunities,
-      search,
-      effectiveWhen,
-      selectedDate,
-      selectedRoles,
-      effectiveFormats,
-    });
-  }, [
-    effectiveFormats,
-    effectiveWhen,
-    opportunities,
-    search,
-    selectedDate,
-    selectedRoles,
-  ]);
-
-  const setTab = (nextTab: SearchTabId) => {
-    setSearchParams(buildTabSearchParams(normalizedSearchParams, nextTab), {
-      replace: true,
-    });
-  };
-
-  const sectionCount = getSectionCount(
-    tab,
-    tab === 'chip-in'
-      ? new Set(filteredOpportunities.map((opportunity) => opportunity.event_id)).size
-      : filteredEvents.length,
-    filteredOpportunities.length,
-  );
-  const matchedOpportunityNeedIds = useMemo(
-    () => new Set(matchedOpportunities.map((item) => item.need_id)),
-    [matchedOpportunities],
-  );
-  const eventCardOpportunityByEventId = useMemo(() => {
-    const byEventId = new Map<number, (typeof openEventCardOpportunities)[number]>();
-    openEventCardOpportunities.forEach((opportunity) => {
-      if (!byEventId.has(opportunity.event_id)) {
-        byEventId.set(opportunity.event_id, opportunity);
-      }
-    });
-    return byEventId;
-  }, [openEventCardOpportunities]);
-
-  const openQuickCreateService = (category?: string) => {
-    if (!isAuthenticated) {
-      navigate('/signin');
-      return;
+    if (tab === 'opportunities') {
+      params.has_needs = true;
+    }
+    if (tab === 'online') {
+      params.online = true;
+      params.lat = undefined;
+      params.lng = undefined;
     }
 
-    setQuickCreateServiceCategory(category || '');
-    setIsQuickCreateServiceOpen(true);
+    return params;
+  }, [hasCoords, lat, lng, nowIso, tab]);
+
+  const tabCopy = useMemo<Record<ExploreTabId, { title: string; description: string }>>(
+    () => ({
+      trending: {
+        title: 'Popular events right now',
+        description: locationLabel
+          ? `What people are checking out around ${locationLabel}.`
+          : 'What people are checking out right now.',
+      },
+      upcoming: {
+        title: 'Coming up next',
+        description: 'A time-sorted list of upcoming events.',
+      },
+      free: {
+        title: 'Free to join',
+        description: 'Events you can jump into without buying a ticket.',
+      },
+      opportunities: {
+        title: 'Events with open contributor spots',
+        description: 'Hosts looking for help, services, or collaborators.',
+      },
+      online: {
+        title: 'Happening online',
+        description: 'Join from anywhere.',
+      },
+    }),
+    [locationLabel],
+  );
+
+  const emptyStateCopy = useMemo<Record<ExploreTabId, string>>(
+    () => ({
+      trending: 'No events are available right now.',
+      upcoming: 'No upcoming events are lined up right now.',
+      free: 'No free events are open right now.',
+      opportunities: 'No events with open contributor spots are available right now.',
+      online: 'No online events are open right now.',
+    }),
+    [],
+  );
+
+  const { data: feedResponse, isLoading } = useBaseFeed(feedParams);
+
+  const events = useMemo(() => {
+    let items = ((feedResponse?.data || []) as BaseFeedEventItem[]).map(
+      mapBaseFeedItemForCard,
+    );
+
+    if (tab === 'opportunities') {
+      items = items.filter((item) => getOpenNeedsCount(item) > 0);
+    }
+
+    if (tab === 'online') {
+      items = items.filter(isOnlineEvent);
+    }
+
+    if (search) {
+      items = items.filter((item) => buildSearchHaystack(item).includes(search));
+    }
+
+    return items;
+  }, [feedResponse, search, tab]);
+
+  const handleTabChange = (nextTab: ExploreTabId) => {
+    if (nextTab === tab) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', nextTab);
+    setSearchParams(next, { replace: true });
   };
+
+  const heroCopy = useMemo<Record<ExploreTabId, { eyebrow: string; badge: string }>>(
+    () => ({
+      trending: {
+        eyebrow: 'Explore what is buzzing',
+        badge: 'Most active now',
+      },
+      upcoming: {
+        eyebrow: 'Plan your next move',
+        badge: 'Sorted by time',
+      },
+      free: {
+        eyebrow: 'Low-friction plans',
+        badge: 'Zero-cost picks',
+      },
+      opportunities: {
+        eyebrow: 'Jump in and help shape it',
+        badge: 'Open contributor spots',
+      },
+      online: {
+        eyebrow: 'Join from anywhere',
+        badge: 'Remote-friendly events',
+      },
+    }),
+    [],
+  );
 
   return (
     <Box
       sx={{
-        pt: 8,
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #FFF9F0 0%, #F9F1E4 48%, #F7EEE2 100%)',
-        pb: 60,
+                borderRadius: '28px',
+                border: '1px solid rgba(120, 94, 60, 0.12)',
+                background:
+                  'linear-gradient(135deg, #FFF7EA 0%, #FAECE7 34%, #FAEEDA 68%, #FFF9F0 100%)',
+                // p: { xs: 2, md: 3 },
+                boxShadow: '0 24px 60px rgba(86, 58, 28, 0.08)',
       }}
     >
-      <Box
-        sx={{
-          position: 'sticky',
-          top: 0,
-          background: `linear-gradient(180deg, ${SEARCH_THEME.bgPanel} 0%, #FFF9EE 100%)`,
-          zIndex: 40,
-        }}
-      >
-        <SimpleNavbar onCreateService={openQuickCreateService} />
-      <SearchToolbar
-        tab={tab}
-        selectedDate={selectedDate}
-        effectiveWhen={effectiveWhen}
-        effectiveFormats={effectiveFormats}
-        selectedCategories={selectedCategories}
-        selectedRoles={selectedRoles}
-        categories={categories}
-        onTabChange={setTab}
-        onToggleWhen={(value) =>
-          updateListParam(
-            normalizedSearchParams,
-            'when',
-            toggleListValue(selectedWhen, value),
-            setSearchParams,
-          )
-        }
-        onDateChange={(value) =>
-          setSearchParams(buildDateSearchParams(normalizedSearchParams, value), {
-            replace: true,
-          })
-        }
-        onToggleCategory={(value) =>
-          updateListParam(
-            normalizedSearchParams,
-            'categories',
-            toggleListValue(selectedCategories, value),
-            setSearchParams,
-          )
-        }
-        onToggleFormat={(value) =>
-          updateListParam(
-            normalizedSearchParams,
-            'formats',
-            toggleListValue(selectedFormats, value),
-            setSearchParams,
-          )
-        }
-        onToggleRole={(value) =>
-          updateListParam(
-            normalizedSearchParams,
-            'roles',
-            toggleListValue(selectedRoles, value),
-            setSearchParams,
-          )
-        }
-        onClearRoles={() =>
-          updateListParam(normalizedSearchParams, 'roles', [], setSearchParams)
-        }
-        onClearManualFilters={() =>
-          setSearchParams(buildClearFiltersSearchParams(normalizedSearchParams), {
-            replace: true,
-          })
-        }
-      />
-      </Box>
+      <SimpleNavbar />
 
-      <Container
-        maxWidth={false}
-        sx={{ maxWidth: 960, mx: 'auto' }}
-      >
-        <SearchResults
-          tab={tab}
-          sectionCount={sectionCount}
-          filteredEvents={filteredEvents}
-          filteredOpportunities={filteredOpportunities}
-          eventCardOpportunityByEventId={eventCardOpportunityByEventId}
-          matchedOpportunityNeedIds={matchedOpportunityNeedIds}
-          isFeedLoading={isFeedLoading}
-          isOpportunitiesLoading={isOpportunitiesLoading}
-          isAuthenticated={isAuthenticated}
-          onEventClick={(eventId) => navigate(`/events-new/${eventId}`)}
-          onOpportunityClick={(eventId) => navigate(`/events-new/${eventId}`)}
-          onCreateService={openQuickCreateService}
-          onSignIn={() => navigate('/signin')}
-        />
-      </Container>
-      <QuickCreateServiceDialog
-        open={isQuickCreateServiceOpen}
-        defaultCategory={quickCreateServiceCategory}
-        onClose={async () => {
-          setIsQuickCreateServiceOpen(false);
-          setQuickCreateServiceCategory('');
-          await queryClient.invalidateQueries({ queryKey: ['search'] });
-        }}
-      />
+      <Box sx={{  }}>
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+            backdropFilter: 'blur(10px)',
+            background: 'linear-gradient(0deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%)',
+            WebkitBackdropFilter: 'blur(10px)',
+            
+            // borderBottom: '1px solid rgba(120, 94, 60, 0.12)',
+          }}
+        >
+          <Container
+            maxWidth={false}
+            sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 2 }}
+          >
+            <Box
+              sx={{
+              }}
+            >
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Stack spacing={1.1} sx={{ minWidth: 0, maxWidth: 620 }}>
+                  
+                  <Typography
+                    sx={{
+                      fontFamily: 'Syne, sans-serif',
+                      fontSize: { xs: 30, md: 42 },
+                      fontWeight: 800,
+                      letterSpacing: '-0.05em',
+                      color: '#3D3124',
+                      lineHeight: 1.02,
+                    }}
+                  >
+                    Explore
+                  </Typography>
+
+                </Stack>
+
+              </Stack>
+            </Box>
+
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                overflowX: 'auto',
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+                scrollbarWidth: 'none',
+              }}
+            >
+              {exploreTabs.map((item) => {
+                const isActive = item.id === tab;
+
+                return (
+                  <Box
+                    key={item.id}
+                    component="button"
+                    type="button"
+                    onClick={() => handleTabChange(item.id)}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: isActive ? item.accent : 'rgba(120, 94, 60, 0.12)',
+                      background: isActive ? item.accent : item.wash,
+                      color: isActive ? '#fff' : '#3D3124',
+                      borderRadius: `${tabMetrics.borderRadius}px`,
+                      px: tabMetrics.px,
+                      py: tabMetrics.py,
+                      my: tabMetrics.my,
+                      minWidth: { xs: tabMetrics.minWidthXs, md: tabMetrics.minWidthMd },
+                      fontSize: 14,
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      transition: 'all 180ms ease',
+                      boxShadow: isActive
+                        ? `0 9px 5px ${item.accent}33`
+                        : '0 7px 5px rgba(86, 58, 28, 0.06)',
+                      '&:hover': {
+                        borderColor: item.accent,
+                        background: isActive ? item.accent : '#FFF1DE',
+                        transform: 'translateY(-1px)',
+                      },
+                    }}
+                  >
+                    <Stack
+                      spacing={tabMetrics.stackSpacing}
+                      alignItems="center"
+                      justifyContent="center"
+                      sx={{ minWidth: 0 }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: tabMetrics.iconSize,
+                          height: tabMetrics.iconSize,
+                          borderRadius: `${tabMetrics.iconRadius}px`,
+                          background: isActive ? 'rgba(255,255,255,0.18)' : '#fff',
+                          color: isActive ? '#fff' : item.accent,
+                        }}
+                      >
+                        <item.Icon size={tabMetrics.glyphSize} strokeWidth={tabMetrics.iconStroke} />
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: tabMetrics.labelFontSize,
+                          fontWeight: 700,
+                          lineHeight: 1.1,
+                          color: 'inherit',
+                        }}
+                      >
+                        {item.label}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Container>
+        </Box>
+
+        <Container
+          maxWidth={false}
+          sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 1 }}
+        >
+
+          {isLoading ? (
+            <Box sx={{ display: 'grid', placeItems: 'center', py: 8 }}>
+              <CircularProgress sx={{ color: '#D85A30' }} />
+            </Box>
+          ) : events.length === 0 ? (
+            <ExploreEmptyState message={emptyStateCopy[tab]} />
+          ) : (
+            <Stack spacing={3}>
+              {events.map((event) => (
+                <LargeEventCard key={event.id} event={event} />
+              ))}
+            </Stack>
+          )}
+        </Container>
+      </Box>
     </Box>
   );
 }

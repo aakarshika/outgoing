@@ -80,9 +80,8 @@ function fitView(
 }
 
 function buildEmbedUrl(center: Coords, zoom: number): string {
-  // Plain ?q= centers the map and drops Google's native red pin on the event.
-  // No route, no sidebar — just clean map tiles with one marker.
-  return `https://maps.google.com/maps?q=${center.lat},${center.lng}&z=${zoom}&output=embed`;
+  // Use ll= to center the embed without letting Google add its own native pin.
+  return `https://maps.google.com/maps?ll=${center.lat},${center.lng}&z=${zoom}&output=embed`;
 }
 
 function buildGoogleDirectionsUrl(destination: Coords, origin?: Coords | null) {
@@ -270,6 +269,56 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
           >
             {weekday} · {timeStart} – {timeEnd}
           </Typography>
+
+      {/* Location strip */}
+      <Box
+        component="div"
+        onClick={handleOpenMap}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mt: 1.25,
+          px: 0.5,
+          py: 0.75,
+          color: 'inherit',
+          borderRadius: 'var(--border-radius-md, 8px)',
+          transition: 'background 0.15s',
+          cursor: mapUrl ? 'pointer' : 'default',
+          '&:hover': mapUrl ? { bgcolor: 'rgba(0,0,0,0.03)' } : undefined,
+        }}
+      >
+        {isOnline ? (
+          <Globe size={14} color="#2563eb" style={{ flexShrink: 0 }} />
+        ) : (
+          <MapPin size={14} color="#D85A30" style={{ flexShrink: 0 }} />
+        )}
+        <Box sx={{ minWidth: 0, maxWidth: 140, flex: 1 }}>
+          <Typography
+            sx={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--color-text-primary, #111)',
+              lineHeight: 1.3,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isOnline ? 'Online Event' : locationName || 'Location'}
+          </Typography>
+          {!isOnline && locationAddress && (
+            <Typography
+              sx={{
+                fontSize: 11,
+                color: 'var(--color-text-secondary, #6b7280)',
+                lineHeight: 1.3,
+                lineClamp: 2,
+              }}
+            >
+              {locationAddress}
+            </Typography>
+          )}
+        </Box>
+      </Box>
         </Box>
 
         {/* Map Card */}
@@ -335,75 +384,6 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
         </Box>
       </Box>
 
-      {/* Location strip */}
-      <Box
-        component="div"
-        onClick={handleOpenMap}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          mt: 1.25,
-          px: 0.5,
-          py: 0.75,
-          color: 'inherit',
-          borderRadius: 'var(--border-radius-md, 8px)',
-          transition: 'background 0.15s',
-          cursor: mapUrl ? 'pointer' : 'default',
-          '&:hover': mapUrl ? { bgcolor: 'rgba(0,0,0,0.03)' } : undefined,
-        }}
-      >
-        {isOnline ? (
-          <Globe size={14} color="#2563eb" style={{ flexShrink: 0 }} />
-        ) : (
-          <MapPin size={14} color="#D85A30" style={{ flexShrink: 0 }} />
-        )}
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography
-            sx={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--color-text-primary, #111)',
-              lineHeight: 1.3,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {isOnline ? 'Online Event' : locationName || 'Location'}
-          </Typography>
-          {!isOnline && locationAddress && (
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: 'var(--color-text-secondary, #6b7280)',
-                lineHeight: 1.3,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {locationAddress.slice(0, 50)}
-            </Typography>
-          )}
-        </Box>
-        {!isOnline && hasCoords && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.4,
-              flexShrink: 0,
-              fontSize: 11,
-              fontWeight: 500,
-              color: 'var(--color-text-secondary, #6b7280)',
-            }}
-          >
-            <Navigation size={11} />
-            Directions
-          </Box>
-        )}
-      </Box>
     </Box>
   );
 }

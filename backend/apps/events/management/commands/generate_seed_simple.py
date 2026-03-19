@@ -20,6 +20,39 @@ SEED_CENTER_LNG = -76.57
 SEED_RADIUS_MILES = 200
 PAID_TIER_PRICES = [15, 25, 35, 50, 75, 100]
 
+FEATURE_POOL = [
+    "Food",
+    "Non-Alcoholic Drinks",
+    "Alcoholic Drinks",
+    "Music",
+    "DJ",
+    "Live Band",
+    "Games",
+    "Photo Booth",
+    "Surprise Gifts",
+    "Educational Activities",
+    "Group Activities",
+    "Networking",
+    "Dance Floor",
+    "Workshops",
+    "Art",
+    "Karaoke",
+    "Bonfire",
+    "Fireworks",
+    "Pool",
+    "Outdoor Seating",
+    "Indoor Seating",
+    "Decorations",
+    "Themed Costumes",
+    "Raffle",
+    "Trivia",
+    "Kids Zone",
+    "Pet-Friendly",
+    "Open Bar",
+    "VIP Lounge",
+    "Parking",
+]
+
 
 def random_point_within_radius(rng, center_lat, center_lng, radius_miles):
     """Generate a lat/lng within radius_miles of the given center."""
@@ -244,6 +277,19 @@ def _load_latlong_rows_from_md():
     return out
 
 
+def _random_features_for_event(rng: random.Random):
+    # ~70% of events get a features list; among those, choose 0–4.
+    if rng.random() >= 0.7:
+        return None
+    k = rng.randint(0, 4)
+    if k <= 0:
+        return []
+    picked = rng.sample(FEATURE_POOL, min(k, len(FEATURE_POOL)))
+    # Bias toward 'featured' so UI looks good by default.
+    tags = ["featured", "featured", "additional", "extra"]
+    return [{"name": name, "tag": rng.choice(tags)} for name in picked]
+
+
 class Command(BaseCommand):
     help = "Generates a simple JSON seed dataset strictly adhering to seed_description.md and counts.md."
 
@@ -463,6 +509,9 @@ class Command(BaseCommand):
                 "lifecycle_state": status,
                 "capacity": capacity
             }
+            features = _random_features_for_event(rng)
+            if features is not None:
+                event_obj["features"] = features
             out_events.append(event_obj)
 
             # Tiers

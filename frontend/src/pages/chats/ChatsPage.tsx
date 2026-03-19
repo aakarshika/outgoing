@@ -49,6 +49,7 @@ import {
   useNetworkPeople,
   usePrivateMessages,
 } from '@/features/events/hooks';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 
 type ChatFilter = 'all' | 'events' | 'people';
 
@@ -1137,7 +1138,7 @@ export default function ChatsPage() {
                                     bottom: 8,
                                     width: 4,
                                     borderRadius: '999px',
-                                    background: '#D85A30',
+                                    background: getCategoryTheme(chat.category)?.accent || '',
                                   }
                                 : undefined,
                               '&:hover': {

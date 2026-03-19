@@ -3,8 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { SmallEventCard } from '@/components/events/SmallEventCard';
-
-import type { EventListItem } from '@/types/events';
+import type { EventCardEvent } from '@/components/events/useEventCards';
 
 import { SectionHeading } from './MyHomeSectionHeading';
 
@@ -20,7 +19,7 @@ type Props = {
   selectedTrendingFilters: string[];
   onToggleFilter: (filterId: string) => void;
   onClearFilters: () => void;
-  filteredTrendingEvents: EventListItem[];
+  filteredTrendingEvents: EventCardEvent[];
 };
 
 export function MyHomeTrendingSection({
@@ -91,9 +90,7 @@ export function MyHomeTrendingSection({
               bgcolor: selectedTrendingFilters.includes(filter.id)
                 ? '#D85A30'
                 : 'rgba(255,255,255,0.9)',
-              color: selectedTrendingFilters.includes(filter.id)
-                ? '#fff'
-                : '#4A3827',
+              color: selectedTrendingFilters.includes(filter.id) ? '#fff' : '#4A3827',
               border: selectedTrendingFilters.includes(filter.id)
                 ? 'none'
                 : '1px solid rgba(143, 105, 66, 0.14)',
@@ -150,4 +147,3 @@ export function MyHomeTrendingSection({
     </Box>
   );
 }
-

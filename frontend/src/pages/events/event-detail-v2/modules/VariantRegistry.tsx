@@ -129,8 +129,11 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           <NormalChipsModule event={event} />
 
           <NormalCalendarMapModule event={event} />
-
+          <NormalDivider />
           <NormalStatusModule event={event} isHost={isHost} />
+
+          <NormalGoersModule event={event} isEventOver={isEventOver} />
+
 
           <NormalSaveToggleModule
             event={event}
@@ -154,9 +157,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
           <NormalDivider />
 
-          <NormalGoersModule event={event} isEventOver={isEventOver} />
-
-          <NormalDivider />
 
           <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
 

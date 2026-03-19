@@ -9,6 +9,7 @@ import { Footer } from './components/Footer';
 import { AppBottomNav } from './components/navigation/AppBottomNav';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
+import { ServicesProvider } from './features/vendors/ServicesContext';
 import { SimpleNavbar } from './pages/search/components/SimpleNavbar';
 import { AppRoutes } from './routes/AppRoutes';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -87,10 +88,12 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <BackgroundProvider>
-              <ChatDrawerProvider>
-                <ScrollToTop />
-                <AppContent />
-              </ChatDrawerProvider>
+              <ServicesProvider>
+                <ChatDrawerProvider>
+                  <ScrollToTop />
+                  <AppContent />
+                </ChatDrawerProvider>
+              </ServicesProvider>
             </BackgroundProvider>
           </BrowserRouter>
         </AuthProvider>

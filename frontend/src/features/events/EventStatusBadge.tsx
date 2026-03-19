@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { EventLifecycleState } from '@/types/events';
+import { Star } from 'lucide-react';
 
 interface EventStatusBadgeProps {
   status: EventLifecycleState | string;
@@ -54,7 +55,7 @@ const getStatusStyles = (status: EventLifecycleState | string) => {
       return {
         bg: 'rgba(245, 245, 245, 0.8)',
         color: '#616161',
-        label: status.replace(/_/g, ' '),
+        label: status,
       };
   }
 };
@@ -95,3 +96,47 @@ export const EventStatusBadge = ({ status, sx = {} }: EventStatusBadgeProps) => 
     </Box>
   );
 };
+
+
+export const HostStatusBadge = ({ status, sx = {} }: EventStatusBadgeProps) => {
+  if (!status) return null;
+  const styles = getStatusStyles(status);
+  
+  return (
+    <Box
+      sx={{
+        px: 1,
+        py: 0.25,
+        color: styles.color,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: '0.02em',
+        display: 'inline-flex',
+        alignItems: 'center',
+        // border: `1px solid ${styles.color}20`,
+        ...sx,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          fontSize: 13,
+          display: 'inline-flex',
+          gap: 0.5,
+        }}
+      >
+      <Typography
+        variant="caption"
+        sx={{
+          pt: ['1px'],
+          fontSize: 12,
+          fontWeight: 900,
+        }}
+      >
+        by 
+      </Typography>
+      {' ' + styles.label} 
+      </Typography>
+    </Box>
+  );
+}

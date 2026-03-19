@@ -290,16 +290,6 @@ export function AddNeedOverlay({
                             <Typography sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.62)' }}>
                                 {eventLabel}
                             </Typography>
-                            <Typography
-                                sx={{
-                                    fontFamily: 'Syne, sans-serif',
-                                    fontSize: 18,
-                                    fontWeight: 700,
-                                    color: '#2B2118',
-                                }}
-                            >
-                                {previewTitle}
-                            </Typography>
                             <Typography sx={{ fontSize: 12, color: 'rgba(66, 50, 28, 0.68)' }}>
                                 {displayDateLabel}
                             </Typography>
