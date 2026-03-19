@@ -22,10 +22,11 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   });
 }
 
+import { Box } from '@mui/material';
+
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
-import { Box } from '@mui/material';
 
 function GlobalChatDrawer() {
   const { isOpen, closeChat, params } = useChatDrawer();
@@ -33,11 +34,15 @@ function GlobalChatDrawer() {
     <ChatDrawer
       isOpen={isOpen}
       onClose={closeChat}
-      title={params?.title || 'Chat'}
+      title={params?.title}
+      subtitle={params?.subtitle}
+      badgeLabel={params?.badgeLabel}
       mode={params?.mode || 'group'}
       eventId={params?.eventId}
       conversationId={params?.conversationId}
       targetUsername={params?.targetUsername}
+      otherUsername={params?.otherUsername}
+      otherAvatar={params?.otherAvatar}
     />
   );
 }
@@ -49,29 +54,21 @@ function AppContent() {
   const isGallery = location.pathname.includes('/gallery/');
   const isEventDetailRoute = location.pathname.startsWith('/events');
   const isSearchRoute = location.pathname.startsWith('/search');
-  const isChatListRoute =
-    location.pathname.startsWith('/chats');
-  const isChatThreadRoute =
-    location.pathname.startsWith('/chats/group/') ||
-    location.pathname.startsWith('/chats/private/') ||
-    location.pathname.startsWith('/chats/direct/');
+  const isChatListRoute = location.pathname.startsWith('/chats');
   const isSignedOutRoot = !isAuthenticated;
 
   return (
     <div className="relative flex min-h-screen flex-col pb-40 text-foreground transition-colors duration-300">
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && !isChatThreadRoute && !isChatListRoute && !isEventDetailRoute && (
+      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbar />}
 
-          <SimpleNavbar />
-      )}
-      
       <Toaster />
       <main className="flex-1 bg-transparent pb-32">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
-      {!isChatThreadRoute && !isEventDetailRoute && <AppBottomNav />}
+      {!isEventDetailRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
           <Footer />

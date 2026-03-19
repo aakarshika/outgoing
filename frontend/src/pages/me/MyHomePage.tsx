@@ -436,7 +436,7 @@ export default function MyHomePage() {
             backdropFilter: 'blur(14px)',
           }}
         >
-          <MyHomeUpcomingSection upcomingEvents={upcomingEvents} />
+          <MyHomeUpcomingSection upcomingEvents={upcomingEvents} hasUpcomingEvents={upcomingEvents.length > 0} />
           <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, md: 4 } }}>
             <Stack spacing={4}>
               <MyHomeTrendingSection

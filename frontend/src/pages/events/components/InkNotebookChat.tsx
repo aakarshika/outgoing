@@ -85,6 +85,8 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
       mode: 'direct',
       eventId,
       targetUsername,
+      otherUsername: targetUsername,
+      badgeLabel: 'Direct',
     });
   };
 

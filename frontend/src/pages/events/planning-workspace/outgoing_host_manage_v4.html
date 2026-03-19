@@ -1,0 +1,443 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .p{font-family:'DM Sans',sans-serif;background:#F5F0EB;max-width:390px;margin:0 auto;padding-bottom:80px;}
+
+  /* HERO */
+  .hero{margin:14px 14px 0;border-radius:18px;background:#D85A30;padding:20px 20px 16px;}
+  .hero-tag{font-size:10px;font-weight:500;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+  .hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:10px;}
+  .hero-row{display:flex;gap:14px;margin-bottom:14px;}
+  .hero-detail{font-size:12px;color:rgba(255,255,255,0.75);display:flex;align-items:center;gap:4px;}
+  .hero-nums{display:flex;gap:8px;}
+  .hnum{flex:1;background:rgba(0,0,0,0.15);border-radius:10px;padding:10px 8px;text-align:center;}
+  .hnum-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;}
+  .hnum-label{font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px;}
+
+  /* SECTION */
+  .sec{margin:14px 14px 0;}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .sec-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;}
+  .sec-link{font-size:12px;color:#D85A30;font-weight:500;cursor:pointer;}
+
+  /* ATTENTION */
+  .att-wrap{background:#fff;border-radius:14px;overflow:hidden;}
+  .att-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:0.5px solid #F0EDE8;cursor:pointer;}
+  .att-item:last-child{border-bottom:none;}
+  .att-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .att-dot-red{background:#E24B4A;}
+  .att-dot-amber{background:#EF9F27;}
+  .att-icon{font-size:17px;flex-shrink:0;}
+  .att-body{flex:1;}
+  .att-title{font-size:13px;font-weight:500;color:#1A1A1A;}
+  .att-sub{font-size:11px;color:#888780;margin-top:1px;}
+  .att-cta{font-size:12px;font-weight:500;color:#D85A30;white-space:nowrap;}
+
+  /* APPLICATION CARD */
+  .app-card{background:#fff;border-radius:14px;padding:14px 16px;margin:10px 14px 0;}
+  .app-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .app-av{width:36px;height:36px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:500;flex-shrink:0;}
+  .app-name{font-size:14px;font-weight:500;color:#1A1A1A;}
+  .app-meta{font-size:11px;color:#888780;}
+  .app-role{font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;background:#EEEDFE;color:#3C3489;margin-left:auto;flex-shrink:0;}
+  .app-letter{font-size:13px;color:#444441;line-height:1.55;font-style:italic;border-left:3px solid #FAECE7;padding-left:12px;margin-bottom:12px;}
+  .app-btns{display:flex;gap:8px;}
+  .btn-lock{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;flex:1;padding:10px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;}
+  .btn-pass{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:10px 18px;border-radius:999px;border:0.5px solid #D3D1C7;background:transparent;color:#1A1A1A;cursor:pointer;}
+  .app-more{font-size:12px;color:#888780;text-align:center;margin-top:10px;cursor:pointer;}
+
+  /* CHECK GRID */
+  .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .cg-card{background:#fff;border-radius:14px;padding:14px;cursor:pointer;position:relative;overflow:hidden;}
+  .cg-card.done{background:#fff;}
+  .cg-card.warn{border:1.5px solid #EF9F27;}
+  .cg-card.locked{opacity:0.45;}
+  .cg-emoji{font-size:24px;margin-bottom:8px;}
+  .cg-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:3px;line-height:1.25;}
+  .cg-sub{font-size:11px;color:#888780;line-height:1.35;}
+  .cg-badge{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;}
+  .badge-done{background:#EAF3DE;color:#3B6D11;}
+  .badge-warn{background:#FAEEDA;color:#854F0B;}
+  .badge-locked{background:#F1EFE8;color:#888780;}
+  .cg-check{position:absolute;top:10px;right:10px;font-size:13px;color:#1D9E75;}
+
+  /* ALL NEEDS */
+  .needs-wrap{background:#fff;border-radius:14px;padding:12px 14px;}
+  .need-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:0.5px solid #F0EDE8;}
+  .need-row:first-child{border-top:none;padding-top:0;}
+  .nr-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0;}
+  .nr-name{font-size:13px;color:#1A1A1A;flex:1;}
+  .nr-reward{font-size:11px;color:#888780;margin-right:6px;}
+  .npill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;}
+  .np-open{background:#FAEEDA;color:#854F0B;}
+  .np-pend{background:#E6F1FB;color:#185FA5;}
+  .np-done{background:#EAF3DE;color:#3B6D11;}
+
+  /* ADD ONS */
+  .addon-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .addon-card{background:#fff;border-radius:14px;padding:14px;cursor:pointer;}
+  .addon-card.full{grid-column:span 2;}
+  .addon-emoji{font-size:20px;margin-bottom:6px;}
+  .addon-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:3px;}
+  .addon-sub{font-size:11px;color:#888780;line-height:1.4;}
+  .addon-expand{margin-top:10px;display:none;}
+  .addon-expand.show{display:block;}
+  .addon-hint{font-size:11px;color:#D85A30;font-weight:500;margin-bottom:6px;}
+  .addon-textarea{width:100%;padding:10px 12px;border-radius:10px;border:0.5px solid #D3D1C7;background:#FAFAF9;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A1A1A;outline:none;resize:none;min-height:70px;}
+  .addon-textarea:focus{border-color:#D85A30;}
+  .addon-save{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 16px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;margin-top:6px;}
+
+  /* IDEAS */
+  .ideas-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+  .ideas-scroll::-webkit-scrollbar{display:none;}
+  .idea-chip{flex-shrink:0;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;min-width:80px;text-align:center;}
+  .idea-chip.open{min-width:160px;text-align:left;}
+  .idea-emoji{font-size:20px;margin-bottom:4px;}
+  .idea-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#1A1A1A;line-height:1.25;}
+  .idea-desc{font-size:11px;color:#888780;margin-top:5px;line-height:1.4;display:none;}
+  .idea-chip.open .idea-desc{display:block;}
+
+  /* CHECKLIST */
+  .cl-wrap{background:#fff;border-radius:14px;padding:12px 14px;}
+  .cl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cl-pill{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;background:#FAEEDA;color:#633806;}
+  .cl-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:0.5px solid #F0EDE8;}
+  .cl-item:first-child{border-top:none;}
+  .cl-circle{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;}
+  .cl-done-c{background:#1D9E75;color:#fff;}
+  .cl-open-c{border:2px solid #D85A30;background:transparent;}
+  .cl-lock-c{border:2px solid #D3D1C7;background:transparent;}
+  .cl-text{font-size:13px;flex:1;}
+  .cl-done-t{color:#B4B2A9;text-decoration:line-through;}
+  .cl-open-t{color:#D85A30;font-weight:500;}
+  .cl-lock-t{color:#B4B2A9;}
+  .cl-act{font-size:11px;color:#D85A30;font-weight:500;cursor:pointer;white-space:nowrap;}
+
+  /* CHAT */
+  .chat-btn-wrap{margin:14px 14px 0;}
+  .chat-btn{width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:14px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .chat-av{width:32px;height:32px;border-radius:50%;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .chat-info{flex:1;text-align:left;}
+  .chat-name{font-size:13px;font-weight:500;color:#1A1A1A;}
+  .chat-preview{font-size:11px;color:#888780;}
+  .chat-badge{background:#D85A30;color:#fff;font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;}
+
+  /* DRAWER */
+  .overlay{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;height:100%;background:rgba(0,0,0,0.3);z-index:10;}
+  .overlay.show{display:block;}
+  .drawer{position:fixed;bottom:-100%;left:50%;transform:translateX(-50%);width:100%;max-width:390px;background:#fff;border-radius:20px 20px 0 0;z-index:20;transition:bottom 0.3s cubic-bezier(0.32,0.72,0,1);height:70vh;display:flex;flex-direction:column;}
+  .drawer.open{bottom:0;}
+  .drawer-handle{width:36px;height:4px;background:#E0DDD8;border-radius:999px;margin:12px auto 0;flex-shrink:0;}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0;border-bottom:0.5px solid #F0EDE8;}
+  .drawer-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#1A1A1A;}
+  .drawer-close{width:26px;height:26px;border-radius:50%;background:#F1EFE8;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#888780;border:none;}
+  .chat-messages{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+  .msg{max-width:80%;}
+  .msg-them{align-self:flex-start;}
+  .msg-me{align-self:flex-end;}
+  .msg-bubble{padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.4;}
+  .msg-them .msg-bubble{background:#F5F0EB;color:#1A1A1A;border-radius:4px 12px 12px 12px;}
+  .msg-me .msg-bubble{background:#D85A30;color:#fff;border-radius:12px 4px 12px 12px;}
+  .msg-name{font-size:10px;color:#888780;margin-bottom:3px;}
+  .chat-input-row{display:flex;gap:8px;padding:10px 14px 20px;border-top:0.5px solid #F0EDE8;flex-shrink:0;}
+  .chat-input{flex:1;padding:10px 14px;border-radius:999px;border:0.5px solid #D3D1C7;background:#FAFAF9;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+  .chat-send{width:36px;height:36px;border-radius:50%;background:#D85A30;border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style>
+
+<div class="p">
+
+  <div style="padding:14px 14px 0;"><div style="font-size:12px;color:#888780;cursor:pointer;">&#8592; My events</div></div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Music · Indiranagar · 17 days away</div>
+    <div class="hero-title">Rooftop Vinyl Night</div>
+    <div class="hero-row">
+      <div class="hero-detail">&#128197; Sat, Apr 5 · 8pm</div>
+      <div class="hero-detail">&#128101; 60 capacity</div>
+    </div>
+    <div class="hero-nums">
+      <div class="hnum"><div class="hnum-val">20</div><div class="hnum-label">going</div></div>
+      <div class="hnum"><div class="hnum-val">₹8.5k</div><div class="hnum-label">collected</div></div>
+      <div class="hnum"><div class="hnum-val">3</div><div class="hnum-label">open needs</div></div>
+    </div>
+  </div>
+
+  <!-- ATTENTION -->
+  <div class="sec">
+    <div class="att-wrap">
+      <div class="att-item">
+        <div class="att-dot att-dot-red"></div>
+        <div class="att-icon">&#127911;</div>
+        <div class="att-body">
+          <div class="att-title">Arjun wants to DJ</div>
+          <div class="att-sub">4.9 stars · 4 Outgoing events</div>
+        </div>
+        <div class="att-cta">Review ›</div>
+      </div>
+      <div class="att-item">
+        <div class="att-dot att-dot-amber"></div>
+        <div class="att-icon">&#127869;</div>
+        <div class="att-body">
+          <div class="att-title">Catering, Photography still open</div>
+          <div class="att-sub">No one has applied yet</div>
+        </div>
+        <div class="att-cta">Find ›</div>
+      </div>
+      <div class="att-item">
+        <div class="att-dot att-dot-amber"></div>
+        <div class="att-icon">&#127881;</div>
+        <div class="att-body">
+          <div class="att-title">10 more to hit minimum</div>
+          <div class="att-sub">Share your event link</div>
+        </div>
+        <div class="att-cta">Share ›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION CARD -->
+  <div class="app-card" id="app-card" style="display:none;">
+    <div class="app-head">
+      <div class="app-av">AK</div>
+      <div>
+        <div class="app-name">Arjun Kapoor</div>
+        <div class="app-meta">&#9733; 4.9 · DJ'd 4 Outgoing events</div>
+      </div>
+      <div class="app-role">DJ / Music</div>
+    </div>
+    <div class="app-letter">"Deep house and afrobeats are my thing. Did the last rooftop at Koramangala Social — 3 hours, my gear, no issues. Happy to do this one."</div>
+    <div class="app-btns">
+      <button class="btn-lock">Lock him in ✓</button>
+      <button class="btn-pass" disabled>Pass</button>
+    </div>
+    <div class="app-more">+2 more applications</div>
+  </div>
+
+  <!-- CHECK GRID -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">Event setup</div></div>
+    <div class="check-grid">
+      <div class="cg-card done">
+        <div class="cg-check">✓</div>
+        <div class="cg-emoji">&#128197;</div>
+        <div class="cg-title">When & where</div>
+        <div class="cg-sub">Sat Apr 5 · Indiranagar</div>
+        <div class="cg-badge badge-done">Set</div>
+      </div>
+      <div class="cg-card done">
+        <div class="cg-check">✓</div>
+        <div class="cg-emoji">&#127915;</div>
+        <div class="cg-title">Tickets</div>
+        <div class="cg-sub">3 tiers · 20 sold</div>
+        <div class="cg-badge badge-done">₹8.5k in</div>
+      </div>
+      <div class="cg-card warn">
+        <div class="cg-emoji">&#9889;</div>
+        <div class="cg-title">Needs met</div>
+        <div class="cg-sub">DJ pending · 2 still open</div>
+        <div class="cg-badge badge-warn">Incomplete</div>
+      </div>
+      <div class="cg-card locked">
+        <div class="cg-emoji">&#128101;</div>
+        <div class="cg-title">Ready to receive guests</div>
+        <div class="cg-sub">Min. threshold not yet reached</div>
+        <div class="cg-badge badge-locked">Not yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL NEEDS -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">All needs</div><div class="sec-link">+ Add</div></div>
+    <div class="needs-wrap">
+      <div class="need-row">
+        <div class="nr-icon">&#127911;</div>
+        <div class="nr-name">DJ / Music</div>
+        <div class="nr-reward">Free in</div>
+        <div class="npill np-pend">Pending</div>
+      </div>
+      <div class="need-row">
+        <div class="nr-icon">&#127869;</div>
+        <div class="nr-name">Catering</div>
+        <div class="nr-reward">₹1,200</div>
+        <div class="npill np-open">Open</div>
+      </div>
+      <div class="need-row">
+        <div class="nr-icon">&#128247;</div>
+        <div class="nr-name">Photography</div>
+        <div class="nr-reward">40% off</div>
+        <div class="npill np-open">Open</div>
+      </div>
+      <div class="need-row">
+        <div class="nr-icon">&#127981;</div>
+        <div class="nr-name">Venue</div>
+        <div class="nr-reward">Indiranagar Social</div>
+        <div class="npill np-done">Done</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD ONS -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">Add-ons</div></div>
+    <div class="addon-grid">
+      <div class="addon-card">
+        <div class="addon-emoji">&#127869;</div>
+        <div class="addon-title">Food provided</div>
+        <div class="addon-sub">Let guests know what to expect</div>
+        <div class="addon-expand">
+          <div class="addon-hint">Add as an exciting extra ✨</div>
+          <textarea class="addon-textarea" placeholder="e.g. Finger food and snacks provided. Vegetarian options available."></textarea>
+          <button class="addon-save">Save</button>
+        </div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-emoji">&#129380;</div>
+        <div class="addon-title">Drinks policy</div>
+        <div class="addon-sub">BYOB, bar, or dry event?</div>
+        <div class="addon-expand">
+          <div class="addon-hint">Add as an exciting extra ✨</div>
+          <textarea class="addon-textarea" placeholder="e.g. BYOB welcome. We'll have a bar open till midnight."></textarea>
+          <button class="addon-save">Save</button>
+        </div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-emoji">&#128247;</div>
+        <div class="addon-title">Dress code</div>
+        <div class="addon-sub">Set the tone before they arrive</div>
+        <div class="addon-expand">
+          <div class="addon-hint">Add as an exciting extra ✨</div>
+          <textarea class="addon-textarea" placeholder="e.g. All black only. Come ready to dance."></textarea>
+          <button class="addon-save">Save</button>
+        </div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-emoji">&#127872;</div>
+        <div class="addon-title">Theme</div>
+        <div class="addon-sub">Visual direction for the night</div>
+        <div class="addon-expand">
+          <div class="addon-hint">Add as an exciting extra ✨</div>
+          <textarea class="addon-textarea" placeholder="e.g. 70s disco. Think gold, glitter, and platform shoes."></textarea>
+          <button class="addon-save">Save</button>
+        </div>
+      </div>
+      <div class="addon-card full">
+        <div class="addon-emoji">&#127922;</div>
+        <div class="addon-title">Activities planned</div>
+        <div class="addon-sub">Give guests a sense of what will happen</div>
+        <div class="addon-expand">
+          <div class="addon-hint">Add as an exciting extra ✨</div>
+          <textarea class="addon-textarea" placeholder="e.g. Live DJ 9pm–midnight, vinyl request wall, surprise set at 11."></textarea>
+          <button class="addon-save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IDEAS -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">Ideas for your event</div></div>
+    <div class="ideas-scroll">
+      <div class="idea-chip">
+        <div class="idea-emoji">&#127911;</div>
+        <div class="idea-title">Vinyl request wall</div>
+        <div class="idea-desc">Pin a board at the entrance where guests write their track requests. The DJ works through them across the night.</div>
+      </div>
+      <div class="idea-chip">
+        <div class="idea-emoji">&#127381;</div>
+        <div class="idea-title">String lights</div>
+        <div class="idea-desc">Warm overhead bulb lights transform any rooftop instantly. Rent them for a few hundred rupees.</div>
+      </div>
+      <div class="idea-chip">
+        <div class="idea-emoji">&#127867;</div>
+        <div class="idea-title">Signature drink</div>
+        <div class="idea-desc">Name one cocktail after the event. People order it just to say they did.</div>
+      </div>
+      <div class="idea-chip">
+        <div class="idea-emoji">&#128247;</div>
+        <div class="idea-title">Disposable cameras</div>
+        <div class="idea-desc">Put one on each table. Develop them after. The photos are always better than anything taken on a phone.</div>
+      </div>
+      <div class="idea-chip">
+        <div class="idea-emoji">&#127775;</div>
+        <div class="idea-title">Surprise second DJ</div>
+        <div class="idea-desc">Announce only one act. Midway through, a second DJ takes over unannounced. The crowd loses it every time.</div>
+      </div>
+      <div class="idea-chip">
+        <div class="idea-emoji">&#127878;</div>
+        <div class="idea-title">Midnight cake</div>
+        <div class="idea-desc">At the peak of the night, bring out a cake. No occasion needed. Costs almost nothing, remembered forever.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">Checklist</div></div>
+    <div class="cl-wrap">
+      <div class="cl-head">
+        <div style="font-size:12px;color:#888780;">Event in <strong style="color:#1A1A1A;">17 days</strong></div>
+        <div class="cl-pill">7 / 11 ready</div>
+      </div>
+      <div class="cl-item"><div class="cl-circle cl-done-c">✓</div><div class="cl-text cl-done-t">Event details complete</div></div>
+      <div class="cl-item"><div class="cl-circle cl-done-c">✓</div><div class="cl-text cl-done-t">Published and discoverable</div></div>
+      <div class="cl-item"><div class="cl-circle cl-done-c">✓</div><div class="cl-text cl-done-t">Tickets configured</div></div>
+      <div class="cl-item"><div class="cl-circle cl-done-c">✓</div><div class="cl-text cl-done-t">Cover photo uploaded</div></div>
+      <div class="cl-item"><div class="cl-circle cl-done-c">✓</div><div class="cl-text cl-done-t">Venue confirmed</div></div>
+      <div class="cl-item"><div class="cl-circle cl-open-c"></div><div class="cl-text cl-open-t">DJ still pending</div><div class="cl-act">Review ›</div></div>
+      <div class="cl-item"><div class="cl-circle cl-open-c"></div><div class="cl-text cl-open-t">Catering & photography open</div><div class="cl-act">Find ›</div></div>
+      <div class="cl-item"><div class="cl-circle cl-open-c"></div><div class="cl-text cl-open-t">Min. threshold not reached</div><div class="cl-act">Share ›</div></div>
+      <div class="cl-item"><div class="cl-circle cl-lock-c"></div><div class="cl-text cl-lock-t">Close ticket sales</div></div>
+      <div class="cl-item"><div class="cl-circle cl-lock-c"></div><div class="cl-text cl-lock-t">Send check-in instructions</div></div>
+      <div class="cl-item"><div class="cl-circle cl-lock-c"></div><div class="cl-text cl-lock-t">Go live &amp; admit guests</div></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-btn-wrap">
+    <button class="chat-btn" disabled>
+      <div class="chat-av">&#128172;</div>
+      <div class="chat-info">
+        <div class="chat-name">Co-organiser chat · Priya</div>
+        <div class="chat-preview">"Should we add a signature cocktail?"</div>
+      </div>
+      <div class="chat-badge">2</div>
+    </button>
+  </div>
+
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+<!-- CHAT DRAWER -->
+<div class="drawer" id="chat-drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-head">
+    <div class="drawer-title">Priya &amp; you</div>
+    <button class="drawer-close" disabled>✕</button>
+  </div>
+  <div class="chat-messages">
+    <div class="msg msg-them">
+      <div class="msg-name">Priya</div>
+      <div class="msg-bubble">DJ confirmed kar liya?</div>
+    </div>
+    <div class="msg msg-me">
+      <div class="msg-bubble">Arjun ka application aaya hai — abhi review kar raha hoon</div>
+    </div>
+    <div class="msg msg-them">
+      <div class="msg-name">Priya</div>
+      <div class="msg-bubble">Nice! Should we add a signature cocktail to the listing?</div>
+    </div>
+    <div class="msg msg-me">
+      <div class="msg-bubble">Yes — add-ons mein dikha raha hai, fill kar dete hain</div>
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" placeholder="Message Priya..." />
+    <button class="chat-send">&#8593;</button>
+  </div>
+</div>
+
