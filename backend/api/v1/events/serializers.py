@@ -27,9 +27,21 @@ from apps.events.models import (
     EventPrivateConversation,
     EventPrivateMessage,
     Friendship,
+    EventAddon,
 )
 from apps.tickets.models import Ticket
 from core.utils import resolve_media_url
+
+
+
+class EventAddonSerializer(serializers.ModelSerializer):
+    """Serializer for event add-ons."""
+
+    class Meta:
+        """Meta configuration for EventAddonSerializer."""
+
+        model = EventAddon
+        fields = ["id", "addon_slug", "description", "created_at", "updated_at"]
 
 
 class EventCategorySerializer(serializers.ModelSerializer):
@@ -280,6 +292,7 @@ class EventDetailSerializer(EventListSerializer):
     user_tickets = serializers.SerializerMethodField()
     user_applications = serializers.SerializerMethodField()
     attendees = serializers.SerializerMethodField()
+    addons = EventAddonSerializer(many=True, read_only=True)
 
     class Meta(EventListSerializer.Meta):
         """Meta configuration for EventDetailSerializer."""
@@ -304,6 +317,7 @@ class EventDetailSerializer(EventListSerializer):
             "user_tickets",
             "user_applications",
             "attendees",
+            "addons",
         ]
 
     def get_user_tickets(self, obj):

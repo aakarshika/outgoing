@@ -17,7 +17,7 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
-    path: '/events/:id/workspace',
+    path: '/events/:id/manage',
     componentName: 'EventWorkspace',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
@@ -66,16 +66,11 @@ export const routesConfig: RouteDefinition[] = [
   //   componentName: 'CreateEvent',
   //   roles: [UserRole.USER, UserRole.ADMIN],
   // },
-  {
-    path: '/manage',
-    componentName: 'PlanningWorkspace',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/events/:id/manage/*',
-    componentName: 'PlanningWorkspace',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
+  // {
+  //   path: '/events/:id/manage/*',
+  //   componentName: 'PlanningWorkspace',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
   // {
   //   path: '/events/:id/host-event-management/*',
   //   componentName: 'ManageForHost',

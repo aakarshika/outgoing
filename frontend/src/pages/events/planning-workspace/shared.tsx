@@ -106,39 +106,7 @@ export function WorkspaceCard({
   );
 }
 
-export function getNeedVisuals(need: EventNeed) {
-  const source = `${need.category} ${need.title}`.toLowerCase();
-  if (source.includes('photo')) {
-    return {
-      icon: '📷',
-      iconBg: '#E6F1FB',
-      accent: '#378ADD',
-    };
-  }
-  if (source.includes('music') || source.includes('dj')) {
-    return {
-      icon: '🎧',
-      iconBg: '#EAF3DE',
-      accent: '#1D9E75',
-    };
-  }
-  if (
-    source.includes('speaker') ||
-    source.includes('audio') ||
-    source.includes('sound')
-  ) {
-    return {
-      icon: '🔊',
-      iconBg: '#FAEEDA',
-      accent: '#EF9F27',
-    };
-  }
-  return {
-    icon: '🧩',
-    iconBg: '#F1EFE8',
-    accent: '#534AB7',
-  };
-}
+
 
 export function getNeedPresentation(need: EventNeed) {
   const acceptedApplication = need.applications.find(

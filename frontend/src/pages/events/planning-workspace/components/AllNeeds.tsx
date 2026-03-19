@@ -1,10 +1,12 @@
 import { Box, Typography } from '@mui/material';
 
 import type { EventNeed } from '@/types/needs';
-import { getNeedPresentation, getNeedVisuals } from '../shared';
+import { getCategoryVisuals } from '@/constants/categories';
+import { getNeedPresentation } from '../shared';
 
 type AllNeedsProps = {
   eventNeeds: EventNeed[];
+  onEditNeed: (needId: number | null) => void;
 };
 
 function formatNeedBudget(need: EventNeed) {
@@ -13,10 +15,10 @@ function formatNeedBudget(need: EventNeed) {
   return need.budget_min || need.budget_max || '—';
 }
 
-export function AllNeeds({ eventNeeds }: AllNeedsProps) {
+export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
   return (
-    <Box sx={{ mx: 2.1, mt: 1.5 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+    <Box sx={{ mx: 1.75, mt: 1.75 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.25 }}>
         <Typography
           sx={{
             fontSize: 10,
@@ -24,34 +26,54 @@ export function AllNeeds({ eventNeeds }: AllNeedsProps) {
             textTransform: 'uppercase',
             letterSpacing: '0.09em',
             color: '#888780',
+            pl: 0.25,
           }}
         >
           All needs
         </Typography>
-        <Typography sx={{ fontSize: 12, color: '#D85A30', fontWeight: 500 }}>+ Add</Typography>
+        <Typography
+          onClick={() => onEditNeed(null)}
+          sx={{ fontSize: 12, color: '#D85A30', fontWeight: 500, cursor: 'pointer' }}
+        >
+          + Add need
+        </Typography>
       </Box>
 
-      <Box sx={{ background: '#fff', borderRadius: '14px', px: 1.5, py: 1.1 }}>
+      <Box sx={{ background: '#fff', borderRadius: '14px', px: 1.75, py: 1.5, border: '0.5px solid #F0EDE8' }}>
         {eventNeeds.length === 0 ? (
-          <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary)', py: 1.5 }}>No needs added yet.</Typography>
+          <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary)', py: 1.5 }}>
+            No needs added yet.
+          </Typography>
         ) : (
           eventNeeds.map((need, index) => {
-            const visuals = getNeedVisuals(need);
+            const visuals = getCategoryVisuals(need.category);
             const presentation = getNeedPresentation(need);
             return (
               <Box
                 key={need.id}
+                onClick={() => onEditNeed(need.id)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.1,
-                  py: 1,
+                  gap: 1.25,
+                  py: 1.15,
+                  cursor: 'pointer',
                   borderTop: index === 0 ? 'none' : '0.5px solid #F0EDE8',
+                  '&:hover': {
+                    '& .need-title': { color: '#D85A30' },
+                  },
                 }}
               >
-                <Box sx={{ fontSize: 15, width: 22, textAlign: 'center', flexShrink: 0 }}>{visuals.icon}</Box>
-                <Typography sx={{ fontSize: 13, color: '#1A1A1A', flex: 1, fontWeight: 500 }}>{need.title}</Typography>
-                <Typography sx={{ fontSize: 11, color: '#888780', mr: 0.5, whiteSpace: 'nowrap' }}>
+                <Box sx={{ fontSize: 15, width: 24, textAlign: 'center', flexShrink: 0 }}>
+                  {visuals.icon}
+                </Box>
+                <Typography
+                  className="need-title"
+                  sx={{ fontSize: 13, color: '#1A1A1A', flex: 1, fontWeight: 500, transition: 'color 0.2s' }}
+                >
+                  {need.title}
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: '#888780', mr: 0.75, whiteSpace: 'nowrap' }}>
                   {formatNeedBudget(need)}
                 </Typography>
                 <Box

@@ -16,6 +16,14 @@ export interface EventHost {
   avatar: string | null;
 }
 
+export interface EventAddon {
+  id: number;
+  addon_slug: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EventMedia {
   id: number;
   media_type: 'image' | 'video';
@@ -125,6 +133,7 @@ export interface EventDetail extends EventListItem {
   user_tickets?: TicketInfo[];
   user_applications?: VendorApplicationInfo[];
   attendees?: AttendeeInfo[];
+  addons?: EventAddon[];
 }
 
 export type EventLifecycleState =

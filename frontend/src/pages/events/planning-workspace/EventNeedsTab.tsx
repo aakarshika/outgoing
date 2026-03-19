@@ -2,8 +2,9 @@ import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { MessageCircle } from 'lucide-react';
 
 import type { EventNeed, NeedApplication } from '@/types/needs';
+import { getCategoryVisuals } from '@/constants/categories';
 
-import { getNeedPresentation, getNeedVisuals, WorkspaceCard } from './shared';
+import { getNeedPresentation, WorkspaceCard } from './shared';
 
 type EventNeedsTabProps = {
   assignedVendors: NeedApplication[];
@@ -105,7 +106,7 @@ export function EventNeedsTab({
 
           {eventNeeds.map((need) => {
             const presentation = getNeedPresentation(need);
-            const visuals = getNeedVisuals(need);
+            const visuals = getCategoryVisuals(need.category);
             const isExpanded = expandedNeedId === need.id;
             const acceptedApplications = (need.applications || []).filter(
               (application) => application.status === 'accepted',

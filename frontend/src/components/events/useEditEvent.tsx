@@ -40,6 +40,8 @@ import {
 import { EventFeature } from '@/pages/events/manage/ManageDetailsSection';
 import { QuickCreateAction, QuickEditEventSubmitPayload } from './QuickEditEvent';
 import { useCategories } from '@/features/events/hooks';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { TICKET_COLORS } from '@/features/events/constants';
 
 function toLocalDateTimeValue(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -95,6 +97,8 @@ export function useEditEvent({
   isSubmitting: boolean;
   isCreate?: boolean;
 }) {
+  const categoryTheme = getCategoryTheme(event?.category ?? undefined);
+
 
   const { data: categories } = useCategories();
   const coverInputRef = useRef<HTMLInputElement | null>(null);
@@ -166,6 +170,8 @@ export function useEditEvent({
       },
     },
   } as const;
+
+
 
   const primaryTier = ticketTiers[0] || buildPrimaryTicketTier();
   const normalizedDurationHours = Math.max(0.25, Number(durationHours) || 2);
@@ -1456,7 +1462,7 @@ export function useEditEvent({
             overflow: 'hidden',
             border: '1px solid rgba(143, 105, 66, 0.18)',
             background:
-              'linear-gradient(135deg, rgba(216, 90, 48, 0.08) 0%, rgba(255,255,255,1) 36%, rgba(246, 239, 255, 1) 100%)',
+              `linear-gradient(135deg, rgba(216, 90, 48, 0.08) 0%, rgba(255,255,255,1) 36%, ${TICKET_COLORS[0].light} 100%)`,
           }}
         >
           <Box sx={{ display: 'flex', minHeight: 168 }}>
@@ -1464,7 +1470,7 @@ export function useEditEvent({
               sx={{
                 width: 108,
                 flexShrink: 0,
-                bgcolor: '#D85A30',
+                bgcolor: TICKET_COLORS[0].dark,
                 color: '#fff',
                 position: 'relative',
                 display: 'flex',
@@ -1513,9 +1519,10 @@ export function useEditEvent({
                   opacity: 0.75,
                   writingMode: 'vertical-rl',
                   transform: 'rotate(180deg)',
+                  mb: 1,
                 }}
               >
-                Admit
+                Admits {resolvedPrimaryTier.admits || 1}
               </Typography>
               <Typography
                 sx={{

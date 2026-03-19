@@ -789,3 +789,22 @@ class EventPrivateMessage(models.Model):
 
     def __str__(self):
         return f"Direct message by {self.sender.username}"
+
+class EventAddon(models.Model):
+    """Stores descriptions for event add-ons."""
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="addons")
+    addon_slug = models.SlugField(max_length=100)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Meta configuration for EventAddon."""
+
+        unique_together = ["event", "addon_slug"]
+        ordering = ["created_at"]
+
+    def __str__(self):
+        """String representation of the EventAddon."""
+        return f"{self.addon_slug} for {self.event.title}"

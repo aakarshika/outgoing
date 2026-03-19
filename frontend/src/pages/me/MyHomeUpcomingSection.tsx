@@ -1,5 +1,5 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { BaseFeedEventItem } from '@/types/events';
@@ -57,12 +57,12 @@ export function MyHomeUpcomingSection({
   const upcomingEventsDetails = upcomingEvents.map((event) => {
 
 
-  let role: 'hosting' | 'attending' | 'vendor' | 'unknown' = 'unknown';
-  if (event.i_am_host) role = 'hosting'; 
-  else if (event.user_is_vendor) role = 'vendor';
-  else if (event.user_is_interested) role = 'attending';
-  else if (event.user_has_ticket) role = 'attending';
-  else role = 'unknown';
+    let role: 'hosting' | 'attending' | 'vendor' | 'unknown' = 'unknown';
+    if (event.i_am_host) role = 'hosting';
+    else if (event.user_is_vendor) role = 'vendor';
+    else if (event.user_is_interested) role = 'attending';
+    else if (event.user_has_ticket) role = 'attending';
+    else role = 'unknown';
     return {
       ...event,
       pill: getRoleStyle(role),
@@ -77,6 +77,7 @@ export function MyHomeUpcomingSection({
   const nextEventCountdown = getCountdownParts(nextEvent ? nextEvent.start_time : null);
   const categoryTheme = getCategoryTheme(nextEvent.category ?? undefined);
 
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -95,9 +96,10 @@ export function MyHomeUpcomingSection({
             gap: 2,
           }}
         >
-{/* first of the upcoming events. */}
+          {/* first of the upcoming events. */}
 
           <Box
+            onClick={() => navigate('/events-new/' + nextEvent.id)}
             sx={{
               position: 'relative',
               borderRadius: '28px',
@@ -195,7 +197,7 @@ export function MyHomeUpcomingSection({
                     <Typography
                       sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
                     >
-                      {nextEvent.subtitle} 
+                      {nextEvent.subtitle}
                     </Typography>
                     <Typography
                       sx={{ fontSize: 14, color: 'rgba(255,255,255,0.60)' }}
@@ -239,7 +241,7 @@ export function MyHomeUpcomingSection({
               </Stack>
             </Stack>
           </Box>
-{/* rest of the upcoming events. */}
+          {/* rest of the upcoming events. */}
           <Stack spacing={1.4}>
             {upcomingEventsDetails.slice(1).map((event) => {
               const eventTheme = getCategoryTheme(event.category ?? undefined);
@@ -317,23 +319,23 @@ export function MyHomeUpcomingSection({
                   </Box>
 
                   <Chip
-                      label={event.pill.label}
-                      sx={{
-                        position: 'absolute',
-                        left: -2,
-                        bottom: -3,
-                        zIndex: 2,
-                        color: event.i_am_host ? '#fff' : event.user_is_vendor ? '#fff' : event.pill?.color,
-                        lineHeight: 1,
-                        bgcolor: event.i_am_host ? '#8b5cf6' : event.user_is_vendor ?  '#0eacac' : event.pill.background,
-                        p: 0 ,
-                        borderRadius: '2px',
-                        fontFamily: 'serif',
-                        fontSize: '0.7rem',
-                        m: 0,
-                        padding: 0,
-                      }}
-                    />
+                    label={event.pill.label}
+                    sx={{
+                      position: 'absolute',
+                      left: -2,
+                      bottom: -3,
+                      zIndex: 2,
+                      color: event.i_am_host ? '#fff' : event.user_is_vendor ? '#fff' : event.pill?.color,
+                      lineHeight: 1,
+                      bgcolor: event.i_am_host ? '#8b5cf6' : event.user_is_vendor ? '#0eacac' : event.pill.background,
+                      p: 0,
+                      borderRadius: '2px',
+                      fontFamily: 'serif',
+                      fontSize: '0.7rem',
+                      m: 0,
+                      padding: 0,
+                    }}
+                  />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack
                       direction="row"

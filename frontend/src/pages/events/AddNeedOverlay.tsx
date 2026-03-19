@@ -12,7 +12,7 @@ import { ArrowLeft } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getCategoryLabel, VENDOR_CATEGORIES } from '@/constants/categories';
+import { getCategoryLabel, VENDOR_CATEGORIES, allVendorCategoryOptions } from '@/constants/categories';
 
 import type { EventNeed } from '@/types/needs';
 import {
@@ -615,12 +615,6 @@ const compensationDesignOptions = [
     },
 ] as const;
 
-const allVendorCategoryOptions = VENDOR_CATEGORIES.flatMap((group) =>
-    group.items.map((item) => ({
-        ...item,
-        group: (group as any).group || '',
-    })),
-);
 
 
 export function EventDetailsOverlay({

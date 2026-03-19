@@ -9,7 +9,7 @@ type PendingApplicationWithNeed = {
   application: NeedApplication;
 };
 
-type AttendingListProps = {
+type AttentionListProps = {
   pendingApplicationsWithNeed: PendingApplicationWithNeed[];
   pendingAppsCount: number;
   pendingAppsIcon: string;
@@ -22,7 +22,7 @@ type AttendingListProps = {
   attention3Sub: string;
 };
 
-export function AttendingList({
+export function AttentionList({
   pendingApplicationsWithNeed,
   pendingAppsCount,
   pendingAppsIcon,
@@ -33,7 +33,7 @@ export function AttendingList({
   showChecklistAttention3,
   attention3Title,
   attention3Sub,
-}: AttendingListProps) {
+}: AttentionListProps) {
   const reviewNeedApplicationMutation = useReviewNeedApplication();
   const [showPendingApps, setShowPendingApps] = useState(false);
   const [showAllPendingApps, setShowAllPendingApps] = useState(false);
@@ -64,24 +64,34 @@ export function AttendingList({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1.25,
-            px: 1.7,
-            py: 1.2,
+            gap: 1.5,
+            px: 1.75,
+            py: 1.6,
             borderBottom: '0.5px solid #F0EDE8',
             cursor: pendingAppsCount === 0 ? 'default' : 'pointer',
           }}
         >
-          <Box sx={{ width: 7, height: 7, borderRadius: '50%', background: '#E24B4A', flexShrink: 0 }} />
-          <Typography sx={{ fontSize: 17, flexShrink: 0 }}>{pendingAppsIcon}</Typography>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#E24B4A',
+              flexShrink: 0,
+            }}
+          />
+          <Typography sx={{ fontSize: 18, flexShrink: 0 }}>{pendingAppsIcon}</Typography>
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1A1A1A' }}>{attentionAppTitle}</Typography>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>
+              {attentionAppTitle}
+            </Typography>
             <Typography
               sx={{
-                fontSize: 11,
+                fontSize: 12,
                 color: '#888780',
-                mt: 0.2,
+                mt: 0.1,
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 1,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
               }}
@@ -89,30 +99,44 @@ export function AttendingList({
               {attentionAppSub}
             </Typography>
           </Box>
-          <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}>Review ›</Typography>
+          <Typography
+            sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}
+          >
+            Review ›
+          </Typography>
         </Box>
 
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1.25,
-            px: 1.7,
-            py: 1.2,
-            borderBottom: '0.5px solid #F0EDE8',
+            gap: 1.5,
+            px: 1.75,
+            py: 1.6,
+            borderBottom: showChecklistAttention3 ? '0.5px solid #F0EDE8' : 'none',
           }}
         >
-          <Box sx={{ width: 7, height: 7, borderRadius: '50%', background: '#EF9F27', flexShrink: 0 }} />
-          <Typography sx={{ fontSize: 17, flexShrink: 0 }}>🧰</Typography>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#EF9F27',
+              flexShrink: 0,
+            }}
+          />
+          <Typography sx={{ fontSize: 18, flexShrink: 0 }}>🧰</Typography>
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1A1A1A' }}>{attention2Title}</Typography>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>
+              {attention2Title}
+            </Typography>
             <Typography
               sx={{
-                fontSize: 11,
+                fontSize: 12,
                 color: '#888780',
-                mt: 0.2,
+                mt: 0.1,
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 1,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
               }}
@@ -120,7 +144,11 @@ export function AttendingList({
               {attention2Sub}
             </Typography>
           </Box>
-          <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}>Find ›</Typography>
+          <Typography
+            sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}
+          >
+            Find ›
+          </Typography>
         </Box>
 
         {showChecklistAttention3 ? (
@@ -128,31 +156,32 @@ export function AttendingList({
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 1.25,
-              px: 1.7,
-              py: 1.2,
-              borderBottom: 'none',
+              gap: 1.5,
+              px: 1.75,
+              py: 1.6,
             }}
           >
             <Box
               sx={{
-                width: 7,
-                height: 7,
+                width: 8,
+                height: 8,
                 borderRadius: '50%',
                 background: '#EF9F27',
                 flexShrink: 0,
               }}
             />
-            <Typography sx={{ fontSize: 17, flexShrink: 0 }}>📣</Typography>
+            <Typography sx={{ fontSize: 18, flexShrink: 0 }}>📣</Typography>
             <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1A1A1A' }}>{attention3Title}</Typography>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>
+                {attention3Title}
+              </Typography>
               <Typography
                 sx={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: '#888780',
-                  mt: 0.2,
+                  mt: 0.1,
                   display: '-webkit-box',
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 1,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                 }}
@@ -160,7 +189,11 @@ export function AttendingList({
                 {attention3Sub}
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}>Share ›</Typography>
+            <Typography
+              sx={{ fontSize: 12, fontWeight: 500, color: '#D85A30', whiteSpace: 'nowrap' }}
+            >
+              Share ›
+            </Typography>
           </Box>
         ) : null}
 
