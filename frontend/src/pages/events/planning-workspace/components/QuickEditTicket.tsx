@@ -343,35 +343,21 @@ export function QuickEditTicket({
                 {name}
               </Typography>
 
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2}>
-                <TextField
-                  label="People allowed per ticket"
-                  type="number"
-                  value={String(admits ?? '1')}
-                  onChange={(event) =>
-                    setAdmits(event.target.value || '1')
-                  }
-                  fullWidth
-                  sx={fieldSx}
-                />
-                <TextField
-                  label="Minimum goers to hold event"
-                  type="number"
-                  // value={minimumParticipants}
-                  // onChange={(event) =>
-                  //   setMinimumParticipants(event.target.value || '10')
-                  // }
-                  fullWidth
-                  sx={fieldSx}
-                />
-              </Stack>
+              <TextField
+                label="People allowed per ticket"
+                type="number"
+                value={String(admits ?? '1')}
+                onChange={(event) => setAdmits(event.target.value || '1')}
+                fullWidth
+                sx={fieldSx}
+              />
 
               <Typography
                 sx={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(66, 50, 28, 0.72)' }}
               >
-                {`${admits || 1} person allowed per ticket. Event will happen if at least 
-                ${10} 
-                participants come.`}
+                {Number(admits) === 1
+                  ? '1 person admitted per ticket.'
+                  : `${admits || 1} people admitted per ticket.`}
               </Typography>
             </Box>
           </Box>

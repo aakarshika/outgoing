@@ -114,6 +114,7 @@ export interface EventSeriesDetail extends EventSeries {
 }
 
 export interface EventDetail extends EventListItem {
+  category: EventCategory | null;
   description: string;
   location_address: string;
   event_ready_message: string;
@@ -173,6 +174,7 @@ export interface VendorApplicationInfo {
 }
 
 export interface TicketInfo {
+  tier_id: number;
   id: number;
   name: string;
   description: string;
@@ -233,6 +235,7 @@ export interface BaseFeedParams {
   sort?: BaseFeedSort;
   online?: boolean;
   status?: string | string[];
+  include_host_drafts?: boolean;
   start_time_gte?: string;
   start_time_lte?: string;
   category?: string;
@@ -301,9 +304,9 @@ export interface BaseFeedNeed {
 export interface BaseFeedEventItem {
   id: number;
   title: string;
-  subtitle : string;
-  day : string;
-  month : string;
+  subtitle: string;
+  day: string;
+  month: string;
   slug: string;
   category: EventCategory | null;
   location_name: string;

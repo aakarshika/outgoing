@@ -123,7 +123,9 @@ export const resolveCategorySlug = (category?: {
   return category?.slug || '';
 };
 
-export const getCategoryTheme = (category?: any) => CATEGORY_THEMES[resolveCategorySlug(category)] || DEFAULT_CATEGORY_THEME;
+export const getCategoryTheme = (category?: any) => {
+  return CATEGORY_THEMES[resolveCategorySlug(category)];
+}
 
 export type EventCategory = {
   slug?: string | null;

@@ -1,14 +1,18 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { MapPin } from 'lucide-react';
-import React from 'react';
+import { MapPin, Heart, ChevronLeft, Pencil } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import type { BaseFeedEventItem } from '@/types/events';
+import { useAuth } from '@/features/auth/hooks';
+import { useToggleInterest } from '@/features/events/hooks';
 
 import { EventNeedsStack } from './EventNeedsStack';
 
-export type EventCardEvent = BaseFeedEventItem ;
+export type EventCardEvent = BaseFeedEventItem;
 
 interface UseEventCardsOptions {
   event: EventCardEvent;
@@ -27,6 +31,111 @@ export function useEventCards({
   imageWidth,
   layout = 'stacked',
 }: UseEventCardsOptions) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const toggleInterest = useToggleInterest();
+  const [isSaved, setIsSaved] = useState(event.user_is_interested || event.i_have_saved || false);
+
+  useEffect(() => {
+    setIsSaved(event.user_is_interested || event.i_have_saved || false);
+  }, [event.user_is_interested, event.i_have_saved]);
+
+  const handleToggleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const nextState = !isSaved;
+    setIsSaved(nextState);
+
+    try {
+      await toggleInterest.mutateAsync({
+        eventId: event.id,
+        isInterested: nextState,
+      });
+    } catch (err) {
+      setIsSaved(!nextState);
+    }
+  };
+
+  const HeartButton = () => (
+    <Box
+      onClick={handleToggleSave}
+      sx={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        zIndex: 10,
+        cursor: 'pointer',
+      }}
+    >
+      <motion.div
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.85 }}
+        animate={{
+          scale: isSaved ? [1, 1.4, 1] : 1,
+        }}
+        transition={{ duration: 0.4 }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          borderRadius: '12px',
+          background: isSaved ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          boxShadow: isSaved ? '0 8px 16px rgba(216, 90, 48, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+          border: isSaved
+            ? '1px solid rgba(216, 90, 48, 0.2)'
+            : '1px solid rgba(255, 255, 255, 0.5)',
+        }}
+      >
+        <Heart
+          size={20}
+          fill={isSaved ? '#D85A30' : 'transparent'}
+          color={isSaved ? '#D85A30' : '#D85A30'}
+          strokeWidth={isSaved ? 0 : 2}
+          style={{ transition: 'all 0.3s ease' }}
+        />
+
+        <AnimatePresence>
+          {isSaved && (
+            <Box sx={{ position: 'absolute', inset: 0 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 1, scale: 0.5, x: 0, y: 0 }}
+                  animate={{
+                    opacity: 0,
+                    scale: 1,
+                    x: (i % 2 === 0 ? 1 : -1) * (20 + Math.random() * 20),
+                    y: -(20 + Math.random() * 20),
+                    rotate: i % 2 === 0 ? 20 : -20,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    top: '25%',
+                    left: '25%',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <Heart size={10} fill="#D85A30" color="transparent" />
+                </motion.div>
+              ))}
+            </Box>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </Box>
+  );
+
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
   const isLandscape = layout === 'landscape';
   const resolvedImageWidth = imageWidth ?? imageHeight;
@@ -90,18 +199,18 @@ export function useEventCards({
             position: 'absolute',
             ...(isLandscape
               ? {
-                  top: '14%',
-                  right: -16,
-                  width: 18,
-                  height: '72%',
-                }
+                top: '14%',
+                right: -16,
+                width: 18,
+                height: '72%',
+              }
               : {
-                  left: '50%',
-                  bottom: -16,
-                  transform: 'translateX(-50%)',
-                  width: '72%',
-                  height: 18,
-                }),
+                left: '50%',
+                bottom: -16,
+                transform: 'translateX(-50%)',
+                width: '72%',
+                height: 18,
+              }),
             borderRadius: '999px',
             background: 'rgba(43, 33, 24, 0.18)',
             filter: `blur(${imageHeight / 10}px)`,
@@ -132,18 +241,18 @@ export function useEventCards({
                 position: 'absolute',
                 ...(isLandscape
                   ? {
-                      top: '12%',
-                      right: -12,
-                      width: 20,
-                      height: '76%',
-                    }
+                    top: '12%',
+                    right: -12,
+                    width: 20,
+                    height: '76%',
+                  }
                   : {
-                      left: '50%',
-                      bottom: -14,
-                      transform: 'translateX(-50%)',
-                      width: '85%',
-                      height: 20,
-                    }),
+                    left: '50%',
+                    bottom: -14,
+                    transform: 'translateX(-50%)',
+                    width: '85%',
+                    height: 20,
+                  }),
                 borderRadius: '999px',
                 background: 'rgba(41, 30, 21, 0.2)',
                 filter: 'blur(8px)',
@@ -171,6 +280,52 @@ export function useEventCards({
         ) : null}
       </Box>
     </>
+  );
+
+  const DateAndLocationRow = () => (
+    <Stack
+      spacing={1}
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
+      sx={{
+        minHeight: 0,
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 20,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          color: 'rgba(66, 50, 28, 0.56)',
+        }}
+      >
+        {dayLabel}
+      </Typography>
+      <Typography
+        component="span"
+        sx={{
+          flexShrink: 0,
+          fontSize: 12,
+          color: 'rgba(66, 50, 28, 0.68)',
+          fontWeight: 500,
+        }}
+      >
+        {monthLabel}
+      </Typography>
+
+      <Typography
+        component="span"
+        sx={{
+          flexShrink: 0,
+          fontSize: 12,
+          color: 'rgba(66, 50, 28, 0.68)',
+          fontWeight: 500,
+        }}
+      >
+        {timeLabel}
+      </Typography>
+    </Stack>
   );
 
   const DateAndLocation = () => (
@@ -248,7 +403,7 @@ export function useEventCards({
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         // backgroundColor: categoryTheme.tape,
-        color: categoryTheme.accent,
+        color: categoryTheme?.accent??'#121212',
         borderRadius: '40px',
       }}
     >
@@ -256,35 +411,86 @@ export function useEventCards({
     </Typography>
   );
 
-  const LocationStuff = () => (
-    <>
-      <MapPin size={12} color="rgba(66, 50, 28, 0.68)" />
+ // useEventCards.tsx — fix LocationStuff
+const LocationStuff = () => (
+  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0, overflow: 'hidden' }}>
+    <MapPin size={12} color="rgba(66, 50, 28, 0.68)" style={{ flexShrink: 0 }} />
+    <Typography
+      component="span"
+      sx={{
+        fontSize: 12,
+        color: 'rgba(66, 50, 28, 0.68)',
+        fontWeight: 500,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        minWidth: 0,
+        flex: 1,
+      }}
+    >
+      {subtitle}
+    </Typography>
+  </Stack>
+);
+
+  const LifecycleStatus = () => {
+    return event.lifecycle_state === 'draft' ? (
       <Box
         sx={{
-          mt: 0.5,
           display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          minWidth: 0,
+          px: 1,
+          py: 0.55,
+          borderRadius: '4px',
+          background: 'rgba(255, 246, 224, 0.8)',
+          color: '#666',
+          fontWeight: 500,
         }}
       >
-        <Typography
-          component="span"
+        {event.lifecycle_state}
+      </Box>
+      ) : event.lifecycle_state === 'published' ? (
+        <Box
           sx={{
-            minWidth: 0,
-            flex: 1,
-            fontSize: 12,
-            color: 'rgba(66, 50, 28, 0.68)',
-            fontWeight: 500,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            display: 'flex',
+            px: 1,
+            py: 0.55,
+            borderRadius: '4px',
+            background:'rgba(216, 87, 0, 0.8)',
+            color: '#ffffff',
+            backdropFilter: 'blur(8px)',
           }}
         >
-          {subtitle}
-        </Typography>
-      </Box>
-    </>
+          Collecting Tickets
+        </Box>
+      )  : event.lifecycle_state === 'completed' ? (
+        <Box
+          sx={{
+            display: 'flex',
+            px: 1,
+            py: 0.55,
+            borderRadius: '4px',
+            background:'rgba(255, 255, 255, 0.8)',
+            color: '#aaaaaa',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          Completed
+        </Box>
+      ) : <></>
+  }
+
+  const ManageButton = () => (
+
+    <Typography
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate(`/events/${event.id}/manage`);
+    }}
+    sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 12, color: '#D85A30', fontWeight: 500, cursor: 'pointer' }}
+  >
+    Manage <Pencil size={14} style={{ paddingTop: 1, marginLeft: 2 }} />
+  </Typography>
   );
 
   const Going = () => (
@@ -297,7 +503,7 @@ export function useEventCards({
             height: 18,
             fontSize: 8,
             fontWeight: 700,
-            bgcolor: categoryTheme.accent,
+            bgcolor:categoryTheme?.accent??'#121212',
             color: '#fff',
           }}
         >
@@ -501,7 +707,7 @@ export function useEventCards({
       pl: isLandscape ? `calc(${resolvedImageWidth}px + 8px)` : 1,
       zIndex: 1,
       borderRadius: '22px',
-      borderLeft: `3px solid ${categoryTheme.accent}`,
+      borderLeft: `3px solid ${categoryTheme?.accent??'#121212'}`,
       minWidth: 0,
     },
     ...(Array.isArray(extra) ? extra : extra ? [extra] : []),
@@ -517,9 +723,14 @@ export function useEventCards({
     Needs,
     Description,
     isFree,
+    ManageButton,
     weekdayLabel,
     timeLabel,
+    DateAndLocationRow,
+    LifecycleStatus,
     getCardSx,
     getContentSx,
+    HeartButton,
+    isSaved,
   };
 }

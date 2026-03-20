@@ -12,7 +12,9 @@ type ServicesContextValue = {
   getMatchingService: (category?: string | null) => VendorService | null;
   hasMatchingService: (category?: string | null) => boolean;
   openQuickCreateService: (category?: string) => void;
+  openEditService: (service: VendorService) => void;
   closeQuickCreateService: () => void;
+  editingService: VendorService | null;
 };
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
@@ -25,6 +27,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const services = useMemo(() => myServicesResponse?.data || [], [myServicesResponse]);
   const [isQuickCreateServiceOpen, setIsQuickCreateServiceOpen] = useState(false);
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
+  const [editingService, setEditingService] = useState<VendorService | null>(null);
 
   const getMatchingService = useCallback(
     (category?: string | null) =>
@@ -39,12 +42,20 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const openQuickCreateService = useCallback((category?: string) => {
     setQuickCreateServiceCategory(category || '');
+    setEditingService(null);
+    setIsQuickCreateServiceOpen(true);
+  }, []);
+
+  const openEditService = useCallback((service: VendorService) => {
+    setEditingService(service);
+    setQuickCreateServiceCategory(service.category || '');
     setIsQuickCreateServiceOpen(true);
   }, []);
 
   const closeQuickCreateService = useCallback(() => {
     setIsQuickCreateServiceOpen(false);
     setQuickCreateServiceCategory('');
+    setEditingService(null);
   }, []);
 
   const value = useMemo(
@@ -54,7 +65,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       getMatchingService,
       hasMatchingService,
       openQuickCreateService,
+      openEditService,
       closeQuickCreateService,
+      editingService,
     }),
     [
       services,
@@ -62,7 +75,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       getMatchingService,
       hasMatchingService,
       openQuickCreateService,
+      openEditService,
       closeQuickCreateService,
+      editingService,
     ],
   );
 
@@ -71,6 +86,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       {children}
       <QuickCreateServiceDialog
         open={isQuickCreateServiceOpen}
+        service={editingService}
         defaultCategory={quickCreateServiceCategory}
         onClose={closeQuickCreateService}
       />

@@ -188,7 +188,15 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
       {capabilities.showTicketPurchase && (!hasPurchased || showStubs) && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {tiers.map((tier: any, idx: number) => {
-            const isSoldOut = tier.sold_out || tier.capacity <= (tier.sold_count || 0);
+            const soldCount = tier.sold_count || 0;
+            const rawTierCapacity = tier.capacity;
+            // Treat missing/0 tier capacity as "infinite" (no cap).
+            const isInfiniteTier = rawTierCapacity == null || Number(rawTierCapacity) <= 0;
+
+            const tierCapacity = isInfiniteTier ? null : Number(rawTierCapacity);
+            const isSoldOut = isInfiniteTier
+              ? false
+              : Boolean(tier.sold_out) || (tierCapacity ?? 0) <= soldCount;
             const price =
               tier.price === 0 || tier.price === '0' || tier.price === 'Free'
                 ? 'Free'
@@ -196,7 +204,7 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
             const isFree = price === 'Free';
             const { bg, icon } = getTierColors(idx);
             const currentQty = quantities[tier.id] || 0;
-            const leftCount = tier.capacity - (tier.sold_count || 0);
+            const leftCount = tierCapacity != null ? Math.max(tierCapacity - soldCount, 0) : null;
 
             return (
               <Box
@@ -262,7 +270,7 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
                         fontWeight: 400,
                       }}
                     >
-                      {isSoldOut ? 'Sold out' : `${leftCount} left`}
+                      {isSoldOut ? 'Sold out' : isInfiniteTier ? 'Unlimited' : `${leftCount} left`}
                     </Typography>
                     {tier.sales_end_date && (
                       <>
@@ -311,9 +319,13 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
                     <Stepper
                       value={currentQty}
                       onIncrement={() =>
-                        handleUpdateQty(tier.id, 1, Math.min(leftCount, 10))
+                        handleUpdateQty(
+                          tier.id,
+                          1,
+                          isInfiniteTier ? 999 : Math.min(leftCount ?? 0, 10),
+                        )
                       }
-                      onDecrement={() => handleUpdateQty(tier.id, -1, 10)}
+                      onDecrement={() => handleUpdateQty(tier.id, -1, isInfiniteTier ? 999 : 10)}
                     />
                   </Box>
                 )}

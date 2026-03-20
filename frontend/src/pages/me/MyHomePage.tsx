@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { useBaseFeed } from '@/features/events/hooks';
 import { ProfileService } from '@/pages/profile/Profile.service';
 import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
+import { useEventOverviewRows } from '@/features/events/hooks';
 import {
   getStoredSearchLocation,
   inferCityFromLocationLabel,
@@ -238,15 +239,16 @@ export default function MyHomePage() {
     }),
     [nowIso],
   );
-  const upcomingFeedParams = useMemo<BaseFeedParams>(
-    () => ({
-      sort: 'start_time',
-      status: ['published', 'event_ready', 'live'],
-      start_time_gte: nowIso,
-      page_size: 6,
-    }),
-    [nowIso],
-  );
+  // Replaced by useEventOverviewRows for personalized upcoming section
+  // const upcomingFeedParams = useMemo<BaseFeedParams>(
+  //   () => ({
+  //     sort: 'start_time',
+  //     status: ['published', 'event_ready', 'live'],
+  //     start_time_gte: nowIso,
+  //     page_size: 6,
+  //   }),
+  //   [nowIso],
+  // );
   const chipInFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: 'popularity',
@@ -259,7 +261,7 @@ export default function MyHomePage() {
   );
   const { data: trendingResponse } = useBaseFeed(trendingFeedParams);
   const { data: recommendedResponse } = useBaseFeed(recommendedFeedParams);
-  const { data: upcomingResponse } = useBaseFeed(upcomingFeedParams);
+  const { data: eventOverviewResponse } = useEventOverviewRows(isAuthenticated);
   const { data: chipInResponse } = useBaseFeed(chipInFeedParams);
   const allTrendingSearchHref = useMemo(() => {
     const params = new URLSearchParams({ tab: 'trending' });
@@ -304,14 +306,52 @@ export default function MyHomePage() {
       trendingResponse,
     ],
   );
-  const upcomingEvents = useMemo(
-    () =>
-      ((upcomingResponse?.data || []) as BaseFeedEventItem[])
-        .map(mapBaseFeedItemForCard)
-        .filter(isCurrentOrUpcomingEvent)
-        .slice(0, 3),
-    [upcomingResponse],
-  );
+  const upcomingEvents = useMemo(() => {
+    if (!eventOverviewResponse || !user) return [];
+
+    const userId = user.id;
+    const now = Date.now();
+
+    const personalEventsMap = new Map<number, BaseFeedEventItem>();
+
+    for (const row of eventOverviewResponse) {
+      // Logic borrowed from EventSpecialPage.tsx
+      if (['completed', 'cancelled'].includes(row.event_lifecycle_state)) continue;
+
+      const detail = row.event_details;
+      if (!detail) continue;
+
+      const isHost = row.host_user_id === userId;
+      const isVendor =
+        row.need_applied_to_user_id === userId ||
+        row.need_application_requested_by_host_vendor_user_id === userId ||
+        row.need_assigned_user_id === userId;
+      const isAttendee = row.attendee_user_id === userId && row.ticket_status !== 'cancelled';
+
+      if (isHost || isVendor || isAttendee) {
+        const item: BaseFeedEventItem = {
+          ...detail,
+          event: detail,
+          i_am_host: isHost,
+          user_is_vendor: isVendor, // Corrected from event_details.user_is_vendor for more accuracy from view
+          user_has_ticket: isAttendee,
+          // user_is_interested: detail.user_is_interested, // keep current
+          needs: detail.participating_vendors ? [] : [], // BaseFeedEventItem needs 'needs' array
+        } as unknown as BaseFeedEventItem;
+
+        personalEventsMap.set(detail.id, mapBaseFeedItemForCard(item));
+      }
+    }
+
+    return Array.from(personalEventsMap.values())
+      .filter(isCurrentOrUpcomingEvent)
+      .sort((a, b) => {
+        const timeA = new Date(a.start_time).getTime();
+        const timeB = new Date(b.start_time).getTime();
+        return timeA - timeB;
+      })
+      .slice(0, 3);
+  }, [eventOverviewResponse, user]);
 
   const hasUpcomingEvents = upcomingEvents.length > 0;
   const weekendFeedTitle = hasUpcomingEvents

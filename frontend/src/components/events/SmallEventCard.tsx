@@ -5,6 +5,9 @@ import { useAuth } from '@/features/auth/hooks';
 import { getEventCardRoles, HostVendorBadge } from '@/features/events/scrapbookCard';
 import { useEventCards } from './useEventCards';
 import type { EventCardEvent, EventCardProps } from './useEventCards';
+import { ChevronLeft, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const IMAGE_HEIGHT = 130;
 
@@ -13,6 +16,8 @@ export function SmallEventCard({
   sx,
 }: EventCardProps & { event: EventCardEvent }) {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const { isHost, isVendor } = getEventCardRoles(event, {
     user: user ?? null,
     isAuthenticated,
@@ -21,11 +26,14 @@ export function SmallEventCard({
   const {
     ImageFrame,
     DateAndLocation,
+    ManageButton,
     Category,
     LocationStuff,
     Going,
     getCardSx,
     getContentSx,
+    HeartButton,
+    isSaved,
   } = useEventCards({
     event,
     imageHeight: IMAGE_HEIGHT,
@@ -33,11 +41,28 @@ export function SmallEventCard({
 
   return (
     <Box
-      component={Link}
-      to={`/events-new/${event.id}`}
+      component={motion.div}
+      layout
+      initial={false}
+      animate={{
+        scale: isSaved ? [1, 1.03, 1] : 1,
+        boxShadow: isSaved
+          ? '0 20px 40px rgba(216, 90, 48, 0.12)'
+          : '0 10px 30px rgba(43, 33, 24, 0.04)'
+      }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       sx={getCardSx([{ mb: IMAGE_HEIGHT / 30 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])])}
     >
-      <ImageFrame />
+      <Box
+        component={Link}
+        to={`/events-new/${event.id}`}
+        sx={{ textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', height: '100%' }}
+      >
+        <ImageFrame />
+      </Box>
+
+      <HeartButton />
+
       {isLive ? (
         <Box
           sx={{
@@ -82,7 +107,7 @@ export function SmallEventCard({
         </Box>
       ) : null}
 
-      {isHost || isVendor ? (
+      {(isHost || isVendor) && !location.pathname.includes('/managing') ? (
         <HostVendorBadge
           isHost={isHost}
           variant="short"
@@ -154,13 +179,17 @@ export function SmallEventCard({
               spacing={0.75}
             >
               <Stack
-              direction="row"
-              alignItems="center"
+                direction="row"
+                alignItems="center"
               >
-              <LocationStuff />
+                <LocationStuff />
               </Stack>
               <Going />
             </Stack>
+
+              {isHost && location.pathname.includes('/managing') && (
+                <ManageButton />
+              )}
           </Stack>
         </Stack>
       </Stack>

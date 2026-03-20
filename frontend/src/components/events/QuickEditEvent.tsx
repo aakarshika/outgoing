@@ -15,7 +15,7 @@ type QuickCategory = {
   slug?: string;
 };
 
-export type QuickCreateAction = 'plan' | 'post';
+export type QuickCreateAction = 'plan' | 'post' | 'tickets-more' | 'needs-more';
 
 export type QuickEditEventSubmitPayload = {
   title: string;
@@ -69,6 +69,7 @@ export function QuickEditEvent({
     renderTimingSection,
     renderLocationSection,
     renderFeaturesSection,
+    renderTotalCapacitySection,
     handleAction,
     isPublishReady,
   } = useEditEvent({ event, onSubmit, isSubmitting, isCreate: false });
@@ -137,14 +138,14 @@ export function QuickEditEvent({
             title: 'Show the feel of it',
             content: renderFeaturesSection(),
           },
+          {
+            title: 'Total capacity',
+            content: renderTotalCapacitySection(),
+          },
         ].map((section) => (
           <Box
             key={section.title}
             sx={{
-              borderRadius: '24px',
-              background: '#FFFCF7',
-              border: '1px solid rgba(143, 105, 66, 0.16)',
-              p: 2,
             }}
           >
             {section.content}
@@ -156,7 +157,9 @@ export function QuickEditEvent({
           <Button
             type="button"
             variant="contained"
-            onClick={() => void handleAction('post')}
+            // Quick edit should not flip lifecycle_state (post/publish) -
+            // keep the current lifecycle and just update fields.
+            onClick={() => void handleAction('plan')}
             sx={{
               position: 'fixed',
               bottom: 20,

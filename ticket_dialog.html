@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ticket Dialog</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#1a1a1a;display:flex;align-items:flex-end;justify-content:center;min-height:100vh;padding:0;}
+
+  .modal{background:#F5F0EB;border-radius:24px 24px 0 0;width:100%;max-width:390px;padding-bottom:32px;}
+
+  .modal-handle{width:36px;height:4px;background:#D3D1C7;border-radius:999px;margin:12px auto 0;}
+
+  .modal-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;}
+  .close-btn{width:28px;height:28px;border-radius:50%;background:#E0DDD8;border:none;font-size:14px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .pager{display:flex;align-items:center;gap:10px;}
+  .pager-lbl{font-size:13px;font-weight:500;color:#1A1A1A;min-width:60px;text-align:center;}
+  .pg-btn{width:28px;height:28px;border-radius:50%;background:#E0DDD8;border:none;font-size:18px;color:#1A1A1A;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .pg-btn:disabled{opacity:0.3;cursor:default;}
+
+  /* BIG TICKET */
+  .btwrap{padding:8px 16px 14px;}
+  .bt{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,0.12);}
+  .bt-band{height:8px;background:#D85A30;}
+  .bt-body{padding:18px 18px 0;}
+  .bt-ev{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1A1A1A;line-height:1.2;margin-bottom:2px;}
+  .bt-ht{font-size:11px;color:#888780;margin-bottom:14px;}
+  .bt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .bt-field-lbl{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:#888780;margin-bottom:3px;}
+  .bt-field-val{font-size:13px;font-weight:500;color:#1A1A1A;}
+  .bt-guest-box{background:#F5F0EB;border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .bt-guest-lbl{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:#888780;margin-bottom:3px;}
+  .bt-guest-val{font-size:14px;font-weight:500;color:#1A1A1A;}
+  .edit-lnk{font-size:11px;color:#D85A30;font-weight:500;cursor:pointer;}
+
+  .tear{display:flex;align-items:center;margin:14px 0 0;}
+  .tc-l{width:20px;height:20px;border-radius:50%;background:#F5F0EB;margin-left:-10px;flex-shrink:0;}
+  .tc-r{width:20px;height:20px;border-radius:50%;background:#F5F0EB;margin-right:-10px;margin-left:auto;flex-shrink:0;}
+  .dashes{flex:1;border-top:2px dashed #E8E5E0;margin:0 4px;}
+
+  .bt-stub{padding:14px 18px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .bt-tier-lbl{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;color:#1A1A1A;text-align:center;}
+  .qr-wrap{background:#1A1A1A;border-radius:14px;padding:16px;display:inline-flex;flex-direction:column;align-items:center;gap:8px;}
+  .bt-qr-code{font-family:'Courier Prime',monospace;font-size:9px;color:#666;letter-spacing:0.1em;}
+
+  /* ACTIONS */
+  .act-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px;}
+  .act-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:0.5px solid #D3D1C7;background:#fff;color:#1A1A1A;}
+  .act-full{grid-column:span 2;background:#D85A30;border-color:#D85A30;color:#fff;}
+  .act-red{border-color:#F09595;color:#E24B4A;background:#FCEBEB;}
+  .my-tix{text-align:center;font-size:11px;color:#888780;margin-top:10px;padding:0 16px;}
+</style>
+</head>
+<body>
+
+<div class="modal">
+  <div class="modal-handle"></div>
+
+  <div class="modal-topbar">
+    <button class="close-btn">✕</button>
+    <div class="pager">
+      <button class="pg-btn" id="pb-prev" onclick="go(-1)">‹</button>
+      <div class="pager-lbl" id="pager-lbl">1 of 2</div>
+      <button class="pg-btn" id="pb-next" onclick="go(1)">›</button>
+    </div>
+    <div style="width:28px;"></div>
+  </div>
+
+  <div class="btwrap">
+    <div class="bt">
+      <div class="bt-band" id="m-band"></div>
+      <div class="bt-body">
+        <div class="bt-ev" id="m-ev"></div>
+        <div class="bt-ht" id="m-ht"></div>
+        <div class="bt-grid">
+          <div><div class="bt-field-lbl">Date</div><div class="bt-field-val" id="m-date"></div></div>
+          <div><div class="bt-field-lbl">Tier</div><div class="bt-field-val" id="m-tier"></div></div>
+          <div><div class="bt-field-lbl">Time</div><div class="bt-field-val" id="m-time"></div></div>
+          <div><div class="bt-field-lbl">Price</div><div class="bt-field-val" id="m-price"></div></div>
+        </div>
+        <div class="bt-guest-box">
+          <div>
+            <div class="bt-guest-lbl">Guest name</div>
+            <div class="bt-guest-val" id="m-guest"></div>
+          </div>
+          <div class="edit-lnk">Edit ✎</div>
+        </div>
+      </div>
+      <div class="tear">
+        <div class="tc-l"></div>
+        <div class="dashes"></div>
+        <div class="tc-r"></div>
+      </div>
+      <div class="bt-stub">
+        <div class="bt-tier-lbl" id="m-tier-lbl"></div>
+        <div class="qr-wrap">
+          <svg width="130" height="130" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+            <rect width="130" height="130" fill="#1A1A1A"/>
+            <!-- top-left finder -->
+            <QRcode/>
+          </svg>
+          <div class="bt-qr-code" id="m-code"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="act-grid">
+    <button class="act-btn act-full">&#128279; Share ticket</button>
+    <button class="act-btn">&#128190; Export PDF</button>
+    <button class="act-btn">&#128203; Copy code</button>
+    <button class="act-btn act-red">&#10005; Cancel ticket</button>
+  </div>
+  <div class="my-tix" id="my-tix-lbl">My tickets · 1 of 2</div>
+</div>
+
+<script>
+  const T = [
+    {ev:'Rooftop Vinyl Night', ht:'Hosted by Pinky · Indiranagar Social', date:'Sat, Apr 5', time:'8:00 PM', tier:'Premium', price:'₹350', guest:'Aditi Sharma', code:'OG-PRE-0071', band:'#D85A30', stub:'PREMIUM · TICKET 1 OF 2'},
+    {ev:'Rooftop Vinyl Night', ht:'Hosted by Pinky · Indiranagar Social', date:'Sat, Apr 5', time:'8:00 PM', tier:'Premium', price:'₹350', guest:'Aditi Sharma', code:'OG-PRE-0072', band:'#D85A30', stub:'PREMIUM · TICKET 2 OF 2'},
+  ];
+  let cur = 0;
+
+  function render() {
+    const t = T[cur];
+    document.getElementById('m-band').style.background = t.band;
+    document.getElementById('m-ev').textContent = t.ev;
+    document.getElementById('m-ht').textContent = t.ht;
+    document.getElementById('m-date').textContent = t.date;
+    document.getElementById('m-time').textContent = t.time;
+    document.getElementById('m-tier').textContent = t.tier;
+    document.getElementById('m-price').textContent = t.price;
+    document.getElementById('m-guest').textContent = t.guest;
+    document.getElementById('m-tier-lbl').textContent = t.stub;
+    document.getElementById('m-code').textContent = t.code;
+    document.getElementById('pager-lbl').textContent = (cur + 1) + ' of ' + T.length;
+    document.getElementById('my-tix-lbl').textContent = 'My tickets · ' + (cur + 1) + ' of ' + T.length;
+    document.getElementById('pb-prev').disabled = cur === 0;
+    document.getElementById('pb-next').disabled = cur === T.length - 1;
+  }
+
+  function go(d) {
+    cur = Math.max(0, Math.min(T.length - 1, cur + d));
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>

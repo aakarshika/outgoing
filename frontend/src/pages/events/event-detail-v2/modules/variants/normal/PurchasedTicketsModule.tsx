@@ -17,10 +17,10 @@ export function PurchasedTicketsModule({
   // Group tickets by type
   const groupedTickets: Record<string, any[]> = {};
   userTickets.forEach((t) => {
-    if (!groupedTickets[t.ticket_type]) {
-      groupedTickets[t.ticket_type] = [];
+    if (!groupedTickets[t.tier_id]) {
+      groupedTickets[t.tier_id] = [];
     }
-    groupedTickets[t.ticket_type].push(t);
+    groupedTickets[t.tier_id].push(t);
   });
 
   return (

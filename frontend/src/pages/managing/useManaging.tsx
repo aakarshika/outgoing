@@ -219,7 +219,7 @@ export const KIND_STYLES: Record<
     label: 'Hosting',
     bg: '#E7EDFF',
     color: '#2D4EDA',
-    dot: 'rgb(61, 71, 255)',
+    dot: 'rgb(105, 37, 213)',
   },
   vendor_request: {
     label: 'Service request',
@@ -231,13 +231,13 @@ export const KIND_STYLES: Record<
     label: 'Servicing',
     bg: '#E1F5EE',
     color: '#0F6E56',
-    dot: 'rgb(0, 159, 132)',
+    dot: 'rgb(0, 119, 99)',
   },
   attending: {
     label: 'Attending',
     bg: '#FFF7CC',
     color: '#8A6A00',
-    dot: 'rgb(255, 228, 25)',
+    dot: 'rgb(247, 156, 21)',
   },
 };
 

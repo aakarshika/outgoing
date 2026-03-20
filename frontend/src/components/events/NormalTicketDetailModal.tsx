@@ -18,7 +18,7 @@ import {
   Share,
   X,
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { DottedQrCode } from './DottedQrCode';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -476,12 +476,12 @@ export function NormalTicketDetailModal({
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                       }}
                     >
-                      <QRCodeSVG
+                      <DottedQrCode
                         value={currentTicket.qr_token || currentTicket.barcode}
                         size={160}
-                        level="H"
-                        includeMargin={false}
                         fgColor="#111827"
+                        bgColor="#FFFFFF"
+                        errorCorrectionLevel="H"
                       />
                     </Box>
                   ) : (

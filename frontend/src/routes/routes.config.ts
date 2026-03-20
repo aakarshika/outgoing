@@ -22,6 +22,26 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
   },
   {
+    path: '/events/:id/manage/basic-details',
+    componentName: 'EventWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/events/:id/manage/needs',
+    componentName: 'EventWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/events/:id/manage/tickets',
+    componentName: 'EventWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/events/:id/manage/admit',
+    componentName: 'EventWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
     path: '/test-feed',
     componentName: 'TestFeed',
     isPublic: true,

@@ -2,6 +2,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 
 import type { EventNeed } from '@/types/needs';
+import type { EventTicketTier } from '@/types/events';
 
 import type { EventFeature } from '../manage/ManageDetailsSection';
 
@@ -62,6 +63,27 @@ export function formatDateLabel(dateString?: string | null) {
     hour: 'numeric',
     minute: '2-digit',
   })}`;
+}
+
+/** Sum of tier capacities when every tier has a cap; null if any tier is unlimited or there are no tiers. */
+export function totalCapacityFromTiers(
+  tiers: EventTicketTier[] | undefined | null,
+): number | null {
+  const list = tiers ?? [];
+  if (list.length === 0) return null;
+  if (list.some((t) => t.capacity == null)) return null;
+  return list.reduce((sum, t) => sum + (t.capacity ?? 0), 0);
+}
+
+/** Short label for totals / unlimited tiers (display only). */
+export function formatTierCapacitySummary(tiers: EventTicketTier[] | undefined | null): string {
+  const list = tiers ?? [];
+  if (list.length === 0) return 'No tiers yet';
+  const cappedSum = list.reduce((sum, t) => sum + (t.capacity ?? 0), 0);
+  const hasUncapped = list.some((t) => t.capacity == null);
+  if (!hasUncapped) return `${cappedSum} total seats`;
+  if (cappedSum === 0) return 'Unlimited (all tiers open)';
+  return `${cappedSum} capped seats · plus unlimited tiers`;
 }
 
 export function WorkspaceCard({

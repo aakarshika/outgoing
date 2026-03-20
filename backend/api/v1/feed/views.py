@@ -331,6 +331,14 @@ class BaseFeedView(APIView):
 
         query_lat = _safe_float(request.query_params.get("lat"))
         query_lng = _safe_float(request.query_params.get("lng"))
+        include_host_drafts = (
+            request.user.is_authenticated
+            and request.query_params.get("include_host_drafts") == "true"
+        )
+
+        lifecycle_filter = Q(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES)
+        if include_host_drafts:
+            lifecycle_filter |= Q(host=request.user, lifecycle_state="draft")
 
         events = (
             Event.objects.select_related("host", "host__profile", "category")
@@ -346,7 +354,7 @@ class BaseFeedView(APIView):
                 "needs__applications__vendor__profile",
                 "needs__applications__service",
             )
-            .filter(lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES)
+            .filter(lifecycle_filter)
             .annotate(
                 sold_ticket_count=Count(
                     "tickets",

@@ -11,6 +11,8 @@ import { useEventCards } from './useEventCards';
 import { BaseFeedEventItem } from '@/types/events';
 import { MapPin } from 'lucide-react';
 
+import { motion } from 'framer-motion';
+
 const IMAGE_HEIGHT = 180;
 
 export function LargeEventCard({
@@ -38,6 +40,8 @@ export function LargeEventCard({
     timeLabel,
     getCardSx,
     getContentSx,
+    HeartButton,
+    isSaved,
   } = useEventCards({
     event,
     imageHeight: IMAGE_HEIGHT,
@@ -62,10 +66,21 @@ export function LargeEventCard({
 
   return (
     <Box
+      component={motion.div}
+      layout
+      initial={false}
+      animate={{ 
+        scale: isSaved ? [1, 1.03, 1] : 1,
+        boxShadow: isSaved 
+          ? '0 20px 40px rgba(216, 90, 48, 0.12)' 
+          : '0 10px 30px rgba(43, 33, 24, 0.04)'
+      }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       onClick={handleCardClick}
       sx={getCardSx([{ mb: 2.5 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])])}
     >
       <ImageFrame />
+      <HeartButton />
       {isLive ? (
         <Box
           sx={{

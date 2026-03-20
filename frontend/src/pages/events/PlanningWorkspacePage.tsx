@@ -18,6 +18,10 @@ import { useAuth } from '@/features/auth/hooks';
 import { createEvent, updateEvent } from '@/features/events/api';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { useCategories, useEvent, useUpdateTicketTiers } from '@/features/events/hooks';
+import type {
+  QuickCreateAction,
+  QuickCreateSubmitPayload,
+} from '@/components/events/QuickCreateSpark';
 import {
   buildPlanningChecklist,
   type PlanningChecklistItem as ChecklistItem,
@@ -63,7 +67,10 @@ function CreateWorkspaceLanding({
 }: {
   categories: Array<{ id: number; name: string; slug?: string }>;
   isSubmitting: boolean;
-  onSubmit: () => Promise<void>;
+  onSubmit: (
+    action: QuickCreateAction,
+    payload: QuickCreateSubmitPayload,
+  ) => Promise<void>;
 }) {
   return (
     <Box
@@ -308,24 +315,23 @@ export default function PlanningWorkspacePage() {
     });
   }, [event?.features]);
 
-  const detailRows = event
+  const detailRows: Array<{ label: string; value: string }> = event
     ? [
-      { label: 'Date & time', value: formatDateLabel(event.start_time) },
-      {
-        label: 'Location',
-        value:
-          event.location_address === 'Online Event'
-            ? 'Online event'
-            : event.location_name || 'Location TBD',
-      },
-      { label: 'Category', value: event.category?.name || 'Uncategorized' },
-      {
-        label: 'Format',
-        value: `${event.location_address === 'Online Event' ? 'Online' : 'In person'
-          } · One-time`,
-      },
-    ]
-    : eventDetailsFallback;
+        { label: 'Date & time', value: formatDateLabel(event.start_time) },
+        {
+          label: 'Location',
+          value:
+            event.location_address === 'Online Event'
+              ? 'Online event'
+              : event.location_name || 'Location TBD',
+        },
+        { label: 'Category', value: event.category?.name || 'Uncategorized' },
+        {
+          label: 'Format',
+          value: `${event.location_address === 'Online Event' ? 'Online' : 'In person'} · One-time`,
+        },
+      ]
+    : [...eventDetailsFallback];
 
   const editableFeatures: EditableFeature[] = (event?.features || []).map(
     (feature) => ({

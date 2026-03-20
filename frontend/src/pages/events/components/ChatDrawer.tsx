@@ -1,5 +1,5 @@
 import { Drawer } from '@mui/material';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { ChatThreadPanel } from '@/pages/chats/components/ChatThreadPanel';
 
@@ -30,6 +30,32 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   otherUsername,
   otherAvatar,
 }) => {
+  const isPoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Push state when opening so we can intercept 'back'
+    window.history.pushState({ chatDrawerOpen: true }, '');
+    isPoppedRef.current = false;
+
+    const handlePopState = () => {
+      // Mark that we handled the popstate already
+      isPoppedRef.current = true;
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // If we are closing manually (not via popstate), pop the state to clean up history
+      if (!isPoppedRef.current && window.history.state?.chatDrawerOpen) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
+
   return (
     <Drawer
       anchor="right"

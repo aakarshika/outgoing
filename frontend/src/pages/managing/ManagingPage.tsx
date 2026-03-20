@@ -5,6 +5,7 @@ import {
   Container,
   Stack,
 } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -28,13 +29,20 @@ import { MyEarnings } from './MyEarnings';
 import { MyEvents } from './MyEvents';
 import { MyServices } from './MyServices';
 import { MyUpcoming } from './MyUpcoming';
+import { MySaved } from './MySaved';
+import { Drawer } from '@mui/material';
+import { QuickCreateSpark, type QuickCreateAction, type QuickCreateSubmitPayload } from '@/components/events/QuickCreateSpark';
+import { createEvent, updateEventTicketTiers } from '@/features/events/api';
+import { useCategories } from '@/features/events/hooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 async function fetchEventOverview() {
   return client.get<ApiResponse<EventOverviewRow[]>>('/alerts/event-overview/');
 }
 
 type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application' | 'attending';
-type ManagingTab = 'managing' | 'earnings' | 'hosting' | 'attending' | 'services';
+type ManagingTab = 'managing' | 'earnings' | 'hosting' | 'attending' | 'services' | 'saved';
 type EarningsRole = 'hosted' | 'serviced';
 
 interface ManagingItem {
@@ -102,7 +110,17 @@ const VALID_TABS: ManagingTab[] = [
   'hosting',
   'services',
   'earnings',
+  'saved',
 ];
+
+const TABS_CONFIG = [
+  { key: 'managing', label: 'Calendar' },
+  { key: 'earnings', label: 'Earnings' },
+  { key: 'hosting', label: 'My Events' },
+  { key: 'attending', label: 'My Tickets' },
+  { key: 'services', label: 'My Services' },
+  { key: 'saved', label: 'Saved Dates' },
+] as const;
 
 export default function ManagingPage() {
   const { user, loading } = useAuth();
@@ -121,10 +139,118 @@ export default function ManagingPage() {
   const [expandedHostingId, setExpandedHostingId] = useState<string | null>(null);
   const [expandedAttendingId, setExpandedAttendingId] = useState<string | null>(null);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isQuickCreateSubmitting, setIsQuickCreateSubmitting] = useState(false);
+  const { data: categoriesResponse } = useCategories();
+  const categories = categoriesResponse?.data || [];
+  const queryClient = useQueryClient();
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+
+  const handleQuickCreateSubmit = async (
+    action: QuickCreateAction,
+    payload: QuickCreateSubmitPayload,
+  ) => {
+    setIsQuickCreateSubmitting(true);
+    const formData = new FormData();
+    formData.set('title', payload.title);
+    formData.set(
+      'description',
+      payload.description.trim() ||
+      'Planning is underway. More details are coming soon.',
+    );
+    formData.set('category_id', String(payload.categoryId));
+    formData.set('start_time', payload.startTimeIso);
+    formData.set('end_time', payload.endTimeIso);
+    formData.set('status', action === 'post' ? 'published' : 'draft');
+
+    if (payload.locationMode === 'online') {
+      formData.set('location_name', payload.onlineUrl || 'Online Event');
+      formData.set('location_address', 'Online Event');
+    } else {
+      formData.set('location_name', payload.locationName);
+      formData.set('location_address', payload.locationAddress);
+      if (payload.latitude) formData.set('latitude', payload.latitude);
+      if (payload.longitude) formData.set('longitude', payload.longitude);
+    }
+
+    if (payload.capacity) {
+      formData.set('capacity', payload.capacity);
+    }
+    if (payload.ticketPriceStandard !== null) {
+      formData.set('ticket_price_standard', payload.ticketPriceStandard);
+    }
+    if (payload.features.length > 0) {
+      formData.set('features', JSON.stringify(payload.features));
+    }
+    if (payload.coverFile) {
+      formData.set('cover_image', payload.coverFile);
+    }
+
+    try {
+      const result = await createEvent(formData);
+      const totalCapacityVal = payload.capacity ? parseInt(payload.capacity, 10) : null;
+      const tiersToSave = payload.ticketTiers.map((tier, index) => {
+        const isLastTier = index === payload.ticketTiers.length - 1;
+        let calculatedCapacity =
+          tier.capacity === '' || tier.capacity === null ? null : Number(tier.capacity);
+        if (isLastTier && totalCapacityVal !== null) {
+          const sumOthers = payload.ticketTiers
+            .slice(0, -1)
+            .reduce((sum, item) => sum + (Number(item.capacity) || 0), 0);
+          calculatedCapacity = Math.max(0, totalCapacityVal - sumOthers);
+        }
+
+        return {
+          name: tier.name || 'General Admission',
+          price: Number(tier.price || 0).toFixed(2),
+          capacity: calculatedCapacity,
+          is_refundable: true,
+          description: tier.description || '',
+          admits: Number(tier.admits || 1),
+          max_passes_per_ticket: Number(tier.max_passes_per_ticket || 6),
+        };
+      });
+
+      if (tiersToSave.length > 0) {
+        await updateEventTicketTiers(result.data.id, tiersToSave, false);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+      await queryClient.invalidateQueries({ queryKey: ['managingOverview'] });
+
+      setIsQuickCreateOpen(false);
+      if (action === 'post') {
+        toast.success('Event posted');
+        navigate(`/events-new/${result.data.id}`);
+        return;
+      }
+
+      toast.success('Draft created. Keep building it.');
+      navigate(`/events/${result.data.id}/manage`);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Could not create this event');
+      throw error;
+    } finally {
+      setIsQuickCreateSubmitting(false);
+    }
+  };
+
+  const rotatedTabs = useMemo(() => {
+    const idx = TABS_CONFIG.findIndex((t) => t.key === tab);
+    if (idx === -1) return TABS_CONFIG;
+
+    const result = [];
+    for (let i = 0; i < TABS_CONFIG.length; i++) {
+      result.push(
+        TABS_CONFIG[(idx - 1 + i + TABS_CONFIG.length) % TABS_CONFIG.length],
+      );
+    }
+    return result;
+  }, [tab]);
+
   const { data: servicesResponse, isLoading: servicesLoading } = useMyServices({
     enabled: !!user,
   });
@@ -450,7 +576,7 @@ export default function ManagingPage() {
       sx={{
         maxWidth: 1240,
         mx: 'auto',
-        pt:8,
+        pt: 8,
         pb: 20,
         minHeight: '100vh',
         background:
@@ -458,41 +584,11 @@ export default function ManagingPage() {
       }}
     >
       <Container maxWidth={false}>
-        <Box>
-          <Box sx={{ borderBottom: '1px solid rgba(143, 105, 66, 0.10)' }}>
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {(
-                  [
-                    { key: 'managing', label: 'Upcoming Events' },
-                    { key: 'earnings', label: 'Earnings' },
-                    { key: 'hosting', label: 'My Events' },
-                    { key: 'attending', label: 'My Tickets' },
-                    { key: 'services', label: 'My Services' },
-                  ] as const
-                ).map((pageTab) => (
-                  <Chip
-                    key={pageTab.key}
-                    label={pageTab.label}
-                    onClick={() => setTab(pageTab.key)}
-                    sx={{
-                      height: 36,
-                      bgcolor:
-                        tab === pageTab.key ? '#2B2118' : 'rgba(255,255,255,0.82)',
-                      color: tab === pageTab.key ? '#fff' : '#4A3827',
-                      border:
-                        tab === pageTab.key
-                          ? 'none'
-                          : '1px solid rgba(143, 105, 66, 0.14)',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  />
-                ))}
-              </Stack>
-
-            </Stack>
-          </Box>
+        <Box 
+        sx={{
+          pb: 2
+        }}
+        >
 
           {tab === 'managing' ? (
             <MyUpcoming
@@ -514,12 +610,11 @@ export default function ManagingPage() {
               expandedHostingId={expandedHostingId}
               setExpandedHostingId={setExpandedHostingId}
               nextChecklistByItemId={nextChecklistByItemId as any}
+              onCreateEvent={() => setIsQuickCreateOpen(true)}
             />
           ) : tab === 'attending' ? (
             <MyAttending
               attendingItems={attendingItems as any}
-              expandedAttendingId={expandedAttendingId}
-              setExpandedAttendingId={setExpandedAttendingId}
             />
           ) : tab === 'earnings' ? (
             <MyEarnings
@@ -528,6 +623,8 @@ export default function ManagingPage() {
               expandedEarningId={expandedEarningId}
               setExpandedEarningId={setExpandedEarningId}
             />
+          ) : tab === 'saved' ? (
+            <MySaved />
           ) : (
             <MyServices
               servicesWithApplications={servicesWithApplications as any}
@@ -538,6 +635,28 @@ export default function ManagingPage() {
           )}
         </Box>
       </Container>
+      <Drawer
+        anchor="bottom"
+        open={isQuickCreateOpen}
+        onClose={() => setIsQuickCreateOpen(false)}
+        PaperProps={{
+          sx: {
+            background: 'transparent',
+            boxShadow: 'none',
+            height: '100dvh',
+            maxHeight: '100dvh',
+          },
+        }}
+      >
+        <Box sx={{ height: '100dvh' }}>
+          <QuickCreateSpark
+            categories={categories}
+            isSubmitting={isQuickCreateSubmitting}
+            onSubmit={handleQuickCreateSubmit}
+            onClose={() => setIsQuickCreateOpen(false)}
+          />
+        </Box>
+      </Drawer>
     </Box>
   );
 }

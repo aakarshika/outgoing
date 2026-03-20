@@ -1,67 +1,64 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { PlanningChecklistItem } from '@/features/events/planningChecklist';
-import { ExpandableManagingEventCard } from './useManaging';
-import type { ManagingItem } from './MyUpcoming';
+import { useBaseFeed } from '@/features/events/hooks';
+import type { BaseFeedEventItem } from '@/types/events';
+
+import { Sparkles } from 'lucide-react';
+import { FallbackBox } from '@/components/ui/FallbackBox';
+import { LandscapeEventCardLow } from '@/components/events/LandscapeEventCardLow';
 
 interface MyEventsProps {
-  hostingItems: ManagingItem[];
+  hostingItems: BaseFeedEventItem[];
   expandedHostingId: string | null;
   setExpandedHostingId: Dispatch<SetStateAction<string | null>>;
   nextChecklistByItemId: Map<string, PlanningChecklistItem | null>;
+  onCreateEvent: () => void;
 }
 
 export function MyEvents({
-  hostingItems,
-  expandedHostingId,
-  setExpandedHostingId,
-  nextChecklistByItemId,
+  nextChecklistByItemId: _nextChecklistByItemId,
+  onCreateEvent,
 }: MyEventsProps) {
+  const { data, isLoading } = useBaseFeed({
+    sort: 'start_time',
+    page_size: 100,
+    include_host_drafts: true,
+  });
+
+  const hostingItems = ((data?.data as BaseFeedEventItem[] | undefined) || []).filter(
+    (item) => item.i_am_host,
+  ).map((item) => ({
+    ...item,
+    ...item.event
+  }));
+
   return (
     <Box>
-      <Typography
-        sx={{
-          fontFamily: 'Syne, sans-serif',
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'rgba(66, 50, 28, 0.62)',
-          mb: 2,
-        }}
-      >
-        All events
-      </Typography>
-
-      {hostingItems.length === 0 ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography
-            sx={{
-              fontFamily: 'Syne, sans-serif',
-              fontSize: 20,
-              fontWeight: 800,
-              color: '#2B2118',
-            }}
-          >
-            No events yet
-          </Typography>
-          <Typography sx={{ mt: 1, fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}>
-            Events you're hosting or servicing will appear here.
-          </Typography>
+      {isLoading ? (
+        <Box sx={{ py: 6, display: 'grid', placeItems: 'center' }}>
+          <CircularProgress sx={{ color: '#D85A30' }} />
         </Box>
+      ) : hostingItems.length === 0 ? (
+        <FallbackBox
+          title="No hosted events"
+          description="Create your first event and bring people together."
+          icon={<Sparkles />}
+          actionLabel="Create an event"
+          onAction={onCreateEvent}
+        />
       ) : (
         <Stack spacing={1.5}>
           {hostingItems.map((item) => (
-            <Box key={item.id} sx={{ opacity: item.isPast ? 0.72 : 1 }}>
-              <ExpandableManagingEventCard
-                item={item as any}
-                expanded={expandedHostingId === item.id}
-                nextChecklistItem={nextChecklistByItemId.get(item.id)}
-                onToggle={() =>
-                  setExpandedHostingId((current) => (current === item.id ? null : item.id))
-                }
-              />
+            <Box
+              key={item.id}
+              sx={{
+                opacity: item.lifecycle_state === 'completed' ? 0.78 : 1,
+                position: 'relative',
+              }}
+            >
+              <LandscapeEventCardLow event={item} />
             </Box>
           ))}
         </Stack>

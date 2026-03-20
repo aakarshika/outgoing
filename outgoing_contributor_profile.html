@@ -1,0 +1,359 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .p{font-family:'DM Sans',sans-serif;background:#F5F0EB;max-width:390px;margin:0 auto;padding-bottom:40px;}
+
+  .topbar{padding:14px 16px 0;}
+  .back{font-size:12px;color:#888780;cursor:pointer;margin-bottom:14px;}
+
+  .profile-hero{margin:0 14px 14px;background:#fff;border-radius:18px;padding:18px;}
+  .ph-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .ph-av{width:52px;height:52px;border-radius:50%;background:#D85A30;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;}
+  .ph-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1A1A1A;}
+  .ph-sub{font-size:12px;color:#888780;margin-top:2px;}
+  .ph-stats{display:flex;gap:0;border-top:0.5px solid #F0EDE8;padding-top:14px;}
+  .ph-stat{flex:1;text-align:center;border-right:0.5px solid #F0EDE8;}
+  .ph-stat:last-child{border-right:none;}
+  .ph-stat-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#1A1A1A;}
+  .ph-stat-label{font-size:10px;color:#888780;margin-top:2px;}
+
+  .sec{margin:0 14px 14px;}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .sec-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;}
+  .sec-link{font-size:12px;color:#D85A30;font-weight:500;cursor:pointer;}
+
+  /* SERVICES */
+  .svc-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:8px;}
+  .svc-top{display:flex;align-items:center;gap:10px;}
+  .svc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .svc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#1A1A1A;flex:1;}
+  .svc-edit{font-size:11px;font-weight:500;color:#D85A30;padding:5px 12px;border-radius:999px;border:0.5px solid #F0997B;cursor:pointer;}
+  .svc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .svc-tag{font-size:10px;font-weight:500;padding:3px 9px;border-radius:999px;background:#F5F0EB;color:#5F5E5A;}
+  .svc-desc{font-size:12px;color:#888780;margin-top:6px;line-height:1.45;}
+
+  /* APPLICATIONS */
+  .app-group{margin-bottom:14px;}
+  .app-group-label{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .agl-icon{font-size:14px;}
+  .agl-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#1A1A1A;}
+  .agl-count{font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F5F0EB;color:#5F5E5A;}
+
+  .app-card{background:#fff;border-radius:14px;margin-bottom:8px;overflow:hidden;}
+  .app-card-top{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;}
+  .app-event-thumb{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .app-event-name{font-size:13px;font-weight:500;color:#1A1A1A;flex:1;line-height:1.3;}
+  .app-event-date{font-size:11px;color:#888780;margin-top:1px;}
+  .app-status{font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;flex-shrink:0;}
+  .s-accepted{background:#EAF3DE;color:#3B6D11;}
+  .s-pending{background:#E6F1FB;color:#185FA5;}
+  .s-rejected{background:#F1EFE8;color:#888780;}
+  .app-chevron{font-size:12px;color:#D3D1C7;margin-left:4px;flex-shrink:0;transition:transform 0.2s;}
+  .app-chevron.open{transform:rotate(90deg);}
+
+  /* EXPANDED DETAIL */
+  .app-detail{display:none;border-top:0.5px solid #F0EDE8;padding:14px;}
+  .app-detail.show{display:block;}
+
+  .detail-row{display:flex;gap:8px;margin-bottom:10px;align-items:flex-start;}
+  .dr-icon{font-size:14px;width:20px;flex-shrink:0;margin-top:1px;}
+  .dr-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:#888780;margin-bottom:2px;}
+  .dr-val{font-size:13px;color:#1A1A1A;line-height:1.4;}
+
+  .instruction-box{background:#F5F0EB;border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+  .ib-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:#888780;margin-bottom:4px;}
+  .ib-text{font-size:13px;color:#1A1A1A;line-height:1.5;}
+
+  .comp-box{background:#FAEEDA;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .comp-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#BA7517;}
+  .comp-desc{font-size:12px;color:#854F0B;line-height:1.4;}
+
+  .qr-box{background:#1A1A1A;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;}
+  .qr-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin-bottom:10px;}
+  .qr-svg{display:block;margin:0 auto;}
+  .qr-code{font-family:monospace;font-size:9px;color:#888780;margin-top:8px;letter-spacing:0.1em;}
+
+  .msg-btn{width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:0.5px solid #D3D1C7;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#1A1A1A;cursor:pointer;margin-bottom:4px;}
+  .msg-btn-icon{font-size:15px;}
+
+  /* REJECTED */
+  .app-card.rejected .app-card-top{opacity:0.5;}
+</style>
+
+<div class="p">
+  <div class="topbar"><div class="back">&#8592; Profile</div></div>
+
+  <!-- PROFILE HERO -->
+  <div class="profile-hero">
+    <div class="ph-top">
+      <div class="ph-av">AK</div>
+      <div>
+        <div class="ph-name">Arjun Kapoor</div>
+        <div class="ph-sub">Contributor · Bengaluru</div>
+      </div>
+    </div>
+    <div class="ph-stats">
+      <div class="ph-stat">
+        <div class="ph-stat-val">4.9</div>
+        <div class="ph-stat-label">Rating</div>
+      </div>
+      <div class="ph-stat">
+        <div class="ph-stat-val">7</div>
+        <div class="ph-stat-label">Events done</div>
+      </div>
+      <div class="ph-stat">
+        <div class="ph-stat-val">3</div>
+        <div class="ph-stat-label">Active gigs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="sec">
+    <div class="sec-head">
+      <div class="sec-label">My services</div>
+      <div class="sec-link">+ Add service</div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-top">
+        <div class="svc-icon" style="background:#FAECE7;">&#127911;</div>
+        <div class="svc-name">DJ / Music</div>
+        <div class="svc-edit">Edit</div>
+      </div>
+      <div class="svc-tags">
+        <span class="svc-tag">Deep house</span>
+        <span class="svc-tag">Afrobeats</span>
+        <span class="svc-tag">3–4 hr sets</span>
+        <span class="svc-tag">Own gear</span>
+      </div>
+      <div class="svc-desc">Available for rooftop sets, clubs, and private events. Bring my own setup. Comfortable with 60–200 capacity.</div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-top">
+        <div class="svc-icon" style="background:#EEEDFE;">&#128247;</div>
+        <div class="svc-name">Photography</div>
+        <div class="svc-edit">Edit</div>
+      </div>
+      <div class="svc-tags">
+        <span class="svc-tag">Events</span>
+        <span class="svc-tag">Portraits</span>
+        <span class="svc-tag">Same-day edits</span>
+      </div>
+      <div class="svc-desc">Sony A7III. Deliver 100+ edited shots within 24 hours. Available for 2–5 hr event coverage.</div>
+    </div>
+  </div>
+
+  <!-- APPLICATIONS -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-label">My applications</div></div>
+
+    <!-- DJ GROUP -->
+    <div class="app-group">
+      <div class="app-group-label">
+        <div class="agl-icon">&#127911;</div>
+        <div class="agl-name">DJ / Music</div>
+        <div class="agl-count">3 applications</div>
+      </div>
+
+      <!-- ACCEPTED — EXPANDABLE -->
+      <div class="app-card" id="card1">
+        <div class="app-card-top" onclick="toggleApp('card1')">
+          <div class="app-event-thumb" style="background:#FAECE7;">&#127926;</div>
+          <div>
+            <div class="app-event-name">Rooftop Vinyl Night</div>
+            <div class="app-event-date">Sat, Apr 5 · Indiranagar</div>
+          </div>
+          <div class="app-status s-accepted">Accepted</div>
+          <div class="app-chevron" id="chev1">›</div>
+        </div>
+        <div class="app-detail" id="detail1">
+
+          <div class="comp-box">
+            <div class="comp-val">Free in</div>
+            <div class="comp-desc">Entry waived in exchange for your 3-hour set. Bring your own gear.</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="dr-icon">&#128197;</div>
+            <div><div class="dr-label">When</div><div class="dr-val">Sat, Apr 5 · 8:00 PM – 11:30 PM</div></div>
+          </div>
+          <div class="detail-row">
+            <div class="dr-icon">&#128205;</div>
+            <div><div class="dr-label">Where</div><div class="dr-val">Indiranagar Social, 100 Feet Rd, Bengaluru</div></div>
+          </div>
+
+          <div class="instruction-box">
+            <div class="ib-label">Instructions from host</div>
+            <div class="ib-text">Arrive by 7pm for soundcheck. Load-in from the back entrance. Ask for Pinky at the door. Set starts at 9pm sharp — crowd will be about 50 people by then.</div>
+          </div>
+
+          <div class="qr-label" style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin-bottom:8px;">Your entry pass</div>
+          <div class="qr-box">
+            <svg class="qr-svg" width="120" height="120" viewBox="0 0 120 120">
+              <rect width="120" height="120" fill="#1A1A1A"/>
+              <rect x="8" y="8" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="14" y="14" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="18" y="18" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="72" y="8" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="78" y="14" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="82" y="18" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="8" y="72" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="14" y="78" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="18" y="82" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="56" y="56" width="8" height="8" fill="#fff"/>
+              <rect x="68" y="56" width="8" height="8" fill="#fff"/>
+              <rect x="80" y="56" width="8" height="8" fill="#fff"/>
+              <rect x="56" y="68" width="8" height="8" fill="#fff"/>
+              <rect x="80" y="68" width="8" height="8" fill="#fff"/>
+              <rect x="56" y="80" width="8" height="8" fill="#fff"/>
+              <rect x="68" y="80" width="8" height="8" fill="#fff"/>
+              <rect x="92" y="68" width="8" height="8" fill="#fff"/>
+              <rect x="104" y="56" width="8" height="8" fill="#fff"/>
+              <rect x="104" y="80" width="8" height="8" fill="#fff"/>
+              <rect x="104" y="104" width="8" height="8" fill="#fff"/>
+              <rect x="92" y="104" width="8" height="8" fill="#fff"/>
+              <rect x="68" y="104" width="8" height="8" fill="#fff"/>
+            </svg>
+            <div class="qr-code">OG-2026-VINYL-AK047</div>
+          </div>
+
+          <button class="msg-btn">
+            <span class="msg-btn-icon">&#128172;</span>
+            Message Pinky (host)
+          </button>
+
+        </div>
+      </div>
+
+      <!-- PENDING -->
+      <div class="app-card">
+        <div class="app-card-top" style="cursor:default;">
+          <div class="app-event-thumb" style="background:#E1F5EE;">&#127939;</div>
+          <div>
+            <div class="app-event-name">Dawn Hike — Patapsco Valley</div>
+            <div class="app-event-date">Sun, Apr 13 · Cubbon Park</div>
+          </div>
+          <div class="app-status s-pending">Pending</div>
+        </div>
+      </div>
+
+      <!-- REJECTED -->
+      <div class="app-card rejected">
+        <div class="app-card-top" style="cursor:default;">
+          <div class="app-event-thumb" style="background:#F1EFE8;">&#127917;</div>
+          <div>
+            <div class="app-event-name">Open Mic Comedy Night</div>
+            <div class="app-event-date">Fri, Mar 28 · Koramangala</div>
+          </div>
+          <div class="app-status s-rejected">Not selected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTOGRAPHY GROUP -->
+    <div class="app-group">
+      <div class="app-group-label">
+        <div class="agl-icon">&#128247;</div>
+        <div class="agl-name">Photography</div>
+        <div class="agl-count">2 applications</div>
+      </div>
+
+      <!-- ACCEPTED -->
+      <div class="app-card" id="card2">
+        <div class="app-card-top" onclick="toggleApp('card2')">
+          <div class="app-event-thumb" style="background:#EEEDFE;">&#127912;</div>
+          <div>
+            <div class="app-event-name">Open Studio — Collage Night</div>
+            <div class="app-event-date">Sun, Apr 6 · HSR Layout</div>
+          </div>
+          <div class="app-status s-accepted">Accepted</div>
+          <div class="app-chevron" id="chev2">›</div>
+        </div>
+        <div class="app-detail" id="detail2">
+
+          <div class="comp-box">
+            <div class="comp-val">40% off</div>
+            <div class="comp-desc">Ticket discounted from ₹500 to ₹300. Credited once your photos are submitted to the host.</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="dr-icon">&#128197;</div>
+            <div><div class="dr-label">When</div><div class="dr-val">Sun, Apr 6 · 3:00 PM – 7:00 PM</div></div>
+          </div>
+          <div class="detail-row">
+            <div class="dr-icon">&#128205;</div>
+            <div><div class="dr-label">Where</div><div class="dr-val">The Studio, 14th Cross, HSR Layout</div></div>
+          </div>
+
+          <div class="instruction-box">
+            <div class="ib-label">Instructions from host</div>
+            <div class="ib-text">Shoot candid — no posed shots. Focus on hands, work-in-progress, and group moments. Share 80+ edited photos to our Drive link within 48 hours. Contact Meera if you need anything on the day.</div>
+          </div>
+
+          <div class="qr-label" style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin-bottom:8px;">Your entry pass</div>
+          <div class="qr-box">
+            <svg class="qr-svg" width="120" height="120" viewBox="0 0 120 120">
+              <rect width="120" height="120" fill="#1A1A1A"/>
+              <rect x="8" y="8" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="14" y="14" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="18" y="18" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="72" y="8" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="78" y="14" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="82" y="18" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="8" y="72" width="40" height="40" rx="4" fill="#fff"/>
+              <rect x="14" y="78" width="28" height="28" rx="2" fill="#1A1A1A"/>
+              <rect x="18" y="82" width="20" height="20" rx="1" fill="#fff"/>
+              <rect x="58" y="58" width="6" height="6" fill="#fff"/>
+              <rect x="70" y="58" width="6" height="6" fill="#fff"/>
+              <rect x="82" y="58" width="6" height="6" fill="#fff"/>
+              <rect x="58" y="70" width="6" height="6" fill="#fff"/>
+              <rect x="82" y="70" width="6" height="6" fill="#fff"/>
+              <rect x="70" y="82" width="6" height="6" fill="#fff"/>
+              <rect x="94" y="70" width="6" height="6" fill="#fff"/>
+              <rect x="106" y="58" width="6" height="6" fill="#fff"/>
+              <rect x="106" y="82" width="6" height="6" fill="#fff"/>
+              <rect x="94" y="106" width="6" height="6" fill="#fff"/>
+            </svg>
+            <div class="qr-code">OG-2026-STUDIO-AK031</div>
+          </div>
+
+          <button class="msg-btn">
+            <span class="msg-btn-icon">&#128172;</span>
+            Message Meera (host)
+          </button>
+
+        </div>
+      </div>
+
+      <!-- PENDING -->
+      <div class="app-card">
+        <div class="app-card-top" style="cursor:default;">
+          <div class="app-event-thumb" style="background:#FAEEDA;">&#127881;</div>
+          <div>
+            <div class="app-event-name">New in Town Mixer</div>
+            <div class="app-event-date">Fri, Apr 11 · Indiranagar</div>
+          </div>
+          <div class="app-status s-pending">Pending</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleApp(id) {
+    const detail = document.getElementById('detail' + id.replace('card',''));
+    const chev = document.getElementById('chev' + id.replace('card',''));
+    const isOpen = detail.classList.contains('show');
+    document.querySelectorAll('.app-detail').forEach(d => d.classList.remove('show'));
+    document.querySelectorAll('.app-chevron').forEach(c => c.classList.remove('open'));
+    if (!isOpen) {
+      detail.classList.add('show');
+      chev.classList.add('open');
+    }
+  }
+</script>
