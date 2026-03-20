@@ -245,7 +245,7 @@ export default function ManagingPage() {
     const result = [];
     for (let i = 0; i < TABS_CONFIG.length; i++) {
       result.push(
-        TABS_CONFIG[(idx - 4 + i + TABS_CONFIG.length) % TABS_CONFIG.length],
+        TABS_CONFIG[(idx - 1 + i + TABS_CONFIG.length) % TABS_CONFIG.length],
       );
     }
     return result;
@@ -584,56 +584,11 @@ export default function ManagingPage() {
       }}
     >
       <Container maxWidth={false}>
-        <Box>
-          <Box sx={{}}>
-            <Stack spacing={2}>
-              <Stack
-                direction="row"
-                spacing={1}
-                flexWrap="wrap"
-                useFlexGap
-                sx={{
-                  justifyContent: 'center',
-                  overflow: 'visible',
-                  width: '100%',
-                  pb: 2
-                }}
-              >
-                {rotatedTabs.map((pageTab) => (
-                  <motion.div
-                    key={pageTab.key}
-                    layout
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 40,
-                      mass: 1,
-                    }}
-                  >
-                    <Chip
-                      label={pageTab.label}
-                      onClick={() => setTab(pageTab.key as ManagingTab)}
-                      sx={{
-                        height: 36,
-                        minWidth: "10vh",
-                        bgcolor:
-                          tab === pageTab.key ? '#2B2118' : 'rgba(255,255,255,0.82)',
-                        color: tab === pageTab.key ? '#fff' : '#706d6aff',
-                        fontWeight: tab === pageTab.key ? 700 : 400,
-                        fontSize: tab === pageTab.key ? "15px" : "12px",
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s, color 0.2s',
-                        '&:hover': {
-                          bgcolor: tab === pageTab.key ? '#2B2118' : 'rgba(255,255,255,0.95)',
-                        }
-                      }}
-                    />
-                  </motion.div>
-                ))}
-              </Stack>
-
-            </Stack>
-          </Box>
+        <Box 
+        sx={{
+          pb: 2
+        }}
+        >
 
           {tab === 'managing' ? (
             <MyUpcoming

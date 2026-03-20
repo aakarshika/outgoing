@@ -9,6 +9,8 @@ import { ThemeWrapper } from '@/theme/ThemeWrapper';
 import { RoleGuard } from './RoleGuard';
 import { RouteDefinition, routesConfig } from './routes.config';
 
+import EventDetailV2Page from '@/pages/events/EventDetailPageV2';
+
 const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 // const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
@@ -19,7 +21,6 @@ const HomePageRenewed = lazy(() => import('@/pages/home/HomePageRenewed'));
 const HighlightsPage = lazy(() => import('@/pages/highlights/HighlightsPage'));
 const HighlightsReelsPage = lazy(() => import('@/pages/highlightsreels/HighlightsReelsPage'));
 const EventDetailNewPage = lazy(() => import('@/pages/events/EventDetailPageNew'));
-const EventDetailV2Page = lazy(() => import('@/pages/events/EventDetailPageV2'));
 const PlanningWorkspacePage = lazy(
   () => import('@/pages/events/PlanningWorkspacePage'),
 );

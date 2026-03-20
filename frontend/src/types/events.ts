@@ -235,6 +235,7 @@ export interface BaseFeedParams {
   sort?: BaseFeedSort;
   online?: boolean;
   status?: string | string[];
+  include_host_drafts?: boolean;
   start_time_gte?: string;
   start_time_lte?: string;
   category?: string;

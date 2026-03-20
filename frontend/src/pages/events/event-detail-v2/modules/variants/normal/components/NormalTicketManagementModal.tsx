@@ -25,6 +25,7 @@ import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { formatShortDate, formatTime } from '@/utils/date';
 import { exportTicketAsPDF, shareTicket } from '@/features/events/utils/ticketSharing';
 import { DottedQrCode } from '@/components/events/DottedQrCode';
+import { TicketTier } from '@/pages/events/components/manage-redesign/TicketsAndCapacityForm';
 
 interface NormalTicketManagementModalProps {
   event: any;
@@ -53,7 +54,9 @@ export function NormalTicketManagementModal({
     setActiveIndex(initialIndex);
   }, [isOpen, initialIndex]);
 
-  const currentTicket = tickets?.[activeIndex];
+  const a = tickets?.[activeIndex];
+  const t = event.ticket_tiers?.find((tier: TicketTier) => String(tier.id) === String(a?.tier_id));
+  const currentTicket = {...a,  ...t};
 
   useEffect(() => {
     setGuestName(currentTicket?.guest_name || '');
@@ -201,7 +204,7 @@ export function NormalTicketManagementModal({
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25, mb: 1.75 }}>
                 {[
                   { label: 'Date', val: formatShortDate(event?.start_time) },
-                  { label: 'Tier', val: currentTicket.ticket_type },
+                  { label: 'Tier', val: currentTicket.name },
                   { label: 'Time', val: formatTime(event?.start_time) },
                   { label: 'Price', val: currentTicket.price === 0 ? 'Free' : `₹${currentTicket.price}` },
                 ].map((detail, idx) => (

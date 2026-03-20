@@ -121,7 +121,7 @@ export function ServiceApplicationEventCard({
           gap: 1.5,
           padding: '14px 16px',
           cursor: 'pointer',
-          borderLeft: `3px solid ${getCategoryTheme(event.category?.slug || '').accent}`,
+          borderLeft: `3px solid ${getCategoryTheme(event.category?.slug || '')?.accent}`,
           borderBottom: isExpanded ? '0.5px solid #F0EDE8' : 'none',
           '&:hover': {
             background: 'rgba(245, 240, 235, 0.3)'

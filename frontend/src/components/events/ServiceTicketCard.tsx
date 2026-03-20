@@ -48,47 +48,69 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const event = item.event;
-  console.log(item);
-  if (!event) return null;
+  // console.log(item);
+  if (!event || event.lifecycle_state == 'draft' || event.user_tickets?.length == 0) return null;
 
   const categoryTheme = getCategoryTheme(event.category);
-  console.log(categoryTheme.icon);
+  // console.log(categoryTheme.icon);
   const isCancelled = item.status?.toLowerCase() === 'cancelled';
   const isAdmitted = item.status?.toLowerCase() === 'admitted' || (item.isPast && !isCancelled);
 
   // Derive display values
-  const ticketCount = item.event?.user_tickets?.length || 0;
+  const userTickets = event.user_tickets ?? [];
+  const ticketCount = userTickets.length;
 
   const tiersAndCount = useMemo(() => {
     const counts: Record<string, number> = {};
-    item.event?.user_tickets?.forEach((ticket) => {
-      const tierName = item.event?.ticket_tiers?.find((tier) => tier.id === ticket.tier_id)?.name;
+    userTickets.forEach((ticket) => {
+      const tierName = event.ticket_tiers?.find(
+        (tier) => String(tier.id) === String(ticket.tier_id),
+      )?.name;
       if (tierName) {
         counts[tierName] = (counts[tierName] || 0) + 1;
       }
     });
 
-    return Object.entries(counts)
+    const y = Object.entries(counts)
       .map(([name, count]) => `${name} × ${count}`)
-      .join(', ');
-  }, [item.event?.user_tickets, item.event?.ticket_tiers]);
+      .join('\n');
+    return y;
+  }, [userTickets, event.ticket_tiers]);
+
 
 
   const uniqueTierNames = useMemo(() => {
     const names = new Set<string>();
-    item.event?.user_tickets?.forEach((ticket) => {
-      const tierName = item.event?.ticket_tiers?.find((tier) => tier.id === ticket.tier_id)?.name;
-      if (tierName) {
-        names.add(tierName);
+    userTickets.forEach((ticket) => {
+      const tier_found = event.ticket_tiers?.find(
+        (tier) => String(tier.id) === String(ticket.tier_id),
+      );
+      if (tier_found) {
+        names.add(tier_found.name);
       }
     });
-    return Array.from(names).join(', ');
-  }, [item.event?.user_tickets, item.event?.ticket_tiers]);
+    return names;
+  }, [userTickets, event.ticket_tiers]);
 
 
-  const paidAmount = item.event?.paidAmount || '₹0';
-  const pricePerTicket = item.event?.pricePerTicket || 'Free';
-  const ticketCode = item.event?.ticketCode || `OG-${new Date(event.start_time).getFullYear()}-${event.title?.substring(0, 4).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`;
+  const paidAmountNumber = userTickets.reduce(
+    (total, ticket) => total + Number(ticket.price_paid ?? 0),
+    0,
+  );
+  const paidAmount = paidAmountNumber > 0 ? `₹${paidAmountNumber}` : '₹0';
+  const ticketCode =
+    userTickets.length > 0
+      ? (() => {
+        const codes = userTickets
+          .map((t) => (t.barcode != null ? String(t.barcode) : ''))
+          .filter(Boolean);
+        const primary = codes[0];
+        if (!primary) {
+          return `OG-${new Date(event.start_time).getFullYear()}-${event.title?.substring(0, 4).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`;
+        }
+        return codes.length > 1 ? `${primary} +${codes.length - 1}` : primary;
+      })()
+      : `OG-${new Date(event.start_time).getFullYear()}-${event.title?.substring(0, 4).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`;
 
   return (
     <Box
@@ -165,7 +187,7 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
             {[
               { label: 'Date', val: formatShortDate(event.start_time) },
               { label: 'Time', val: formatTime(event.start_time) },
-              { label: 'Tier', val: uniqueTierNames },
+              { label: 'Tier', val: Array.from(uniqueTierNames).join(', ') },
               { label: 'Paid', val: paidAmount },
             ].map((detail, idx) => (
               <Box
@@ -205,12 +227,22 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
           sx={{ p: '12px 18px 16px', cursor: 'pointer', '&:hover': { bgcolor: 'rgba(0,0,0,0.01)' } }}
         >
           <Box>
-            <Typography sx={{ fontFamily: 'Courier Prime, monospace', fontSize: 13, fontWeight: 700, color: '#1A1A1A', textTransform: 'uppercase' }}>
+            <Typography
+              sx={{
+                fontFamily: 'Courier Prime, monospace',
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#1A1A1A',
+                textTransform: 'uppercase',
+                whiteSpace: 'pre-line',
+                lineHeight: 1.1,
+              }}
+            >
               {tiersAndCount}
             </Typography>
-            <Typography sx={{ fontFamily: 'Courier Prime, monospace', fontSize: 11, color: '#888780' }}>
-              {pricePerTicket} {pricePerTicket === 'Free' ? '' : 'each'}
-            </Typography>
+            {/* <Typography sx={{ fontFamily: 'Courier Prime, monospace', fontSize: 11, color: '#888780' }}>
+              {paidAmountNumber === 0 ? 'Free' : +''}
+            </Typography> */}
           </Box>
 
           <Stack alignItems="flex-end" spacing={0.5}>

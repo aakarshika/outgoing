@@ -10,7 +10,7 @@ import { CompactManagingEventCard } from './useManaging';
 export type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application' | 'attending';
 
 export interface ManagingItem {
-  status: any;
+  status?: any;
   id: string;
   kind: ManagingKind;
   event?: EventDetail | null;

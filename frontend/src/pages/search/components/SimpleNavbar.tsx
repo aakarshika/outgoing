@@ -1,13 +1,15 @@
 import {
   Box,
+  Chip,
   Container,
   Divider,
   Drawer,
   Popover,
+  Stack,
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LogOut,
   type LucideIcon,
@@ -21,8 +23,10 @@ import {
   UserIcon,
   UserPlus,
   Users,
+  Heart,
+  Briefcase,
 } from 'lucide-react';
-import { type MouseEvent, useState } from 'react';
+import { type MouseEvent, useState, useMemo } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -45,6 +49,11 @@ import {
   useMyTickets,
 } from '@/features/events/hooks';
 import { useMyServices } from '@/features/vendors/hooks';
+import { EventOverviewRow } from '@/pages/alerts/utils';
+import client from '@/api/client';
+import { ApiResponse } from '@/types/api';
+import { KIND_STYLES } from '@/pages/managing/useManaging';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type MenuItem = {
   label: string;
@@ -52,8 +61,13 @@ type MenuItem = {
   to?: string;
   action?: 'create-event' | 'create-service' | 'logout' | 'signin' | 'signup';
   muted?: boolean;
+  count?: number;
+  color?: string;
 };
 
+async function fetchEventOverview() {
+  return client.get<ApiResponse<EventOverviewRow[]>>('/alerts/event-overview/');
+}
 export function SimpleNavbar({
   onCreateService,
 }: {
@@ -75,9 +89,74 @@ export function SimpleNavbar({
   const { data: myTicketsResponse } = useMyTickets();
   const event = eventResponse?.data;
   const categories = categoriesResponse?.data || [];
-  const hasHostedEvents = (myEventsResponse?.data?.length ?? 0) > 0;
-  const hasServices = (myServicesResponse?.data?.length ?? 0) > 0;
-  const hasTickets = (myTicketsResponse?.data?.length ?? 0) > 0;
+
+  const { data: overviewResponse, isLoading: loadingOverview } = useQuery({
+    queryKey: ['managingOverview'],
+    queryFn: fetchEventOverview as any,
+    enabled: !!user,
+  });
+
+  const overviewRows = (((overviewResponse as any)?.data?.data as EventOverviewRow[]) ||
+    []) as EventOverviewRow[];
+  const {
+    hasPendingHostedEvents,
+    hasPendingApplications,
+    hasPendingTickets,
+    pendingHostedEventsCount,
+    pendingApplicationsCount,
+    pendingTicketsCount,
+  } = useMemo(() => {
+    const userId = user?.id;
+
+    const isTerminalLifecycle = (state?: string | null) => {
+      const normalized = state?.toLowerCase?.() ?? '';
+      return normalized === 'completed' || normalized === 'cancelled';
+    };
+
+    const isTicketCancelled = (status?: string | null) => {
+      return (status?.toLowerCase?.() ?? '') === 'cancelled';
+    };
+
+    // Use distinct event ids so we don't over-count when the overview contains
+    // multiple rows per event.
+    const hostedEventIds = new Set<number>();
+    const applicationEventIds = new Set<number>();
+    const ticketEventIds = new Set<number>();
+
+    if (userId) {
+      for (const row of overviewRows) {
+        if (isTerminalLifecycle(row?.event_lifecycle_state)) continue;
+
+        if (row.host_user_id === userId) {
+          hostedEventIds.add(row.event_id);
+        }
+
+        if (row.need_applied_to_user_id === userId) {
+          applicationEventIds.add(row.event_id);
+        }
+
+        if (row.attendee_user_id === userId && !isTicketCancelled(row.ticket_status)) {
+          ticketEventIds.add(row.event_id);
+        }
+      }
+    }
+
+    const pendingHostedEventsCount = hostedEventIds.size;
+    const pendingApplicationsCount = applicationEventIds.size;
+    const pendingTicketsCount = ticketEventIds.size;
+
+    return {
+      hasPendingHostedEvents: pendingHostedEventsCount > 0,
+      hasPendingApplications: pendingApplicationsCount > 0,
+      hasPendingTickets: pendingTicketsCount > 0,
+      pendingHostedEventsCount,
+      pendingApplicationsCount,
+      pendingTicketsCount,
+    };
+  }, [overviewRows, user?.id]);
+
+
+
   const isEventHost =
     isAuthenticated && !!user && !!event && user.username === event.host?.username;
   const isVendor =
@@ -87,7 +166,10 @@ export function SimpleNavbar({
     !!(event.user_applications && event.user_applications.length > 0);
   const isGuestLandingPage = location.pathname === '/' && !isAuthenticated;
   const isOrangePage = false;
-  const hideSearchBar = location.pathname.startsWith('/events') || location.pathname.startsWith('/events-new') || location.pathname.startsWith('/chats');
+  const hideSearchBar = location.pathname.startsWith('/events') 
+  || location.pathname.startsWith('/events-new') 
+  || location.pathname.startsWith('/managing') 
+  || location.pathname.startsWith('/chats');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
@@ -101,13 +183,28 @@ export function SimpleNavbar({
     label: 'My Tickets',
     to: '/managing/attending',
     Icon: Ticket,
+    count: hasPendingTickets ? pendingTicketsCount : 0,
+    color: KIND_STYLES.attending.dot
   });
 
-  hostingAndServicesItems.push({ label: 'My Events', to: '/managing/hosting', Icon: Speech });
+  hostingAndServicesItems.push({
+    label: 'My Events',
+    to: '/managing/hosting',
+    Icon: Speech,
+    count: hasPendingHostedEvents ? pendingHostedEventsCount : 0,
+    color: KIND_STYLES.hosting.dot
+  });
   hostingAndServicesItems.push({
     label: 'My Services',
     to: '/managing/services',
-    Icon: Monitor,
+    Icon: Briefcase,
+    count: hasPendingApplications ? pendingApplicationsCount : 0,
+    color: KIND_STYLES.vendor_request.dot
+  });
+  hostingAndServicesItems.push({
+    label: 'Saved dates',
+    to: '/managing/saved',
+    Icon: Heart,
   });
   const mobileAccountItems: MenuItem[] = [];
   if (isMobile && !isAuthenticated) {
@@ -330,6 +427,30 @@ export function SimpleNavbar({
       }}
     />
   );
+
+  const TABS_CONFIG = [
+    { key: 'managing', label: 'Calendar' },
+    { key: 'earnings', label: 'Earnings' },
+    { key: 'hosting', label: 'My Events' },
+    { key: 'attending', label: 'My Tickets' },
+    { key: 'services', label: 'My Services' },
+    { key: 'saved', label: 'Saved Dates' },
+  ] as const;
+  const tab = location.pathname.split('/').pop()?.toLowerCase();
+
+  const rotatedTabs = useMemo(() => {
+    const idx = TABS_CONFIG.findIndex((t) => t.key === tab)
+    if (idx === -1) return TABS_CONFIG;
+
+    const result = [];
+    for (let i = 0; i < TABS_CONFIG.length; i++) {
+      result.push(
+        TABS_CONFIG[(idx - 1 + i + TABS_CONFIG.length) % TABS_CONFIG.length],
+      );
+    }
+    return result;
+  }, [tab]);
+
   return (
     <Box
       component="header"
@@ -413,6 +534,49 @@ export function SimpleNavbar({
           </Box>
           <NavbarProvider>
             {hideSearchBar ? <></> : <SearchBarSimple />}
+            {hideSearchBar && location.pathname.startsWith('/managing') && (
+              <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{
+                justifyContent: 'center',
+                overflow: 'visible',
+                width: '100%',
+              }}
+            >
+              {rotatedTabs.map((pageTab) => (
+                <motion.div
+                  key={pageTab.key}
+                  layout
+                  transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 40,
+                    mass: 1,
+                  }}
+                >
+                  {pageTab.key == tab && (<Chip
+                    label={pageTab.label}
+                    onClick={() => navigate(`/managing/${pageTab.key}`)}
+                    sx={{
+                      bgcolor:
+                        'transparent',
+                      color: '#121212',
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s, color 0.2s',
+                      '&:hover': {
+                        bgcolor: '#2B2118',
+                      }
+                    }}
+                  />)}
+                </motion.div>
+              ))}
+            </Stack>
+            )}
           </NavbarProvider>
 
           <Box
@@ -616,6 +780,24 @@ export function SimpleNavbar({
                   >
                     <item.Icon size={14} />
                     {item.label}
+
+                    {item?.count && item.count > 0 ? (
+                      <Typography
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          background: item.color,
+                          color: 'white',
+                          fontWeight: 700,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          fontSize: 10
+                        }}
+                      >
+                        {item.count}
+                      </Typography>
+                    ): null }
                   </Box>
                 </Box>
               ))}

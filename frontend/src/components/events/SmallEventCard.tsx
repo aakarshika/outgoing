@@ -26,6 +26,7 @@ export function SmallEventCard({
   const {
     ImageFrame,
     DateAndLocation,
+    ManageButton,
     Category,
     LocationStuff,
     Going,
@@ -186,44 +187,9 @@ export function SmallEventCard({
               <Going />
             </Stack>
 
-
-            {isHost && location.pathname.includes('/managing') && (
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={0.75}
-                fontSize={11}
-              >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                >
-                  <ChevronLeft size={11} /> Preview
-                </Stack>
-                <Box
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate(`/events/${event.id}/manage`);
-                  }}
-                  sx={{
-                    display: 'flex',
-                    px: 1,
-                    py: 0.55,
-                    borderRadius: '4px',
-                    background:
-                      'linear-gradient(135deg, rgba(23, 1, 149, 0.96) 0%, rgba(124, 58, 237, 0.96) 100%)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    boxShadow: '0 12px 24px rgba(124, 58, 237, 0.22)',
-                    backdropFilter: 'blur(8px)',
-                  }}
-                >
-                  <Pencil size={11} style={{ paddingTop: 1 }} /> Manage
-                </Box>
-              </Stack>
-            )}
+              {isHost && location.pathname.includes('/managing') && (
+                <ManageButton />
+              )}
           </Stack>
         </Stack>
       </Stack>

@@ -1,6 +1,6 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { MapPin, Heart } from 'lucide-react';
+import { MapPin, Heart, ChevronLeft, Pencil } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -282,6 +282,52 @@ export function useEventCards({
     </>
   );
 
+  const DateAndLocationRow = () => (
+    <Stack
+      spacing={1}
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
+      sx={{
+        minHeight: 0,
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 20,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          color: 'rgba(66, 50, 28, 0.56)',
+        }}
+      >
+        {dayLabel}
+      </Typography>
+      <Typography
+        component="span"
+        sx={{
+          flexShrink: 0,
+          fontSize: 12,
+          color: 'rgba(66, 50, 28, 0.68)',
+          fontWeight: 500,
+        }}
+      >
+        {monthLabel}
+      </Typography>
+
+      <Typography
+        component="span"
+        sx={{
+          flexShrink: 0,
+          fontSize: 12,
+          color: 'rgba(66, 50, 28, 0.68)',
+          fontWeight: 500,
+        }}
+      >
+        {timeLabel}
+      </Typography>
+    </Stack>
+  );
+
   const DateAndLocation = () => (
     <Stack
       spacing={0}
@@ -357,7 +403,7 @@ export function useEventCards({
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         // backgroundColor: categoryTheme.tape,
-        color: categoryTheme.accent,
+        color: categoryTheme?.accent??'#121212',
         borderRadius: '40px',
       }}
     >
@@ -365,35 +411,86 @@ export function useEventCards({
     </Typography>
   );
 
-  const LocationStuff = () => (
-    <>
-      <MapPin size={12} color="rgba(66, 50, 28, 0.68)" />
+ // useEventCards.tsx — fix LocationStuff
+const LocationStuff = () => (
+  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0, overflow: 'hidden' }}>
+    <MapPin size={12} color="rgba(66, 50, 28, 0.68)" style={{ flexShrink: 0 }} />
+    <Typography
+      component="span"
+      sx={{
+        fontSize: 12,
+        color: 'rgba(66, 50, 28, 0.68)',
+        fontWeight: 500,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        minWidth: 0,
+        flex: 1,
+      }}
+    >
+      {subtitle}
+    </Typography>
+  </Stack>
+);
+
+  const LifecycleStatus = () => {
+    return event.lifecycle_state === 'draft' ? (
       <Box
         sx={{
-          mt: 0.5,
           display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          minWidth: 0,
+          px: 1,
+          py: 0.55,
+          borderRadius: '4px',
+          background: 'rgba(255, 246, 224, 0.8)',
+          color: '#666',
+          fontWeight: 500,
         }}
       >
-        <Typography
-          component="span"
+        {event.lifecycle_state}
+      </Box>
+      ) : event.lifecycle_state === 'published' ? (
+        <Box
           sx={{
-            minWidth: 0,
-            flex: 1,
-            fontSize: 12,
-            color: 'rgba(66, 50, 28, 0.68)',
-            fontWeight: 500,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            display: 'flex',
+            px: 1,
+            py: 0.55,
+            borderRadius: '4px',
+            background:'rgba(216, 87, 0, 0.8)',
+            color: '#ffffff',
+            backdropFilter: 'blur(8px)',
           }}
         >
-          {subtitle}
-        </Typography>
-      </Box>
-    </>
+          Collecting Tickets
+        </Box>
+      )  : event.lifecycle_state === 'completed' ? (
+        <Box
+          sx={{
+            display: 'flex',
+            px: 1,
+            py: 0.55,
+            borderRadius: '4px',
+            background:'rgba(255, 255, 255, 0.8)',
+            color: '#aaaaaa',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          Completed
+        </Box>
+      ) : <></>
+  }
+
+  const ManageButton = () => (
+
+    <Typography
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate(`/events/${event.id}/manage`);
+    }}
+    sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 12, color: '#D85A30', fontWeight: 500, cursor: 'pointer' }}
+  >
+    Manage <Pencil size={14} style={{ paddingTop: 1, marginLeft: 2 }} />
+  </Typography>
   );
 
   const Going = () => (
@@ -406,7 +503,7 @@ export function useEventCards({
             height: 18,
             fontSize: 8,
             fontWeight: 700,
-            bgcolor: categoryTheme.accent,
+            bgcolor:categoryTheme?.accent??'#121212',
             color: '#fff',
           }}
         >
@@ -610,7 +707,7 @@ export function useEventCards({
       pl: isLandscape ? `calc(${resolvedImageWidth}px + 8px)` : 1,
       zIndex: 1,
       borderRadius: '22px',
-      borderLeft: `3px solid ${categoryTheme.accent}`,
+      borderLeft: `3px solid ${categoryTheme?.accent??'#121212'}`,
       minWidth: 0,
     },
     ...(Array.isArray(extra) ? extra : extra ? [extra] : []),
@@ -626,8 +723,11 @@ export function useEventCards({
     Needs,
     Description,
     isFree,
+    ManageButton,
     weekdayLabel,
     timeLabel,
+    DateAndLocationRow,
+    LifecycleStatus,
     getCardSx,
     getContentSx,
     HeartButton,

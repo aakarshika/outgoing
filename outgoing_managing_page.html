@@ -1,0 +1,271 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#F5F0EB;max-width:390px;margin:0 auto;padding-bottom:40px;}
+
+  /* PAGE */
+  .topbar{padding:16px 16px 0;}
+  .back{font-size:12px;color:#888780;margin-bottom:14px;cursor:pointer;}
+  .page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#1A1A1A;margin-bottom:4px;}
+  .page-sub{font-size:13px;color:#888780;margin-bottom:20px;}
+
+  .section-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;margin-bottom:8px;padding:0 16px;}
+
+  /* CARD */
+  .ev-card{
+    margin:0 14px 10px;
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    cursor:pointer;
+    border-left:4px solid transparent;
+  }
+  .ev-card.published{border-left-color:#D85A30;}
+  .ev-card.draft{border-left-color:#D3D1C7;}
+  .ev-card.live{border-left-color:#10b981;}
+  .ev-card.completed{border-left-color:#D3D1C7;}
+  .ev-card.threshold{border-left-color:#EF9F27;}
+
+  .card-body{display:flex;gap:12px;padding:12px 14px 10px;}
+
+  /* THUMB */
+  .thumb{width:64px;height:64px;border-radius:12px;flex-shrink:0;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;}
+  .thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+
+  /* CONTENT */
+  .card-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .event-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#1A1A1A;line-height:1.2;flex:1;min-width:0;}
+
+  /* STATE PILL */
+  .state{font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0;}
+  .state-draft{background:#F1EFE8;color:#888780;}
+  .state-published{background:#FAECE7;color:#993C1D;}
+  .state-live{background:#D1FAE5;color:#065F46;}
+  .state-threshold{background:#FAEEDA;color:#854F0B;}
+  .state-completed{background:#F1EFE8;color:#888780;}
+
+  .card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .meta-item{display:flex;align-items:center;gap:3px;font-size:11px;color:#888780;}
+
+  /* CARD FOOTER */
+  .card-footer{border-top:0.5px solid #F0EDE8;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .footer-stats{display:flex;gap:14px;}
+  .fstat{text-align:center;}
+  .fstat-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#1A1A1A;line-height:1;}
+  .fstat-label{font-size:9px;color:#888780;text-transform:uppercase;letter-spacing:0.05em;margin-top:1px;}
+
+  .manage-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 18px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .manage-btn.secondary{background:transparent;border:0.5px solid #D3D1C7;color:#1A1A1A;}
+
+  /* ALERT ROW */
+  .alert-row{background:#FAEEDA;border-radius:10px;margin:0 14px 10px;padding:9px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:#633806;}
+  .alert-dot{width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0;}
+
+  /* LIVE BADGE */
+  .live-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    color:#fff;padding:3px 9px;border-radius:999px;
+    background:linear-gradient(135deg,#ff5e62,#7c3aed);
+    flex-shrink:0;
+  }
+  .live-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+  /* NEEDS ROW */
+  .needs-row{margin:0 14px 10px;}
+  .needs-inner{background:#FAECE7;border-radius:10px;padding:8px 12px;font-size:12px;color:#712B13;display:flex;align-items:center;gap:6px;}
+
+  /* FAB */
+  .fab{position:fixed;bottom:24px;right:calc(50% - 195px + 16px);background:#D85A30;color:#fff;border:none;border-radius:999px;padding:14px 22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(216,90,48,0.35);}
+
+  /* EMPTY */
+  .empty-card{margin:0 14px;background:#fff;border-radius:18px;padding:32px 20px;text-align:center;}
+  .empty-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:6px;}
+  .empty-sub{font-size:13px;color:#888780;margin-bottom:16px;line-height:1.5;}
+  .empty-btn{display:inline-flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:10px 20px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;}
+
+  .divider-line{height:0.5px;background:#E8E5E0;margin:16px 14px 12px;}
+</style>
+
+<div>
+  <div class="topbar">
+    <div class="back">← Profile</div>
+    <div class="page-title">Managing</div>
+    <div class="page-sub">Events you're hosting or co-hosting</div>
+  </div>
+
+  <!-- ACTIVE SECTION -->
+  <div class="section-label">Active</div>
+
+  <!-- CARD 1: LIVE NOW -->
+  <div class="ev-card live">
+    <div class="card-body">
+      <div class="thumb" style="background:#1a0a2e;">🎵</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Rooftop Vinyl Night</div>
+          <div class="live-badge"><div class="live-dot"></div>Live</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Today · 8pm</div>
+          <div class="meta-item">📍 Indiranagar</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">48</div><div class="fstat-label">Checked in</div></div>
+        <div class="fstat"><div class="fstat-val">60</div><div class="fstat-label">Capacity</div></div>
+        <div class="fstat"><div class="fstat-val">₹16k</div><div class="fstat-label">Revenue</div></div>
+      </div>
+      <button class="manage-btn">Manage ✎</button>
+    </div>
+  </div>
+
+  <!-- CARD 2: PUBLISHED, NEEDS ATTENTION -->
+  <div class="ev-card threshold">
+    <div class="card-body">
+      <div class="thumb" style="background:#EAF3DE;">🌿</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Fermentation Workshop</div>
+          <div class="state state-threshold">Needs attention</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Sat, Apr 12</div>
+          <div class="meta-item">📍 HSR Layout</div>
+        </div>
+      </div>
+    </div>
+    <div class="needs-row" style="margin:0;padding:0 14px 10px;">
+      <div class="needs-inner">⚡ <span>Catering and photography still unfilled · 8 more to hit min. threshold</span></div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">22</div><div class="fstat-label">Going</div></div>
+        <div class="fstat"><div class="fstat-val">30</div><div class="fstat-label">Min.</div></div>
+        <div class="fstat"><div class="fstat-val">₹5.5k</div><div class="fstat-label">Revenue</div></div>
+      </div>
+      <button class="manage-btn">Manage ✎</button>
+    </div>
+  </div>
+
+  <!-- CARD 3: PUBLISHED, HEALTHY -->
+  <div class="ev-card published">
+    <div class="card-body">
+      <div class="thumb" style="background:#EEEDFE;">🎨</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Open Studio — Collage Night</div>
+          <div class="state state-published">Collecting tickets</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Sun, Apr 20</div>
+          <div class="meta-item">📍 Koramangala</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">31</div><div class="fstat-label">Going</div></div>
+        <div class="fstat"><div class="fstat-val">50</div><div class="fstat-label">Capacity</div></div>
+        <div class="fstat"><div class="fstat-val">₹7.7k</div><div class="fstat-label">Revenue</div></div>
+      </div>
+      <button class="manage-btn">Manage ✎</button>
+    </div>
+  </div>
+
+  <!-- CARD 4: DRAFT -->
+  <div class="ev-card draft">
+    <div class="card-body">
+      <div class="thumb" style="background:#F1EFE8;">🏃</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Sunday Morning Run Club</div>
+          <div class="state state-draft">Draft</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Date not set</div>
+          <div class="meta-item">📍 Cubbon Park</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">—</div><div class="fstat-label">Going</div></div>
+        <div class="fstat"><div class="fstat-val">—</div><div class="fstat-label">Revenue</div></div>
+        <div class="fstat"><div class="fstat-val">2</div><div class="fstat-label">Needs set</div></div>
+      </div>
+      <button class="manage-btn secondary">Edit draft</button>
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PAST SECTION -->
+  <div class="section-label">Past</div>
+
+  <!-- CARD 5: COMPLETED -->
+  <div class="ev-card completed">
+    <div class="card-body">
+      <div class="thumb" style="background:#E6F1FB;">🎤</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Indie Film Screening + Q&A</div>
+          <div class="state state-completed">Completed</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Fri, Mar 28</div>
+          <div class="meta-item">📍 The Charles</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">58</div><div class="fstat-label">Attended</div></div>
+        <div class="fstat"><div class="fstat-val">4.8★</div><div class="fstat-label">Rating</div></div>
+        <div class="fstat"><div class="fstat-val">₹14k</div><div class="fstat-label">Revenue</div></div>
+      </div>
+      <button class="manage-btn secondary">View recap</button>
+    </div>
+  </div>
+
+  <!-- CARD 6: COMPLETED -->
+  <div class="ev-card completed">
+    <div class="card-body">
+      <div class="thumb" style="background:#FAEEDA;">🌅</div>
+      <div class="card-content">
+        <div class="card-top">
+          <div class="event-title">Dawn Hike — Nandi Hills</div>
+          <div class="state state-completed">Completed</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">📅 Sun, Mar 9</div>
+          <div class="meta-item">📍 Nandi Hills</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-stats">
+        <div class="fstat"><div class="fstat-val">22</div><div class="fstat-label">Attended</div></div>
+        <div class="fstat"><div class="fstat-val">4.6★</div><div class="fstat-label">Rating</div></div>
+        <div class="fstat"><div class="fstat-val">Free</div><div class="fstat-label">Revenue</div></div>
+      </div>
+      <button class="manage-btn secondary">View recap</button>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE if no past -->
+  <!-- <div class="empty-card">
+    <div class="empty-title">No completed events yet</div>
+    <div class="empty-sub">Your past events will show up here after they wrap up.</div>
+  </div> -->
+
+</div>
+
+<button class="fab">+ Create event</button>

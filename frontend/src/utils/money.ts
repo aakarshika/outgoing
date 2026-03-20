@@ -8,5 +8,5 @@ export function parseMoney(value?: string | number | null): number {
 
 export function formatMoney(value?: string | number | null): string {
   const numeric = parseMoney(value);
-  return `Rs ${numeric.toLocaleString('en-IN')}`;
+  return `₹${numeric.toLocaleString('en-IN')}`;
 }
