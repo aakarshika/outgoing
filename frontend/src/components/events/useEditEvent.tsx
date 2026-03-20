@@ -133,7 +133,9 @@ export function useEditEvent({
   const [eventFeatures, setEventFeatures] = useState<EventFeature[]>(
     (event?.features as EventFeature[] | undefined) ?? [],
   );
-  const [capacity, setCapacity] = useState(event?.capacity ?? '');
+  const [capacity, setCapacity] = useState(
+    event?.capacity != null ? String(event.capacity) : '',
+  );
   const [isPaidTicket, setIsPaidTicket] = useState(
     event?.ticket_price_standard != null && Number(event.ticket_price_standard) > 0,
   );
@@ -482,7 +484,7 @@ export function useEditEvent({
             // background:
             //   'radial-gradient(circle at top right, rgba(255, 205, 164, 0.55), transparent 32%), linear-gradient(145deg, #FFF8EF 0%, #FFFFFF 48%, #F7F0FF 100%)',
             // borderRadius: '28px',
-            // border: '1px solid rgba(143, 105, 66, 0.18)',
+            // 
             // boxShadow: '0 24px 44px rgba(92, 63, 31, 0.08)',
             p: 1.75,
           }}
@@ -732,7 +734,7 @@ export function useEditEvent({
             type="button"
             variant="contained"
             disabled={isSubmitting || categories?.data?.length === 0}
-            onClick={() => void handleAction('plan')}
+            onClick={() => void handleAction('needs-more')}
             sx={{
               borderRadius: '999px',
               mx: 8,
@@ -824,9 +826,9 @@ export function useEditEvent({
         sx={{
           ...fieldSx,
           '& .MuiInputBase-input': {
-            fontSize: isCreate ? 26 : 20,
+            fontSize: isCreate ? 26 : 15,
             fontWeight: 700,
-            py: 2,
+            py: isCreate ? 2 : 1,
           },
         }}
       />
@@ -846,13 +848,13 @@ export function useEditEvent({
         </Typography>
         <Box
           sx={{
-            display: 'grid',
+            display: isCreate ? 'grid' : '  ',
             gridTemplateColumns: isCreate
               ? 'repeat(2, minmax(0, 1fr))'
-              : 'repeat(auto-fill, minmax(140px, 1fr))',
+              : '',
             gap: 1,
             maxHeight: isCreate ? 280 : 'none',
-            overflowY: 'auto',
+            overflowY: isCreate ? 'auto' : 'none',
             pr: 0.5,
           }}
         >
@@ -865,16 +867,17 @@ export function useEditEvent({
                 type="button"
                 onClick={() => setCategoryId(category.id)}
                 sx={{
-                  minHeight: 68,
+                  minHeight: isCreate ? 68 : 44,
                   borderRadius: '18px',
-                  border: '1px solid rgba(143, 105, 66, 0.18)',
+                  ml: isCreate ? 0 : 1,
+                  mt: isCreate ? 0 : 1,
                   background: selected ? '#D85A30' : '#fff',
                   color: selected ? '#fff' : '#2B2118',
                   px: 1.5,
-                  py: 1.1,
+                  py: isCreate ? 1.1 : 0.5,
                   textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 700,
+                  fontSize: isCreate ? 14 : 12,
+                  fontWeight: isCreate ? 700 : 500,
                   lineHeight: 1.35,
                   boxShadow: selected ? '0 18px 28px rgba(216, 90, 48, 0.18)' : 'none',
                 }}
@@ -1135,24 +1138,8 @@ export function useEditEvent({
         inputProps={{ min: 0.25, step: 0.25 }}
         sx={fieldSx}
       />
-      <Button
-        type="button"
-        onClick={() => void handleAction('plan')}
-        disabled={isSubmitting}
-        sx={{
-          alignSelf: 'flex-start',
-          borderRadius: '999px',
-          px: 1.6,
-          py: 1,
-          textTransform: 'none',
-          color: '#2B2118',
-          border: '1px solid rgba(143, 105, 66, 0.18)',
-          background: '#fff',
-        }}
-      >
-        More options
-        <ArrowRight size={15} style={{ marginLeft: 8 }} />
-      </Button>
+      
+      
     </Stack>
   );
 
@@ -1171,7 +1158,7 @@ export function useEditEvent({
               type="button"
               onClick={() => setLocationMode(option.id as 'offline' | 'online')}
               sx={{
-                border: '1px solid rgba(143, 105, 66, 0.18)',
+                
                 borderRadius: '999px',
                 px: 1.8,
                 py: 1,
@@ -1302,7 +1289,7 @@ export function useEditEvent({
             sx={{
               borderRadius: '18px',
               background: '#fff',
-              border: '1px solid rgba(143, 105, 66, 0.18)',
+              
               px: 1.6,
               py: 1.3,
             }}
@@ -1318,6 +1305,43 @@ export function useEditEvent({
           </Box>
         </>
       )}
+    </Stack>
+  );
+
+  const renderTotalCapacityField = () => (
+    <TextField
+      label="Total capacity"
+      type="number"
+      value={capacity}
+      onChange={(event) => {
+        const nextCapacity = event.target.value;
+        setCapacity(nextCapacity);
+        setTicketTiers((current) => {
+          const tier = current[0] || buildPrimaryTicketTier();
+          return [
+            {
+              ...tier,
+              capacity: toTierCapacity(nextCapacity),
+            },
+          ];
+        });
+      }}
+      placeholder={`${capacity === '' ? 'Unlimited' : 'Total capacity'}`}
+      fullWidth
+      sx={fieldSx}
+      helperText="Leave blank for unlimited capacity."
+    />
+  );
+
+  const renderTotalCapacitySection = () => (
+    <Stack spacing={1.4}>
+      <Typography
+        sx={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(66, 50, 28, 0.72)' }}
+      >
+        Total capacity is how many people can attend across all tiers. Leave blank if you
+        don&apos;t want a hard cap.
+      </Typography>
+      {renderTotalCapacityField()}
     </Stack>
   );
 
@@ -1355,40 +1379,7 @@ export function useEditEvent({
       }}
     >
       <Stack spacing={2.2}>
-        {/* <Typography
-          sx={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'rgba(66, 50, 28, 0.56)',
-          }}
-        >
-          Event Capacity
-        </Typography> */}
-
-        <TextField
-          label="Event capacity"
-          type="number"
-          value={capacity}
-          onChange={(event) => {
-            const nextCapacity = event.target.value;
-            setCapacity(nextCapacity);
-            setTicketTiers((current) => {
-              const tier = current[0] || buildPrimaryTicketTier();
-              return [
-                {
-                  ...tier,
-                  capacity: toTierCapacity(nextCapacity),
-                },
-              ];
-            });
-          }}
-          placeholder={`${capacity === '' ? 'Unlimited' : 'Event capacity'}`}
-          fullWidth
-          sx={fieldSx}
-          helperText="Leave blank for unlimited capacity."
-        />
+        {renderTotalCapacityField()}
 
         <TextField
           label="Ticket name"
@@ -1408,7 +1399,7 @@ export function useEditEvent({
             display: 'inline-flex',
             p: 0.5,
             borderRadius: '999px',
-            border: '1px solid rgba(143, 105, 66, 0.18)',
+            
             background: '#fff',
             width: 'fit-content',
           }}
@@ -1453,6 +1444,7 @@ export function useEditEvent({
                 {option.label}
               </Box>
             );
+            
           })}
         </Box>
 
@@ -1460,7 +1452,7 @@ export function useEditEvent({
           sx={{
             borderRadius: '24px',
             overflow: 'hidden',
-            border: '1px solid rgba(143, 105, 66, 0.18)',
+            
             background:
               `linear-gradient(135deg, rgba(216, 90, 48, 0.08) 0%, rgba(255,255,255,1) 36%, ${TICKET_COLORS[0].light} 100%)`,
           }}
@@ -1608,22 +1600,12 @@ export function useEditEvent({
                   fullWidth
                   sx={fieldSx}
                 />
-                <TextField
-                  label="Minimum goers to hold event"
-                  type="number"
-                  value={minimumParticipants}
-                  onChange={(event) =>
-                    setMinimumParticipants(event.target.value || '10')
-                  }
-                  fullWidth
-                  sx={fieldSx}
-                />
               </Stack>
 
               <Typography
                 sx={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(66, 50, 28, 0.72)' }}
               >
-                {`${resolvedPrimaryTier.admits || 1} person allowed per ticket. Event will happen if at least ${minimumParticipants || 10} participants come.`}
+                {`${resolvedPrimaryTier.admits || 1} person allowed per ticket. Event will happen if at least 20% participants come.`}
               </Typography>
             </Box>
           </Box>
@@ -1631,7 +1613,7 @@ export function useEditEvent({
 
         <Button
           type="button"
-          onClick={() => void handleAction('plan')}
+          onClick={() => void handleAction('tickets-more')}
           disabled={isSubmitting}
           sx={{
             alignSelf: 'flex-start',
@@ -1640,11 +1622,11 @@ export function useEditEvent({
             py: 1,
             textTransform: 'none',
             color: '#2B2118',
-            border: '1px solid rgba(143, 105, 66, 0.18)',
+            
             background: '#fff',
           }}
         >
-          More options
+          Save Draft  for More options
           <ArrowRight size={15} style={{ marginLeft: 8 }} />
         </Button>
       </Stack>
@@ -1711,6 +1693,7 @@ export function useEditEvent({
     renderTimingSection,
     renderLocationSection,
     renderFeaturesSection,
+    renderTotalCapacitySection,
     renderSeatingSection,
     renderFinishSection,
     handleAction,

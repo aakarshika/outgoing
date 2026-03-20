@@ -1,0 +1,224 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .p{font-family:'DM Sans',sans-serif;background:#F5F0EB;max-width:390px;margin:0 auto;padding:20px 14px 40px;}
+
+  .context-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;margin-bottom:10px;padding-left:2px;}
+
+  .app-card{background:#fff;border-radius:18px;overflow:hidden;}
+
+  /* COLLAPSED TOP — always visible */
+  .card-top{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0EDE8;}
+  .ct-thumb{width:42px;height:42px;border-radius:12px;background:#FAECE7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .ct-body{flex:1;}
+  .ct-event{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#1A1A1A;line-height:1.2;}
+  .ct-meta{font-size:11px;color:#888780;margin-top:2px;}
+  .ct-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .status-pill{font-size:11px;font-weight:500;padding:4px 10px;border-radius:999px;background:#EAF3DE;color:#3B6D11;}
+  .ct-chev{font-size:14px;color:#D3D1C7;}
+
+  /* EXPANDED BODY */
+  .card-body{padding:16px;}
+
+  /* COMPENSATION */
+  .comp{background:#FAEEDA;border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;}
+  .comp-left{}
+  .comp-tag{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#854F0B;margin-bottom:4px;}
+  .comp-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#BA7517;line-height:1;}
+  .comp-right{flex:1;}
+  .comp-desc{font-size:12px;color:#854F0B;line-height:1.5;}
+
+  /* DETAILS */
+  .detail-block{display:flex;flex-direction:column;gap:0;background:#F5F0EB;border-radius:14px;overflow:hidden;margin-bottom:14px;}
+  .dr{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-bottom:0.5px solid #EAE7E2;}
+  .dr:last-child{border-bottom:none;}
+  .dr-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+  .dr-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:#888780;margin-bottom:3px;}
+  .dr-val{font-size:13px;color:#1A1A1A;line-height:1.4;}
+  .dr-val-link{font-size:13px;color:#185FA5;line-height:1.4;text-decoration:underline;}
+
+  /* INSTRUCTIONS */
+  .instructions{margin-bottom:14px;}
+  .inst-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin-bottom:8px;padding-left:2px;}
+  .inst-box{background:#F5F0EB;border-left:3px solid #D85A30;border-radius:0 10px 10px 0;padding:12px 14px;}
+  .inst-text{font-size:13px;color:#1A1A1A;line-height:1.6;}
+
+  /* QR */
+  .qr-section{margin-bottom:14px;}
+  .qr-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin-bottom:8px;padding-left:2px;}
+  .qr-card{background:#1A1A1A;border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .qr-event-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;text-align:center;}
+  .qr-role{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:#888780;text-align:center;}
+  .qr-img{width:140px;height:140px;}
+  .qr-divider{width:100%;height:0.5px;background:rgba(255,255,255,0.1);}
+  .qr-bottom{display:flex;justify-content:space-between;align-items:center;width:100%;}
+  .qr-name{font-size:13px;font-weight:500;color:#fff;}
+  .qr-code-text{font-family:monospace;font-size:9px;color:#888780;letter-spacing:0.1em;}
+  .qr-date{font-size:11px;color:#888780;}
+
+  /* ACTIONS */
+  .actions{display:flex;flex-direction:column;gap:8px;}
+  .msg-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;border:0.5px solid #D3D1C7;background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#1A1A1A;cursor:pointer;}
+  .msg-btn-primary{background:#D85A30;border-color:#D85A30;color:#fff;}
+  .btn-icon{font-size:16px;}
+</style>
+
+<div class="p">
+  <div class="context-label">DJ / Music · Application</div>
+
+  <div class="app-card">
+
+    <!-- ALWAYS VISIBLE TOP -->
+    <div class="card-top">
+      <div class="ct-thumb">&#127926;</div>
+      <div class="ct-body">
+        <div class="ct-event">Rooftop Vinyl Night</div>
+        <div class="ct-meta">Sat, Apr 5 · Indiranagar Social</div>
+      </div>
+      <div class="ct-right">
+        <div class="status-pill">Accepted ✓</div>
+        <div class="ct-chev">&#8963;</div>
+      </div>
+    </div>
+
+    <!-- EXPANDED BODY -->
+    <div class="card-body">
+
+      <!-- COMPENSATION -->
+      <div class="comp">
+        <div class="comp-left">
+          <div class="comp-tag">Your reward</div>
+          <div class="comp-val">Free in</div>
+        </div>
+        <div class="comp-right">
+          <div class="comp-desc">Entry waived for your 3-hour set. Bring your own gear. No ticket needed.</div>
+        </div>
+      </div>
+
+      <!-- DETAILS -->
+      <div class="detail-block">
+        <div class="dr">
+          <div class="dr-icon">&#128197;</div>
+          <div>
+            <div class="dr-label">When</div>
+            <div class="dr-val">Sat, Apr 5 · 8:00 PM – 11:30 PM</div>
+          </div>
+        </div>
+        <div class="dr">
+          <div class="dr-icon">&#128205;</div>
+          <div>
+            <div class="dr-label">Where</div>
+            <div class="dr-val">Indiranagar Social, 100 Feet Rd, Bengaluru</div>
+          </div>
+        </div>
+        <div class="dr">
+          <div class="dr-icon">&#128101;</div>
+          <div>
+            <div class="dr-label">Host</div>
+            <div class="dr-val">Pinky Sharma · <span style="color:#D85A30;cursor:pointer;">View profile</span></div>
+          </div>
+        </div>
+        <div class="dr">
+          <div class="dr-icon">&#127743;</div>
+          <div>
+            <div class="dr-label">Expected crowd</div>
+            <div class="dr-val">~50 people · Indoor rooftop</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSTRUCTIONS -->
+      <div class="instructions">
+        <div class="inst-label">Instructions from host</div>
+        <div class="inst-box">
+          <div class="inst-text">Arrive by <strong>7:00 PM</strong> for soundcheck. Load-in from the back entrance — ask for Pinky at the door. Your set starts at <strong>9:00 PM</strong> sharp. Play 3 hours, feel free to read the crowd. Rooftop capacity is 60.</div>
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="qr-section">
+        <div class="qr-label">Your entry pass</div>
+        <div class="qr-card">
+          <div class="qr-event-name">Rooftop Vinyl Night</div>
+          <div class="qr-role">DJ · Contributor Pass</div>
+          <svg class="qr-img" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="140" height="140" fill="#1A1A1A"/>
+            <!-- top-left finder -->
+            <rect x="10" y="10" width="44" height="44" rx="5" fill="#fff"/>
+            <rect x="16" y="16" width="32" height="32" rx="3" fill="#1A1A1A"/>
+            <rect x="21" y="21" width="22" height="22" rx="1" fill="#fff"/>
+            <!-- top-right finder -->
+            <rect x="86" y="10" width="44" height="44" rx="5" fill="#fff"/>
+            <rect x="92" y="16" width="32" height="32" rx="3" fill="#1A1A1A"/>
+            <rect x="97" y="21" width="22" height="22" rx="1" fill="#fff"/>
+            <!-- bottom-left finder -->
+            <rect x="10" y="86" width="44" height="44" rx="5" fill="#fff"/>
+            <rect x="16" y="92" width="32" height="32" rx="3" fill="#1A1A1A"/>
+            <rect x="21" y="97" width="22" height="22" rx="1" fill="#fff"/>
+            <!-- data modules -->
+            <rect x="62" y="10" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="10" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="20" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="20" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="30" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="82" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="72" width="7" height="7" fill="#fff"/>
+            <rect x="82" y="72" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="92" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="102" y="72" width="7" height="7" fill="#fff"/>
+            <rect x="112" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="122" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="112" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="122" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="92" y="92" width="7" height="7" fill="#fff"/>
+            <rect x="102" y="92" width="7" height="7" fill="#fff"/>
+            <rect x="122" y="92" width="7" height="7" fill="#fff"/>
+            <rect x="92" y="102" width="7" height="7" fill="#fff"/>
+            <rect x="112" y="102" width="7" height="7" fill="#fff"/>
+            <rect x="92" y="112" width="7" height="7" fill="#fff"/>
+            <rect x="102" y="112" width="7" height="7" fill="#fff"/>
+            <rect x="122" y="112" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="92" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="102" width="7" height="7" fill="#fff"/>
+            <rect x="62" y="112" width="7" height="7" fill="#fff"/>
+            <rect x="72" y="122" width="7" height="7" fill="#fff"/>
+            <rect x="10" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="20" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="30" y="72" width="7" height="7" fill="#fff"/>
+            <rect x="10" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="40" y="62" width="7" height="7" fill="#fff"/>
+            <rect x="50" y="72" width="7" height="7" fill="#fff"/>
+            <rect x="40" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="20" y="82" width="7" height="7" fill="#fff"/>
+            <rect x="50" y="62" width="7" height="7" fill="#fff"/>
+          </svg>
+          <div class="qr-divider"></div>
+          <div class="qr-bottom">
+            <div>
+              <div class="qr-name">Arjun Kapoor</div>
+              <div class="qr-date">Sat, Apr 5 · 8PM</div>
+            </div>
+            <div class="qr-code-text">OG-2026-VINYL-AK047</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button class="msg-btn msg-btn-primary">
+          <span class="btn-icon">&#128172;</span>
+          Message Pinky
+        </button>
+        <button class="msg-btn">
+          <span class="btn-icon">&#128205;</span>
+          Get directions
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import {
   QuickCreateSpark,
   type QuickCreateSubmitPayload,
+  type QuickCreateAction,
 } from '@/components/events/QuickCreateSpark';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
 import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
@@ -208,7 +209,7 @@ export function SimpleNavbar({
   };
 
   const handleQuickCreateSubmit = async (
-    action: 'plan' | 'post',
+    action: QuickCreateAction,
     payload: QuickCreateSubmitPayload,
   ) => {
     setIsQuickCreateSubmitting(true);
@@ -280,13 +281,26 @@ export function SimpleNavbar({
       await queryClient.invalidateQueries({ queryKey: ['feed'] });
 
       setIsQuickCreateOpen(false);
-      if (action === 'plan') {
-        toast.success('Draft created. Keep building it.');
-        navigate(`/events/${result.data.id}/manage`);
-      } else {
+      if (action === 'post') {
         toast.success('Event posted');
         navigate(`/events-new/${result.data.id}`);
+        return;
       }
+
+      if (action === 'tickets-more') {
+        toast.success('Draft created. Keep building it.');
+        navigate(`/events/${result.data.id}/manage/tickets`);
+        return;
+      }
+
+      if (action === 'needs-more') {
+        toast.success('Draft created. Keep building it.');
+        navigate(`/events/${result.data.id}/manage/needs`);
+        return;
+      }
+
+      toast.success('Draft created. Keep building it.');
+      navigate(`/events/${result.data.id}/manage`);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Could not create this event');
       throw error;

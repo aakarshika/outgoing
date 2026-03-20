@@ -8,7 +8,7 @@ import type { BaseFeedEventItem } from '@/types/events';
 
 import { EventNeedsStack } from './EventNeedsStack';
 
-export type EventCardEvent = BaseFeedEventItem ;
+export type EventCardEvent = BaseFeedEventItem;
 
 interface UseEventCardsOptions {
   event: EventCardEvent;
@@ -90,18 +90,18 @@ export function useEventCards({
             position: 'absolute',
             ...(isLandscape
               ? {
-                  top: '14%',
-                  right: -16,
-                  width: 18,
-                  height: '72%',
-                }
+                top: '14%',
+                right: -16,
+                width: 18,
+                height: '72%',
+              }
               : {
-                  left: '50%',
-                  bottom: -16,
-                  transform: 'translateX(-50%)',
-                  width: '72%',
-                  height: 18,
-                }),
+                left: '50%',
+                bottom: -16,
+                transform: 'translateX(-50%)',
+                width: '72%',
+                height: 18,
+              }),
             borderRadius: '999px',
             background: 'rgba(43, 33, 24, 0.18)',
             filter: `blur(${imageHeight / 10}px)`,
@@ -132,18 +132,18 @@ export function useEventCards({
                 position: 'absolute',
                 ...(isLandscape
                   ? {
-                      top: '12%',
-                      right: -12,
-                      width: 20,
-                      height: '76%',
-                    }
+                    top: '12%',
+                    right: -12,
+                    width: 20,
+                    height: '76%',
+                  }
                   : {
-                      left: '50%',
-                      bottom: -14,
-                      transform: 'translateX(-50%)',
-                      width: '85%',
-                      height: 20,
-                    }),
+                    left: '50%',
+                    bottom: -14,
+                    transform: 'translateX(-50%)',
+                    width: '85%',
+                    height: 20,
+                  }),
                 borderRadius: '999px',
                 background: 'rgba(41, 30, 21, 0.2)',
                 filter: 'blur(8px)',

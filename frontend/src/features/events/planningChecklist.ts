@@ -1,12 +1,13 @@
-import type { EventDetail } from '@/types/events';
+import type { EventDetail, EventTicketTier } from '@/types/events';
 import type { EventNeed } from '@/types/needs';
 
 import {
+  applyPlanningChecklistTemplate as tpl,
+  type PlanningChecklistConfigItem,
   type PlanningChecklistContext,
   type PlanningChecklistItem,
   planningChecklistManagerConfig,
-  type PlanningChecklistResolver,
-  type PlanningChecklistRuleGroup,
+  type PlanningChecklistRuleKey,
 } from './planningChecklistConfig';
 
 export function formatChecklistDeadline(daysUntilEvent: number | null) {
@@ -17,40 +18,45 @@ export function formatChecklistDeadline(daysUntilEvent: number | null) {
   return `${daysUntilEvent} days before event`;
 }
 
-function createPlanningChecklistContext(
+function buildContext(
   event: EventDetail,
   eventNeeds: EventNeed[],
   totalSold = event.ticket_count ?? 0,
 ): PlanningChecklistContext {
-  const isOnline = event.location_address === 'Online Event';
   const missingDetails = [
-    !event.title?.trim() ? 'title' : null,
-    !event.description?.trim() ? 'description' : null,
-    !event.category?.id ? 'category' : null,
-    !event.start_time ? 'start time' : null,
-    isOnline
-      ? !event.location_name?.trim()
-        ? 'join link'
-        : null
-      : !event.location_name?.trim() && !event.location_address?.trim()
-        ? 'location'
-        : null,
-  ].filter(Boolean);
+    // Index 0: basic details check (title, category, location_address only).
+    (() => {
+      const missing: string[] = [];
+      if (!event.title?.trim()) missing.push('title');
+      if (!event.category?.id) missing.push('category');
+      if (!event.location_address?.trim()) missing.push('location address');
+      return missing.length === 0 ? null : missing.join(', ');
+    })(),
+  ].filter((x): x is string => Boolean(x));
 
-  const isDetailsComplete = missingDetails.length === 0;
-  const isPublished =
-    event.lifecycle_state !== 'draft' && event.lifecycle_state !== 'cancelled';
+  const isPublished = (() => {
+    const { lifecycle_state } = event;
+    // Once an event reaches "published", it should stay discoverable for subsequent
+    // lifecycle states in this checklist flow (event_ready -> live -> completed).
+    return (
+      lifecycle_state === 'published' ||
+      lifecycle_state === 'event_ready' ||
+      lifecycle_state === 'live' ||
+      lifecycle_state === 'completed'
+    );
+  })();
   const hasTickets = (event.ticket_tiers?.length || 0) > 0;
   const soldCount = event.ticket_count ?? totalSold;
   const derivedCapacity =
-    event.capacity ||
-    event.ticket_tiers?.reduce((sum: number, tier: any) => {
-      return sum + (Number(tier.capacity) || 0);
-    }, 0) ||
+    event.ticket_tiers?.reduce(
+      (sum: number, tier: EventTicketTier) => sum + (Number(tier.capacity) || 0),
+      0,
+    ) ||
     0;
   const salesPercentage = derivedCapacity > 0 ? (soldCount / derivedCapacity) * 100 : 0;
   const hasSalesThreshold = derivedCapacity > 0;
-  const isSalesHealthy = hasSalesThreshold && salesPercentage >= 20;
+  const minimumSalesRequired = hasSalesThreshold ? Math.ceil(derivedCapacity * 0.2) : 1;
+  const isSalesHealthy = soldCount >= minimumSalesRequired;
   const startDate = event.start_time ? new Date(event.start_time) : null;
   const daysUntilEvent = startDate
     ? Math.ceil((startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -60,15 +66,13 @@ function createPlanningChecklistContext(
     : daysUntilEvent !== null && daysUntilEvent <= 3
       ? 'warn'
       : 'todo';
-  const isLiveMilestoneComplete =
-    event.lifecycle_state === 'live' || event.lifecycle_state === 'completed';
 
   return {
     event,
     eventNeeds,
     totalSold,
     missingDetails,
-    isDetailsComplete,
+    isDetailsComplete: missingDetails.length === 0,
     isPublished,
     hasTickets,
     soldCount,
@@ -78,154 +82,226 @@ function createPlanningChecklistContext(
     isSalesHealthy,
     salesStatus,
     daysUntilEvent,
-    isLiveMilestoneComplete,
+    isLiveMilestoneComplete:
+      event.lifecycle_state === 'live' || event.lifecycle_state === 'completed',
     coreItemsDone: false,
     salesItemsDone: false,
   };
 }
 
-const checklistResolvers: Record<string, PlanningChecklistResolver> = {
-  event_details_complete: (context) => ({
-    label: 'Event details complete',
-    status: context.isDetailsComplete ? 'done' : 'todo',
-    due: context.isDetailsComplete
-      ? 'Title, description, category, time, and location are all in place.'
-      : `Still missing: ${context.missingDetails.join(', ')}.`,
-  }),
-  event_is_published: (context) => ({
-    label: 'Event is published',
-    status: context.isPublished ? 'done' : 'todo',
-    due: context.isPublished
-      ? 'People can discover the event and make a decision.'
-      : 'Publish when the essentials feel trustworthy enough to sell.',
-  }),
-  tickets_are_configured: (context) => ({
-    label: 'Tickets are configured',
-    status: context.hasTickets ? 'done' : 'todo',
-    due: context.hasTickets
-      ? `${context.event.ticket_tiers?.length || 0} ticket tier(s) are ready.`
-      : 'Add at least one ticket tier so the event has a clear entry path.',
-  }),
-  sales_threshold_looks_healthy: (context) => ({
-    label: 'Sales threshold looks healthy',
-    status:
-      context.salesStatus === 'done' || context.isLiveMilestoneComplete
-        ? 'done'
-        : context.salesStatus,
-    due:
-      context.salesStatus === 'done' || context.isLiveMilestoneComplete
-        ? context.hasSalesThreshold
-          ? `Min 20% sold (${context.soldCount}/${context.derivedCapacity}). Now ${context.salesPercentage.toFixed(0)}%.`
-          : 'Readiness milestone reached for this event.'
-        : context.hasSalesThreshold
-          ? `Min 20% sold (${context.soldCount}/${context.derivedCapacity}). Now ${context.salesPercentage.toFixed(0)}%.`
-          : 'Set capacity to track readiness against ticket sales.',
-    variant: 'sales',
-  }),
-  event_needs_status: (context) =>
-    context.eventNeeds.length === 0
-      ? [
-          {
-            label: 'No external needs defined',
-            status: 'done',
-            due: 'This event currently has no vendor or support dependencies.',
-          },
-        ]
-      : context.eventNeeds.map((need) => {
-          const acceptedApplication = need.applications.find(
-            (application) => application.status === 'accepted',
-          );
-          if (need.status === 'filled') {
-            return {
-              label: `${need.title} slot filled`,
-              status: 'done',
-              due: acceptedApplication
-                ? `${acceptedApplication.vendor_name} confirmed for this role.`
-                : 'Vendor confirmed and the slot is covered.',
-            };
-          }
-          if (need.status === 'override_filled') {
-            return {
-              label: `${need.title} covered by host`,
-              status: 'done',
-              due: 'You (host) are providing this service and are responsible for it.',
-              variant: 'host',
-            };
-          }
-          if (need.application_count > 0) {
-            return {
-              label: `${need.title} slot needs a decision`,
-              status:
-                context.daysUntilEvent !== null && context.daysUntilEvent <= 3
-                  ? 'warn'
-                  : 'todo',
-              due: `${need.application_count} application(s) to review · ${formatChecklistDeadline(context.daysUntilEvent)}.`,
-            };
-          }
-          return {
-            label: `${need.title} still needed`,
-            status:
-              context.daysUntilEvent !== null && context.daysUntilEvent <= 3
-                ? 'warn'
-                : 'todo',
-            due: `No applicants yet · ${formatChecklistDeadline(context.daysUntilEvent)}.`,
-          };
-        }),
-  cover_image_uploaded: (context) => ({
-    label: 'Cover image is uploaded',
-    status: context.event.cover_image ? 'done' : 'todo',
-    due: context.event.cover_image
-      ? 'The event already has a visual anchor people can trust.'
-      : 'Recommended. A strong cover image improves trust and click-through.',
-  }),
-  go_live: (context) => ({
-    label: 'Go Live, and start admitting guests',
-    status:
-      context.isLiveMilestoneComplete ||
-      (context.coreItemsDone && context.salesItemsDone)
-        ? 'done'
-        : 'todo',
-    due:
-      context.isLiveMilestoneComplete ||
-      (context.coreItemsDone && context.salesItemsDone)
-        ? 'You are perfectly ready to go live now.'
-        : 'Finish the checklist above before going live.',
-    variant: 'go_live',
-  }),
-  live_event: (context) => {
-    if (context.event.lifecycle_state === 'live') {
-      return {
-        label: 'Live the event',
-        status: 'done',
-        due: "You are live. Nothing to do here but manage now, and celebrate later. Don't forget to add highlights, and return and tell us all about it!",
-        variant: 'live_event',
-      };
-    }
-
-    if (context.event.lifecycle_state === 'completed') {
-      return {
-        label: 'Live the event',
-        status: 'done',
-        due: 'All wrapped up here! Hope it went well.',
-        variant: 'live_event',
-      };
-    }
-
-    return null;
-  },
-};
-
-function resolveChecklistGroup(
-  context: PlanningChecklistContext,
-  group: PlanningChecklistRuleGroup,
+function simpleDue(
+  cfg: PlanningChecklistConfigItem,
+  done: boolean,
+  varsDone: Record<string, string | number> = {},
+  varsPending: Record<string, string | number> = {},
 ) {
-  return planningChecklistManagerConfig
-    .filter((item) => item.enabled !== false && item.group === group)
-    .flatMap((item) => {
-      const result = checklistResolvers[item.resolver](context);
-      if (!result) return [];
-      return Array.isArray(result) ? result : [result];
+  return done ? tpl(cfg.dueDone ?? '', varsDone) : tpl(cfg.duePending ?? '', varsPending);
+}
+
+function ruleEventDetails(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  const ok = ctx.isDetailsComplete;
+  return {
+    label: cfg.label,
+    status: ok ? 'done' : 'todo',
+    due: simpleDue(cfg, ok, {}, { missingDetails: ctx.missingDetails.join(', ') }),
+  };
+}
+
+function rulePublished(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  const ok = ctx.isPublished;
+  return { label: cfg.label, status: ok ? 'done' : 'todo', due: simpleDue(cfg, ok) };
+}
+
+function ruleTickets(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  const ok = ctx.hasTickets;
+  return {
+    label: cfg.label,
+    status: ok ? 'done' : 'todo',
+    due: simpleDue(cfg, ok, { tierCount: ctx.event.ticket_tiers?.length || 0 }),
+  };
+}
+
+function ruleSales(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  const isDone = ctx.salesStatus === 'done' || ctx.isLiveMilestoneComplete;
+  let due: string;
+  if (ctx.hasSalesThreshold) {
+    due = tpl(cfg.dueWithMetrics ?? '', {
+      soldCount: ctx.soldCount,
+      derivedCapacity: ctx.derivedCapacity,
+      salesPercentage: ctx.salesPercentage.toFixed(0),
     });
+  } else {
+    due = isDone
+      ? tpl(cfg.dueDoneNoCapacity ?? '', {})
+      : tpl(cfg.duePendingNoCapacity ?? '', {});
+  }
+  return { label: cfg.label, status: isDone ? 'done' : ctx.salesStatus, due, variant: 'sales' };
+}
+
+function ruleEventNeeds(
+  ctx: PlanningChecklistContext,
+  cfg: PlanningChecklistConfigItem,
+): PlanningChecklistItem[] {
+  const copy = cfg.eventNeedsCopy;
+  if (!copy) return [];
+
+  if (ctx.eventNeeds.length === 0) {
+    return [{ label: copy.noNeedsDefined.label, status: 'done', due: copy.noNeedsDefined.dueDone }];
+  }
+
+  return ctx.eventNeeds.map((need) => {
+    const accepted = need.applications.find((a) => a.status === 'accepted');
+    const deadline = formatChecklistDeadline(ctx.daysUntilEvent);
+    const urgent = ctx.daysUntilEvent !== null && ctx.daysUntilEvent <= 3;
+
+    if (need.status === 'filled') {
+      return {
+        label: tpl(copy.slotFilled.label, { title: need.title }),
+        status: 'done' as const,
+        due: accepted
+          ? tpl(copy.slotFilled.dueDoneWithVendor, { vendor: accepted.vendor_name })
+          : copy.slotFilled.dueDoneFallback,
+      };
+    }
+    if (need.status === 'override_filled') {
+      return {
+        label: tpl(copy.overrideFilled.label, { title: need.title }),
+        status: 'done' as const,
+        due: copy.overrideFilled.dueDone,
+        variant: 'host' as const,
+      };
+    }
+    if (need.application_count > 0) {
+      return {
+        label: tpl(copy.pendingDecision.label, { title: need.title }),
+        status: urgent ? 'warn' : 'todo',
+        due: tpl(copy.pendingDecision.duePending, {
+          applicationCount: need.application_count,
+          deadline,
+        }),
+      };
+    }
+    return {
+      label: tpl(copy.stillNeeded.label, { title: need.title }),
+      status: urgent ? 'warn' : 'todo',
+      due: tpl(copy.stillNeeded.duePending, { deadline }),
+    };
+  });
+}
+
+function ruleCover(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  // Cover image checklist is linked to having a description too:
+  // if either is missing, we keep this row in "todo".
+  const coverPhotoMissing = !ctx.event.cover_image;
+  const descriptionMissing = !ctx.event.description?.trim();
+  const ok = !coverPhotoMissing && !descriptionMissing;
+  const missing = (() => {
+    if (coverPhotoMissing && descriptionMissing) return 'cover photo and description';
+    if (coverPhotoMissing) return 'a cover photo';
+    return 'a description';
+  })();
+
+  const due = ok ? (cfg.dueDone ?? '') : tpl(cfg.duePending ?? '', { missing });
+  return { label: cfg.label, status: ok ? 'done' : 'todo', due };
+}
+
+
+function ruleGoReady(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  if(ctx.event.lifecycle_state === 'draft') {
+    
+    return { label: cfg.label, 
+      status: 'todo', 
+      due: tpl(cfg.label ?? '', {}),
+      variant: 'go_ready',
+    }
+  }
+
+  const ok = (
+    ctx.event.lifecycle_state === 'live'|| 
+    ctx.event.lifecycle_state === 'completed'
+  ) && ctx.isDetailsComplete && ctx.salesItemsDone;
+  return { label: cfg.label, 
+    status: ok ? 'done' : 'todo', 
+    due: ok ? tpl(cfg.dueDone ?? '', {}) : tpl(cfg.duePending ?? '', {}),
+    variant: 'go_ready',
+  };
+}
+function ruleGoLive(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
+  if(ctx.event.lifecycle_state === 'draft' || ctx.event.lifecycle_state === 'published') {
+    return { label: cfg.label, 
+      status: 'todo', 
+      due: tpl(cfg.label ?? '', {}),
+      variant: 'go_live',
+    }
+  }
+  const ok = (
+    ctx.event.lifecycle_state === 'event_ready' || 
+    ctx.event.lifecycle_state === 'live'|| 
+    ctx.event.lifecycle_state === 'completed'
+  ) && ctx.isDetailsComplete && ctx.salesItemsDone;
+  return {
+    label: cfg.label,
+    status: ok ? 'done' : 'todo',
+    due: ok ? tpl(cfg.dueDone ?? '', {}) : tpl(cfg.duePending ?? '', {}),
+    variant: 'go_live',
+  };
+}
+function ruleLiveEvent(
+  ctx: PlanningChecklistContext,
+  cfg: PlanningChecklistConfigItem,
+): PlanningChecklistItem | null {
+  if(ctx.event.lifecycle_state === 'draft' || ctx.event.lifecycle_state === 'published' || ctx.event.lifecycle_state === 'event_ready' ) {
+    return { label: cfg.label, 
+      status: 'todo', 
+      due: tpl(cfg.label ?? '', {}),
+      variant: 'live_event',
+    }
+  }
+  const ok = (
+    ctx.event.lifecycle_state === 'completed'
+  );
+  return {
+    label: cfg.label,
+    status: ok ? 'done' : 'todo',
+    due: ok ? tpl(cfg.dueDoneCompleted ?? '', {}) : tpl(cfg.dueDoneLive ?? '', {}),
+    variant: 'live_event',
+  };
+}
+
+type RuleOut = PlanningChecklistItem | PlanningChecklistItem[] | null;
+
+const rules: Record<PlanningChecklistRuleKey, (ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem) => RuleOut> =
+  {
+    event_details_complete: ruleEventDetails,
+    event_is_published: rulePublished,
+    tickets_are_configured: ruleTickets,
+    sales_threshold_looks_healthy: ruleSales,
+    event_needs_status: ruleEventNeeds,
+    cover_image_uploaded: ruleCover,
+    go_ready: ruleGoReady,
+    go_live: ruleGoLive,
+    live_event: ruleLiveEvent,
+  };
+
+function flatRule(out: RuleOut): PlanningChecklistItem[] {
+  if (out == null) return [];
+  return Array.isArray(out) ? out : [out];
+}
+
+/** Core + sales completion for `go_live` (same grouping as config `group` field). */
+function coreAndSalesDone(ctx: PlanningChecklistContext) {
+  let coreOk = true;
+  let salesOk = true;
+  for (const cfg of planningChecklistManagerConfig) {
+    if (cfg.enabled === false) continue;
+    const g = cfg.group;
+    if (g !== 'core' && g !== 'sales') continue;
+    const items = flatRule(rules[cfg.resolver](ctx, cfg));
+    const allDone = items.length === 0 || items.every((i) => i.status === 'done');
+    if (g === 'core' && !allDone) coreOk = false;
+    if (g === 'sales' && !allDone) salesOk = false;
+  }
+  return { coreItemsDone: coreOk, salesItemsDone: salesOk };
 }
 
 export function buildPlanningChecklist(
@@ -233,18 +309,21 @@ export function buildPlanningChecklist(
   eventNeeds: EventNeed[],
   totalSold = event.ticket_count ?? 0,
 ): PlanningChecklistItem[] {
-  const baseContext = createPlanningChecklistContext(event, eventNeeds, totalSold);
-  const coreItems = resolveChecklistGroup(baseContext, 'core');
-  const salesItems = resolveChecklistGroup(baseContext, 'sales');
-  const lifecycleContext: PlanningChecklistContext = {
-    ...baseContext,
-    coreItemsDone: coreItems.every((item) => item.status === 'done'),
-    salesItemsDone:
-      salesItems.length === 0 || salesItems.every((item) => item.status === 'done'),
-  };
-  const lifecycleItems = resolveChecklistGroup(lifecycleContext, 'lifecycle');
+  const base = buildContext(event, eventNeeds, totalSold);
+  const { coreItemsDone, salesItemsDone } = coreAndSalesDone(base);
+  const withLifecycle: PlanningChecklistContext = { ...base, coreItemsDone, salesItemsDone };
 
-  return [...coreItems, ...salesItems, ...lifecycleItems];
+  const items: PlanningChecklistItem[] = [];
+  for (const cfg of planningChecklistManagerConfig) {
+    if (cfg.enabled === false) continue;
+    // `go_live` and `go_ready` depend on aggregated `coreItemsDone` / `salesItemsDone`,
+    // which are computed in `coreAndSalesDone()` above.
+    const ctx = cfg.resolver === 'go_live' || cfg.resolver === 'go_ready' ? withLifecycle : base;
+    for (const row of flatRule(rules[cfg.resolver](ctx, cfg))) {
+      items.push({ ...row, sourceRule: cfg.id });
+    }
+  }
+  return items;
 }
 
 export type { PlanningChecklistItem } from './planningChecklistConfig';
@@ -255,9 +334,7 @@ export function getFirstPendingChecklistItem(
   totalSold = event.ticket_count ?? 0,
 ) {
   return (
-    buildPlanningChecklist(event, eventNeeds, totalSold).find(
-      (item) => item.status !== 'done',
-    ) || null
+    buildPlanningChecklist(event, eventNeeds, totalSold).find((item) => item.status !== 'done') || null
   );
 }
 
@@ -275,9 +352,7 @@ export function getChecklistFocusItem(
       .find(
         (item) =>
           item.status === 'done' &&
-          (item.variant === 'sales' ||
-            item.variant === 'go_live' ||
-            item.variant === 'live_event'),
+          (item.variant === 'sales' || item.variant === 'go_live' || item.variant === 'go_ready' || item.variant === 'live_event'),
       ) || null
   );
 }

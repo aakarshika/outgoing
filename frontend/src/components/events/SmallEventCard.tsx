@@ -154,10 +154,10 @@ export function SmallEventCard({
               spacing={0.75}
             >
               <Stack
-              direction="row"
-              alignItems="center"
+                direction="row"
+                alignItems="center"
               >
-              <LocationStuff />
+                <LocationStuff />
               </Stack>
               <Going />
             </Stack>

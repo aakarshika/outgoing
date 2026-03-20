@@ -450,7 +450,7 @@ export default function ManagingPage() {
       sx={{
         maxWidth: 1240,
         mx: 'auto',
-        pt:8,
+        pt: 8,
         pb: 20,
         minHeight: '100vh',
         background:

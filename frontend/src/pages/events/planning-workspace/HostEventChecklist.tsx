@@ -1,6 +1,9 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Check } from 'lucide-react';
 
 import type { PlanningChecklistItem } from '@/features/events/planningChecklist';
+
+import { WorkspaceCard } from './shared';
 
 type HostEventChecklistProps = {
   checklistItems: PlanningChecklistItem[];
@@ -12,78 +15,102 @@ export function HostEventChecklist({
   completedChecklistCount,
 }: HostEventChecklistProps) {
   return (
-    <Box sx={{ mx: 0, mt: 0 }}>
-      {/* Label for Checklist */}
-      <Typography
-        sx={{
-          fontSize: 10,
-          fontWeight: 500,
-          textTransform: 'uppercase',
-          letterSpacing: '0.09em',
-          color: '#888780',
-          mb: 1.25,
-          pl: 0.25,
-        }}
-      >
-        Checklist
-      </Typography>
+    <WorkspaceCard
+      title="Checklist"
+      action={
+        <Chip
+          label={`${completedChecklistCount}/${checklistItems.length} ready`}
+          sx={{
+            height: 24,
+            background:
+              completedChecklistCount === checklistItems.length ? '#EAF3DE' : '#F1EFE8',
+            color:
+              completedChecklistCount === checklistItems.length
+                ? '#3B6D11'
+                : 'var(--color-text-primary)',
+            fontSize: 11,
+            fontWeight: 600,
+          }}
+        />
+      }
+    >
+      <Stack spacing={0}>
+        {checklistItems.map((item, index) => {
+          const isHighlightedMilestone =
+            (item.variant === 'sales' ||
+              item.variant === 'go_live' ||
+              item.variant === 'go_ready' ||
+              item.variant === 'live_event') &&
+            item.status === 'done';
 
-      <Box
-        sx={{
-          background: '#fff',
-          borderRadius: '14px',
-          padding: '12px 16px',
-          border: '0.5px solid #F0EDE8',
-        }}
-      >
-        <Stack spacing={0}>
-          {checklistItems.map((item, index) => {
-            const isDone = item.status === 'done';
-            const isWarn = item.status === 'warn';
-
-            return (
-              <Stack
-                key={item.label}
-                direction="row"
-                spacing={1.25}
+          return (
+            <Stack
+              key={item.label}
+              direction="row"
+              spacing={1.1}
+              sx={{
+                py: isHighlightedMilestone ? 1.25 : 1,
+                px: isHighlightedMilestone ? 1.25 : 0,
+                mx: isHighlightedMilestone ? -1.25 : 0,
+                borderRadius: isHighlightedMilestone ? 10 : 0,
+                borderBottom:
+                  index < checklistItems.length - 1 && !isHighlightedMilestone
+                    ? '0.5px solid var(--color-border-tertiary)'
+                    : 'none',
+              }}
+            >
+              <Box
                 sx={{
-                  py: 1,
-                  alignItems: 'center',
-                  borderBottom: index < checklistItems.length - 1 ? '0.5px solid #F0EDE8' : 'none',
+                  width: isHighlightedMilestone ? 20 : 16,
+                  height: isHighlightedMilestone ? 20 : 16,
+                  borderRadius: isHighlightedMilestone ? 6 : 4,
+                  border: '1.5px solid',
+                  borderColor:
+                    item.variant === 'host'
+                      ? '#2563EB'
+                      : item.status === 'done'
+                        ? '#1D9E75'
+                        : item.status === 'warn'
+                          ? '#E24B4A'
+                          : 'var(--color-border-secondary)',
+                  background:
+                    item.variant === 'host'
+                      ? '#2563EB'
+                      : item.status === 'done'
+                        ? '#1D9E75'
+                        : 'transparent',
+                  display: 'grid',
+                  placeItems: 'center',
+                  mt: '2px',
+                  flexShrink: 0,
                 }}
               >
-                <Box
-                  sx={{
-                    width: 14,
-                    height: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    color: isDone ? '#1D9E75' : isWarn ? '#E24B4A' : '#B4B2A9',
-                    fontSize: 14,
-                    fontWeight: 800,
-                  }}
-                >
-                  {isDone ? '✓' : isWarn ? '!' : '○'}
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: 13,
-                    fontWeight: 400,
-                    lineHeight: 1.4,
-                    color: isDone ? '#B4B2A9' : isWarn ? '#A32D2D' : '#1A1A1A',
-                    textDecoration: isDone ? 'line-through' : 'none',
-                    flex: 1,
-                  }}
-                >
-                  {item.label}
-                </Typography>
-              </Stack>
-            );
-          })}
-        </Stack>
-      </Box>
-    </Box>
+                {item.status === 'done' ? (
+                  <Check size={isHighlightedMilestone ? 12 : 10} color="#fff" />
+                ) : null}
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: isHighlightedMilestone ? 14 : 13,
+                  fontWeight: isHighlightedMilestone ? 600 : 400,
+                  lineHeight: 1.4,
+                  color:
+                    item.status === 'warn'
+                      ? '#A32D2D'
+                      : item.variant === 'host'
+                        ? '#1E40AF'
+                        : item.status === 'done'
+                          ? 'var(--color-text-secondary)'
+                          : 'var(--color-text-primary)',
+                  textDecoration: item.status === 'done' ? 'line-through' : 'none',
+                }}
+              >
+                { item.status == 'done' ? item.label : item.due}
+              </Typography>
+            </Stack>
+          );
+        })}
+      </Stack>
+    </WorkspaceCard>
   );
 }

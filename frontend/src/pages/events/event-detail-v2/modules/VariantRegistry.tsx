@@ -137,14 +137,14 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
           <NormalGoersModule event={event} isEventOver={isEventOver} />
 
-
+{/* 
           <NormalSaveToggleModule
             event={event}
             isAuthenticated={isAuthenticated}
             isSaved={event.user_is_interested || false}
             onToggle={handleToggleSave}
             disabled={!capabilities.canSaveEvent}
-          />
+          /> */}
 
           <NormalDivider />
 

@@ -9,15 +9,19 @@ type AllNeedsProps = {
   onEditNeed: (needId: number | null) => void;
 };
 
+const formatMoney = (value?: string | number | null) => {
+  if (!value) return '—';
+  return `Rs ${value}`;
+}
 function formatNeedBudget(need: EventNeed) {
   if (!need.budget_min && !need.budget_max) return 'Free in';
-  if (need.budget_min && need.budget_max) return `${need.budget_min} - ${need.budget_max}`;
-  return need.budget_min || need.budget_max || '—';
+  if (need.budget_min && need.budget_max) return `Comp - ${formatMoney(need.budget_max)}`;
+  return `Comp - ${formatMoney(need.budget_min || need.budget_max)}`;
 }
 
 export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
   return (
-    <Box sx={{ mx: 1.75, mt: 1.75 }}>
+    <Box sx={{  }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.25 }}>
         <Typography
           sx={{
@@ -26,7 +30,6 @@ export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
             textTransform: 'uppercase',
             letterSpacing: '0.09em',
             color: '#888780',
-            pl: 0.25,
           }}
         >
           All needs
@@ -39,7 +42,7 @@ export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
         </Typography>
       </Box>
 
-      <Box sx={{ background: '#fff', borderRadius: '14px', px: 1.75, py: 1.5, border: '0.5px solid #F0EDE8' }}>
+      <Box sx={{ background: '#fff', borderRadius: '14px',}}>
         {eventNeeds.length === 0 ? (
           <Typography sx={{ fontSize: 13, color: 'var(--color-text-secondary)', py: 1.5 }}>
             No needs added yet.
@@ -55,13 +58,7 @@ export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.25,
-                  py: 1.15,
                   cursor: 'pointer',
-                  borderTop: index === 0 ? 'none' : '0.5px solid #F0EDE8',
-                  '&:hover': {
-                    '& .need-title': { color: '#D85A30' },
-                  },
                 }}
               >
                 <Box sx={{ fontSize: 15, width: 24, textAlign: 'center', flexShrink: 0 }}>
@@ -73,21 +70,28 @@ export function AllNeeds({ eventNeeds, onEditNeed }: AllNeedsProps) {
                 >
                   {need.title}
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: '#888780', mr: 0.75, whiteSpace: 'nowrap' }}>
-                  {formatNeedBudget(need)}
-                </Typography>
+
+                
                 <Box
                   sx={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    background: presentation.statusBg,
-                    color: presentation.statusColor,
-                    whiteSpace: 'nowrap',
                   }}
-                >
-                  {presentation.statusLabel}
+                ><Typography sx={{ fontSize: 11, 
+                  color: '#888780', 
+                  mr: 0.75, 
+                  whiteSpace: 'nowrap' }}>
+                  {formatNeedBudget(need)}
+                  </Typography>
+                <Typography 
+                sx={{ 
+                  fontSize: 10,
+                  fontWeight: 500,
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: presentation.statusBg,
+                  color: presentation.statusColor,
+                  whiteSpace: 'nowrap',}}>
+                  {presentation.subtitle}
+                </Typography>
                 </Box>
               </Box>
             );

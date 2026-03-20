@@ -18,7 +18,8 @@ import { toast } from 'sonner';
 
 import { VENDOR_CATEGORIES } from '@/constants/categories';
 import { useAuth } from '@/features/auth/AuthContext';
-import { useCreateVendorService } from '@/features/vendors/hooks';
+import { useCreateVendorService, useUpdateVendorService } from '@/features/vendors/hooks';
+import type { VendorService } from '@/types/vendors';
 import { compressImage } from '@/utils/image';
 
 type QuickCreateServiceFormData = {
@@ -50,15 +51,19 @@ export function QuickCreateServiceDialog({
   open,
   onClose,
   defaultCategory = '',
+  service = null,
 }: {
   open: boolean;
   onClose: () => void;
   defaultCategory?: string;
+  service?: VendorService | null;
 }) {
   const isMobile = useMediaQuery('(max-width:767px)');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const createMutation = useCreateVendorService();
+  const updateMutation = useUpdateVendorService();
+  const isEdit = !!service;
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const {
@@ -70,28 +75,28 @@ export function QuickCreateServiceDialog({
     formState: { errors },
   } = useForm<QuickCreateServiceFormData>({
     defaultValues: {
-      title: '',
-      description: '',
-      category: defaultCategory,
-      base_price: '',
-      travel_radius_miles: '',
-      portfolio_url: '',
+      title: service?.title || '',
+      description: service?.description || '',
+      category: service?.category || defaultCategory,
+      base_price: service?.base_price || '',
+      travel_radius_miles: service?.travel_radius_miles || '',
+      portfolio_url: service?.portfolio_url || '',
     },
   });
 
   useEffect(() => {
     if (!open) return;
     reset({
-      title: '',
-      description: '',
-      category: defaultCategory,
-      base_price: '',
-      travel_radius_miles: '',
-      portfolio_url: '',
+      title: service?.title || '',
+      description: service?.description || '',
+      category: service?.category || defaultCategory,
+      base_price: service?.base_price || '',
+      travel_radius_miles: service?.travel_radius_miles || '',
+      portfolio_url: service?.portfolio_url || '',
     });
-    setImagePreview(null);
+    setImagePreview(service?.portfolio_image || null);
     setSelectedImage(null);
-  }, [defaultCategory, open, reset]);
+  }, [defaultCategory, open, reset, service]);
 
   const watchedCategory = watch('category');
   const categorySelected = VENDOR_CATEGORIES.flatMap((g) => g.items).find(
@@ -137,12 +142,17 @@ export function QuickCreateServiceDialog({
     }
 
     try {
-      await createMutation.mutateAsync(formData);
+      if (isEdit && service) {
+        await updateMutation.mutateAsync({ id: service.id, formData });
+        toast.success('Service updated');
+      } else {
+        await createMutation.mutateAsync(formData);
+        toast.success('Service created');
+      }
       await queryClient.invalidateQueries({ queryKey: ['search'] });
-      toast.success('Service created');
       onClose();
     } catch (error: any) {
-      const message = error?.response?.data?.message || 'Failed to create service';
+      const message = error?.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} service`;
       toast.error(message);
     }
   };
@@ -191,7 +201,7 @@ export function QuickCreateServiceDialog({
                 color: 'rgba(66, 50, 28, 0.56)',
               }}
             >
-              List your service
+              {isEdit ? 'Edit your service' : 'List your service'}
             </Typography>
             <Typography
               sx={{
@@ -204,7 +214,7 @@ export function QuickCreateServiceDialog({
                 lineHeight: 1.1,
               }}
             >
-              Any talent or equipment you would like to offer?
+              {isEdit ? 'Update your service details' : 'Any talent or equipment you would like to offer?'}
             </Typography>
             <Typography
               sx={{
@@ -461,13 +471,13 @@ export function QuickCreateServiceDialog({
                   },
                 }}
               >
-                {createMutation.isPending ? (
+                {createMutation.isPending || updateMutation.isPending ? (
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                     <CircularProgress size={14} sx={{ color: '#ffffff' }} />
-                    Creating...
+                    {isEdit ? 'Saving...' : 'Creating...'}
                   </Box>
                 ) : (
-                  'Create service'
+                  isEdit ? 'Save changes' : 'Create service'
                 )}
               </MuiButton>
             </Stack>

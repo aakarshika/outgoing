@@ -44,13 +44,29 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
   const lifecycle = event?.lifecycle_state || 'draft';
   const config = LIFECYCLE_CONFIG[lifecycle] || LIFECYCLE_CONFIG.draft;
 
-  const capacity = Number(event.capacity) || 100;
+  // Treat missing/0 capacity as "infinite" capacity.
+  const rawCapacity = event?.capacity;
+  const capacity = rawCapacity == null ? null : Number(rawCapacity);
+  const isInfiniteCapacity = capacity == null || capacity === 0;
+
   const soldCount = Number(event.ticket_count || event.tickets_sold) || 0;
-  const minRequired = Number(event.min_attendees) || 20;
-  const progress = capacity > 0 ? Math.min((soldCount / capacity) * 100, 100) : 0;
+  const explicitMin = Number(event.min_attendees) || 0;
+  const minRequired = explicitMin > 0 ? explicitMin : isInfiniteCapacity ? 1 : 0;
+
+  const progress = isInfiniteCapacity
+    ? Math.min((soldCount / Math.max(minRequired, 1)) * 100, 100)
+    : capacity != null
+      ? Math.min((soldCount / capacity) * 100, 100)
+      : 0;
   const minReached = soldCount >= minRequired;
-  const spotsLeft = Math.max(capacity - soldCount, 0);
-  const remainingRatio = capacity > 0 ? spotsLeft / capacity : 1;
+  const spotsLeft = !isInfiniteCapacity && capacity != null ? Math.max(capacity - soldCount, 0) : null;
+  const remainingRatio = isInfiniteCapacity
+    ? 1
+    : capacity != null && capacity > 0
+      ? (spotsLeft ?? 0) / capacity
+      : 1;
+  const capacityLabel = isInfiniteCapacity ? 'Unlimited' : capacity;
+  const remainingLabel = isInfiniteCapacity ? 'Unlimited remaining' : `${spotsLeft} remaining`;
   const startTime = event?.start_time ? new Date(event.start_time) : null;
   const timeUntilStart = startTime ? startTime.getTime() - Date.now() : null;
   const showCountdown =
@@ -110,46 +126,11 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         mx: 2,
         mt: 1.75,
         bgcolor: '#fff',
-        border: '1px solid var(--color-border-tertiary, #e5e7eb)',
-        borderRadius: 'var(--border-radius-lg, 12px)',
         p: 1.5,
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 1,
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.07em',
-            color: 'var(--color-text-secondary, #6b7280)',
-          }}
-        >
-          Event status
-        </Typography>
-        <Box
-          sx={{
-            fontSize: 11,
-            fontWeight: 500,
-            px: 1.25,
-            py: 0.4,
-            borderRadius: 999,
-            bgcolor: config.bg,
-            color: config.color,
-          }}
-        >
-          {config.label}
-        </Box>
-      </Box>
 
-      <Box
+      {capacity != null && (<Box
         sx={{
           height: 6,
           bgcolor: 'var(--color-border-tertiary, #e5e7eb)',
@@ -166,7 +147,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
             bgcolor: urgency.accent,
           }}
         />
-      </Box>
+      </Box>)}
 
       <Box
         sx={{
@@ -179,9 +160,9 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         }}
       >
         <span>
-          {soldCount} of {capacity} spots filled
+          {soldCount} of {capacityLabel} spots filled
         </span>
-        <span>{spotsLeft} remaining</span>
+        <span>{remainingLabel}</span>
       </Box>
 
       {minRequired > 0 && (
@@ -214,7 +195,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
               color: minReached ? '#3B6D11' : 'var(--color-text-secondary, #6b7280)',
             }}
           >
-            {minReached ? `${minRequired}+ confirmed` : `${minRequired} needed`}
+            {minReached ? `${minRequired}+ confirmed` : `${minRequired} needed for event to happen`}
           </Typography>
         </Box>
       )}

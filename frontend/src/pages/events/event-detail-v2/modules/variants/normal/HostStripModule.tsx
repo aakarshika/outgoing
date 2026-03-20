@@ -75,7 +75,7 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', gap: 1 }}>
-        <Box
+        {/* <Box
           sx={{
             fontSize: 9,
             fontWeight: 600,
@@ -90,7 +90,7 @@ export function NormalHostStripModule({ event, isHost }: NormalHostStripModulePr
           }}
         >
           {config.label}
-        </Box>
+        </Box> */}
 
         {coHosts.length > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

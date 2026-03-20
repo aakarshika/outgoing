@@ -45,7 +45,7 @@ type QuickCategory = {
   slug?: string;
 };
 
-export type QuickCreateAction = 'plan' | 'post';
+export type QuickCreateAction = 'plan' | 'post' | 'tickets-more' | 'needs-more';
 
 export type QuickCreateSubmitPayload = {
   title: string;
@@ -122,7 +122,7 @@ export function QuickCreateSpark({
   onClose,
 }: {
   categories: QuickCategory[];
-  layout: 'page' | 'sheet';
+  layout?: 'page' | 'sheet';
   isSubmitting: boolean;
   onSubmit: (
     action: QuickCreateAction,
