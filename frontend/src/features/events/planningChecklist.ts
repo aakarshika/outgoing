@@ -1,12 +1,13 @@
 import type { EventDetail } from '@/types/events';
 import type { EventNeed } from '@/types/needs';
 
-export type PlanningChecklistItem = {
-  label: string;
-  status: 'done' | 'todo' | 'warn';
-  due: string;
-  variant?: 'host' | 'sales' | 'go_live' | 'live_event';
-};
+import {
+  type PlanningChecklistContext,
+  type PlanningChecklistItem,
+  planningChecklistManagerConfig,
+  type PlanningChecklistResolver,
+  type PlanningChecklistRuleGroup,
+} from './planningChecklistConfig';
 
 export function formatChecklistDeadline(daysUntilEvent: number | null) {
   if (daysUntilEvent === null) return 'Before the event starts';
@@ -16,11 +17,11 @@ export function formatChecklistDeadline(daysUntilEvent: number | null) {
   return `${daysUntilEvent} days before event`;
 }
 
-export function buildPlanningChecklist(
+function createPlanningChecklistContext(
   event: EventDetail,
   eventNeeds: EventNeed[],
   totalSold = event.ticket_count ?? 0,
-): PlanningChecklistItem[] {
+): PlanningChecklistContext {
   const isOnline = event.location_address === 'Online Event';
   const missingDetails = [
     !event.title?.trim() ? 'title' : null,
@@ -59,9 +60,70 @@ export function buildPlanningChecklist(
     : daysUntilEvent !== null && daysUntilEvent <= 3
       ? 'warn'
       : 'todo';
+  const isLiveMilestoneComplete =
+    event.lifecycle_state === 'live' || event.lifecycle_state === 'completed';
 
-  const needChecklistItems: PlanningChecklistItem[] =
-    eventNeeds.length === 0
+  return {
+    event,
+    eventNeeds,
+    totalSold,
+    missingDetails,
+    isDetailsComplete,
+    isPublished,
+    hasTickets,
+    soldCount,
+    derivedCapacity,
+    salesPercentage,
+    hasSalesThreshold,
+    isSalesHealthy,
+    salesStatus,
+    daysUntilEvent,
+    isLiveMilestoneComplete,
+    coreItemsDone: false,
+    salesItemsDone: false,
+  };
+}
+
+const checklistResolvers: Record<string, PlanningChecklistResolver> = {
+  event_details_complete: (context) => ({
+    label: 'Event details complete',
+    status: context.isDetailsComplete ? 'done' : 'todo',
+    due: context.isDetailsComplete
+      ? 'Title, description, category, time, and location are all in place.'
+      : `Still missing: ${context.missingDetails.join(', ')}.`,
+  }),
+  event_is_published: (context) => ({
+    label: 'Event is published',
+    status: context.isPublished ? 'done' : 'todo',
+    due: context.isPublished
+      ? 'People can discover the event and make a decision.'
+      : 'Publish when the essentials feel trustworthy enough to sell.',
+  }),
+  tickets_are_configured: (context) => ({
+    label: 'Tickets are configured',
+    status: context.hasTickets ? 'done' : 'todo',
+    due: context.hasTickets
+      ? `${context.event.ticket_tiers?.length || 0} ticket tier(s) are ready.`
+      : 'Add at least one ticket tier so the event has a clear entry path.',
+  }),
+  sales_threshold_looks_healthy: (context) => ({
+    label: 'Sales threshold looks healthy',
+    status:
+      context.salesStatus === 'done' || context.isLiveMilestoneComplete
+        ? 'done'
+        : context.salesStatus,
+    due:
+      context.salesStatus === 'done' || context.isLiveMilestoneComplete
+        ? context.hasSalesThreshold
+          ? `Min 20% sold (${context.soldCount}/${context.derivedCapacity}). Now ${context.salesPercentage.toFixed(0)}%.`
+          : 'Readiness milestone reached for this event.'
+        : context.hasSalesThreshold
+          ? `Min 20% sold (${context.soldCount}/${context.derivedCapacity}). Now ${context.salesPercentage.toFixed(0)}%.`
+          : 'Set capacity to track readiness against ticket sales.',
+    variant: 'sales',
+  }),
+  event_needs_status: (context) =>
+    context.eventNeeds.length === 0
       ? [
           {
             label: 'No external needs defined',
@@ -69,7 +131,7 @@ export function buildPlanningChecklist(
             due: 'This event currently has no vendor or support dependencies.',
           },
         ]
-      : eventNeeds.map((need) => {
+      : context.eventNeeds.map((need) => {
           const acceptedApplication = need.applications.find(
             (application) => application.status === 'accepted',
           );
@@ -93,103 +155,99 @@ export function buildPlanningChecklist(
           if (need.application_count > 0) {
             return {
               label: `${need.title} slot needs a decision`,
-              status: daysUntilEvent !== null && daysUntilEvent <= 3 ? 'warn' : 'todo',
-              due: `${need.application_count} application(s) to review · ${formatChecklistDeadline(daysUntilEvent)}.`,
+              status:
+                context.daysUntilEvent !== null && context.daysUntilEvent <= 3
+                  ? 'warn'
+                  : 'todo',
+              due: `${need.application_count} application(s) to review · ${formatChecklistDeadline(context.daysUntilEvent)}.`,
             };
           }
           return {
             label: `${need.title} still needed`,
-            status: daysUntilEvent !== null && daysUntilEvent <= 3 ? 'warn' : 'todo',
-            due: `No applicants yet · ${formatChecklistDeadline(daysUntilEvent)}.`,
+            status:
+              context.daysUntilEvent !== null && context.daysUntilEvent <= 3
+                ? 'warn'
+                : 'todo',
+            due: `No applicants yet · ${formatChecklistDeadline(context.daysUntilEvent)}.`,
           };
-        });
-
-  const isLiveMilestoneComplete =
-    event.lifecycle_state === 'live' || event.lifecycle_state === 'completed';
-
-  const nonMilestoneChecklistItems: PlanningChecklistItem[] = [
-    {
-      label: 'Event details complete',
-      status: isDetailsComplete ? 'done' : 'todo',
-      due: isDetailsComplete
-        ? 'Title, description, category, time, and location are all in place.'
-        : `Still missing: ${missingDetails.join(', ')}.`,
-    },
-    {
-      label: 'Event is published',
-      status: isPublished ? 'done' : 'todo',
-      due: isPublished
-        ? 'People can discover the event and make a decision.'
-        : 'Publish when the essentials feel trustworthy enough to sell.',
-    },
-    {
-      label: 'Tickets are configured',
-      status: hasTickets ? 'done' : 'todo',
-      due: hasTickets
-        ? `${event.ticket_tiers?.length || 0} ticket tier(s) are ready.`
-        : 'Add at least one ticket tier so the event has a clear entry path.',
-    },
-    ...needChecklistItems,
-    {
-      label: 'Cover image is uploaded',
-      status: event.cover_image ? 'done' : 'todo',
-      due: event.cover_image
-        ? 'The event already has a visual anchor people can trust.'
-        : 'Recommended. A strong cover image improves trust and click-through.',
-    },
-  ];
-
-  const allNonMilestoneItemsDone = nonMilestoneChecklistItems.every(
-    (item) => item.status === 'done',
-  );
-  const goLiveDone =
-    isLiveMilestoneComplete || (allNonMilestoneItemsDone && salesStatus === 'done');
-  const salesDone = salesStatus === 'done' || goLiveDone || isLiveMilestoneComplete;
-  const baseChecklistItems: PlanningChecklistItem[] = [
-    ...nonMilestoneChecklistItems.slice(0, 3),
-    {
-      label: 'Sales threshold looks healthy',
-      status: salesDone ? 'done' : salesStatus,
-      due: salesDone
-        ? hasSalesThreshold
-          ? `Min 20% sold (${soldCount}/${derivedCapacity}). Now ${salesPercentage.toFixed(0)}%.`
-          : 'Readiness milestone reached for this event.'
-        : hasSalesThreshold
-          ? `Min 20% sold (${soldCount}/${derivedCapacity}). Now ${salesPercentage.toFixed(0)}%.`
-          : 'Set capacity to track readiness against ticket sales.',
-      variant: 'sales',
-    },
-    ...nonMilestoneChecklistItems.slice(3),
-  ];
-  const lifecycleItems: PlanningChecklistItem[] = [];
-
-  lifecycleItems.push({
+        }),
+  cover_image_uploaded: (context) => ({
+    label: 'Cover image is uploaded',
+    status: context.event.cover_image ? 'done' : 'todo',
+    due: context.event.cover_image
+      ? 'The event already has a visual anchor people can trust.'
+      : 'Recommended. A strong cover image improves trust and click-through.',
+  }),
+  go_live: (context) => ({
     label: 'Go Live, and start admitting guests',
-    status: goLiveDone ? 'done' : 'todo',
-    due: goLiveDone
-      ? 'You are perfectly ready to go live now.'
-      : 'Finish the checklist above before going live.',
+    status:
+      context.isLiveMilestoneComplete ||
+      (context.coreItemsDone && context.salesItemsDone)
+        ? 'done'
+        : 'todo',
+    due:
+      context.isLiveMilestoneComplete ||
+      (context.coreItemsDone && context.salesItemsDone)
+        ? 'You are perfectly ready to go live now.'
+        : 'Finish the checklist above before going live.',
     variant: 'go_live',
-  });
+  }),
+  live_event: (context) => {
+    if (context.event.lifecycle_state === 'live') {
+      return {
+        label: 'Live the event',
+        status: 'done',
+        due: "You are live. Nothing to do here but manage now, and celebrate later. Don't forget to add highlights, and return and tell us all about it!",
+        variant: 'live_event',
+      };
+    }
 
-  if (event.lifecycle_state === 'live') {
-    lifecycleItems.push({
-      label: 'Live the event',
-      status: 'done',
-      due: "You are live. Nothing to do here but manage now, and celebrate later. Don't forget to add highlights, and return and tell us all about it!",
-      variant: 'live_event',
-    });
-  } else if (event.lifecycle_state === 'completed') {
-    lifecycleItems.push({
-      label: 'Live the event',
-      status: 'done',
-      due: 'All wrapped up here! Hope it went well.',
-      variant: 'live_event',
-    });
-  }
+    if (context.event.lifecycle_state === 'completed') {
+      return {
+        label: 'Live the event',
+        status: 'done',
+        due: 'All wrapped up here! Hope it went well.',
+        variant: 'live_event',
+      };
+    }
 
-  return [...baseChecklistItems, ...lifecycleItems];
+    return null;
+  },
+};
+
+function resolveChecklistGroup(
+  context: PlanningChecklistContext,
+  group: PlanningChecklistRuleGroup,
+) {
+  return planningChecklistManagerConfig
+    .filter((item) => item.enabled !== false && item.group === group)
+    .flatMap((item) => {
+      const result = checklistResolvers[item.resolver](context);
+      if (!result) return [];
+      return Array.isArray(result) ? result : [result];
+    });
 }
+
+export function buildPlanningChecklist(
+  event: EventDetail,
+  eventNeeds: EventNeed[],
+  totalSold = event.ticket_count ?? 0,
+): PlanningChecklistItem[] {
+  const baseContext = createPlanningChecklistContext(event, eventNeeds, totalSold);
+  const coreItems = resolveChecklistGroup(baseContext, 'core');
+  const salesItems = resolveChecklistGroup(baseContext, 'sales');
+  const lifecycleContext: PlanningChecklistContext = {
+    ...baseContext,
+    coreItemsDone: coreItems.every((item) => item.status === 'done'),
+    salesItemsDone:
+      salesItems.length === 0 || salesItems.every((item) => item.status === 'done'),
+  };
+  const lifecycleItems = resolveChecklistGroup(lifecycleContext, 'lifecycle');
+
+  return [...coreItems, ...salesItems, ...lifecycleItems];
+}
+
+export type { PlanningChecklistItem } from './planningChecklistConfig';
 
 export function getFirstPendingChecklistItem(
   event: EventDetail,

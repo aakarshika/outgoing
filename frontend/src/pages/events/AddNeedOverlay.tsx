@@ -12,7 +12,7 @@ import { ArrowLeft } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getCategoryLabel, VENDOR_CATEGORIES } from '@/constants/categories';
+import { getCategoryLabel, VENDOR_CATEGORIES, allVendorCategoryOptions } from '@/constants/categories';
 
 import type { EventNeed } from '@/types/needs';
 import {
@@ -289,16 +289,6 @@ export function AddNeedOverlay({
                         >
                             <Typography sx={{ fontSize: 11, color: 'rgba(66, 50, 28, 0.62)' }}>
                                 {eventLabel}
-                            </Typography>
-                            <Typography
-                                sx={{
-                                    fontFamily: 'Syne, sans-serif',
-                                    fontSize: 18,
-                                    fontWeight: 700,
-                                    color: '#2B2118',
-                                }}
-                            >
-                                {previewTitle}
                             </Typography>
                             <Typography sx={{ fontSize: 12, color: 'rgba(66, 50, 28, 0.68)' }}>
                                 {displayDateLabel}
@@ -625,12 +615,6 @@ const compensationDesignOptions = [
     },
 ] as const;
 
-const allVendorCategoryOptions = VENDOR_CATEGORIES.flatMap((group) =>
-    group.items.map((item) => ({
-        ...item,
-        group: (group as any).group || '',
-    })),
-);
 
 
 export function EventDetailsOverlay({

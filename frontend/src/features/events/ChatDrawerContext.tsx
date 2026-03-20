@@ -1,11 +1,15 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
-interface ChatParams {
-  title: string;
+export interface ChatParams {
+  title?: string;
+  subtitle?: string;
+  badgeLabel?: string;
   mode: 'group' | 'direct' | 'private';
   eventId?: number;
   conversationId?: number;
   targetUsername?: string;
+  otherUsername?: string | null;
+  otherAvatar?: string | null;
 }
 
 interface ChatDrawerContextType {
@@ -36,6 +40,7 @@ export function ChatDrawerProvider({ children }: { children: ReactNode }) {
       params,
     });
     setIsOpen(false);
+    setParams(null);
   };
 
   return (

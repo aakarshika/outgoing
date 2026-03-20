@@ -1,0 +1,14 @@
+
+[
+
+{"slug": "drinks-policy","icon":"🥤", "category": "food", "title":"Drinks policy" , "description":"Is it BYOB, a dry event, or is there a bar? This is one of the first things people look for before RSVPing."}
+,
+{"slug": "dress-code","icon":"👗", "category": "social", "title":"Dress code" , "description":"Even a loose suggestion — casual, all-black, one colour — sets the tone and makes guests feel prepared."}
+,
+{"slug": "theme","icon":"🎨", "category": "arts", "title":"Theme" , "description":"Is there a visual or creative direction to the event? Helps guests know what to expect and makes the event more shareable."}
+,
+{"slug": "activities-planned","icon":"🎯", "category": "social", "title":"Activities planned" , "description":"Give a rough sense of what will happen — live music, a workshop, free time, a game. Even one line helps people decide."}
+,
+{"slug": "what-to-bring","icon":"🎒", "category": "social", "title":"Where to park, what to bring, who to ask for..." , "description":"Anything guests should remember — a mat, a costume piece, no kids allowed, who to meet at the door... Reduces confusion on the day."}
+
+]

@@ -309,6 +309,7 @@ class Command(BaseCommand):
                             "location_address": e.get("location_address", ""),
                             "latitude": e.get("latitude"),
                             "longitude": e.get("longitude"),
+                            "features": e.get("features", []),
                             "cover_image": cover_image_file,
                             "start_time": start_time,
                             "end_time": end_time,
@@ -326,6 +327,9 @@ class Command(BaseCommand):
                         if e.get("longitude") is not None and event.longitude != e.get("longitude"):
                             event.longitude = e.get("longitude")
                             fields_to_update.append("longitude")
+                        if "features" in e and event.features != e.get("features"):
+                            event.features = e.get("features") or []
+                            fields_to_update.append("features")
                         # If we were able to download a cover image and the event doesn't already have one,
                         # populate it. (Avoid overwriting user-provided images.)
                         if cover_image_file and not event.cover_image:

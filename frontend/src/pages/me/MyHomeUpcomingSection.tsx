@@ -1,23 +1,9 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { BaseFeedEventItem } from '@/types/events';
 
-type UpcomingEventCard = {
-  id: string;
-  eventId: number;
-  start_time?: string;
-  cover_image?: string;
-  category?: {
-    slug?: string;
-    name?: string;
-  };
-  month: string;
-  day: string;
-  title: string;
-  subtitle: string;
-  pill: { label: string; background: string; color: string };
-};
 
 type CountdownParts = {
   countdown: string | number;
@@ -26,7 +12,7 @@ type CountdownParts = {
 
 type Props = {
   hasUpcomingEvents: boolean;
-  upcomingEvents: UpcomingEventCard[];
+  upcomingEvents: BaseFeedEventItem[];
 };
 
 function getCountdownParts(dateString: string | undefined | null) {
@@ -48,6 +34,18 @@ function getCountdownParts(dateString: string | undefined | null) {
   return { countdown: String(diffDays), countdownLabel: 'days away' };
 }
 
+function getRoleStyle(kind: 'hosting' | 'saved' | 'attending' | 'vendor' | 'unknown') {
+  switch (kind) {
+    case 'hosting':
+      return { label: 'Hosting', background: '#E7EDFF', color: '#2D4EDA' };
+    case 'vendor':
+      return { label: 'Servicing', background: '#E1F5EE', color: '#0F6E56' };
+    case 'saved':
+      return { label: 'Saved', background: '#FBEAF0', color: '#B03A63' };
+    default:
+      return { label: 'Going', background: 'transparent', color: 'transparent' };
+  }
+}
 export function MyHomeUpcomingSection({
   hasUpcomingEvents,
   upcomingEvents,
@@ -56,7 +54,22 @@ export function MyHomeUpcomingSection({
     return null;
   }
 
-  const nextEvent = upcomingEvents[0];
+  const upcomingEventsDetails = upcomingEvents.map((event) => {
+
+
+    let role: 'hosting' | 'attending' | 'vendor' | 'unknown' = 'unknown';
+    if (event.i_am_host) role = 'hosting';
+    else if (event.user_is_vendor) role = 'vendor';
+    else if (event.user_is_interested) role = 'attending';
+    else if (event.user_has_ticket) role = 'attending';
+    else role = 'unknown';
+    return {
+      ...event,
+      pill: getRoleStyle(role),
+      role: role,
+    };
+  });
+  const nextEvent = upcomingEventsDetails[0];
   if (!nextEvent) {
     return null;
   }
@@ -64,6 +77,7 @@ export function MyHomeUpcomingSection({
   const nextEventCountdown = getCountdownParts(nextEvent ? nextEvent.start_time : null);
   const categoryTheme = getCategoryTheme(nextEvent.category ?? undefined);
 
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -82,9 +96,10 @@ export function MyHomeUpcomingSection({
             gap: 2,
           }}
         >
-{/* first of the upcoming events. */}
+          {/* first of the upcoming events. */}
 
           <Box
+            onClick={() => navigate('/events-new/' + nextEvent.id)}
             sx={{
               position: 'relative',
               borderRadius: '28px',
@@ -137,18 +152,25 @@ export function MyHomeUpcomingSection({
               }}
             />
 
+            <Chip
+              label={
+                nextEvent.category?.name ? `Upcoming next · ${nextEvent.category.name}` : 'Upcoming next'
+              }
+              sx={{
+                position: 'absolute',
+                left: { xs: 16, sm: 20 },
+                bottom: { xs: 16, sm: 20 },
+                zIndex: 5,
+                width: 'fit-content',
+                bgcolor: 'rgba(255,255,255,0.20)',
+                color: '#fff',
+                fontWeight: 700,
+                letterSpacing: '0.03em',
+                backdropFilter: 'blur(6px)',
+              }}
+            />
+
             <Stack spacing={2.5} sx={{ position: 'relative', zIndex: 4, p: { xs: 2.2, sm: 2.8 } }}>
-              <Chip
-                label={nextEvent.category?.name ? `Upcoming next · ${nextEvent.category.name}` : 'Upcoming next'}
-                sx={{
-                  width: 'fit-content',
-                  bgcolor: 'rgba(255,255,255,0.20)',
-                  color: '#fff',
-                  fontWeight: 700,
-                  letterSpacing: '0.03em',
-                  backdropFilter: 'blur(6px)',
-                }}
-              />
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
@@ -175,7 +197,7 @@ export function MyHomeUpcomingSection({
                     <Typography
                       sx={{ fontSize: 14, color: 'rgba(255,255,255,0.88)' }}
                     >
-                      {nextEvent.subtitle} 
+                      {nextEvent.subtitle}
                     </Typography>
                     <Typography
                       sx={{ fontSize: 14, color: 'rgba(255,255,255,0.60)' }}
@@ -219,16 +241,16 @@ export function MyHomeUpcomingSection({
               </Stack>
             </Stack>
           </Box>
-{/* rest of the upcoming events. */}
+          {/* rest of the upcoming events. */}
           <Stack spacing={1.4}>
-            {upcomingEvents.slice(1).map((event) => {
+            {upcomingEventsDetails.slice(1).map((event) => {
               const eventTheme = getCategoryTheme(event.category ?? undefined);
 
               return (
                 <Box
                   key={event.id}
                   component={Link}
-                  to={`/events-new/${event.eventId}`}
+                  to={`/events-new/${event.id}`}
                   sx={{
                     position: 'relative',
                     display: 'flex',
@@ -293,8 +315,27 @@ export function MyHomeUpcomingSection({
                           'linear-gradient(180deg, rgba(24, 24, 24, 0.18) 0%, rgba(24, 24, 24, 0.42) 100%)',
                       }}
                     />
+
                   </Box>
 
+                  <Chip
+                    label={event.pill.label}
+                    sx={{
+                      position: 'absolute',
+                      left: -2,
+                      bottom: -3,
+                      zIndex: 2,
+                      color: event.i_am_host ? '#fff' : event.user_is_vendor ? '#fff' : event.pill?.color,
+                      lineHeight: 1,
+                      bgcolor: event.i_am_host ? '#8b5cf6' : event.user_is_vendor ? '#0eacac' : event.pill.background,
+                      p: 0,
+                      borderRadius: '2px',
+                      fontFamily: 'serif',
+                      fontSize: '0.7rem',
+                      m: 0,
+                      padding: 0,
+                    }}
+                  />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack
                       direction="row"
@@ -323,10 +364,13 @@ export function MyHomeUpcomingSection({
                       sx={{
                         fontSize: 15,
                         fontWeight: 700,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 1,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
+                        // Mobile: allow full title to wrap to multiple lines.
+                        // Desktop: keep it compact with a single-line clamp.
+                        display: { xs: 'block', sm: '-webkit-box' },
+                        WebkitLineClamp: { xs: 'unset', sm: 1 },
+                        WebkitBoxOrient: { xs: 'unset', sm: 'vertical' },
+                        overflow: { xs: 'visible', sm: 'hidden' },
+                        whiteSpace: { xs: 'normal', sm: 'nowrap' },
                       }}
                     >
                       {event.title}
@@ -335,8 +379,9 @@ export function MyHomeUpcomingSection({
                       sx={{
                         mt: 0.5,
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'flex-start', sm: 'center' },
+                        gap: { xs: 0.25, sm: 0.5 },
                         minWidth: 0,
                       }}
                     >
@@ -344,13 +389,13 @@ export function MyHomeUpcomingSection({
                         component="span"
                         sx={{
                           minWidth: 0,
-                          flex: 1,
                           fontSize: 12,
                           color: '#2B2118',
                           fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                          flex: { xs: '0 0 auto', sm: 1 },
+                          overflow: { xs: 'visible', sm: 'hidden' },
+                          textOverflow: { xs: 'clip', sm: 'ellipsis' },
+                          whiteSpace: { xs: 'normal', sm: 'nowrap' },
                         }}
                       >
                         {event.subtitle}
@@ -362,23 +407,12 @@ export function MyHomeUpcomingSection({
                           fontSize: 12,
                           color: '#2B2118',
                           fontWeight: 500,
-                          whiteSpace: 'nowrap',
+                          whiteSpace: { xs: 'normal', sm: 'nowrap' },
                         }}
                       >
                         • {event.day} {event.month}
                       </Typography>
                     </Box>
-                  </Box>
-
-                  <Box sx={{ ml: 'auto', alignSelf: 'flex-end' }}>
-                    <Chip
-                      label={event.pill.label}
-                      sx={{
-                        bgcolor: event.pill.background,
-                        color: event.pill.color,
-                        fontWeight: 700,
-                      }}
-                    />
                   </Box>
                 </Box>
               );

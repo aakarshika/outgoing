@@ -16,6 +16,14 @@ export interface EventHost {
   avatar: string | null;
 }
 
+export interface EventAddon {
+  id: number;
+  addon_slug: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EventMedia {
   id: number;
   media_type: 'image' | 'video';
@@ -40,7 +48,7 @@ export interface EventTicketTier {
 
 export interface EventListItem {
   id: number;
-  host: EventHost;
+  host: BaseFeedUser;
   title: string;
   slug: string;
   category: EventCategory | null;
@@ -125,6 +133,7 @@ export interface EventDetail extends EventListItem {
   user_tickets?: TicketInfo[];
   user_applications?: VendorApplicationInfo[];
   attendees?: AttendeeInfo[];
+  addons?: EventAddon[];
 }
 
 export type EventLifecycleState =
@@ -290,6 +299,37 @@ export interface BaseFeedNeed {
 }
 
 export interface BaseFeedEventItem {
+  id: number;
+  title: string;
+  subtitle : string;
+  day : string;
+  month : string;
+  slug: string;
+  category: EventCategory | null;
+  location_name: string;
+  location_address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  start_time: string;
+  end_time: string;
+  ticket_price_standard: string | null;
+  ticket_price_flexible: string | null;
+  cover_image: string | null;
+  status: string;
+  lifecycle_state: EventLifecycleState;
+  capacity: number | null;
+  interest_count: number;
+  ticket_count: number;
+  user_is_interested: boolean;
+  user_has_ticket: boolean;
+  user_is_vendor: boolean;
+  series?: { id: number; name: string } | null;
+  occurrence_index?: number | null;
+  media?: EventMedia[];
+  description?: string;
+  reviews?: any[];
+  average_rating?: number | null;
+  ticket_tiers?: EventTicketTier[];
   event: EventListItem;
   needs: BaseFeedNeed[];
   host: BaseFeedUser;

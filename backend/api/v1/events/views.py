@@ -28,6 +28,7 @@ from apps.events.models import (
     EventPrivateConversation,
     EventPrivateMessage,
     Friendship,
+    EventAddon,
 )
 from apps.needs.models import EventNeed
 from apps.tickets.models import Ticket
@@ -54,6 +55,7 @@ from .serializers import (
     FriendshipActionSerializer,
     FriendshipRequestCreateSerializer,
     FriendshipSerializer,
+    EventAddonSerializer,
 )
 
 
@@ -1652,3 +1654,38 @@ class MyNetworkActivityView(APIView):
         activity_items = activity_items[:limit]
 
         return success_response(data={"activity": activity_items})
+
+class EventAddonView(APIView):
+    """Create or update an add-on description for an event."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=EventAddonSerializer, responses={201: EventAddonSerializer})
+    def post(self, request, event_id):
+        """Save description for an event add-on."""
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            return error_response(message="Event not found", status=404)
+
+        if event.host != request.user:
+            return error_response(message="Not authorized", status=403)
+
+        addon_slug = request.data.get("addon_slug")
+        description = request.data.get("description", "")
+
+        if not addon_slug:
+            return error_response(message="addon_slug is required", status=400)
+
+        addon, created = EventAddon.objects.update_or_create(
+            event=event,
+            addon_slug=addon_slug,
+            defaults={"description": description},
+        )
+
+        serializer = EventAddonSerializer(addon)
+        return success_response(
+            data=serializer.data,
+            message="Add-on description saved",
+            status=201 if created else 200,
+        )

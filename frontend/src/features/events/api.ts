@@ -660,3 +660,15 @@ export async function getOrCreatePrivateConversation(
   );
   return data;
 }
+
+export async function saveEventAddonDescription(
+  eventId: number,
+  addonSlug: string,
+  description: string,
+) {
+  const { data } = await client.post<ApiResponse<any>>(`/events/${eventId}/addons/`, {
+    addon_slug: addonSlug,
+    description,
+  });
+  return data;
+}

@@ -17,6 +17,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/events/:id/manage',
+    componentName: 'EventWorkspace',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
     path: '/test-feed',
     componentName: 'TestFeed',
     isPublic: true,
@@ -41,61 +46,41 @@ export const routesConfig: RouteDefinition[] = [
     componentName: 'HomeRenewed',
     isPublic: true,
   },
-  {
-    path: '/alerts',
-    componentName: 'Alerts',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
+  // {
+  //   path: '/alerts',
+  //   componentName: 'Alerts',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
   {
     path: '/chats',
     componentName: 'Chats',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
-  {
-    path: '/chats/group/:eventId',
-    componentName: 'Chats',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/chats/private/:conversationId',
-    componentName: 'Chats',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/chats/direct/:username',
-    componentName: 'Chats',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/special',
-    componentName: 'EventsSpecial',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/events/create',
-    componentName: 'CreateEvent',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/manage',
-    componentName: 'PlanningWorkspace',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/events/:id/manage/*',
-    componentName: 'PlanningWorkspace',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/events/:id/host-event-management/*',
-    componentName: 'ManageForHost',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/events/:id/service-event-management/*',
-    componentName: 'ManageForVendor',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
+  // {
+  //   path: '/special',
+  //   componentName: 'EventsSpecial',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/events/create',
+  //   componentName: 'CreateEvent',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/events/:id/manage/*',
+  //   componentName: 'PlanningWorkspace',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/events/:id/host-event-management/*',
+  //   componentName: 'ManageForHost',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/events/:id/service-event-management/*',
+  //   componentName: 'ManageForVendor',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
   {
     path: '/events/:id',
     componentName: 'EventDetail',
@@ -116,51 +101,51 @@ export const routesConfig: RouteDefinition[] = [
     componentName: 'Gallery',
     isPublic: true,
   },
-  {
-    path: '/dashboard',
-    componentName: 'Dashboard',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/calendar',
-    componentName: 'Calendar',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
+  // {
+  //   path: '/dashboard',
+  //   componentName: 'Dashboard',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/calendar',
+  //   componentName: 'Calendar',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
   {
     path: '/managing/:tab?',
     componentName: 'Managing',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
-  {
-    path: '/vendors',
-    componentName: 'BrowseVendors',
-    isPublic: true,
-  },
+  // {
+  //   path: '/vendors',
+  //   componentName: 'BrowseVendors',
+  //   isPublic: true,
+  // },
   {
     path: '/vendors/portfolio/:vendorId',
     componentName: 'VendorPortfolio',
     isPublic: true,
   },
-  {
-    path: '/vendors/create',
-    componentName: 'CreateService',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/services/:id',
-    componentName: 'ServiceDetail',
-    isPublic: true,
-  },
-  {
-    path: '/services/:id/edit',
-    componentName: 'EditService',
-    roles: [UserRole.USER, UserRole.ADMIN],
-  },
-  {
-    path: '/requests',
-    componentName: 'Requests',
-    isPublic: true,
-  },
+  // {
+  //   path: '/vendors/create',
+  //   componentName: 'CreateService',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/services/:id',
+  //   componentName: 'ServiceDetail',
+  //   isPublic: true,
+  // },
+  // {
+  //   path: '/services/:id/edit',
+  //   componentName: 'EditService',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  // },
+  // {
+  //   path: '/requests',
+  //   componentName: 'Requests',
+  //   isPublic: true,
+  // },
   {
     path: '/signup',
     componentName: 'SignUp',
@@ -173,12 +158,12 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
     isGuestOnly: true,
   },
-  {
-    path: '/profile',
-    componentName: 'Profile',
-    roles: [UserRole.USER, UserRole.ADMIN],
-    theme: 'profile-theme',
-  },
+  // {
+  //   path: '/profile',
+  //   componentName: 'Profile',
+  //   roles: [UserRole.USER, UserRole.ADMIN],
+  //   theme: 'profile-theme',
+  // },
   {
     path: '/user/:username',
     componentName: 'UserProfile',
@@ -190,11 +175,11 @@ export const routesConfig: RouteDefinition[] = [
     roles: [UserRole.USER, UserRole.ADMIN],
     theme: 'profile-theme',
   },
-  {
-    path: '/browse',
-    componentName: 'BrowseFeed',
-    isPublic: true,
-  },
+  // {
+  //   path: '/browse',
+  //   componentName: 'BrowseFeed',
+  //   isPublic: true,
+  // },
   {
     path: '/search',
     componentName: 'Search',

@@ -16,14 +16,14 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'linear-gradient(rgba(71, 85, 105, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(71, 85, 105, 0.1) 1px, transparent 1px)',
     accent: 'rgb(71, 85, 105)',
-    tape: 'rgba(71, 85, 105, 0.32)',
+    tape: 'rgba(71, 85, 105, 0.1)',
     icon: 'cpu',
   },
   arts: {
     bg: 'rgb(231, 236, 182)',
     pattern: 'radial-gradient(rgba(179, 190, 81, 0.25) 1.5px, transparent 0)',
     accent: 'rgb(179, 190, 81)',
-    tape: 'rgba(179, 190, 81, 0.35)',
+    tape: 'rgba(179, 190, 81, 0.1)',
     icon: 'palette',
   },
   music: {
@@ -31,14 +31,14 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'linear-gradient(rgba(166, 16, 171, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(166, 16, 171, 0.12) 1px, transparent 1px)',
     accent: 'rgb(166, 16, 171)',
-    tape: 'rgba(166, 16, 171, 0.34)',
+    tape: 'rgba(166, 16, 171, 0.1)',
     icon: 'music',
   },
   food: {
     bg: 'rgb(251, 227, 190)',
     pattern: 'radial-gradient(rgba(250, 168, 45, 0.25) 2px, transparent 0)',
     accent: 'rgb(250, 168, 45)',
-    tape: 'rgba(250, 168, 45, 0.35)',
+    tape: 'rgba(250, 168, 45, 0.1)',
     icon: 'utensils',
   },
   networking: {
@@ -46,14 +46,14 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(59, 130, 246, 0.08) 10px, rgba(59, 130, 246, 0.08) 20px)',
     accent: 'rgb(59, 130, 246)',
-    tape: 'rgba(59, 130, 246, 0.34)',
+    tape: 'rgba(59, 130, 246, 0.1)',
     icon: 'users',
   },
   comedy: {
     bg: 'rgb(252, 222, 218)',
     pattern: 'radial-gradient(rgba(206, 62, 9, 0.2) 1.5px, transparent 0)',
     accent: 'rgb(206, 62, 9)',
-    tape: 'rgba(206, 62, 9, 0.32)',
+    tape: 'rgba(206, 62, 9, 0.1)',
     icon: 'laugh',
   },
   social: {
@@ -61,7 +61,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'linear-gradient(45deg, rgba(146, 47, 82, 0.08) 25%, transparent 25%, transparent 50%, rgba(146, 47, 82, 0.08) 50%, rgba(146, 47, 82, 0.08) 75%, transparent 75%, transparent)',
     accent: 'rgb(146, 47, 82)',
-    tape: 'rgba(146, 47, 82, 0.33)',
+    tape: 'rgba(146, 47, 82, 0.1)',
     icon: 'heart-handshake',
   },
   festivals: {
@@ -69,7 +69,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'radial-gradient(circle at 2px 2px, rgba(216, 177, 20, 0.16) 1px, transparent 0)',
     accent: 'rgb(216, 177, 20)',
-    tape: 'rgba(216, 177, 20, 0.35)',
+    tape: 'rgba(216, 177, 20, 0.1)',
     icon: 'party-popper',
   },
   outdoors: {
@@ -77,7 +77,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'repeating-linear-gradient(135deg, rgba(17, 145, 128, 0.1) 0, rgba(17, 145, 128, 0.1) 2px, transparent 2px, transparent 12px)',
     accent: 'rgb(17, 145, 128)',
-    tape: 'rgba(17, 145, 128, 0.33)',
+    tape: 'rgba(17, 145, 128, 0.1)',
     icon: 'mountain',
   },
   nightlife: {
@@ -85,7 +85,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'radial-gradient(circle at 3px 3px, rgba(93, 63, 211, 0.18) 1px, transparent 0)',
     accent: 'rgb(93, 63, 211)',
-    tape: 'rgba(93, 63, 211, 0.35)',
+    tape: 'rgba(93, 63, 211, 0.1)',
     icon: 'moon',
   },
   sports: {
@@ -93,7 +93,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'repeating-linear-gradient(120deg, rgba(20, 133, 108, 0.12) 0, rgba(20, 133, 108, 0.12) 2px, transparent 2px, transparent 11px)',
     accent: 'rgb(20, 133, 108)',
-    tape: 'rgba(20, 133, 108, 0.33)',
+    tape: 'rgba(20, 133, 108, 0.1)',
     icon: 'dumbbell',
   },
   tech: {
@@ -101,7 +101,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'linear-gradient(rgba(80, 61, 153, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(80, 61, 153, 0.12) 1px, transparent 1px)',
     accent: 'rgb(80, 61, 153)',
-    tape: 'rgba(80, 61, 153, 0.34)',
+    tape: 'rgba(80, 61, 153, 0.1)',
     icon: 'cpu',
   },
   workshops: {
@@ -109,7 +109,7 @@ export const CATEGORY_THEMES: Record<
     pattern:
       'linear-gradient(135deg, rgba(37, 99, 235, 0.12) 25%, transparent 25%, transparent 50%, rgba(37, 99, 235, 0.12) 50%, rgba(37, 99, 235, 0.12) 75%, transparent 75%, transparent)',
     accent: 'rgb(37, 99, 235)',
-    tape: 'rgba(37, 99, 235, 0.33)',
+    tape: 'rgba(37, 99, 235, 0.1)',
     icon: 'book-open',
   },
 };

@@ -8,19 +8,26 @@ import {
   Typography,
 } from '@mui/material';
 import Lottie from 'lottie-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { LargeEventCard } from '@/components/events/LargeEventCard';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
 import { HostCard } from '@/components/ui/HostCard';
 import {
-  useFeed,
+  useBaseFeed,
+  useCategories,
   useIconicHostsFeed,
   useTrendingHighlights,
 } from '@/features/events/hooks';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
-import type { EventListItem } from '@/types/events';
+import type { BaseFeedEventItem, BaseFeedParams, EventCategory } from '@/types/events';
+import {
+  getStoredSearchLocation,
+  inferCityFromLocationLabel,
+  LOCATION_PREFERENCES_CHANGED_EVENT,
+} from '@/utils/locationPrefs';
 
 const categoryChips = [
   { label: 'Outdoors', icon: '🏃' },
@@ -87,316 +94,156 @@ const filterChips = [
 
 type FilterChip = (typeof filterChips)[number];
 
-function formatDayTime(dateString: string) {
-  const date = new Date(dateString);
-  return `${date.toLocaleDateString(undefined, {
-    weekday: 'short',
-  })} · ${date.toLocaleTimeString(undefined, {
+const DISCOVERABLE_STATUSES = ['published', 'event_ready', 'live'] as const;
+const SMALL_SECTION_CARD_LIMIT = 8;
+const THINGS_TO_DO_CARD_LIMIT = 6;
+
+type ThingsToDoChipConfig = {
+  baseParams: BaseFeedParams;
+  emptyStateCopy: string;
+  postFilter?: (item: BaseFeedEventItem) => boolean;
+  sortItems?: (left: BaseFeedEventItem, right: BaseFeedEventItem) => number;
+};
+
+function formatTime(dateString: string | undefined | null) {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
-  })}`;
+  });
 }
 
-function getAccent(event: EventListItem) {
-  const category = (event.category?.name || '').toLowerCase();
-  if (event.location_name?.toLowerCase().includes('online')) return '#E1F5EE';
-  if (category.includes('music')) return '#E6F1FB';
-  if (category.includes('food')) return '#FAECE7';
-  if (category.includes('outdoor') || category.includes('sport')) return '#FAEEDA';
-  if (category.includes('art')) return '#EEEDFE';
-  if (category.includes('book')) return '#FBEAF0';
-  return '#EAF3DE';
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }
 
-function getIcon(event: EventListItem) {
-  const category = (event.category?.name || '').toLowerCase();
-  if (event.location_name?.toLowerCase().includes('online')) return '💻';
-  if (category.includes('music')) return '🎶';
-  if (category.includes('food')) return '🍽️';
-  if (category.includes('outdoor') || category.includes('sport')) return '🏃';
-  if (category.includes('art')) return '🎨';
-  if (category.includes('film')) return '🎞️';
-  if (category.includes('game')) return '🎮';
-  if (category.includes('book')) return '📚';
-  if (category.includes('well')) return '🧘';
-  return '✨';
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function getPriceLabel(event: EventListItem) {
-  const prices = [event.ticket_price_standard, event.ticket_price_flexible]
-    .filter((value): value is string => value !== null)
-    .map((value) => Number(value))
-    .filter((value) => !Number.isNaN(value));
+function buildFeedTimeContext(reference = new Date()) {
+  const todayStart = startOfDay(reference);
+  const tomorrowStart = addDays(todayStart, 1);
+  const weekStart = new Date(todayStart);
+  const mondayOffset = (weekStart.getDay() + 6) % 7;
+  weekStart.setDate(weekStart.getDate() - mondayOffset);
+  const weekendStart = addDays(weekStart, 5);
+  const nextMonday = addDays(weekStart, 7);
+  const effectiveWeekendStart =
+    weekendStart.getTime() > reference.getTime() ? weekendStart : reference;
 
-  if (prices.length === 0) return '';
-  const lowest = Math.min(...prices);
-  return lowest === 0 ? 'Free' : `$${lowest}`;
+  return {
+    nowIso: reference.toISOString(),
+    tonight: {
+      start_time_gte: reference.toISOString(),
+      start_time_lte: tomorrowStart.toISOString(),
+    },
+    weekend: {
+      start_time_gte: effectiveWeekendStart.toISOString(),
+      start_time_lte: nextMonday.toISOString(),
+    },
+  };
 }
 
-function EventCard({
-  event,
-  compactPrice = false,
-}: {
-  event: EventListItem;
-  compactPrice?: boolean;
-}) {
-  const secondary = compactPrice
-    ? `${formatDayTime(event.start_time)}${getPriceLabel(event) ? ` · ${getPriceLabel(event)}` : ''}`
-    : formatDayTime(event.start_time);
+function mapBaseFeedItemForCard(item: BaseFeedEventItem) {
+  const date = new Date(item.event.start_time);
+
+  return {
+    ...item,
+    ...item.event,
+    month: date.toLocaleDateString(undefined, { month: 'short' }),
+    day: String(date.getDate()).padStart(2, '0'),
+    subtitle: `${item.event.location_name || 'Location TBD'} · ${formatTime(item.event.start_time)}`,
+  } as BaseFeedEventItem;
+}
+
+function isOnlineEvent(event: BaseFeedEventItem) {
+  const locationName = (event.location_name || event.event.location_name || '')
+    .trim()
+    .toLowerCase();
+  const locationAddress = (event.location_address || event.event.location_address || '')
+    .trim()
+    .toLowerCase();
 
   return (
-    <Box
-      sx={{
-        background: '#F9F9F9',
-        border: '0.5px solid var(--color-border-tertiary)',
-        borderRadius: '24px',
-        overflow: 'hidden',
-        minWidth: 0,
-        height: '100%',
-      }}
-    >
-      <Box
-        sx={{
-          height: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 32,
-          background: getAccent(event),
-        }}
-      >
-        {getIcon(event)}
-      </Box>
-      <Box sx={{ p: 1.5 }}>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.07em',
-            color: 'var(--color-text-secondary)',
-            mb: 0.5,
-          }}
-        >
-          {event.category?.name ||
-            (event.location_name?.toLowerCase().includes('online')
-              ? 'Online'
-              : 'Event')}
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: 'Syne, sans-serif',
-            fontSize: 13,
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            lineHeight: 1.3,
-            minHeight: 34,
-          }}
-        >
-          {event.title}
-        </Typography>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          spacing={1}
-          sx={{ mt: 1 }}
-        >
-          <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-            {secondary}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 11,
-              color: '#3B6D11',
-              background: '#EAF3DE',
-              px: 1,
-              py: 0.3,
-              borderRadius: '999px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {event.ticket_count || event.interest_count} going
-          </Typography>
-        </Stack>
-      </Box>
+    locationName.includes('online') ||
+    locationAddress === 'online event' ||
+    locationAddress.includes('online')
+  );
+}
+
+function getOpenNeedsCount(event: BaseFeedEventItem) {
+  return event.needs.filter(
+    (need) =>
+      need.status !== 'filled' &&
+      need.status !== 'override_filled' &&
+      !need.assigned_vendor,
+  ).length;
+}
+
+function getPopularityScore(event: BaseFeedEventItem) {
+  return event.event_popularity_score || event.ticket_count + event.interest_count;
+}
+
+function getCreatedAtMs(event: BaseFeedEventItem) {
+  return new Date(event.event.created_at || event.start_time).getTime();
+}
+
+function compareByUpcomingTime(left: BaseFeedEventItem, right: BaseFeedEventItem) {
+  return new Date(left.start_time).getTime() - new Date(right.start_time).getTime();
+}
+
+function compareByPopularity(left: BaseFeedEventItem, right: BaseFeedEventItem) {
+  return (
+    getPopularityScore(right) - getPopularityScore(left) ||
+    compareByUpcomingTime(left, right)
+  );
+}
+
+function compareByCreated(left: BaseFeedEventItem, right: BaseFeedEventItem) {
+  return (
+    getCreatedAtMs(right) - getCreatedAtMs(left) || compareByUpcomingTime(left, right)
+  );
+}
+
+function isOutdoorCategory(category: EventCategory | null | undefined) {
+  const haystack = `${category?.slug || ''} ${category?.name || ''}`.toLowerCase();
+  return haystack.includes('outdoor') || haystack.includes('sport');
+}
+
+function SectionLoadingState() {
+  return (
+    <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+      <CircularProgress sx={{ color: '#D85A30' }} />
     </Box>
   );
 }
 
-function ThingsToDoCard({
-  event,
-  showNeedCallout,
-}: {
-  event: EventListItem;
-  showNeedCallout: boolean;
-}) {
-  const isOnline = event.location_name?.toLowerCase().includes('online');
-  const description =
-    event.description ||
-    (isOnline
-      ? 'Join from anywhere and meet people around a shared interest.'
-      : 'A local event built around people showing up, contributing, and connecting.');
-  const priceLabel = getPriceLabel(event);
-
+function FeedStripEmptyState({ message }: { message: string }) {
   return (
     <Box
       sx={{
-        background: '#F9F9F9',
-        border: '0.5px solid var(--color-border-tertiary)',
-        borderLeft: `3px solid ${isOnline ? '#1D9E75' : '#D85A30'}`,
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: 180,
+        px: 2,
         borderRadius: '24px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        height: '100%',
+        border: '0.5px solid var(--color-border-tertiary)',
+        background: '#F9F9F9',
       }}
     >
-      {event.cover_image ? (
-        <Box
-          component="img"
-          src={event.cover_image}
-          alt={event.title}
-          sx={{ height: 110, width: '100%', objectFit: 'cover', flexShrink: 0 }}
-        />
-      ) : (
-        <Box
-          sx={{
-            height: 110,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 36,
-            background: getAccent(event),
-            flexShrink: 0,
-          }}
-        >
-          {getIcon(event)}
-        </Box>
-      )}
-      <Box
+      <Typography
         sx={{
-          p: '12px 14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.75,
-          flex: 1,
+          maxWidth: 420,
+          textAlign: 'center',
+          color: 'var(--color-text-secondary)',
+          lineHeight: 1.6,
         }}
       >
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          spacing={1}
-        >
-          <Typography
-            sx={{
-              fontSize: 10,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.07em',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            {event.category?.name || 'Event'}
-          </Typography>
-          <Box
-            sx={{
-              fontSize: 10,
-              fontWeight: 500,
-              px: 1,
-              py: 0.35,
-              borderRadius: '999px',
-              whiteSpace: 'nowrap',
-              background: isOnline ? '#E1F5EE' : '#FAECE7',
-              color: isOnline ? '#085041' : '#712B13',
-              flexShrink: 0,
-            }}
-          >
-            {isOnline ? 'Online' : 'In person'}
-          </Box>
-        </Stack>
-
-        <Typography
-          sx={{
-            fontFamily: 'Syne, sans-serif',
-            fontSize: 14,
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            lineHeight: 1.3,
-          }}
-        >
-          {event.title}
-        </Typography>
-
-        <Typography
-          sx={{
-            fontSize: 12,
-            color: 'var(--color-text-secondary)',
-            lineHeight: 1.5,
-            display: '-webkit-box',
-            overflow: 'hidden',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-          }}
-        >
-          {description}
-        </Typography>
-
-        {showNeedCallout ? (
-          <Box
-            sx={{
-              background: '#FAEEDA',
-              borderRadius: '16px',
-              p: '7px 10px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 0.75,
-            }}
-          >
-            <Typography sx={{ fontSize: 12, color: '#633806', mt: '1px' }}>
-              ⚡
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: '#633806', lineHeight: 1.4 }}>
-              <Box component="span" sx={{ fontWeight: 700, color: '#412402' }}>
-                Contributor spot open
-              </Box>{' '}
-              - chip in on the day and earn a perk.
-            </Typography>
-          </Box>
-        ) : null}
-
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          spacing={1}
-          sx={{
-            mt: 'auto',
-            pt: 1,
-            borderTop: '0.5px solid var(--color-border-tertiary)',
-          }}
-        >
-          <Typography sx={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-            {formatDayTime(event.start_time)}
-            {priceLabel ? ` · ${priceLabel}` : ''}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 11,
-              color: '#3B6D11',
-              background: '#EAF3DE',
-              px: 1,
-              py: 0.3,
-              borderRadius: '999px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {event.ticket_count || event.interest_count} going
-          </Typography>
-        </Stack>
-      </Box>
+        {message}
+      </Typography>
     </Box>
   );
 }
@@ -478,57 +325,199 @@ function HorizontalScrollRow({ children }: { children: React.ReactNode }) {
 
 export default function GuestLandingPage() {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<FilterChip>('This weekend');
+  const [activeFilter, setActiveFilter] = useState<FilterChip>(
+    'Contributor spots open',
+  );
+  const [feedTimeContext] = useState(() => buildFeedTimeContext());
+  const [storedLocation, setStoredLocation] = useState(() => getStoredSearchLocation());
   const [heroAnimationData, setHeroAnimationData] = useState<object | null>(null);
-  const nearbySectionRef = useRef<HTMLDivElement | null>(null);
   const [isHighlightViewerOpen, setIsHighlightViewerOpen] = useState(false);
   const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
+  const { data: categoriesResponse } = useCategories();
+  const categories = categoriesResponse?.data || [];
 
-  const { data: nearbyResponse, isLoading: loadingNearby } = useFeed({
-    sort: 'trending',
-    page_size: 100,
-  });
+  const outdoorCategorySlugs = useMemo(
+    () =>
+      categories
+        .filter((category) => isOutdoorCategory(category))
+        .map((category) => category.slug),
+    [categories],
+  );
 
-  const nearbyEvents = ((nearbyResponse?.data || []) as EventListItem[]);
-  const onlineEvents = ((nearbyResponse?.data || []) as EventListItem[]);
+  const locationCoords = storedLocation?.coords ?? null;
+  const locationCity =
+    storedLocation?.city ||
+    inferCityFromLocationLabel(storedLocation?.label || '') ||
+    '';
+
+  const nearbyFeedParams = useMemo<BaseFeedParams>(
+    () => ({
+      sort: locationCoords ? 'distance' : 'popularity',
+      status: [...DISCOVERABLE_STATUSES],
+      start_time_gte: feedTimeContext.nowIso,
+      lat: locationCoords?.lat,
+      lng: locationCoords?.lng,
+      page_size: 24,
+    }),
+    [feedTimeContext.nowIso, locationCoords],
+  );
+
+  const onlineFeedParams = useMemo<BaseFeedParams>(
+    () => ({
+      sort: 'popularity',
+      online: true,
+      status: [...DISCOVERABLE_STATUSES],
+      start_time_gte: feedTimeContext.nowIso,
+      page_size: 24,
+    }),
+    [feedTimeContext.nowIso],
+  );
+
+  const thingsToDoConfigs = useMemo<Record<FilterChip, ThingsToDoChipConfig>>(
+    () => ({
+      'This weekend': {
+        baseParams: {
+          sort: 'start_time',
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.weekend.start_time_gte,
+          start_time_lte: feedTimeContext.weekend.start_time_lte,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No weekend events are lined up right now.',
+        sortItems: (left, right) =>
+          getPopularityScore(right) -
+            getPopularityScore(left) +
+            (getOpenNeedsCount(right) - getOpenNeedsCount(left)) * 20 ||
+          compareByUpcomingTime(left, right),
+      },
+      Tonight: {
+        baseParams: {
+          sort: 'start_time',
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.tonight.start_time_gte,
+          start_time_lte: feedTimeContext.tonight.start_time_lte,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No events are happening tonight right now.',
+        sortItems: (left, right) => {
+          if (left.lifecycle_state === 'live' && right.lifecycle_state !== 'live')
+            return -1;
+          if (right.lifecycle_state === 'live' && left.lifecycle_state !== 'live')
+            return 1;
+          return compareByUpcomingTime(left, right) || compareByPopularity(left, right);
+        },
+      },
+      Free: {
+        baseParams: {
+          sort: 'popularity',
+          free_only: true,
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.nowIso,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No free events are open right now.',
+        sortItems: compareByPopularity,
+      },
+      'Under $20': {
+        baseParams: {
+          sort: 'popularity',
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.nowIso,
+          page_size: 40,
+        },
+        emptyStateCopy: 'No low-cost events matched this filter right now.',
+        postFilter: (item) => item.min_ticket_price > 0 && item.min_ticket_price <= 20,
+        sortItems: (left, right) =>
+          left.min_ticket_price - right.min_ticket_price ||
+          compareByPopularity(left, right),
+      },
+      Outdoors: {
+        baseParams: {
+          sort: 'popularity',
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.nowIso,
+          categories: outdoorCategorySlugs.length ? outdoorCategorySlugs : undefined,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No outdoor or sports events are open right now.',
+        postFilter: (item) =>
+          outdoorCategorySlugs.length > 0 ? true : isOutdoorCategory(item.category),
+        sortItems: compareByPopularity,
+      },
+      'New in town': {
+        baseParams: {
+          sort: 'created',
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.nowIso,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No newly created events are available right now.',
+        sortItems: compareByCreated,
+      },
+      'Contributor spots open': {
+        baseParams: {
+          sort: 'popularity',
+          has_needs: true,
+          status: [...DISCOVERABLE_STATUSES],
+          start_time_gte: feedTimeContext.nowIso,
+          page_size: 32,
+        },
+        emptyStateCopy: 'No events with contributor spots open right now.',
+        postFilter: (item) => getOpenNeedsCount(item) > 0,
+        sortItems: (left, right) => {
+          const openNeedsDelta = getOpenNeedsCount(right) - getOpenNeedsCount(left);
+          return openNeedsDelta || compareByPopularity(left, right);
+        },
+      },
+    }),
+    [feedTimeContext, outdoorCategorySlugs],
+  );
+
+  const activeThingsToDoConfig = thingsToDoConfigs[activeFilter];
+
+  const { data: nearbyResponse, isLoading: loadingNearby } =
+    useBaseFeed(nearbyFeedParams);
+  const { data: onlineResponse, isLoading: loadingOnline } =
+    useBaseFeed(onlineFeedParams);
+  const { data: thingsToDoResponse, isLoading: loadingThingsToDo } = useBaseFeed(
+    activeThingsToDoConfig.baseParams,
+  );
+
+  const nearbyEvents = useMemo(
+    () =>
+      ((nearbyResponse?.data || []) as BaseFeedEventItem[])
+        .map(mapBaseFeedItemForCard)
+        .filter((event) => !isOnlineEvent(event))
+        .slice(0, SMALL_SECTION_CARD_LIMIT),
+    [nearbyResponse],
+  );
+
+  const onlineEvents = useMemo(
+    () =>
+      ((onlineResponse?.data || []) as BaseFeedEventItem[])
+        .map(mapBaseFeedItemForCard)
+        .slice(0, SMALL_SECTION_CARD_LIMIT),
+    [onlineResponse],
+  );
 
   const discoverEvents = useMemo(() => {
-    const baseEvents = ((nearbyResponse?.data || []) as EventListItem[]);
-
-    return baseEvents
-      .filter((event) => {
-        const category = (event.category?.name || '').toLowerCase();
-        const price = getPriceLabel(event);
-
-        switch (activeFilter) {
-          case 'Tonight':
-            return (
-              new Date(event.start_time).toDateString() === new Date().toDateString()
-            );
-          case 'Free':
-            return price === 'Free';
-          case 'Under $20':
-            return price.startsWith('$') ? Number(price.slice(1)) < 20 : false;
-          case 'Outdoors':
-            return category.includes('outdoor') || category.includes('sport');
-          case 'New in town':
-            return category.includes('social') || category.includes('community');
-          case 'Contributor spots open':
-            return category.includes('workshop') || category.includes('community');
-          default:
-            return true;
-        }
-      })
-      .slice(0, 4);
-  }, [activeFilter, nearbyResponse]);
+    let items = [...((thingsToDoResponse?.data || []) as BaseFeedEventItem[])].map(
+      mapBaseFeedItemForCard,
+    );
+    if (activeThingsToDoConfig.postFilter) {
+      items = items.filter(activeThingsToDoConfig.postFilter);
+    }
+    if (activeThingsToDoConfig.sortItems) {
+      items.sort(activeThingsToDoConfig.sortItems);
+    }
+    return items.slice(0, THINGS_TO_DO_CARD_LIMIT);
+  }, [activeThingsToDoConfig, thingsToDoResponse]);
 
   const { data: iconicHostsResponse } = useIconicHostsFeed();
   const { data: trendingHighlightsResponse } = useTrendingHighlights(12);
 
   const iconicHosts = (iconicHostsResponse?.data || []).slice(0, 8);
   const trendingHighlights = (trendingHighlightsResponse?.data || []).slice(0, 8);
-
-  const isLoading = loadingNearby ;
 
   useEffect(() => {
     let ignore = false;
@@ -551,8 +540,33 @@ export default function GuestLandingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const syncStoredLocation = () => {
+      setStoredLocation(getStoredSearchLocation());
+    };
+
+    syncStoredLocation();
+    window.addEventListener(LOCATION_PREFERENCES_CHANGED_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
+
+    return () => {
+      window.removeEventListener(
+        LOCATION_PREFERENCES_CHANGED_EVENT,
+        syncStoredLocation,
+      );
+      window.removeEventListener('storage', syncStoredLocation);
+    };
+  }, []);
+
+  const nearbyTitle = locationCity
+    ? `Events happening around ${locationCity}`
+    : 'Popular in-person events';
+  const nearbyDescription = locationCoords
+    ? `Using your saved location${locationCity ? ` in ${locationCity}` : ''}`
+    : 'Set a search location to sort this strip by distance.';
+
   return (
-    <Box sx={{ background: '--#F9F9F9' }}>
+    <Box sx={{ background: '#F9F9F9' }}>
       <Box
         sx={{
           background: '#D85A30',
@@ -709,30 +723,32 @@ export default function GuestLandingPage() {
         }}
       />
 
-      <Container
-        ref={nearbySectionRef}
-        maxWidth={false}
-        sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}
-      >
+      <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
         <SectionHeader
           label="Near you"
-          title="Events happening in your city"
-          description="This weekend"
+          title={nearbyTitle}
+          description={nearbyDescription}
         />
-        <HorizontalScrollRow>
-          {nearbyEvents.map((event) => (
-            <Box
-              key={event.id}
-              sx={{
-                flex: '0 0 clamp(260px, 32vw, 320px)',
-                minWidth: 0,
-                scrollSnapAlign: 'start',
-              }}
-            >
-              <SmallEventCard event={event} />
-            </Box>
-          ))}
-        </HorizontalScrollRow>
+        {loadingNearby ? (
+          <SectionLoadingState />
+        ) : nearbyEvents.length === 0 ? (
+          <FeedStripEmptyState message="No in-person events are available right now." />
+        ) : (
+          <HorizontalScrollRow>
+            {nearbyEvents.map((event) => (
+              <Box
+                key={event.id}
+                sx={{
+                  flex: '0 0 clamp(260px, 32vw, 320px)',
+                  minWidth: 0,
+                  scrollSnapAlign: 'start',
+                }}
+              >
+                <SmallEventCard event={event} />
+              </Box>
+            ))}
+          </HorizontalScrollRow>
+        )}
       </Container>
 
       <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 6 }}>
@@ -760,20 +776,26 @@ export default function GuestLandingPage() {
       <Box sx={{ background: 'var(--color-background-secondary)', py: 6 }}>
         <Container maxWidth={false} sx={{ maxWidth: 1040, px: { xs: 2, md: 4 } }}>
           <SectionHeader label="Join from anywhere" title="Events happening online" />
-          <HorizontalScrollRow>
-            {onlineEvents.map((event) => (
-              <Box
-                key={event.id}
-                sx={{
-                  flex: '0 0 clamp(260px, 32vw, 320px)',
-                  minWidth: 0,
-                  scrollSnapAlign: 'start',
-                }}
-              >
-                <EventCard event={event} />
-              </Box>
-            ))}
-          </HorizontalScrollRow>
+          {loadingOnline ? (
+            <SectionLoadingState />
+          ) : onlineEvents.length === 0 ? (
+            <FeedStripEmptyState message="No online events are open right now." />
+          ) : (
+            <HorizontalScrollRow>
+              {onlineEvents.map((event) => (
+                <Box
+                  key={event.id}
+                  sx={{
+                    flex: '0 0 clamp(260px, 32vw, 320px)',
+                    minWidth: 0,
+                    scrollSnapAlign: 'start',
+                  }}
+                >
+                  <SmallEventCard event={event} />
+                </Box>
+              ))}
+            </HorizontalScrollRow>
+          )}
         </Container>
       </Box>
 
@@ -787,8 +809,7 @@ export default function GuestLandingPage() {
               onClick={() => setActiveFilter(chip)}
               sx={{
                 borderRadius: '999px',
-                background:
-                  activeFilter === chip ? '#D85A30' : '#F9F9F9',
+                background: activeFilter === chip ? '#D85A30' : '#F9F9F9',
                 color: activeFilter === chip ? '#fff' : 'var(--color-text-primary)',
                 border:
                   activeFilter === chip
@@ -799,26 +820,22 @@ export default function GuestLandingPage() {
             />
           ))}
         </Stack>
-        {isLoading ? (
-          <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
-            <CircularProgress sx={{ color: '#D85A30' }} />
-          </Box>
+        {loadingThingsToDo ? (
+          <SectionLoadingState />
+        ) : discoverEvents.length === 0 ? (
+          <FeedStripEmptyState message={activeThingsToDoConfig.emptyStateCopy} />
         ) : (
           <HorizontalScrollRow>
             {discoverEvents.map((event) => (
               <Box
                 key={event.id}
-                onClick={() => navigate(`/events-new/${event.id}`)}
                 sx={{
-                  flex: '0 0 clamp(260px, 32vw, 320px)',
+                  flex: '0 0 clamp(280px, 36vw, 360px)',
                   minWidth: 0,
                   scrollSnapAlign: 'start',
                 }}
               >
-                <ThingsToDoCard
-                  event={event}
-                  showNeedCallout={activeFilter === 'Contributor spots open'}
-                />
+                <LargeEventCard event={event} showNeeds />
               </Box>
             ))}
           </HorizontalScrollRow>
@@ -1024,7 +1041,13 @@ export default function GuestLandingPage() {
       </Container>
 
       <Box
-        sx={{ background: '#D85A30', height: '70vh', textAlign: 'center', px: 2, py: { xs: 7, md: 8 } }}
+        sx={{
+          background: '#D85A30',
+          height: '70vh',
+          textAlign: 'center',
+          px: 2,
+          py: { xs: 7, md: 8 },
+        }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 800 }}>
           <Typography

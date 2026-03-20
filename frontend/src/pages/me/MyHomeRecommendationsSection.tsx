@@ -1,12 +1,12 @@
 import { Box } from '@mui/material';
 
 import { SmallEventCard } from '@/components/events/SmallEventCard';
-import type { EventListItem } from '@/types/events';
+import type { EventCardEvent } from '@/components/events/useEventCards';
 
 import { SectionHeading } from './MyHomeSectionHeading';
 
 type Props = {
-  recommendedEvents: EventListItem[];
+  recommendedEvents: EventCardEvent[];
 };
 
 export function MyHomeRecommendationsSection({ recommendedEvents }: Props) {
@@ -46,4 +46,3 @@ export function MyHomeRecommendationsSection({ recommendedEvents }: Props) {
     </Box>
   );
 }
-

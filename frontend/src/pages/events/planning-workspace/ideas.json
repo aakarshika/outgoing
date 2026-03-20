@@ -1,0 +1,366 @@
+[
+  {
+    "slug": "vinyl-request-wall",
+    "icon": "🎵",
+    "category": "music",
+    "title": "Set up a vinyl request wall",
+    "description": "Pin a board at the entrance where guests write their track requests. The DJ works through them across the night. Creates conversation before the music even starts."
+  },
+  {
+    "slug": "surprise-second-dj",
+    "icon": "🎧",
+    "category": "music",
+    "title": "Surprise second DJ",
+    "description": "Announce only one act. Midway through the night, a second DJ takes over unannounced. The crowd loses it every time."
+  },
+  {
+    "slug": "signature-drink",
+    "icon": "🍹",
+    "category": "food",
+    "title": "Name a drink after the event",
+    "description": "Work with your caterer or bar to create one cocktail or mocktail named after the night. Print it on a small card. People order it just to say they did."
+  },
+  {
+    "slug": "midnight-cake",
+    "icon": "🎂",
+    "category": "food",
+    "title": "Midnight cake moment",
+    "description": "At the peak of the event, bring out a cake — no occasion needed. Just a moment. Lights down, everyone together. Costs almost nothing, remembered forever."
+  },
+  {
+    "slug": "live-cooking-station",
+    "icon": "🍳",
+    "category": "food",
+    "title": "Live cooking station",
+    "description": "Instead of plated food, have someone cook live in a corner. The smell, the sizzle, the crowd gathering — it becomes its own activity. Works great for chaats, dosas, or pasta."
+  },
+  {
+    "slug": "potluck-theme",
+    "icon": "🥘",
+    "category": "food",
+    "title": "Themed potluck",
+    "description": "Ask every guest to bring one dish from a specific region or ingredient. You provide the space and drinks. The food becomes the conversation."
+  },
+  {
+    "slug": "drinks-pairing-card",
+    "icon": "🍷",
+    "category": "food",
+    "title": "Drinks pairing card",
+    "description": "Print a small card suggesting what to eat with each drink. Makes even simple food feel curated. Guests appreciate the thought."
+  },
+  {
+    "slug": "blind-tasting",
+    "icon": "👅",
+    "category": "food",
+    "title": "Blind tasting round",
+    "description": "Cover the labels on 4–5 drinks or dishes. Guests vote on their favourite before the reveal. Works for wines, hot sauces, biryanis — anything."
+  },
+  {
+    "slug": "chai-corner",
+    "icon": "☕",
+    "category": "food",
+    "title": "Late-night chai corner",
+    "description": "Set up a simple chai station for the last hour of the event. Signals the vibe is winding down warmly, not abruptly. People linger longer."
+  },
+  {
+    "slug": "dress-code-unexpected",
+    "icon": "👗",
+    "category": "social",
+    "title": "Unexpected dress code",
+    "description": "Don't just say \"smart casual.\" Pick something specific — one colour only, a decade, a fabric, a mood. Guests arrive already in character and the photos are incredible."
+  },
+  {
+    "slug": "string-lights",
+    "icon": "💡",
+    "category": "nightlife",
+    "title": "Warm string lights",
+    "description": "Overhead bulb lights transform any rooftop, terrace, or outdoor space instantly. Rent them for a few hundred rupees. The difference in atmosphere is enormous."
+  },
+  {
+    "slug": "polaroid-wall",
+    "icon": "📷",
+    "category": "social",
+    "title": "Polaroid wall",
+    "description": "Set up a blank wall with tape and a polaroid or instant camera. Guests take photos and pin them up. By the end of the night the wall is full. Leave it up while the event continues."
+  },
+  {
+    "slug": "disposable-cameras",
+    "icon": "📸",
+    "category": "social",
+    "title": "Disposable cameras on tables",
+    "description": "Put one or two disposable cameras on each table or in a basket at the entrance. Develop them after. The photos are always better than anything taken on a phone."
+  },
+  {
+    "slug": "crowd-playlist",
+    "icon": "🎶",
+    "category": "music",
+    "title": "Crowd-built playlist",
+    "description": "Open a collaborative Spotify playlist before the event and share the link in the invite. People add songs they want to hear. Play it during setup or between sets."
+  },
+  {
+    "slug": "theme-colour-palette",
+    "icon": "🎨",
+    "category": "arts",
+    "title": "Announce a colour palette",
+    "description": "Tell guests the event has three colours — say terracotta, cream, and forest green. No hard rule, just a suggestion. The visual cohesion in photos is stunning."
+  },
+  {
+    "slug": "flower-bar",
+    "icon": "🌸",
+    "category": "arts",
+    "title": "DIY flower bar",
+    "description": "Set up buckets of loose flowers and let guests make a small arrangement to take home. Works for daytime events, weddings, and anything that needs a feminine or garden touch."
+  },
+  {
+    "slug": "live-art",
+    "icon": "🖌️",
+    "category": "arts",
+    "title": "Live painter or sketch artist",
+    "description": "Have someone paint or sketch the event as it happens. Guests gather around, it becomes a centrepiece, and the finished piece becomes a keepsake or auction item."
+  },
+  {
+    "slug": "scavenger-hunt",
+    "icon": "🗺️",
+    "category": "social",
+    "title": "Hidden scavenger hunt",
+    "description": "Hide 5–10 small clues around the venue. Give the first person to solve it a prize or a free round. Works even at dinner parties. People stay longer and explore more."
+  },
+  {
+    "slug": "trivia-round",
+    "icon": "🧠",
+    "category": "social",
+    "title": "Surprise trivia round",
+    "description": "At an unexpected moment, pause the event for a 5-question trivia round. Teams form instantly. Topic can match the event theme — music history, food cultures, the city you're in."
+  },
+  {
+    "slug": "sunset-toast",
+    "icon": "🌅",
+    "category": "social",
+    "title": "Timed sunset toast",
+    "description": "If your event is outdoors, check the sunset time and plan a group toast at that exact moment. Everyone stops, faces the sky, clinks. One minute that defines the whole evening."
+  },
+  {
+    "slug": "icebreaker-card",
+    "icon": "🃏",
+    "category": "networking",
+    "title": "Icebreaker card on every seat",
+    "description": "Print one unusual question per card. Place one on each seat or hand them out at the door. Guests use it to start conversations with strangers. Better than a name tag."
+  },
+  {
+    "slug": "open-mic-lightning",
+    "icon": "🎤",
+    "category": "comedy",
+    "title": "Lightning open mic",
+    "description": "2 minutes each. Anyone can sign up. No judgment. Works best when the host goes first and is deliberately bad. Breaks the ice and gets the crowd loose."
+  },
+  {
+    "slug": "confetti-drop",
+    "icon": "🎊",
+    "category": "festivals",
+    "title": "Timed confetti drop",
+    "description": "Rig a confetti drop for midnight, a countdown moment, or a reveal. Takes 10 minutes to set up and 10 minutes to clean up. The reaction is always worth both."
+  },
+  {
+    "slug": "photo-booth-props",
+    "icon": "🥳",
+    "category": "social",
+    "title": "DIY photo booth corner",
+    "description": "One backdrop — a decorated wall, a saree draped across a frame, fairy lights — and a basket of props. Guests will queue for it without being told."
+  },
+  {
+    "slug": "guest-book-alternative",
+    "icon": "✍️",
+    "category": "social",
+    "title": "Alternative guest book",
+    "description": "Instead of signatures, ask guests to write one word to describe the night, a song recommendation, or a wish for the host. More interesting to read back later."
+  },
+  {
+    "slug": "sky-lanterns",
+    "icon": "🏮",
+    "category": "festivals",
+    "title": "Sky lanterns release",
+    "description": "At the end of the night, everyone releases a lantern. Works outdoors with space. Requires planning for safety but the visual is unforgettable. Use with care and permissions."
+  },
+  {
+    "slug": "fragrance-station",
+    "icon": "🌿",
+    "category": "social",
+    "title": "Scent corner",
+    "description": "A small arrangement of candles, incense, or diffusers near the entrance. Scent is the most powerful memory trigger. Guests associate that smell with your event forever."
+  },
+  {
+    "slug": "curated-playlist-physical",
+    "icon": "📀",
+    "category": "music",
+    "title": "Physical setlist card",
+    "description": "Print the night's setlist or playlist on a small card. Give one to each guest as they arrive. Makes them feel like they're at a real gig. Costs almost nothing to print."
+  },
+  {
+    "slug": "fire-performance",
+    "icon": "🔥",
+    "category": "nightlife",
+    "title": "Fire or LED performance",
+    "description": "Book a fire spinner or LED performer for a 10-minute set. Works at outdoor festivals, nightlife events, beach parties. Stops everything and creates a shared wow moment."
+  },
+  {
+    "slug": "silent-disco",
+    "icon": "🎧",
+    "category": "nightlife",
+    "title": "Silent disco",
+    "description": "Rent wireless headphones and run two DJs simultaneously on different channels. Guests switch between them. The sight of people dancing to music you can't hear is endlessly entertaining."
+  },
+  {
+    "slug": "city-walk-route",
+    "icon": "🗺️",
+    "category": "outdoors",
+    "title": "Curated city walk",
+    "description": "Plan a 2km route through interesting streets, murals, or food spots. Give each guest a small printed map. Add 3–4 stops along the way. Feels like an adventure, not an event."
+  },
+  {
+    "slug": "sunrise-hike",
+    "icon": "🌄",
+    "category": "outdoors",
+    "title": "Sunrise hike",
+    "description": "Start at 4am, reach the top for sunrise. Bring thermoses of chai. Say nothing is required to attend except showing up. Always fills up."
+  },
+  {
+    "slug": "nature-photography-walk",
+    "icon": "📷",
+    "category": "outdoors",
+    "title": "Photography nature walk",
+    "description": "Walk + shoot. Give everyone one constraint — only textures, only shadows, only reflections. Compare at the end. Works for any skill level and starts conversations instantly."
+  },
+  {
+    "slug": "stargazing-night",
+    "icon": "⭐",
+    "category": "outdoors",
+    "title": "Stargazing night",
+    "description": "Find a dark spot outside the city. Bring a telescope if possible, print a basic star map if not. Add blankets and hot drinks. The night sky does all the work."
+  },
+  {
+    "slug": "sports-tournament-bracket",
+    "icon": "🏆",
+    "category": "sports",
+    "title": "Mini tournament with a bracket",
+    "description": "Any sport — badminton, table tennis, arm wrestling, carrom. Print a bracket and put it on the wall. The competition escalates naturally and everyone gets invested in results they didn't expect to care about."
+  },
+  {
+    "slug": "yoga-sunrise",
+    "icon": "🧘",
+    "category": "outdoors",
+    "title": "Sunrise yoga session",
+    "description": "An outdoor yoga or breathwork session before the city wakes up. Works in parks, rooftops, and beach spaces. Keep it under 45 minutes. People arrive strangers and leave calm together."
+  },
+  {
+    "slug": "hackathon-mini",
+    "icon": "💻",
+    "category": "tech",
+    "title": "3-hour mini hackathon",
+    "description": "Give teams one problem, one constraint, and three hours. Present at the end. No coding required — the problem can be a design challenge, a business idea, or a city issue."
+  },
+  {
+    "slug": "demo-day-casual",
+    "icon": "🚀",
+    "category": "tech",
+    "title": "Casual demo day",
+    "description": "Anyone can sign up to show something they built, made, or are working on — 3 minutes max. No slides required. Creates genuine curiosity and connection between builders."
+  },
+  {
+    "slug": "workshop-zine",
+    "icon": "📰",
+    "category": "workshops",
+    "title": "Make a zine together",
+    "description": "Provide paper, scissors, old magazines, and markers. Everyone makes one page. Photocopy and staple. Each guest leaves with a copy of the collective zine."
+  },
+  {
+    "slug": "pottery-drop-in",
+    "icon": "🏺",
+    "category": "workshops",
+    "title": "Drop-in pottery session",
+    "description": "Partner with a studio or bring a wheel. No experience required. The imperfection is the point. People talk while they work, which makes it one of the best icebreaker formats around."
+  },
+  {
+    "slug": "fermentation-class",
+    "icon": "🧪",
+    "category": "workshops",
+    "title": "Fermentation starter class",
+    "description": "Teach the basics of kombucha, sourdough, or kimchi. Guests take home a starter culture. They will think of your event every time they feed it."
+  },
+  {
+    "slug": "comedy-roast",
+    "icon": "😂",
+    "category": "comedy",
+    "title": "Friendly roast night",
+    "description": "Pick a willing subject — the host, a couple, a guest of honour — and invite friends to roast them. Set clear rules, keep it warm. Works brilliantly at birthday parties and sendoffs."
+  },
+  {
+    "slug": "storytelling-circle",
+    "icon": "📖",
+    "category": "social",
+    "title": "One true story each",
+    "description": "Everyone tells one true story — 2 minutes max — on a shared theme. Can be \"the most embarrassing thing that happened to me\" or \"a stranger who changed something.\" No phones, just listening."
+  },
+  {
+    "slug": "neighbourhood-festival",
+    "icon": "🏘️",
+    "category": "festivals",
+    "title": "Street or neighbourhood festival",
+    "description": "Close off a lane or use a communal area. Each family or stall brings one thing — food, activity, music. Very low individual effort, very high collective payoff."
+  },
+  {
+    "slug": "art-swap",
+    "icon": "🖼️",
+    "category": "arts",
+    "title": "Art swap",
+    "description": "Everyone brings one piece of art they made — drawing, photo print, collage, anything. Swap randomly or by choice at the end. Takes the pressure off and makes everyone feel like an artist."
+  },
+  {
+    "slug": "karaoke-surprise",
+    "icon": "🎤",
+    "category": "music",
+    "title": "Surprise karaoke takeover",
+    "description": "No announcement. Midway through the event, someone walks up to a mic and a track drops. The first brave person sets the tone. After that, the queue forms itself."
+  },
+  {
+    "slug": "food-truck-rally",
+    "icon": "🚚",
+    "category": "food",
+    "title": "Food truck or cart rally",
+    "description": "Invite 3–4 small food vendors to park outside or inside your venue. Each does one thing really well. Guests graze. The variety creates energy and the vendors bring their own following."
+  },
+  {
+    "slug": "carnival-games",
+    "icon": "🎠",
+    "category": "festivals",
+    "title": "Carnival game corner",
+    "description": "Ring toss, hoopla, a spin wheel — set up 2–3 simple carnival games with small prizes. Works at all ages. People become children the moment there is a prize involved."
+  },
+  {
+    "slug": "open-studio-night",
+    "icon": "🎨",
+    "category": "arts",
+    "title": "Open studio night",
+    "description": "Invite artists to work live in a shared space while guests walk around, watch, and talk to them. No pressure to buy. The act of creation in public is magnetic."
+  },
+  {
+    "slug": "ambient-soundscape",
+    "icon": "🔊",
+    "category": "music",
+    "title": "Ambient soundscape set",
+    "description": "Instead of a DJ or band, commission or curate a 2-hour ambient or generative music set. Works for gallery openings, dinner parties, and wellness events. Changes the entire texture of conversation."
+  },
+  {
+    "slug": "book-swap",
+    "icon": "📚",
+    "category": "social",
+    "title": "Book swap",
+    "description": "Bring one book, take one book. Add a rule — you can only take a book if you write one sentence on the inside cover about why someone should read it."
+  },
+  {
+    "slug": "run-club-social",
+    "icon": "🏃",
+    "category": "sports",
+    "title": "Run + social",
+    "description": "A 5km social run with no timing, no pressure. Followed by chai or breakfast at a nearby spot. The run is the warm-up. The real event is after."
+  }
+]

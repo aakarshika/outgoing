@@ -7,6 +7,7 @@ from .views import (
     EventAutocompleteView,
     EventCategoryListView,
     EventDetailView,
+    EventAddonView,
     EventFriendshipRequestCreateView,
     MyFriendshipsView,
     MyNetworkActivityView,
@@ -73,10 +74,15 @@ urlpatterns = [
         "<int:event_id>/reviews/", EventReviewCreateView.as_view(), name="event_reviews"
     ),
     path("<int:event_id>/view/", EventViewView.as_view(), name="event_view"),
-    path(
+        path(
         "<int:event_id>/ticket_tiers/",
         EventTicketTierListView.as_view(),
         name="event_ticket_tiers",
+    ),
+    path(
+        "<int:event_id>/addons/",
+        EventAddonView.as_view(),
+        name="event_addons",
     ),
     path(
         "highlights/<int:highlight_id>/like/",

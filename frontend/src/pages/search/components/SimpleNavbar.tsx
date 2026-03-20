@@ -95,18 +95,19 @@ export function SimpleNavbar({
   const [quickCreateServiceCategory, setQuickCreateServiceCategory] = useState('');
   const menuPopoverOpen = Boolean(menuAnchorEl);
   const hostingAndServicesItems: MenuItem[] = [];
-  hostingAndServicesItems.push({ label: 'My Events', to: '/managing/hosting', Icon: Speech });
-  hostingAndServicesItems.push({
-    label: 'My Services',
-    to: '/managing/services',
-    Icon: Monitor,
-  });
+
   hostingAndServicesItems.push({
     label: 'My Tickets',
     to: '/managing/attending',
     Icon: Ticket,
   });
 
+  hostingAndServicesItems.push({ label: 'My Events', to: '/managing/hosting', Icon: Speech });
+  hostingAndServicesItems.push({
+    label: 'My Services',
+    to: '/managing/services',
+    Icon: Monitor,
+  });
   const mobileAccountItems: MenuItem[] = [];
   if (isMobile && !isAuthenticated) {
     if (location.pathname !== '/signin') {
@@ -146,7 +147,7 @@ export function SimpleNavbar({
     ...(mobileAccountItems.length ? [mobileAccountItems] : []),
     [
       {
-        label: 'Create Event',
+        label: 'Host an Event',
         to: '/manage',
         Icon: PlusCircle,
         action: 'create-event',
@@ -157,18 +158,18 @@ export function SimpleNavbar({
         action: 'create-service',
       },
     ],
-    [{ label: 'My Network', to: '/network', Icon: Users }],
     ...(hostingAndServicesItems.length ? [hostingAndServicesItems] : []),
+    [{ label: 'My Network', to: '/network', Icon: Users }],
     [{ label: 'Settings', to: '/profile/settings-new', Icon: Settings }],
     ...(isAuthenticated
       ? [[{ label: 'Logout', Icon: LogOut, action: 'logout' as const, muted: true }]]
       : !isMobile
         ? [
-            [
-              { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
-              { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
-            ],
-          ]
+          [
+            { label: 'Sign In', Icon: UserIcon, action: 'signin' as const },
+            { label: 'Sign Up', Icon: UserPlus, action: 'signup' as const },
+          ],
+        ]
         : []),
   ];
 
@@ -216,7 +217,7 @@ export function SimpleNavbar({
     formData.set(
       'description',
       payload.description.trim() ||
-        'Planning is underway. More details are coming soon.',
+      'Planning is underway. More details are coming soon.',
     );
     formData.set('category_id', String(payload.categoryId));
     formData.set('start_time', payload.startTimeIso);
@@ -627,7 +628,6 @@ export function SimpleNavbar({
         <Box sx={{ height: '100dvh' }}>
           <QuickCreateSpark
             categories={categories}
-            layout="sheet"
             isSubmitting={isQuickCreateSubmitting}
             onSubmit={handleQuickCreateSubmit}
             onClose={() => setIsQuickCreateOpen(false)}

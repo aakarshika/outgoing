@@ -12,6 +12,7 @@ import { ComicHighlightsModule } from './variants/comic/HighlightsModule';
 import { ComicReviewsModule } from './variants/comic/ReviewsModule';
 import { ComicServicesModule } from './variants/comic/ServicesModule';
 import { ComicTicketsModule } from './variants/comic/TicketsModule';
+import { NormalAddonsModule } from './variants/normal/AddonsModule';
 import { NormalBrowseModule } from './variants/normal/BrowseModule';
 import { NormalCalendarMapModule } from './variants/normal/CalendarMapModule';
 import { NormalChatModule } from './variants/normal/ChatModule';
@@ -44,9 +45,9 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     const checkMobile = () => {
       setIsMobileDevice(
         window.innerWidth < 768 ||
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
-          ),
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        ),
       );
     };
     checkMobile();
@@ -88,6 +89,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
         <Box sx={{ position: 'relative' }}>
           <NormalNavigationModule
             event={event}
+            isHost={isHost}
             isAuthenticated={isAuthenticated}
             isInterested={event.user_is_interested || false}
             onToggleInterest={handleToggleSave}
@@ -127,10 +129,14 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           <NormalDescriptionModule event={event} />
 
           <NormalChipsModule event={event} />
+          <NormalAddonsModule event={event} />
 
           <NormalCalendarMapModule event={event} />
-
+          <NormalDivider />
           <NormalStatusModule event={event} isHost={isHost} />
+
+          <NormalGoersModule event={event} isEventOver={isEventOver} />
+
 
           <NormalSaveToggleModule
             event={event}
@@ -154,9 +160,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
           <NormalDivider />
 
-          <NormalGoersModule event={event} isEventOver={isEventOver} />
-
-          <NormalDivider />
 
           <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />
 
@@ -199,6 +202,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
       <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
         <NormalNavigationModule
           event={event}
+          isHost={isHost}
           isAuthenticated={isAuthenticated}
           isInterested={event.user_is_interested || false}
           onToggleInterest={handleToggleSave}
@@ -223,6 +227,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
         <NormalDivider />
         <NormalDescriptionModule event={event} />
         <NormalChipsModule event={event} />
+        <NormalAddonsModule event={event} />
         <NormalCalendarMapModule event={event} />
         <NormalStatusModule event={event} isHost={isHost} />
         <NormalSaveToggleModule

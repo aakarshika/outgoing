@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
-import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
 import {
   buildAllChatEntries,
   formatChatMessagePreview,
@@ -16,6 +15,7 @@ import {
   useEventOverviewRows,
   useMyFriendships,
 } from '@/features/events/hooks';
+import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
 
 import { useNavbarContext } from './NavbarContext';
 
@@ -141,10 +141,14 @@ export function AllChatsList() {
   const handleOpenChat = (chat: (typeof chatEntries)[number]) => {
     openChat({
       title: chat.title,
+      subtitle: chat.subtitle,
+      badgeLabel: chat.badgeLabel,
       mode: chat.mode === 'direct' ? 'direct' : chat.mode,
       eventId: chat.eventId,
       conversationId: chat.conversationId,
-      targetUsername: chat.targetUsername,
+      targetUsername: chat.targetUsername || chat.otherUsername || undefined,
+      otherUsername: chat.otherUsername,
+      otherAvatar: chat.otherAvatar,
     });
     setIsAllChatsSidebarOpen(false);
   };
@@ -262,12 +266,20 @@ export function AllChatsList() {
                         style={{ color: 'var(--color-text-secondary)' }}
                       >
                         <MapPin className="h-3 w-3 shrink-0" />
-                        <div className="truncate">{chat.locationName || 'Location TBD'}</div>
+                        <div className="truncate">
+                          {chat.locationName || 'Location TBD'}
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <div className="min-w-0">
-                      <div className="truncate text-[13px] font-semibold" style={{ fontFamily: 'Syne, sans-serif', color: 'var(--color-text-primary)' }}>
+                      <div
+                        className="truncate text-[13px] font-semibold"
+                        style={{
+                          fontFamily: 'Syne, sans-serif',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
                         {chat.title}
                       </div>
                       <div className="mt-0.5 flex min-w-0 items-center justify-between gap-2">

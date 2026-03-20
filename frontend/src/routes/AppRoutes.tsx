@@ -23,6 +23,7 @@ const EventDetailV2Page = lazy(() => import('@/pages/events/EventDetailPageV2'))
 const PlanningWorkspacePage = lazy(
   () => import('@/pages/events/PlanningWorkspacePage'),
 );
+const EventWorkspacePage = lazy(() => import('@/pages/events/planning-workspace/EventWorkspacePage'));
 // const CreateEventPage = lazy(() => import('@/pages/events/CreateEventPage'));
 // const ManageForHostPage = lazy(() => import('@/pages/events/ManageForHostPage'));
 // const ManageForVendorPage = lazy(() => import('@/pages/events/ManageForVendorPage'));
@@ -56,6 +57,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   EventDetailV2: EventDetailV2Page,
   PlanningWorkspace: PlanningWorkspacePage,
   TestFeed: TestFeedPage,
+  EventWorkspace: EventWorkspacePage,
   // CreateEvent: CreateEventPage,
   // ManageForHost: ManageForHostPage,
   // ManageForVendor: ManageForVendorPage,

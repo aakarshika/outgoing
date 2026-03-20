@@ -1,0 +1,290 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;}
+  .p{background:#F5F0EB;min-height:100vh;max-width:390px;margin:0 auto;padding-bottom:80px;}
+
+  .topbar{padding:14px 16px 0;}
+  .back{font-size:12px;color:#888780;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px;}
+
+  .hero{margin:0 14px 6px;border-radius:18px;overflow:hidden;background:#D85A30;padding:20px 20px 16px;}
+  .hero-tag{font-size:10px;font-weight:500;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+  .hero-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:12px;}
+  .hero-row{display:flex;gap:12px;margin-bottom:16px;}
+  .hero-detail{font-size:12px;color:rgba(255,255,255,0.75);display:flex;align-items:center;gap:4px;}
+  .hero-nums{display:flex;gap:8px;}
+  .hnum{flex:1;background:rgba(0,0,0,0.15);border-radius:10px;padding:10px;text-align:center;}
+  .hnum-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;}
+  .hnum-label{font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px;}
+
+  .attention{margin:6px 14px;background:#fff;border-radius:14px;overflow:hidden;}
+  .attention-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:0.5px solid #F0EDE8;cursor:pointer;}
+  .attention-item:last-child{border-bottom:none;}
+  .att-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .att-dot-red{background:#E24B4A;}
+  .att-dot-amber{background:#EF9F27;}
+  .att-icon{font-size:18px;flex-shrink:0;}
+  .att-body{flex:1;}
+  .att-title{font-size:14px;font-weight:500;color:#1A1A1A;margin-bottom:1px;}
+  .att-sub{font-size:12px;color:#888780;}
+  .att-cta{font-size:12px;font-weight:500;color:#D85A30;white-space:nowrap;}
+
+  .plan-section{margin:14px 14px 0;}
+  .plan-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;margin-bottom:10px;padding-left:2px;}
+
+  .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .plan-card{background:#fff;border-radius:14px;padding:14px;cursor:pointer;position:relative;overflow:hidden;}
+  .plan-card.wide{grid-column:span 2;}
+  .plan-card.done{opacity:0.55;}
+  .pc-emoji{font-size:26px;margin-bottom:8px;display:block;}
+  .pc-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:3px;line-height:1.2;}
+  .pc-sub{font-size:11px;color:#888780;line-height:1.4;}
+  .pc-status{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;}
+  .pc-open{background:#FAEEDA;color:#854F0B;}
+  .pc-done{background:#EAF3DE;color:#3B6D11;}
+  .pc-new{background:#FAECE7;color:#993C1D;}
+  .pc-optional{background:#F1EFE8;color:#5F5E5A;}
+  .pc-accent{position:absolute;top:0;right:0;width:40px;height:40px;border-radius:0 14px 0 40px;display:flex;align-items:flex-start;justify-content:flex-end;padding:6px 7px;font-size:12px;}
+
+  .applicant-sheet{background:#fff;border-radius:14px;padding:14px 16px;margin:10px 14px 0;}
+  .as-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .as-av{width:36px;height:36px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:500;flex-shrink:0;}
+  .as-name{font-size:14px;font-weight:500;color:#1A1A1A;}
+  .as-meta{font-size:11px;color:#888780;}
+  .as-role{font-size:11px;font-weight:500;padding:2px 9px;border-radius:999px;background:#EEEDFE;color:#3C3489;margin-left:auto;}
+  .as-letter{font-size:13px;color:#444441;line-height:1.55;font-style:italic;border-left:3px solid #FAECE7;padding-left:12px;margin-bottom:14px;}
+  .as-btns{display:flex;gap:8px;}
+  .btn-lock{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;flex:1;padding:10px;border-radius:999px;border:none;background:#D85A30;color:#fff;cursor:pointer;}
+  .btn-pass{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:10px 18px;border-radius:999px;border:0.5px solid #D3D1C7;background:transparent;color:#1A1A1A;cursor:pointer;}
+
+  .needs-list{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 14px 0;}
+  .nl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .nl-title{font-size:13px;font-weight:500;color:#1A1A1A;}
+  .nl-add{font-size:12px;color:#D85A30;font-weight:500;cursor:pointer;}
+  .nl-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:0.5px solid #F0EDE8;}
+  .nl-icon{font-size:15px;width:24px;text-align:center;flex-shrink:0;}
+  .nl-name{font-size:13px;color:#1A1A1A;flex:1;}
+  .nl-reward{font-size:11px;color:#888780;margin-right:6px;}
+  .nlpill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;}
+  .np-open{background:#FAEEDA;color:#854F0B;}
+  .np-pending{background:#E6F1FB;color:#185FA5;}
+  .np-done{background:#EAF3DE;color:#3B6D11;}
+
+  .done-strip{background:#fff;border-radius:14px;padding:12px 16px;margin:10px 14px 0;}
+  .ds-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+  .ds-check{color:#1D9E75;font-size:13px;flex-shrink:0;}
+  .ds-text{font-size:13px;color:#B4B2A9;text-decoration:line-through;}
+
+  .suggest-strip{margin:14px 14px 0;}
+  .suggest-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;color:#888780;margin-bottom:10px;padding-left:2px;}
+  .suggest-scroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+  .suggest-scroll::-webkit-scrollbar{display:none;}
+  .sug-card{min-width:140px;background:#fff;border-radius:14px;padding:14px 12px;cursor:pointer;flex-shrink:0;}
+  .sug-emoji{font-size:22px;margin-bottom:6px;}
+  .sug-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#1A1A1A;margin-bottom:3px;line-height:1.3;}
+  .sug-sub{font-size:11px;color:#888780;line-height:1.35;}
+
+  .chat-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;background:#fff;border-top:0.5px solid #E8E5DF;padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .chat-av{width:30px;height:30px;border-radius:50%;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+  .chat-txt{flex:1;font-size:13px;color:#888780;}
+  .chat-badge{background:#D85A30;color:#fff;font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;}
+</style>
+
+<div class="p">
+  <div class="topbar">
+    <div class="back">&#8592; My events</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-tag">Music · Indiranagar · 17 days away</div>
+    <div class="hero-title">Rooftop Vinyl Night</div>
+    <div class="hero-row">
+      <div class="hero-detail">&#128197; Sat, Apr 5 · 8pm</div>
+      <div class="hero-detail">&#128101; 60 capacity</div>
+    </div>
+    <div class="hero-nums">
+      <div class="hnum"><div class="hnum-val">20</div><div class="hnum-label">going</div></div>
+      <div class="hnum"><div class="hnum-val">₹8.5k</div><div class="hnum-label">collected</div></div>
+      <div class="hnum"><div class="hnum-val">3</div><div class="hnum-label">open needs</div></div>
+    </div>
+  </div>
+
+  <div style="height:10px;"></div>
+
+  <div class="attention">
+    <div class="attention-item">
+      <div class="att-dot att-dot-red"></div>
+      <div class="att-icon">&#127911;</div>
+      <div class="att-body">
+        <div class="att-title">Arjun wants to DJ</div>
+        <div class="att-sub">Read his note — 4.9 stars, 4 events</div>
+      </div>
+      <div class="att-cta">Review ›</div>
+    </div>
+    <div class="attention-item">
+      <div class="att-dot att-dot-amber"></div>
+      <div class="att-icon">&#127881;</div>
+      <div class="att-body">
+        <div class="att-title">10 more to hit minimum</div>
+        <div class="att-sub">Share your event link</div>
+      </div>
+      <div class="att-cta">Share ›</div>
+    </div>
+  </div>
+
+  <div class="applicant-sheet">
+    <div class="as-head">
+      <div class="as-av">AK</div>
+      <div>
+        <div class="as-name">Arjun Kapoor</div>
+        <div class="as-meta">&#9733; 4.9 · DJ'd 4 Outgoing events</div>
+      </div>
+      <div class="as-role">DJ / Music</div>
+    </div>
+    <div class="as-letter">"Deep house and afrobeats are my thing. Did the last rooftop at Koramangala Social — 3 hours, my gear, no issues. Happy to do this one."</div>
+    <div class="as-btns">
+      <button class="btn-lock">Lock him in ✓</button>
+      <button class="btn-pass">Pass</button>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-label">Plan your event</div>
+    <div class="plan-grid">
+
+      <div class="plan-card done">
+        <div class="pc-accent" style="background:#EAF3DE;">✓</div>
+        <span class="pc-emoji">&#128197;</span>
+        <div class="pc-title">When & where</div>
+        <div class="pc-sub">Date, venue, format</div>
+        <div class="pc-status pc-done">Done</div>
+      </div>
+
+      <div class="plan-card done">
+        <div class="pc-accent" style="background:#EAF3DE;">✓</div>
+        <span class="pc-emoji">&#127915;</span>
+        <div class="pc-title">Tickets</div>
+        <div class="pc-sub">3 tiers · ₹8.5k in</div>
+        <div class="pc-status pc-done">20 sold</div>
+      </div>
+
+      <div class="plan-card">
+        <span class="pc-emoji">&#127869;</span>
+        <div class="pc-title">Food & drinks</div>
+        <div class="pc-sub">Menu, catering, bar — let people know what to expect</div>
+        <div class="pc-status pc-open">Not set</div>
+      </div>
+
+      <div class="plan-card">
+        <span class="pc-emoji">&#127880;</span>
+        <div class="pc-title">Vibe & theme</div>
+        <div class="pc-sub">Dress code, colours, decor direction</div>
+        <div class="pc-status pc-optional">Optional</div>
+      </div>
+
+      <div class="plan-card wide">
+        <span class="pc-emoji">&#127381;</span>
+        <div class="pc-title">Activities & surprises</div>
+        <div class="pc-sub">What will people actually do? Add a setlist, a game, a moment — something they won't forget. The best events have one thing nobody saw coming.</div>
+        <div class="pc-status pc-optional">Optional but memorable</div>
+      </div>
+
+      <div class="plan-card">
+        <div class="pc-accent" style="background:#FCEBEB;">!</div>
+        <span class="pc-emoji">&#128247;</span>
+        <div class="pc-title">Photography</div>
+        <div class="pc-sub">Slot open · 40% off offered</div>
+        <div class="pc-status pc-new">Needs filling</div>
+      </div>
+
+      <div class="plan-card">
+        <div class="pc-accent" style="background:#FCEBEB;">!</div>
+        <span class="pc-emoji">&#127869;</span>
+        <div class="pc-title">Catering</div>
+        <div class="pc-sub">Slot open · ₹1,200 offered</div>
+        <div class="pc-status pc-new">Needs filling</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="suggest-strip">
+    <div class="suggest-label">Ideas for a music night</div>
+    <div class="suggest-scroll">
+      <div class="sug-card">
+        <div class="sug-emoji">&#127381;</div>
+        <div class="sug-title">Set up a vinyl request wall</div>
+        <div class="sug-sub">Let guests suggest tracks on arrival</div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-emoji">&#127775;</div>
+        <div class="sug-title">String lights = instant vibe</div>
+        <div class="sug-sub">Warm bulbs over the rooftop floor</div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-emoji">&#127867;</div>
+        <div class="sug-title">Signature drink</div>
+        <div class="sug-sub">Name it after the event — people love that</div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-emoji">&#128247;</div>
+        <div class="sug-title">Disposable cameras</div>
+        <div class="sug-sub">Old-school charm, guests go wild for it</div>
+      </div>
+      <div class="sug-card">
+        <div class="sug-emoji">&#127381;</div>
+        <div class="sug-title">One surprise moment</div>
+        <div class="sug-sub">Midnight cake, a second DJ, fireworks — something</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="needs-list">
+    <div class="nl-head">
+      <div class="nl-title">All needs</div>
+      <div class="nl-add">+ Add need</div>
+    </div>
+    <div class="nl-row">
+      <div class="nl-icon">&#127911;</div>
+      <div class="nl-name">DJ / Music</div>
+      <div class="nl-reward">Free in</div>
+      <div class="nlpill np-pending">Pending</div>
+    </div>
+    <div class="nl-row">
+      <div class="nl-icon">&#127869;</div>
+      <div class="nl-name">Catering</div>
+      <div class="nl-reward">₹1,200</div>
+      <div class="nlpill np-open">Open</div>
+    </div>
+    <div class="nl-row">
+      <div class="nl-icon">&#128247;</div>
+      <div class="nl-name">Photography</div>
+      <div class="nl-reward">40% off</div>
+      <div class="nlpill np-open">Open</div>
+    </div>
+    <div class="nl-row">
+      <div class="nl-icon">&#127981;</div>
+      <div class="nl-name">Venue</div>
+      <div class="nl-reward">Indiranagar Social</div>
+      <div class="nlpill np-done">Done</div>
+    </div>
+  </div>
+
+  <div style="height:10px;"></div>
+
+  <div class="done-strip">
+    <div class="ds-row"><div class="ds-check">✓</div><div class="ds-text">Event details complete</div></div>
+    <div class="ds-row"><div class="ds-check">✓</div><div class="ds-text">Published and discoverable</div></div>
+    <div class="ds-row"><div class="ds-check">✓</div><div class="ds-text">3 ticket tiers configured</div></div>
+    <div class="ds-row"><div class="ds-check">✓</div><div class="ds-text">Cover photo uploaded</div></div>
+    <div class="ds-row"><div class="ds-check">✓</div><div class="ds-text">Venue confirmed</div></div>
+  </div>
+
+</div>
+
+<div class="chat-bar">
+  <div class="chat-av">&#128172;</div>
+  <div class="chat-txt">Priya · co-organiser chat</div>
+  <div class="chat-badge">2 new</div>
+</div>

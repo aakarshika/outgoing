@@ -1,9 +1,11 @@
 import { Box, IconButton } from '@mui/material';
-import { ArrowLeft, Heart, Share2 } from 'lucide-react';
+import { ArrowLeft, Heart, Pencil, Share2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface NormalNavigationModuleProps {
   event: any;
   isAuthenticated: boolean;
+  isHost: boolean;
   isInterested: boolean;
   onBack?: () => void;
   onToggleInterest?: () => void;
@@ -13,6 +15,7 @@ interface NormalNavigationModuleProps {
 export function NormalNavigationModule({
   event,
   isAuthenticated,
+  isHost,
   isInterested,
   onBack,
   onToggleInterest,
@@ -32,6 +35,8 @@ export function NormalNavigationModule({
       navigator.clipboard.writeText(window.location.href);
     }
   };
+
+  const navigate = useNavigate();
 
   return (
     <Box
@@ -60,6 +65,18 @@ export function NormalNavigationModule({
         <ArrowLeft size={18} />
       </IconButton>
       <Box sx={{ display: 'flex', gap: 1 }}>
+        {isHost && (<IconButton
+          onClick={() => navigate('/events/' + event.id + '/workspace')}
+          sx={{
+            width: 34,
+            height: 34,
+            color: '#fff',
+            bgcolor: 'rgba(150, 132, 204, 0.85)',
+            '&:hover': { bgcolor: 'rgba(132, 97, 168, 0.95)' },
+          }}
+        >
+          <Pencil size={18} />
+        </IconButton>)}
         <IconButton
           onClick={onToggleInterest}
           disabled={disableInterestToggle}
