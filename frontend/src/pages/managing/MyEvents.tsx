@@ -4,12 +4,18 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { PlanningChecklistItem } from '@/features/events/planningChecklist';
 import { ExpandableManagingEventCard } from './useManaging';
 import type { ManagingItem } from './MyUpcoming';
+import { ExpandableEventCardBox } from '@/components/events/ExpandableEventCardBox';
+import { SmallEventCard } from '@/components/events/SmallEventCard';
+
+import { Sparkles } from 'lucide-react';
+import { FallbackBox } from '@/components/ui/FallbackBox';
 
 interface MyEventsProps {
   hostingItems: ManagingItem[];
   expandedHostingId: string | null;
   setExpandedHostingId: Dispatch<SetStateAction<string | null>>;
   nextChecklistByItemId: Map<string, PlanningChecklistItem | null>;
+  onCreateEvent: () => void;
 }
 
 export function MyEvents({
@@ -17,51 +23,35 @@ export function MyEvents({
   expandedHostingId,
   setExpandedHostingId,
   nextChecklistByItemId,
+  onCreateEvent,
 }: MyEventsProps) {
   return (
     <Box>
-      <Typography
-        sx={{
-          fontFamily: 'Syne, sans-serif',
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'rgba(66, 50, 28, 0.62)',
-          mb: 2,
-        }}
-      >
-        All events
-      </Typography>
-
       {hostingItems.length === 0 ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography
-            sx={{
-              fontFamily: 'Syne, sans-serif',
-              fontSize: 20,
-              fontWeight: 800,
-              color: '#2B2118',
-            }}
-          >
-            No events yet
-          </Typography>
-          <Typography sx={{ mt: 1, fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}>
-            Events you're hosting or servicing will appear here.
-          </Typography>
-        </Box>
+        <FallbackBox
+          title="No hosted events"
+          description="Create your first event and bring people together."
+          icon={<Sparkles />}
+          actionLabel="Create an event"
+          onAction={onCreateEvent}
+        />
       ) : (
         <Stack spacing={1.5}>
           {hostingItems.map((item) => (
-            <Box key={item.id} sx={{ opacity: item.isPast ? 0.72 : 1 }}>
-              <ExpandableManagingEventCard
-                item={item as any}
-                expanded={expandedHostingId === item.id}
-                nextChecklistItem={nextChecklistByItemId.get(item.id)}
-                onToggle={() =>
-                  setExpandedHostingId((current) => (current === item.id ? null : item.id))
-                }
-              />
+            <Box key={item.id} sx={{
+              opacity: item.isPast ? 0.72 : 1,
+              position: 'relative',
+            }}>
+              <Box sx={{
+                position: '',
+                top: 0,
+                right: 0,
+                zIndex: 1,
+              }} >
+                <SmallEventCard
+                  event={item.event as any} />
+              </Box>
+
             </Box>
           ))}
         </Stack>

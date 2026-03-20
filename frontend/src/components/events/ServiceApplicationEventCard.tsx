@@ -143,7 +143,7 @@ export function ServiceApplicationEventCard({
         >
           {event.cover_image ? (
             <Box component="img" src={event.cover_image} sx={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }} />
-          ) : '🎵'}
+          ) : event.title?.charAt(0).toUpperCase()}
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>

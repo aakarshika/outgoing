@@ -5,6 +5,9 @@ import { useAuth } from '@/features/auth/hooks';
 import { getEventCardRoles, HostVendorBadge } from '@/features/events/scrapbookCard';
 import { useEventCards } from './useEventCards';
 import type { EventCardEvent, EventCardProps } from './useEventCards';
+import { ChevronLeft, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const IMAGE_HEIGHT = 130;
 
@@ -13,6 +16,8 @@ export function SmallEventCard({
   sx,
 }: EventCardProps & { event: EventCardEvent }) {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const { isHost, isVendor } = getEventCardRoles(event, {
     user: user ?? null,
     isAuthenticated,
@@ -26,6 +31,8 @@ export function SmallEventCard({
     Going,
     getCardSx,
     getContentSx,
+    HeartButton,
+    isSaved,
   } = useEventCards({
     event,
     imageHeight: IMAGE_HEIGHT,
@@ -33,11 +40,28 @@ export function SmallEventCard({
 
   return (
     <Box
-      component={Link}
-      to={`/events-new/${event.id}`}
+      component={motion.div}
+      layout
+      initial={false}
+      animate={{
+        scale: isSaved ? [1, 1.03, 1] : 1,
+        boxShadow: isSaved
+          ? '0 20px 40px rgba(216, 90, 48, 0.12)'
+          : '0 10px 30px rgba(43, 33, 24, 0.04)'
+      }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       sx={getCardSx([{ mb: IMAGE_HEIGHT / 30 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])])}
     >
-      <ImageFrame />
+      <Box
+        component={Link}
+        to={`/events-new/${event.id}`}
+        sx={{ textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', height: '100%' }}
+      >
+        <ImageFrame />
+      </Box>
+
+      <HeartButton />
+
       {isLive ? (
         <Box
           sx={{
@@ -82,7 +106,7 @@ export function SmallEventCard({
         </Box>
       ) : null}
 
-      {isHost || isVendor ? (
+      {(isHost || isVendor) && !location.pathname.includes('/managing') ? (
         <HostVendorBadge
           isHost={isHost}
           variant="short"
@@ -161,6 +185,45 @@ export function SmallEventCard({
               </Stack>
               <Going />
             </Stack>
+
+
+            {isHost && location.pathname.includes('/managing') && (
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={0.75}
+                fontSize={11}
+              >
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                >
+                  <ChevronLeft size={11} /> Preview
+                </Stack>
+                <Box
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate(`/events/${event.id}/manage`);
+                  }}
+                  sx={{
+                    display: 'flex',
+                    px: 1,
+                    py: 0.55,
+                    borderRadius: '4px',
+                    background:
+                      'linear-gradient(135deg, rgba(23, 1, 149, 0.96) 0%, rgba(124, 58, 237, 0.96) 100%)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    boxShadow: '0 12px 24px rgba(124, 58, 237, 0.22)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <Pencil size={11} style={{ paddingTop: 1 }} /> Manage
+                </Box>
+              </Stack>
+            )}
           </Stack>
         </Stack>
       </Stack>

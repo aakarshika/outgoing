@@ -6,24 +6,25 @@ import {
   IconButton,
   TextField,
   Typography,
+  Stack,
 } from '@mui/material';
 import {
   ChevronLeft,
   ChevronRight,
   Copy,
   Download,
-  Edit2,
   Share,
-  Ticket as TicketIcon,
   X,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { useCancelTicket, useUpdateTicket } from '@/features/events/hooks';
-import { CATEGORY_COLORS_LIGHT } from '@/features/events/constants';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { formatShortDate, formatTime } from '@/utils/date';
 import { exportTicketAsPDF, shareTicket } from '@/features/events/utils/ticketSharing';
+import { DottedQrCode } from '@/components/events/DottedQrCode';
 
 interface NormalTicketManagementModalProps {
   event: any;
@@ -57,9 +58,23 @@ export function NormalTicketManagementModal({
   useEffect(() => {
     setGuestName(currentTicket?.guest_name || '');
     setIsInlineEditing(false);
-  }, [currentTicket?.id]);
+  }, [currentTicket?.id, currentTicket?.guest_name]);
+
+  const qrValue = currentTicket?.qr_token || currentTicket?.barcode || '';
+  
+  const ticketCode = useMemo(() => {
+    if (!currentTicket) return '';
+    if (currentTicket.barcode) return currentTicket.barcode;
+    const year = new Date(event?.start_time).getFullYear() || 2024;
+    const titlePart = event?.title?.substring(0, 4).toUpperCase() || 'EVNT';
+    const randomPart = Math.floor(Math.random() * 9000) + 1000;
+    return `OG-${year}-${titlePart}-${randomPart}`;
+  }, [currentTicket?.id, event?.start_time, event?.title]);
 
   if (!isOpen || !tickets?.length || !currentTicket) return null;
+
+  const categoryTheme = getCategoryTheme(event?.category);
+  const isCancelled = currentTicket.status === 'cancelled';
 
   const handleSaveName = () => {
     updateTicket.mutate(
@@ -68,6 +83,7 @@ export function NormalTicketManagementModal({
         onSuccess: () => {
           toast.success('Guest name updated');
           setIsInlineEditing(false);
+          currentTicket.guest_name = guestName;
         },
         onError: () => toast.error('Failed to update guest name'),
       },
@@ -83,9 +99,6 @@ export function NormalTicketManagementModal({
     });
   };
 
-  const qrValue = currentTicket.qr_token || currentTicket.barcode || '';
-  console.log('event', event);
-
   const handleExport = () => {
     if (!event || !currentTicket) return;
     exportTicketAsPDF({ event, ticket: currentTicket, ticketTiers: [] });
@@ -97,313 +110,268 @@ export function NormalTicketManagementModal({
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogContent sx={{ p: 3 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 1,
-          }}
-        >
-          <Typography
-            sx={{ fontFamily: '"Syne", sans-serif', fontSize: 20, fontWeight: 700 }}
+    <Dialog 
+      open={isOpen} 
+      onClose={onClose} 
+      maxWidth="xs" 
+      fullWidth
+      slotProps={{
+        paper: {
+          sx: {
+            position: 'fixed',
+            bottom: 0,
+            m: 0,
+            borderRadius: '24px 24px 0 0',
+            bgcolor: '#F5F0EB',
+            width: '100%',
+            maxWidth: 390,
+            pb: 4
+          }
+        }
+      }}
+    >
+      <DialogContent sx={{ p: 0, '&:first-of-type': { pt: 0 } }}>
+        {/* HANDLE */}
+        <Box sx={{ width: 36, height: 4, bgcolor: '#D3D1C7', borderRadius: 999, mx: 'auto', mt: 1.5 }} />
+
+        {/* TOP BAR */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1.75, pb: 1 }}>
+          <IconButton 
+            onClick={onClose}
+            sx={{ width: 28, height: 28, bgcolor: '#E0DDD8', '&:hover': { bgcolor: '#D3D1C7' } }}
           >
-            My Ticket
-          </Typography>
-          <IconButton onClick={onClose}>
-            <X size={18} />
+            <X size={14} color="#666" />
           </IconButton>
+
+          {tickets.length > 1 && (
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <IconButton
+                size="small"
+                onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
+                disabled={activeIndex === 0}
+                sx={{ width: 28, height: 28, bgcolor: '#E0DDD8', '&:hover': { bgcolor: '#D3D1C7' }, '&:disabled': { opacity: 0.3 } }}
+              >
+                <ChevronLeft size={18} color="#1A1A1A" />
+              </IconButton>
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1A1A1A', minWidth: 60, textAlign: 'center' }}>
+                {activeIndex + 1} of {tickets.length}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))}
+                disabled={activeIndex >= tickets.length - 1}
+                sx={{ width: 28, height: 28, bgcolor: '#E0DDD8', '&:hover': { bgcolor: '#D3D1C7' }, '&:disabled': { opacity: 0.3 } }}
+              >
+                <ChevronRight size={18} color="#1A1A1A" />
+              </IconButton>
+            </Stack>
+          )}
+          <Box sx={{ width: 28 }} />
         </Box>
 
-        <Typography sx={{ fontSize: 12, color: '#6b7280', mb: 2 }}>
-          Ticket {activeIndex + 1} of {tickets.length}
-        </Typography>
-
-        <Box
-          sx={{
-            position: 'relative',
-            mt: 1,
-            mb: 1,
-          }}
-        >
+        {/* TICKET WRAP */}
+        <Box sx={{ px: 2, py: 1 }}>
           <Box
             sx={{
-              display: 'flex',
-              bgcolor: '#f4f1ea',
-              borderTop: '1px solid '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string],
-              borderBottom: '1px solid '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string],
-              borderLeft: '1px dashed '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string],
-              borderRight: '1px dashed '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string],
-              boxShadow: '3px 4px 0px #333',
-              transform: activeIndex % 2 === 0 ? 'rotate(-1deg)' : 'rotate(1deg)',
-              position: 'relative',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                left: -6,
-                top: 0,
-                bottom: 0,
-                width: 12,
-                background: 'radial-gradient(circle at 0 0, transparent 0, transparent 4px, '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string]+' 5px)',
-                backgroundSize: '12px 12px',
-                backgroundPosition: '0 0',
-              },
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                right: -6,
-                top: 0,
-                bottom: 0,
-                width: 12,
-                background:
-                  'radial-gradient(circle at 100% 0, transparent 0, transparent 4px, '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string]+' 5px)',
-                backgroundSize: '12px 12px',
-                backgroundPosition: '0 0',
-              },
+              background: '#fff',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+              opacity: isCancelled ? 0.6 : 1
             }}
           >
-            <Box
-              sx={{
-                p: 2,
-                borderRight: '2px dashed '+CATEGORY_COLORS_LIGHT[event?.category?.slug as string],
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                bgcolor:'#141414',
-                color: 'white',
-                minWidth: 72,
-                alignItems: 'center',
-              }}
-            >
-              <TicketIcon size={26} style={{ transform: 'rotate(-45deg)' }} />
-            </Box>
-            <Box sx={{ p: 2.5, flexGrow: 1, bgcolor: CATEGORY_COLORS_LIGHT[event?.category?.slug as string] }}>
-              <Typography sx={{ fontSize: 11, color: '#6b7280' }}>Event</Typography>
+            <Box sx={{ height: 8, bgcolor: categoryTheme.accent }} />
+            <Box sx={{ p: '22px 22px 0' }}>
               <Typography
                 sx={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: '#111827',
-                  mb: 1,
-                  fontFamily: '"Caveat", cursive',
-                  lineHeight: 1.1,
+                  fontFamily: 'Syne, sans-serif',
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: '#1A1A1A',
+                  lineHeight: 1.2,
+                  mb: 0.25
                 }}
               >
-                {currentTicket.event_summary?.title}
+                {event?.title}
+              </Typography>
+              <Typography sx={{ fontSize: 11, color: '#888780', mb: 1.75 }}>
+                Hosted by {event?.host?.first_name || 'Host'} · {event?.location_name}
               </Typography>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1.5 }}>
-                <Box>
-                  <Typography sx={{ fontSize: 11, color: '#6b7280' }}>Tier</Typography>
-                  <Typography sx={{ fontSize: 13, color: '#111827', fontWeight: 600 }}>
-                    {currentTicket.ticket_type}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography sx={{ fontSize: 11, color: '#6b7280' }}>
-                    Guest
-                  </Typography>
-                  {isInlineEditing ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                      <TextField
-                        size="small"
-                        value={guestName}
-                        onChange={(e) => setGuestName(e.target.value)}
-                        placeholder="Guest name"
-                        sx={{ minWidth: 120 }}
-                        autoFocus
-                      />
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleSaveName}
-                        disabled={updateTicket.isPending}
-                        sx={{ textTransform: 'none', fontSize: 11, px: 1.5 }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        onClick={() => {
-                          setIsInlineEditing(false);
-                          setGuestName(currentTicket?.guest_name || '');
-                        }}
-                        sx={{ textTransform: 'none', fontSize: 11, px: 0.5 }}
-                      >
-                        Cancel
-                      </Button>
-                    </Box>
-                  ) : currentTicket.guest_name ? (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end',
-                        gap: 0.5,
-                        mt: 0.5,
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>
-                        {guestName || currentTicket.guest_name}
-                      </Typography>
-                      {currentTicket.status !== 'cancelled' && (
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            setIsInlineEditing(true);
-                            setGuestName(currentTicket.guest_name || '');
-                          }}
-                          sx={{ p: 0.25 }}
-                        >
-                          <Edit2 size={14} />
-                        </IconButton>
-                      )}
-                    </Box>
-                  ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                      <TextField
-                        size="small"
-                        value={guestName}
-                        onChange={(e) => setGuestName(e.target.value)}
-                        placeholder="Guest name"
-                        sx={{ minWidth: 120 }}
-                        autoFocus
-                      />
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleSaveName}
-                        disabled={updateTicket.isPending}
-                        sx={{ textTransform: 'none', fontSize: 11, px: 1.5 }}
-                      >
-                        Save
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                {qrValue ? (
-                  <Box
-                    sx={{
-                      textAlign: 'center',
-                      p: 1,
-                      bgcolor: '#ffffff',
-                      borderRadius: 1.5,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: 11,
-                        color: '#6b7280',
-                        mb: 0.5,
-                        textAlign: 'left',
-                      }}
-                    >
-                      Barcode / QR
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25, mb: 1.75 }}>
+                {[
+                  { label: 'Date', val: formatShortDate(event?.start_time) },
+                  { label: 'Tier', val: currentTicket.ticket_type },
+                  { label: 'Time', val: formatTime(event?.start_time) },
+                  { label: 'Price', val: currentTicket.price === 0 ? 'Free' : `₹${currentTicket.price}` },
+                ].map((detail, idx) => (
+                  <Box key={idx}>
+                    <Typography sx={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#888780', mb: 0.4 }}>
+                      {detail.label}
                     </Typography>
-                    <QRCodeSVG value={qrValue} size={120} includeMargin={true} />
-                    <Typography
-                      sx={{
-                        mt: 1,
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                        color: '#374151',
-                        letterSpacing: 1.5,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {currentTicket.barcode || 'QR'}
+                    <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1A1A1A' }}>
+                      {detail.val}
                     </Typography>
                   </Box>
-                ) : (
-                  <Typography sx={{ fontSize: 12, color: '#6b7280' }}>
-                    QR pending
+                ))}
+              </Box>
+
+              <Box sx={{ bgcolor: '#F5F0EB', borderRadius: '10px', p: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#888780', mb: 0.4 }}>
+                    Guest name
                   </Typography>
+                  {isInlineEditing ? (
+                    <TextField
+                      variant="standard"
+                      size="small"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      onBlur={() => {
+                        if (guestName === currentTicket.guest_name) setIsInlineEditing(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName();
+                        if (e.key === 'Escape') {
+                          setIsInlineEditing(false);
+                          setGuestName(currentTicket.guest_name || '');
+                        }
+                      }}
+                      autoFocus
+                      InputProps={{ disableUnderline: false, sx: { fontSize: 14, fontWeight: 500, pb: 0.5 } }}
+                      sx={{ width: '100%' }}
+                    />
+                  ) : (
+                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>
+                      {guestName || 'Add Guest Name'}
+                    </Typography>
+                  )}
+                </Box>
+                <Typography 
+                  onClick={() => isInlineEditing ? handleSaveName() : setIsInlineEditing(true)}
+                  sx={{ fontSize: 11, color: categoryTheme.accent, fontWeight: 500, cursor: 'pointer', ml: 1 }}
+                >
+                  {isInlineEditing ? 'Save' : 'Edit ✎'}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* TEAR */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1.75 }}>
+              <Box sx={{ width: 20, height: 20, borderRadius: '50%', bgcolor: '#F5F0EB', ml: -1.25, flexShrink: 0 }} />
+              <Box sx={{ flex: 1, borderTop: '2px dashed #E8E5E0', mx: 0.5 }} />
+              <Box sx={{ width: 20, height: 20, borderRadius: '50%', bgcolor: '#F5F0EB', mr: -1.25, flexShrink: 0 }} />
+            </Box>
+
+            {/* STUB */}
+            <Box sx={{ p: '18px 22px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25 }}>
+              <Typography sx={{ fontFamily: '"Courier Prime", monospace', fontSize: 11, fontWeight: 700, color: '#1A1A1A', textAlign: 'center', textTransform: 'uppercase' }}>
+                {currentTicket.ticket_type} · Ticket {activeIndex + 1} of {tickets.length}
+              </Typography>
+              
+              <Box sx={{ borderRadius: '14px', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                {qrValue ? (
+                  <DottedQrCode value={qrValue} 
+                  size={200} 
+                  bgColor="#1A1A1A" 
+                  fgColor={categoryTheme.accent} errorCorrectionLevel="M" />
+                ) : (
+                  <Box sx={{ width: 130, height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', border: '1px dashed #333' }}>
+                    QR PENDING
+                  </Box>
                 )}
+                <Typography sx={{ fontFamily: '"Courier Prime", monospace', fontSize: 9, color: '#666', letterSpacing: '0.1em' }}>
+                  {ticketCode}
+                </Typography>
               </Box>
             </Box>
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
+        {/* ACTIONS */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, px: 2, mt: 1 }}>
           <Button
-            fullWidth
-            variant="contained"
-            startIcon={<Share size={14} />}
             onClick={handleShare}
-            sx={{
-              textTransform: 'none',
-              bgcolor: '#111827',
-              '&:hover': { bgcolor: '#374151' },
-            }}
-          >
-            Share Ticket
-          </Button>
-
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Download size={14} />}
-              onClick={handleExport}
-              sx={{ textTransform: 'none' }}
-            >
-              Export PDF
-            </Button>
-            {currentTicket.status !== 'cancelled' && (
-              <Button
-                fullWidth
-                variant="outlined"
-                color="error"
-                onClick={handleCancelTicket}
-                disabled={cancelTicket.isPending}
-                sx={{ textTransform: 'none' }}
-              >
-                Cancel Ticket
-              </Button>
-            )}
-          </Box>
-
-          <Button
             fullWidth
-            variant="outlined"
-            startIcon={<Copy size={14} />}
-            onClick={async () => {
-              await navigator.clipboard.writeText(
-                currentTicket.barcode || qrValue || '',
-              );
-              toast.success('Code copied');
+            sx={{ 
+              gridColumn: 'span 2', 
+              bgcolor: categoryTheme.accent, 
+              color: '#fff', 
+              borderRadius: '12px', 
+              py: 1.5, 
+              fontSize: 13, 
+              fontWeight: 500, 
+              textTransform: 'none',
+              '&:hover': { bgcolor: categoryTheme.accent, opacity: 0.9 }
             }}
-            sx={{ textTransform: 'none' }}
+            startIcon={<Share size={14} />}
           >
-            Copy Code
+            Share ticket
           </Button>
+          <Button
+            onClick={handleExport}
+            sx={{ 
+              bgcolor: '#fff', 
+              color: '#1A1A1A', 
+              border: '0.5px solid #D3D1C7', 
+              borderRadius: '12px', 
+              py: 1.5, 
+              fontSize: 13, 
+              fontWeight: 500, 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#F9F9F9' }
+            }}
+            startIcon={<Download size={14} />}
+          >
+            Export PDF
+          </Button>
+          <Button
+            onClick={() => {
+              navigator.clipboard.writeText(ticketCode);
+              toast.success('Ticket code copied');
+            }}
+            sx={{ 
+              bgcolor: '#fff', 
+              color: '#1A1A1A', 
+              border: '0.5px solid #D3D1C7', 
+              borderRadius: '12px', 
+              py: 1.5, 
+              fontSize: 13, 
+              fontWeight: 500, 
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#F9F9F9' }
+            }}
+            startIcon={<Copy size={14} />}
+          >
+            Copy code
+          </Button>
+          {!isCancelled && (
+            <Button
+              onClick={handleCancelTicket}
+              fullWidth
+              sx={{ 
+                gridColumn: 'span 2',
+                bgcolor: '#FCEBEB', 
+                color: '#E24B4A', 
+                border: '0.5px solid #F09595', 
+                borderRadius: '12px', 
+                py: 1.5, 
+                fontSize: 13, 
+                fontWeight: 500, 
+                textTransform: 'none',
+                mt: 0.5,
+                '&:hover': { bgcolor: '#FCEBEB', opacity: 0.9 }
+              }}
+              startIcon={<X size={14} />}
+            >
+              Cancel ticket
+            </Button>
+          )}
         </Box>
 
-        {tickets.length > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
-            <IconButton
-              onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
-              disabled={activeIndex === 0}
-            >
-              <ChevronLeft size={18} />
-            </IconButton>
-            <IconButton
-              onClick={() =>
-                setActiveIndex((prev) => Math.min(tickets.length - 1, prev + 1))
-              }
-              disabled={activeIndex >= tickets.length - 1}
-            >
-              <ChevronRight size={18} />
-            </IconButton>
-          </Box>
-        )}
+        <Typography sx={{ textAlign: 'center', fontSize: 11, color: '#888780', mt: 1.5 }}>
+          My tickets · {activeIndex + 1} of {tickets.length}
+        </Typography>
       </DialogContent>
     </Dialog>
   );

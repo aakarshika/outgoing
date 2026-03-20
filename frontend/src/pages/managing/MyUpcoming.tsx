@@ -10,6 +10,7 @@ import { CompactManagingEventCard } from './useManaging';
 export type ManagingKind = 'hosting' | 'vendor_request' | 'vendor_application' | 'attending';
 
 export interface ManagingItem {
+  status: any;
   id: string;
   kind: ManagingKind;
   event?: EventDetail | null;
@@ -65,19 +66,6 @@ export function MyUpcoming({
         }}
       >
         <Box sx={{ order: 3 }}>
-          <Typography
-            sx={{
-              fontFamily: 'Syne, sans-serif',
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'rgba(66, 50, 28, 0.62)',
-              mb: 1.5,
-            }}
-          >
-            Coming up next
-          </Typography>
           {topUpcoming.length === 0 ? (
             <Box sx={{ p: 3 }}>
               <Typography sx={{ fontSize: 14, color: 'rgba(66, 50, 28, 0.72)' }}>
@@ -211,9 +199,9 @@ export function MyUpcoming({
                     }),
                     ...(!day.isToday &&
                       isSelected && {
-                        background: '#FAECE7',
-                        color: '#7C2D12',
-                      }),
+                      background: '#FAECE7',
+                      color: '#7C2D12',
+                    }),
                     ...(!day.isToday && day.inMonth && { color: '#2B2118' }),
                     ...(!day.isToday &&
                       !day.inMonth && { color: 'rgba(66, 50, 28, 0.28)' }),

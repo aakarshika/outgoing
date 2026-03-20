@@ -1,10 +1,14 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { MapPin } from 'lucide-react';
-import React from 'react';
+import { MapPin, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import type { BaseFeedEventItem } from '@/types/events';
+import { useAuth } from '@/features/auth/hooks';
+import { useToggleInterest } from '@/features/events/hooks';
 
 import { EventNeedsStack } from './EventNeedsStack';
 
@@ -27,6 +31,111 @@ export function useEventCards({
   imageWidth,
   layout = 'stacked',
 }: UseEventCardsOptions) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const toggleInterest = useToggleInterest();
+  const [isSaved, setIsSaved] = useState(event.user_is_interested || event.i_have_saved || false);
+
+  useEffect(() => {
+    setIsSaved(event.user_is_interested || event.i_have_saved || false);
+  }, [event.user_is_interested, event.i_have_saved]);
+
+  const handleToggleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const nextState = !isSaved;
+    setIsSaved(nextState);
+
+    try {
+      await toggleInterest.mutateAsync({
+        eventId: event.id,
+        isInterested: nextState,
+      });
+    } catch (err) {
+      setIsSaved(!nextState);
+    }
+  };
+
+  const HeartButton = () => (
+    <Box
+      onClick={handleToggleSave}
+      sx={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        zIndex: 10,
+        cursor: 'pointer',
+      }}
+    >
+      <motion.div
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.85 }}
+        animate={{
+          scale: isSaved ? [1, 1.4, 1] : 1,
+        }}
+        transition={{ duration: 0.4 }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          borderRadius: '12px',
+          background: isSaved ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          boxShadow: isSaved ? '0 8px 16px rgba(216, 90, 48, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+          border: isSaved
+            ? '1px solid rgba(216, 90, 48, 0.2)'
+            : '1px solid rgba(255, 255, 255, 0.5)',
+        }}
+      >
+        <Heart
+          size={20}
+          fill={isSaved ? '#D85A30' : 'transparent'}
+          color={isSaved ? '#D85A30' : '#D85A30'}
+          strokeWidth={isSaved ? 0 : 2}
+          style={{ transition: 'all 0.3s ease' }}
+        />
+
+        <AnimatePresence>
+          {isSaved && (
+            <Box sx={{ position: 'absolute', inset: 0 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 1, scale: 0.5, x: 0, y: 0 }}
+                  animate={{
+                    opacity: 0,
+                    scale: 1,
+                    x: (i % 2 === 0 ? 1 : -1) * (20 + Math.random() * 20),
+                    y: -(20 + Math.random() * 20),
+                    rotate: i % 2 === 0 ? 20 : -20,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    top: '25%',
+                    left: '25%',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <Heart size={10} fill="#D85A30" color="transparent" />
+                </motion.div>
+              ))}
+            </Box>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </Box>
+  );
+
   const categoryTheme = getCategoryTheme(event.category ?? undefined);
   const isLandscape = layout === 'landscape';
   const resolvedImageWidth = imageWidth ?? imageHeight;
@@ -521,5 +630,7 @@ export function useEventCards({
     timeLabel,
     getCardSx,
     getContentSx,
+    HeartButton,
+    isSaved,
   };
 }

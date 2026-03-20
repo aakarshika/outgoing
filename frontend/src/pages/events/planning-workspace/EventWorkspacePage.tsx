@@ -42,7 +42,7 @@ export default function EventWorkspacePage() {
       <Box
         onClick={() => navigate(-1)}
         sx={{ px: 2.1, pt: 1.4 }}>
-        <Typography sx={{ fontSize: 12, color: '#888780' }}>← Event Page</Typography>
+        <Typography sx={{ fontSize: 12, color: '#888780' }}>← Back</Typography>
       </Box>
 
       <HeroSectionEventStats />

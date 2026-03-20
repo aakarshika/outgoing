@@ -17,6 +17,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { useServices } from '@/features/vendors/ServicesContext';
 import { formatShortDate, formatTime } from '@/utils/date';
 import { getCategoryVisuals } from '@/constants/categories';
+import { FallbackBox } from '@/components/ui/FallbackBox';
 
 export interface ServiceWithApplications {
   id: number | string;
@@ -50,13 +51,7 @@ export function MyServices({
   const acceptedGigs = serviceApplications.filter(app => app.status === 'accepted').length;
 
   return (
-    <Box sx={{ maxWidth: 640, mx: 'auto', px: { xs: 0, sm: 0 }, pb: 8 }}>
-      {/* TOPBAR */}
-      <Box sx={{ py: 1.5, mb: 1.5 }}>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ cursor: 'pointer', opacity: 0.6 }}>
-        </Stack>
-      </Box>
-
+    <Box sx={{ maxWidth: 640, mx: 'auto', px: { xs: 0, sm: 0 } }}>
       {/* PROFILE HERO */}
       <Box
         sx={{
@@ -123,10 +118,13 @@ export function MyServices({
       {/* SERVICES SECTION */}
       <Box sx={{ mb: 3.5 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5, px: 0.5 }}>
-          <Typography sx={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#888780' }}>
-            My services
-          </Typography>
+
           <Button
+
+            onClick={(e) => {
+              e.stopPropagation();
+              openEditService(null as any);
+            }}
             startIcon={<Plus size={14} />}
             sx={{ fontSize: 12, color: '#D85A30', fontWeight: 600, textTransform: 'none', p: 0 }}
           >
@@ -196,10 +194,6 @@ export function MyServices({
 
       {/* APPLICATIONS SECTION */}
       <Box>
-        <Typography sx={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#888780', mb: 1.5 }}>
-          My applications
-        </Typography>
-
         {servicesWithApplications.map((group) => {
           const categoryVisuals = getCategoryVisuals(group.category || '');
           return (<Box key={group.id} sx={{ mb: 2.5 }}>
@@ -237,15 +231,15 @@ export function MyServices({
         }
         )}
 
+
         {servicesWithApplications.length === 0 && (
-          <Box sx={{ p: 4, textAlign: 'center', background: '#fff', borderRadius: '18px', border: '1px dashed #D3D1C7' }}>
-            <Typography sx={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#1A1A1A' }}>
-              No applications yet
-            </Typography>
-            <Typography sx={{ fontSize: 13, color: '#888780', mt: 1 }}>
-              Your applications to events will appear here once you send them.
-            </Typography>
-          </Box>
+          <FallbackBox
+            title="Start your journey"
+            description="No active services or applications yet. Share your skills and start collaborating on amazing events."
+            icon={<Briefcase />}
+            actionLabel="Add your first service"
+            onAction={() => openEditService(null as any)}
+          />
         )}
       </Box>
     </Box>
