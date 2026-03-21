@@ -24,10 +24,10 @@ export const SearchBarSimple = () => {
   } = useNavbarContext();
 
   return (
-    <div className="sm:relative min-w-0 flex-1/80">
+    <div className="sm:relative min-w-0 flex w-full mx-2 px-2 ">
       <form
         onSubmit={handleSearchSubmit}
-        className="flex w-full min-w-0 items-center rounded-full bg-white/80"
+        className="flex w-full min-w-0 items-center rounded-full bg-white/70 text-gray-800"
       >
         <div className="relative flex-1 min-w-0">
           <input
@@ -36,7 +36,7 @@ export const SearchBarSimple = () => {
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search"
-            className="h-10 w-full min-w-0 bg-transparent px-3 py-1 text-sm text-[var(--color-text-primary)] outline-none"
+            className="h-10  w-full min-w-0 bg-transparent px-5 py-1 text-sm text-[var(--color-text-primary)] outline-none"
           />
         </div>
 

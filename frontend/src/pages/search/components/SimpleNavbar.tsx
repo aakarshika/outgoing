@@ -25,6 +25,7 @@ import {
   Users,
   Heart,
   Briefcase,
+  Search,
 } from 'lucide-react';
 import { type MouseEvent, useState, useMemo } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
@@ -165,10 +166,11 @@ export function SimpleNavbar({
     !!event &&
     !!(event.user_applications && event.user_applications.length > 0);
   const isGuestLandingPage = location.pathname === '/' && !isAuthenticated;
-  const isOrangePage = false;
+  const isOrangePage = true;
   const hideSearchBar = location.pathname.startsWith('/events') 
   || location.pathname.startsWith('/events-new') 
   || location.pathname.startsWith('/managing') 
+  || location.pathname.startsWith('/network')
   || location.pathname.startsWith('/chats');
   const isNotOnManagePage = !location.pathname.includes('manage');
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -270,6 +272,62 @@ export function SimpleNavbar({
         ]
         : []),
   ];
+
+
+  const NetworkHeadings = () => {
+    return (
+      <Typography sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 11, color: '#6b7280', px: 0.2 }}>
+        <Search size={16} />
+        Search for people... (Coming soon)
+        </Typography>
+    );
+  };
+
+  const ManagingHeadings = () => {
+    return (
+      <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{
+                justifyContent: 'center',
+                overflow: 'visible',
+                width: '100%',
+              }}
+            >
+              {rotatedTabs.map((pageTab) => (
+                <motion.div
+                  key={pageTab.key}
+                  layout
+                  transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 40,
+                    mass: 1,
+                  }}
+                >
+                  {pageTab.key == tab && (<Chip
+                    label={pageTab.label}
+                    onClick={() => navigate(`/managing/${pageTab.key}`)}
+                    sx={{
+                      bgcolor:
+                        'transparent',
+                      color: '#121212',
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s, color 0.2s',
+                      '&:hover': {
+                        bgcolor: '#2B2118',
+                      }
+                    }}
+                  />)}
+                </motion.div>
+              ))}
+            </Stack>
+    );
+  };
 
   const handleMenuButtonClick = (event: MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -413,14 +471,14 @@ export function SimpleNavbar({
       role="img"
       sx={{
         display: 'inline-block',
-        width: { xs: 28, sm: 30, md: 36 },
-        height: { xs: 28, sm: 30, md: 35 },
+        width:  '100%' ,
+        height:  '100%' ,
         backgroundColor: 'currentColor',
-        maskImage: "url('/assets/go-symbol.png')",
+        maskImage: "url('/assets/go-sym.png')",
         maskRepeat: 'no-repeat',
         maskPosition: 'center',
         maskSize: 'contain',
-        WebkitMaskImage: "url('/assets/go-symbol.png')",
+        WebkitMaskImage: "url('/assets/go-sym.png')",
         WebkitMaskRepeat: 'no-repeat',
         WebkitMaskPosition: 'center',
         WebkitMaskSize: 'contain',
@@ -461,7 +519,8 @@ export function SimpleNavbar({
         right: 0,
         width: '100%',
         zIndex: (theme) => theme.zIndex.appBar + 10,
-        backgroundColor: 'rgba(255, 252, 247, 0.8)',
+        backgroundColor: isOrangePage ? '#D85A30' : 'rgba(255, 252, 247, 0.8)',
+        color: isOrangePage ? '#eeeeee' : '#3f372e',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
@@ -497,8 +556,8 @@ export function SimpleNavbar({
                 display: { xs: isGuestLandingPage ? 'none' : 'inline-flex', sm: 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 28,
-                height: 28,
+                width: 45,
+                height: 45,
               }}
             >
               {goMark}
@@ -524,6 +583,9 @@ export function SimpleNavbar({
                   display: 'inline-flex',
                   alignItems: 'flex-end',
                   mx: 0.15,
+                  mt: 1,
+                  width: 28,
+                  height: 28,
                   transform: { xs: 'translateY(2px)', sm: 'translateY(4px)' },
                 }}
               >
@@ -535,47 +597,10 @@ export function SimpleNavbar({
           <NavbarProvider>
             {hideSearchBar ? <></> : <SearchBarSimple />}
             {hideSearchBar && location.pathname.startsWith('/managing') && (
-              <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              useFlexGap
-              sx={{
-                justifyContent: 'center',
-                overflow: 'visible',
-                width: '100%',
-              }}
-            >
-              {rotatedTabs.map((pageTab) => (
-                <motion.div
-                  key={pageTab.key}
-                  layout
-                  transition={{
-                    type: 'spring',
-                    stiffness: 300,
-                    damping: 40,
-                    mass: 1,
-                  }}
-                >
-                  {pageTab.key == tab && (<Chip
-                    label={pageTab.label}
-                    onClick={() => navigate(`/managing/${pageTab.key}`)}
-                    sx={{
-                      bgcolor:
-                        'transparent',
-                      color: '#121212',
-                      fontWeight: 700,
-                      fontSize: "15px",
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s, color 0.2s',
-                      '&:hover': {
-                        bgcolor: '#2B2118',
-                      }
-                    }}
-                  />)}
-                </motion.div>
-              ))}
-            </Stack>
+              <ManagingHeadings/>
+            )}
+            {hideSearchBar && location.pathname.startsWith('/network') && (
+              <NetworkHeadings/>
             )}
           </NavbarProvider>
 

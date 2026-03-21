@@ -579,8 +579,8 @@ export default function ManagingPage() {
         pt: 8,
         pb: 20,
         minHeight: '100vh',
-        background:
-          'radial-gradient(circle at top, rgba(255, 244, 227, 0.9), transparent 32%), linear-gradient(180deg, #FFFDF8 0%, #FFF6EA 48%, #FFFDF8 100%)',
+        background: 'rgba(237, 232, 226, 0.9)',
+      
       }}
     >
       <Container maxWidth={false}>

@@ -199,6 +199,16 @@ export function buildUserChatActivities({
         });
       }
     }
+
+    if (item.kind === 'servicing') {
+      pushActivity(activities, seenKeys, {
+        id: `servicing-${item.event_id}`,
+        occurredAt: item.happened_at,
+        label: `${targetUsername} is servicing ${item.event_title}`,
+        eventId: item.event_id,
+        eventTitle: item.event_title,
+      });
+    }
   }
 
   return activities.sort(

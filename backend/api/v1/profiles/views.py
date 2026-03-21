@@ -112,7 +112,10 @@ class PublicShowcaseView(APIView):
             shared_events = self._serialize_shared_events(request.user, user, request)
 
             user1_id, user2_id = sorted([request.user.id, user.id])
-            friendship = Friendship.objects.select_related("met_at_event").filter(
+            friendship = Friendship.objects.select_related(
+                "met_at_event",
+                "met_at_event__category",
+            ).filter(
                 user1_id=user1_id,
                 user2_id=user2_id,
             ).first()
@@ -167,6 +170,11 @@ class PublicShowcaseView(APIView):
             ),
             "met_at_event_title": (
                 friendship.met_at_event.title if friendship and friendship.met_at_event else None
+            ),
+            "orbit_category_slug": (
+                friendship.orbit_category.slug
+                if friendship and friendship.orbit_category_id
+                else None
             ),
             "can_view_full_profile": can_view_full_profile,
             "cta": cta,
@@ -255,17 +263,18 @@ class PublicShowcaseView(APIView):
         # User category tags (computed from activity)
         user_tags = get_user_tags(user)
 
-        # Backward-compatible badges list (derived from user_tags)
+        # Backward-compatible badges list — only tags the user has actually earned
         badges = [
             {
                 "id": t["id"],
                 "label": f'{t["emoji"]} {t["label"]}',
                 "icon": t["icon"],
                 "color": t["color"],
-                "is_earned": t.get("is_earned", False),
+                "is_earned": True,
                 "description": t.get("description", ""),
             }
             for t in user_tags["all_tags"]
+            if t.get("is_earned", False)
         ]
 
         # Testimonials

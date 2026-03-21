@@ -127,7 +127,10 @@ export function NormalTicketsModule({ className }: NormalTicketsModuleProps) {
             py: 2,
           }}
         >
-          {event.lifecycle_state === 'live' ? 'Event is live!' : 'This event has ended'}
+          {event.lifecycle_state === 'live' ? 'Event is live!' : 
+          event.lifecycle_state == 'draft' ? 'This event is in DRAFT mode, only visible to the host' : 
+          'This event has ended'
+          }
         </Typography>
       </Box>
     );

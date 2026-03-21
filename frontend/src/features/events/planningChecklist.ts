@@ -178,13 +178,14 @@ function ruleEventNeeds(
         due: tpl(copy.pendingDecision.duePending, {
           applicationCount: need.application_count,
           deadline,
+          title: need.title,
         }),
       };
     }
     return {
       label: tpl(copy.stillNeeded.label, { title: need.title }),
       status: urgent ? 'warn' : 'todo',
-      due: tpl(copy.stillNeeded.duePending, { deadline }),
+      due: tpl(copy.stillNeeded.duePending, { deadline, title: need.title }),
     };
   });
 }

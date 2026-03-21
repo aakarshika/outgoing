@@ -309,7 +309,7 @@ export const LogoSection = () => {
             style={{ fontFamily: '"Permanent Marker"', scale: 1.2 }}
           >
             <img
-              src="assets/go-symbol.png"
+              src="assets/go-sym.png"
               alt="Outgoing"
               title="Outgoing"
               className="h-10 w-10"
@@ -330,7 +330,7 @@ export const LogoSection = () => {
           >
             Out
             <img
-              src="assets/go-symbol.png"
+              src="assets/go-sym.png"
               alt="Outgoing"
               title="Outgoing"
               className="h-10 w-10"

@@ -242,6 +242,9 @@ export default function SearchPage() {
     const progress = tabShrinkProgress;
 
     return {
+      /** Fully hidden at end of tab shrink range (no mini title). */
+      exploreSectionMaxHeight: 140 * (1 - progress),
+      exploreSectionOpacity: 1 - progress,
       borderRadius: 22 - progress * 4,
       px: 1.4 - progress * 0.3,
       py: 1.2 - progress * 0.35,
@@ -380,7 +383,6 @@ export default function SearchPage() {
     <Box
       sx={{
         minHeight: '100vh',
-                borderRadius: '28px',
                 border: '1px solid rgba(120, 94, 60, 0.12)',
                 background:
                   'linear-gradient(135deg, #FFF7EA 0%, #FAECE7 34%, #FAEEDA 68%, #FFF9F0 100%)',
@@ -404,34 +406,47 @@ export default function SearchPage() {
           }}
         >
           <Container
+          disableGutters
             maxWidth={false}
-            sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 2 }}
+            sx={{ maxWidth: 1040, pt: 8}}
           >
             <Box
               sx={{
+                
               }}
             >
               <Stack
                 direction={{ xs: 'column', md: 'row' }}
-                spacing={2}
+                // spacing={2}
                 alignItems={{ xs: 'flex-start', md: 'center' }}
                 justifyContent="space-between"
               >
-                <Stack spacing={1.1} sx={{ minWidth: 0, maxWidth: 620 }}>
-                  
-                  <Typography
+                <Stack sx={{ minWidth: 0, maxWidth: 620 }}>
+                  <Box
                     sx={{
-                      fontFamily: 'Syne, sans-serif',
-                      fontSize: { xs: 30, md: 42 },
-                      fontWeight: 800,
-                      letterSpacing: '-0.05em',
-                      color: '#3D3124',
-                      lineHeight: 1.02,
+                      overflow: 'hidden',
+                      maxHeight: `${tabMetrics.exploreSectionMaxHeight}px`,
+                      opacity: tabMetrics.exploreSectionOpacity,
+                      pointerEvents: tabShrinkProgress >= 0.99 ? 'none' : 'auto',
+                      visibility: tabShrinkProgress >= 1 ? 'hidden' : 'visible',
                     }}
+                    aria-hidden={tabShrinkProgress >= 0.99}
                   >
-                    Explore
-                  </Typography>
-
+                    <Typography
+                      sx={{
+                        fontFamily: 'Syne, sans-serif',
+                        fontSize: { xs: 23, md: 42 },
+                        fontWeight: 800,
+                        letterSpacing: '-0.05em',
+                        color: '#3D3124',
+                        lineHeight: 1.02,
+                        p: 4,
+                        pb: 0,
+                      }}
+                    >
+                      Explore
+                    </Typography>
+                  </Box>
                 </Stack>
 
               </Stack>
@@ -440,7 +455,7 @@ export default function SearchPage() {
             <Box
               sx={{
                 display: 'flex',
-                gap: 1,
+                // gap: 1,
                 overflowX: 'auto',
                 '&::-webkit-scrollbar': {
                   display: 'none',
@@ -459,23 +474,20 @@ export default function SearchPage() {
                     onClick={() => handleTabChange(item.id)}
                     sx={{
                       border: '1px solid',
-                      borderColor: isActive ? item.accent : 'rgba(120, 94, 60, 0.12)',
-                      background: isActive ? item.accent : item.wash,
+                      borderColor: isActive ? item.accent : 'rgba(120, 94, 60, 0.0)',
+                      background: isActive ? item.accent : '',
                       color: isActive ? '#fff' : '#3D3124',
-                      borderRadius: `${tabMetrics.borderRadius}px`,
+                      // borderRadius: `${tabMetrics.borderRadius}px`,
                       px: tabMetrics.px,
                       py: tabMetrics.py,
-                      my: tabMetrics.my,
                       minWidth: { xs: tabMetrics.minWidthXs, md: tabMetrics.minWidthMd },
                       fontSize: 14,
                       fontWeight: 700,
                       whiteSpace: 'nowrap',
-                      transition: 'all 180ms ease',
                       boxShadow: isActive
                         ? `0 9px 5px ${item.accent}33`
                         : '0 7px 5px rgba(86, 58, 28, 0.06)',
                       '&:hover': {
-                        borderColor: item.accent,
                         background: isActive ? item.accent : '#FFF1DE',
                         transform: 'translateY(-1px)',
                       },

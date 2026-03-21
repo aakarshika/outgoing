@@ -219,11 +219,11 @@ export default function EventDetailPageV2() {
           gap: 1.5,
         }}
       >
-        <Typography sx={{ fontWeight: 600 }}>This draft event is private</Typography>
+        <Typography sx={{ fontWeight: 600, textAlign: 'center', p: 4 }}>Seems like you're not authorized to be here</Typography>
         <Typography sx={{ color: 'text.secondary' }}>
-          Only the host can preview this draft.
+          404
         </Typography>
-        <MuiButton onClick={() => navigate('/')}>Go Home</MuiButton>
+        <MuiButton variant="contained" onClick={() => navigate('/')}>Go Home</MuiButton>
       </Box>
     );
   }

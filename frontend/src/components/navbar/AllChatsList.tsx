@@ -3,18 +3,13 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { useAuth } from '@/features/auth/hooks';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import {
-  buildAllChatEntries,
+  buildConversationInboxEntries,
   formatChatMessagePreview,
   formatChatRelativeTime,
 } from '@/features/events/chatList';
-import {
-  useAllChatsList,
-  useEventOverviewRows,
-  useMyFriendships,
-} from '@/features/events/hooks';
+import { useConversationInbox } from '@/features/events/hooks';
 import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
 
 import { useNavbarContext } from './NavbarContext';
@@ -114,29 +109,18 @@ function ChatListAvatar({
 
 export function AllChatsList() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { isAllChatsSidebarOpen, setIsAllChatsSidebarOpen, isAuthenticated } =
     useNavbarContext();
   const { openChat } = useChatDrawer();
-  const { data, isLoading } = useAllChatsList(isAuthenticated && isAllChatsSidebarOpen);
-  const { data: friendships, isLoading: friendshipsLoading } = useMyFriendships(
+  const { data, isLoading } = useConversationInbox(
     isAuthenticated && isAllChatsSidebarOpen,
   );
-  const { data: eventOverviewRows, isLoading: eventOverviewLoading } =
-    useEventOverviewRows(isAuthenticated && isAllChatsSidebarOpen);
 
   const chatEntries = useMemo(
-    () =>
-      buildAllChatEntries({
-        response: data?.data,
-        friendships: friendships?.accepted,
-        eventOverviewRows: eventOverviewRows || [],
-        currentUserId: user?.id,
-        currentUsername: user?.username,
-      }),
-    [data?.data, eventOverviewRows, friendships?.accepted, user?.id, user?.username],
+    () => buildConversationInboxEntries(data?.data?.conversations),
+    [data?.data?.conversations],
   );
-  const isListLoading = isLoading || friendshipsLoading || eventOverviewLoading;
+  const isListLoading = isLoading;
 
   const handleOpenChat = (chat: (typeof chatEntries)[number]) => {
     openChat({

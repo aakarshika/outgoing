@@ -57,16 +57,11 @@ export function MyHomeTrendingSection({
               height: 34,
               borderRadius: '999px',
               px: 0.35,
-              bgcolor: '#2B2118',
-              color: '#FFF8EF',
-              boxShadow: '0 10px 20px rgba(66, 50, 28, 0.18)',
+              color: 'rgba(66, 50, 28, 0.68)',
               fontWeight: 700,
               textDecoration: 'none',
               '& .MuiChip-label': {
                 px: 1.4,
-              },
-              '&:hover': {
-                bgcolor: '#3B2E22',
               },
             }}
           />
@@ -96,6 +91,15 @@ export function MyHomeTrendingSection({
                 : '1px solid rgba(143, 105, 66, 0.14)',
               fontWeight: 700,
               cursor: 'pointer',
+              '&:hover': {
+                bgcolor: selectedTrendingFilters.includes(filter.id)
+                  ? '#D85A30'
+                  : 'rgba(255,255,255,0.9)',
+                color: selectedTrendingFilters.includes(filter.id) ? '#fff' : '#4A3827',
+                border: selectedTrendingFilters.includes(filter.id)
+                  ? 'none'
+                  : '1px solid rgba(143, 105, 66, 0.14)',
+              },
             }}
           />
         ))}

@@ -41,6 +41,28 @@ export interface AllChatsListResponse {
   network: AllChatsListItem[];
 }
 
+export type ConversationInboxKind = 'group' | 'event_private' | 'direct';
+
+/** Unified inbox row from GET /events/conversations/inbox/ */
+export interface ConversationInboxItem {
+  kind: ConversationInboxKind;
+  last_message_at: string;
+  latest_message_text: string | null;
+  latest_message_sender_username: string | null;
+  event_id?: number;
+  event_title?: string | null;
+  cover_image?: string | null;
+  location_name?: string | null;
+  start_time?: string | null;
+  attendee_count?: number | null;
+  group_role?: 'hosting' | 'servicing' | null;
+  conversation_id?: number;
+  other_user_id?: number | null;
+  other_username?: string | null;
+  other_avatar?: string | null;
+  updated_at?: string | null;
+}
+
 // --- Feed ---
 
 export async function fetchFeed(params: {
@@ -514,6 +536,8 @@ export interface FriendshipItem {
   accepted_at: string | null;
   met_at_event: number | null;
   met_at_event_title: string | null;
+  orbit_category: number;
+  orbit_category_slug: string;
   created_at: string;
   updated_at: string;
 }
@@ -532,6 +556,24 @@ export interface NetworkPerson {
   avatar: string | null;
   event_id?: number;
   event_title?: string;
+}
+
+/** Accepted buddies grouped by `Friendship.orbit_category` (same shape as by-user/by-category). */
+export interface GroupedOrbitFriendshipRow {
+  friendship_id: number;
+  friend: NetworkPerson;
+  met_at_event: { id: number | null; title: string | null };
+  status: string;
+  accepted_at: string | null;
+}
+
+export interface GroupedOrbitCategoryRow {
+  category: { id: number | null; name: string; slug: string };
+  friendships: GroupedOrbitFriendshipRow[];
+}
+
+export interface MyFriendshipsByOrbitCategoryResponse {
+  grouped_friendships: GroupedOrbitCategoryRow[];
 }
 
 export interface NetworkPeopleResponse {
@@ -563,17 +605,44 @@ export interface NetworkActivityActor {
   last_name: string;
 }
 
+/** Flat item for chat timeline compatibility (derived from grouped activity). */
 export interface NetworkActivityItem {
-  kind: 'hosting' | 'going' | 'interested';
+  kind: 'hosting' | 'going' | 'servicing';
   actor: NetworkActivityActor;
   event_id: number;
   event_title: string;
   event_subtitle: string;
+  orbit_category_slug: string | null;
   happened_at: string;
 }
 
+export interface NetworkActivityAttendee {
+  user_id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+  role: string;
+  activities: ('going' | 'hosting' | 'servicing')[];
+  primary_activity: 'going' | 'hosting' | 'servicing' | null;
+}
+
+export interface NetworkActivityEvent {
+  event_id: number;
+  title: string;
+  subtitle: string;
+  start_time: string;
+  relevant_attendees: NetworkActivityAttendee[];
+}
+
+export interface NetworkActivityCategoryGroup {
+  category_slug: string;
+  category_name: string;
+  events: NetworkActivityEvent[];
+}
+
 export interface NetworkActivityResponse {
-  activity: NetworkActivityItem[];
+  groups: NetworkActivityCategoryGroup[];
 }
 
 export async function fetchNetworkActivity(): Promise<NetworkActivityResponse> {
@@ -581,7 +650,42 @@ export async function fetchNetworkActivity(): Promise<NetworkActivityResponse> {
     '/events/network/activity/',
   );
   const inner = (data as ApiResponse<NetworkActivityResponse>)?.data;
-  return inner ?? { activity: [] };
+  return inner ?? { groups: [] };
+}
+
+/** Flatten grouped network activity for user-chat timeline (target user only). */
+export function flattenNetworkActivityForChat(
+  groups: NetworkActivityCategoryGroup[] | undefined,
+): NetworkActivityItem[] {
+  if (!groups?.length) return [];
+  const items: NetworkActivityItem[] = [];
+  for (const g of groups) {
+    const orbitSlug = g.category_slug === 'other' ? null : g.category_slug;
+    for (const ev of g.events) {
+      for (const att of ev.relevant_attendees) {
+        for (const act of att.activities) {
+          if (act !== 'going' && act !== 'hosting' && act !== 'servicing') {
+            continue;
+          }
+          items.push({
+            kind: act,
+            actor: {
+              id: att.user_id,
+              username: att.username,
+              first_name: att.first_name,
+              last_name: att.last_name,
+            },
+            event_id: ev.event_id,
+            event_title: ev.title,
+            event_subtitle: ev.subtitle,
+            orbit_category_slug: orbitSlug,
+            happened_at: ev.start_time,
+          });
+        }
+      }
+    }
+  }
+  return items;
 }
 
 export async function fetchMyFriendships(): Promise<MyFriendshipsResponse> {
@@ -589,6 +693,14 @@ export async function fetchMyFriendships(): Promise<MyFriendshipsResponse> {
     await client.get<ApiResponse<MyFriendshipsResponse>>('/events/friendships/');
   const inner = (data as ApiResponse<MyFriendshipsResponse>)?.data;
   return inner ?? { accepted: [], pending_incoming: [], pending_outgoing: [] };
+}
+
+export async function fetchMyFriendshipsByOrbitCategory(): Promise<MyFriendshipsByOrbitCategoryResponse> {
+  const { data } = await client.get<ApiResponse<MyFriendshipsByOrbitCategoryResponse>>(
+    '/events/friendships/by-orbit-category/',
+  );
+  const inner = (data as ApiResponse<MyFriendshipsByOrbitCategoryResponse>)?.data;
+  return inner ?? { grouped_friendships: [] };
 }
 
 export async function fetchEventOverviewRows(): Promise<EventOverviewRow[]> {
@@ -601,6 +713,13 @@ export async function fetchEventOverviewRows(): Promise<EventOverviewRow[]> {
 export async function fetchAllChatsList() {
   const { data } = await client.get<ApiResponse<AllChatsListResponse>>(
     '/events/conversations/',
+  );
+  return data;
+}
+
+export async function fetchConversationInbox() {
+  const { data } = await client.get<ApiResponse<{ conversations: ConversationInboxItem[] }>>(
+    '/events/conversations/inbox/',
   );
   return data;
 }

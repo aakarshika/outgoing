@@ -183,7 +183,7 @@ export const planningChecklistManagerConfig: readonly PlanningChecklistConfigIte
       },
       stillNeeded: {
         label: '{title} still needed',
-        duePending: 'No applicants yet · {deadline}.',
+        duePending: 'No applicants for {title} yet',
       },
     },
   },

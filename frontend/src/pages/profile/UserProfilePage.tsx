@@ -471,7 +471,9 @@ export default function UserProfilePage() {
   })();
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#FDF8F3', pb: 14 }}>
+    <Box sx={{ minHeight: '100vh', 
+      background: 'rgba(237, 232, 226, 0.9)',
+       pb: 14 }}>
       <Box sx={{ maxWidth: 430, mx: 'auto', position: 'relative' }}>
 
         <Box sx={{ position: 'relative' }}>

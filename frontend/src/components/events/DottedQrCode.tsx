@@ -20,7 +20,7 @@ export function DottedQrCode({
 }: DottedQrCodeProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const centerImageSrc = '/assets/go-symbol-1.png';
+  const centerImageSrc = '/assets/go-sym-1.png';
   useEffect(() => {
     if (!containerRef.current) return;
     if (!value) {

@@ -1,14 +1,21 @@
 import { Box, Container } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/features/auth/hooks';
-import type { FriendshipItem, NetworkPerson } from '@/features/events/api';
+import type {
+  FriendshipItem,
+  NetworkActivityEvent,
+  NetworkActivityResponse,
+  NetworkPerson,
+} from '@/features/events/api';
+import { CATEGORY_THEMES, getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { useChatDrawer } from '@/features/events/ChatDrawerContext';
 import {
   useMyFriendships,
+  useMyFriendshipsByOrbitCategory,
   useNetworkActivity,
   useNetworkPeople,
   useUpdateFriendRequest,
@@ -27,6 +34,7 @@ import type {
   CoreNetworkItem,
   HeroMoment,
   HeroStatItem,
+  NetworkActivityGroup,
   NetworkFilter,
   NetworkGroup,
   PendingRequestItem,
@@ -119,229 +127,138 @@ const networkGroups: readonly NetworkGroup[] = [
   },
 ] as const;
 
-const buddies: readonly BuddyCard[] = [
-  {
-    name: 'Rahul Mehta',
-    initial: 'R',
-    color: '#D85A30',
-    context: 'Tech buddy · met at Anthill Hackathon · 3 events together',
-    category: 'Tech',
-    categoryTone: { bg: '#EAF3DE', color: '#3B6D11' },
-    active: true,
-    note: 'Best for last-minute “should we just go?” plans.',
-    events: [
-      {
-        dot: '#D85A30',
-        prefix: 'Going to',
-        eventName: 'Indie Night at Social',
-        suffix: '· tonight',
-      },
-      {
-        dot: '#888780',
-        prefix: 'Interested in',
-        eventName: 'Build in Public stream',
-        suffix: '· Fri',
-      },
-    ],
-    primaryAction: 'Join Rahul',
-    secondaryAction: 'Message',
-  },
-  {
-    name: 'Aditi Sharma',
-    initial: 'A',
-    color: '#534AB7',
-    context: 'Art buddy · met at Cubbon Reads · 2 events together',
-    category: 'Arts',
-    categoryTone: { bg: '#EEEDFE', color: '#534AB7' },
-    note: 'A calm, thoughtful match for gallery nights and workshops.',
-    events: [
-      {
-        dot: '#888780',
-        prefix: 'Interested in',
-        eventName: 'Graffiti Workshop HSR',
-        suffix: '· Sat',
-      },
-    ],
-    primaryAction: 'Go together',
-    secondaryAction: 'Message',
-  },
-  {
-    name: 'Karan Nair',
-    initial: 'K',
-    color: '#1D9E75',
-    context: 'Music buddy · met at NH7 Weekender · 5 events together',
-    category: 'Music',
-    categoryTone: { bg: '#E6F1FB', color: '#185FA5' },
-    active: true,
-    note: 'Always seems to know where the good room is before everyone else.',
-    events: [
-      {
-        dot: '#1D9E75',
-        prefix: 'Hosting',
-        suffix: 'Rooftop Vinyl Night · Sat',
-      },
-      {
-        dot: '#D85A30',
-        prefix: 'Going to',
-        eventName: 'Jazz in the Courtyard',
-        suffix: '· Sun',
-      },
-    ],
-    primaryAction: 'Join Karan',
-    secondaryAction: 'Assign a need',
-    secondaryTone: 'assign',
-  },
-  {
-    name: 'Sneha Krishnan',
-    initial: 'S',
-    color: '#D4537E',
-    context: 'Food buddy · met at VV Puram crawl · 1 event together',
-    category: 'Food',
-    categoryTone: { bg: '#FAECE7', color: '#993C1D' },
-    note: 'Worth nudging when you want to turn a quiet week into a plan.',
-    events: [{ dot: '#888780', suffix: 'Nothing planned yet this week' }],
-    primaryAction: 'Suggest an event',
-    secondaryAction: 'Message',
-    secondaryTone: 'ghost',
-  },
-  {
-    name: 'Priya Menon',
-    initial: 'P',
-    color: '#BA7517',
-    context: 'Outdoor buddy · met at Nandi Hills trek · 4 events together',
-    category: 'Outdoors',
-    categoryTone: { bg: '#FAEEDA', color: '#854F0B' },
-    active: true,
-    note: 'Good energy for movement, early starts, and chaotic good adventures.',
-    events: [
-      {
-        dot: '#D85A30',
-        prefix: 'Going to',
-        eventName: 'Midnight Cycling Loop',
-        suffix: '· tonight',
-      },
-    ],
-    primaryAction: 'Join Priya',
-    secondaryAction: 'Message',
-  },
-  {
-    name: 'Vikram Das',
-    initial: 'V',
-    color: '#185FA5',
-    context: 'Tech buddy · met at Product Conf 2025 · 2 events together',
-    category: 'Tech',
-    categoryTone: { bg: '#EAF3DE', color: '#3B6D11' },
-    note: 'Strong collaborator energy when an event needs an extra pair of hands.',
-    events: [
-      {
-        dot: '#1D9E75',
-        prefix: 'Hosting',
-        suffix: 'Build in Public stream · Fri',
-      },
-    ],
-    primaryAction: 'Join Vikram',
-    secondaryAction: 'Assign a need',
-    secondaryTone: 'assign',
-  },
-] as const;
-
-const pendingRequests: readonly BuddyRequestCard[] = [
-  {
-    name: 'Ayesha Kapoor',
-    initial: 'A',
-    color: '#534AB7',
-    buddyType: 'Art and Culture',
-    kind: 'incoming',
-    subtitle: 'You both went to Cubbon Reads and saved two gallery nights this month.',
-    badge: '2 shared events',
-    primaryAction: 'Accept request',
-    secondaryAction: 'Not now',
-  },
-  {
-    name: 'Dev Malhotra',
-    initial: 'D',
-    color: '#D85A30',
-    buddyType: 'Music',
-    kind: 'incoming',
-    subtitle:
-      'You crossed paths at Indie Night at Social and both follow rooftop gig plans.',
-    badge: '1 shared event',
-    primaryAction: 'Accept request',
-    secondaryAction: 'Ignore',
-  },
-] as const;
-
-const possibleBuddyRequests: readonly BuddyRequestCard[] = [
-  {
-    name: 'Meera Sethi',
-    initial: 'M',
-    color: '#1D9E75',
-    buddyType: 'Art and Culture',
-    kind: 'suggested',
-    subtitle:
-      'You keep landing at the same readings, pottery jams, and small gallery events.',
-    badge: '3 overlaps',
-    primaryAction: 'Send request',
-  },
-  {
-    name: 'Nikhil Rao',
-    initial: 'N',
-    color: '#185FA5',
-    buddyType: 'Tech',
-    kind: 'suggested',
-    subtitle:
-      'You both attended Cubbon Park Skate Demo · Sat 8 Mar. Also at NH7 Weekender 2025',
-    badge: '2 overlaps',
-    primaryAction: 'Send request',
-  },
-  {
-    name: 'Tara Iyer',
-    initial: 'T',
-    color: '#BA7517',
-    buddyType: 'Outdoors',
-    kind: 'suggested',
-    subtitle:
-      'Shared cycling and sunrise hike events suggest this could become an easy recurring plan.',
-    badge: '2 overlaps',
-    primaryAction: 'Send request',
-  },
-] as const;
-
-const activity: readonly ActivityItem[] = [
-  {
-    initial: 'K',
-    color: '#1D9E75',
-    text: 'Karan Nair is hosting Rooftop Vinyl Night this Saturday.',
-    time: '2h ago',
-    cta: 'See event',
-    event: {
-      icon: '🎶',
-      title: 'Rooftop Vinyl Night',
-      subtitle: 'Sat · 8:00 PM · Indiranagar',
-      eventId: 1,
-    },
-  },
-  {
-    initial: 'P',
-    color: '#BA7517',
-    text: 'Priya Menon is going to Midnight Cycling Loop tonight.',
-    time: '4h ago',
-    cta: 'Join Priya',
-  },
-  {
-    initial: 'R',
-    color: '#D85A30',
-    text: 'Rahul Mehta is interested in Build in Public stream this Friday.',
-    time: 'Yesterday',
-  },
-] as const;
-
 const BUDDY_COLORS = ['#D85A30', '#534AB7', '#1D9E75', '#D4537E', '#BA7517', '#185FA5'];
 
 function otherUsername(friendship: FriendshipItem, currentUsername: string): string {
   return friendship.user1_username === currentUsername
     ? friendship.user2_username
     : friendship.user1_username;
+}
+
+const OTHER_ACTIVITY_CATEGORY_KEY = '__other';
+
+/** Accent from shared category themes (same source as event categorical UI). */
+function categoryColorForGroupTheme(categorySlugKey: string): string {
+  if (categorySlugKey === OTHER_ACTIVITY_CATEGORY_KEY) {
+    return CATEGORY_THEMES.default.accent;
+  }
+  const key = categorySlugKey.toLowerCase().trim();
+  return CATEGORY_THEMES[key]?.accent ?? CATEGORY_THEMES.default.accent;
+}
+
+function formatHappenedAtDistance(iso: string): string {
+  try {
+    return formatDistanceToNow(new Date(iso), { addSuffix: true });
+  } catch {
+    return '';
+  }
+}
+
+function joinGoerNames(names: readonly string[]): string {
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  if (names.length === 3) {
+    return `${names[0]}, ${names[1]}, and ${names[2]}`;
+  }
+  const [a, b, c] = names;
+  const others = names.length - 3;
+  const otherLabel = others === 1 ? '1 other friend' : `${others} other friends`;
+  return `${a}, ${b}, ${c}, and ${otherLabel}`;
+}
+
+function attendeeDisplayName(att: {
+  first_name: string;
+  last_name: string;
+  username: string;
+}): string {
+  const n = [att.first_name, att.last_name].filter(Boolean).join(' ').trim();
+  return n || att.username;
+}
+
+function activityPhraseForType(
+  act: 'going' | 'hosting' | 'servicing',
+  plural: boolean,
+): string {
+  if (act === 'going') return plural ? 'are going' : 'is going';
+  if (act === 'hosting') return plural ? 'are hosting' : 'is hosting';
+  return plural ? 'are servicing this event' : 'is servicing this event';
+}
+
+function formatNetworkEventFriendSummary(ev: NetworkActivityEvent): string {
+  const goingNames: string[] = [];
+  const hostingNames: string[] = [];
+  const servicingNames: string[] = [];
+  const seenG = new Set<number>();
+  const seenH = new Set<number>();
+  const seenS = new Set<number>();
+
+  for (const att of ev.relevant_attendees) {
+    const label = attendeeDisplayName(att);
+    if (att.activities.includes('going') && !seenG.has(att.user_id)) {
+      seenG.add(att.user_id);
+      goingNames.push(label);
+    }
+    if (att.activities.includes('hosting') && !seenH.has(att.user_id)) {
+      seenH.add(att.user_id);
+      hostingNames.push(label);
+    }
+    if (att.activities.includes('servicing') && !seenS.has(att.user_id)) {
+      seenS.add(att.user_id);
+      servicingNames.push(label);
+    }
+  }
+
+  const parts: string[] = [];
+  if (goingNames.length) {
+    parts.push(
+      `${joinGoerNames(goingNames)} ${activityPhraseForType('going', goingNames.length > 1)}`,
+    );
+  }
+  if (hostingNames.length) {
+    parts.push(
+      `${joinGoerNames(hostingNames)} ${activityPhraseForType('hosting', hostingNames.length > 1)}`,
+    );
+  }
+  if (servicingNames.length) {
+    parts.push(
+      `${joinGoerNames(servicingNames)} ${activityPhraseForType('servicing', servicingNames.length > 1)}`,
+    );
+  }
+
+  if (!parts.length) return ev.title;
+  return `${parts.join('; ')}`;
+}
+
+function mapNetworkActivityGroups(
+  data: NetworkActivityResponse | undefined,
+): readonly NetworkActivityGroup[] {
+  const groups = data?.groups ?? [];
+  return groups.map((g) => {
+    const slugKey = g.category_slug;
+    const themeKey =
+      slugKey === 'other' ? OTHER_ACTIVITY_CATEGORY_KEY : slugKey;
+    return {
+      heading: g.category_name,
+      slugKey,
+      items: g.events.map((ev): ActivityItem => ({
+        initial: '?',
+        category_color: categoryColorForGroupTheme(themeKey),
+        text: formatNetworkEventFriendSummary(ev),
+        time: formatHappenedAtDistance(ev.start_time),
+        cta: 'See event',
+        eventCategorySlug: slugKey === 'other' ? null : slugKey,
+        event: {
+          icon: '🎫',
+          title: ev.title,
+          subtitle: ev.subtitle,
+          eventId: ev.event_id,
+        },
+        goerIds: ev.relevant_attendees.map((a) => a.user_id),
+        relevantAttendees: ev.relevant_attendees,
+      })),
+    };
+  });
 }
 
 export default function YourNetworkPage() {
@@ -357,6 +274,21 @@ export default function YourNetworkPage() {
   );
   const { data: networkPeopleRes } = useNetworkPeople(!!isAuthenticated && !!user);
   const { data: networkActivityRes } = useNetworkActivity(!!isAuthenticated && !!user);
+  const { data: friendshipsByOrbitRes } = useMyFriendshipsByOrbitCategory(
+    !!isAuthenticated && !!user,
+  );
+
+  const orbitFriendsByCategorySlug = useMemo(() => {
+    const m: Record<string, { userId: number; avatar: string | null }[]> = {};
+    for (const g of friendshipsByOrbitRes?.grouped_friendships ?? []) {
+      const slug = g.category.slug;
+      m[slug] = g.friendships.map((row) => ({
+        userId: row.friend.id,
+        avatar: row.friend.avatar,
+      }));
+    }
+    return m;
+  }, [friendshipsByOrbitRes]);
 
   useEffect(() => {
     if (typeof isAuthenticated === 'boolean' && !isAuthenticated) {
@@ -374,7 +306,7 @@ export default function YourNetworkPage() {
     isAuthenticated && typeof friendshipsPayload !== 'undefined';
 
   const displayBuddies: readonly BuddyCard[] = !isAuthenticated
-    ? buddies
+    ? []
     : buddyCount > 0
       ? accepted.map((friendship: FriendshipItem, index: number) => {
           const username = otherUsername(friendship, user?.username ?? '');
@@ -403,50 +335,12 @@ export default function YourNetworkPage() {
         })
       : [];
 
-  const displayActivity: readonly ActivityItem[] = !isAuthenticated
-    ? activity
-    : (networkActivityRes?.activity ?? []).map((item, index) => {
-        const name =
-          item.actor.first_name && item.actor.last_name
-            ? `${item.actor.first_name} ${item.actor.last_name}`.trim()
-            : item.actor.username;
-        const displayName = name || item.actor.username;
-        const verb =
-          item.kind === 'hosting'
-            ? 'is hosting'
-            : item.kind === 'going'
-              ? 'is going to'
-              : 'is interested in';
-        const text = `${displayName} ${verb} ${item.event_title}.`;
-        const time = (() => {
-          try {
-            return formatDistanceToNow(new Date(item.happened_at), {
-              addSuffix: true,
-            });
-          } catch {
-            return '';
-          }
-        })();
-        const icon =
-          item.kind === 'hosting' ? '🎶' : item.kind === 'going' ? '🎫' : '💡';
-
-        return {
-          initial: (displayName.charAt(0) || '?').toUpperCase(),
-          color: BUDDY_COLORS[index % BUDDY_COLORS.length],
-          text,
-          time,
-          cta: 'See event',
-          event: {
-            icon,
-            title: item.event_title,
-            subtitle: item.event_subtitle,
-            eventId: item.event_id,
-          },
-        };
-      });
+  const networkActivityGroups = !isAuthenticated
+    ? []
+    : mapNetworkActivityGroups(networkActivityRes);
 
   const displayPendingIncoming: BuddyRequestCard[] = !isAuthenticated
-    ? [...pendingRequests]
+    ? []
     : pendingIncoming.map((friendship: FriendshipItem, index: number) => {
         const username = otherUsername(friendship, user?.username ?? '');
         const name = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
@@ -457,7 +351,7 @@ export default function YourNetworkPage() {
           color: BUDDY_COLORS[index % BUDDY_COLORS.length],
           buddyType: 'Buddy',
           kind: 'incoming' as const,
-          subtitle: friendship.request_message || `${name} wants to connect.`,
+          subtitle: friendship.request_message || ``,
           badge: friendship.met_at_event_title
             ? `Met at ${friendship.met_at_event_title}`
             : 'Pending',
@@ -473,7 +367,7 @@ export default function YourNetworkPage() {
 
   const displaySuggestedList = isAuthenticated ? wentWith.slice(0, 4) : null;
   const displaySuggested: BuddyRequestCard[] = !isAuthenticated
-    ? [...possibleBuddyRequests]
+    ? []
     : displaySuggestedList
       ? displaySuggestedList.map((person: NetworkPerson, index: number) => ({
           name:
@@ -632,15 +526,16 @@ export default function YourNetworkPage() {
         request: {
           name,
           initial: username.charAt(0).toUpperCase() || '?',
-          color: BUDDY_COLORS[index % BUDDY_COLORS.length],
-          buddyType: 'Buddy',
+          color: getCategoryTheme({ slug: friendship.orbit_category_slug })?.accent,
+          buddyType:
+            'Wants to be ' + getCategoryTheme({ slug: friendship.orbit_category_slug })?.name + ' Buddy',
           kind: 'incoming',
-          subtitle: friendship.request_message || `${username} wants to connect.`,
+          subtitle: friendship.request_message || ``,
           badge: friendship.met_at_event_title
             ? `Met at ${friendship.met_at_event_title}`
             : 'Pending',
           primaryAction: 'Accept request',
-          secondaryAction: 'Not now',
+          secondaryAction: 'Not Now',
         },
       };
     },
@@ -659,9 +554,10 @@ export default function YourNetworkPage() {
           name,
           initial: username.charAt(0).toUpperCase() || '?',
           color: BUDDY_COLORS[(index + 1) % BUDDY_COLORS.length],
-          buddyType: 'Buddy',
+          buddyType:
+            'Potential ' + getCategoryTheme({ slug: friendship.orbit_category_slug })?.name + ' Buddy',
           kind: 'suggested',
-          subtitle: friendship.request_message || `Request sent to ${username}.`,
+          subtitle: friendship.request_message || ``,
           badge: friendship.met_at_event_title
             ? `Met at ${friendship.met_at_event_title}`
             : 'Pending',
@@ -739,8 +635,7 @@ export default function YourNetworkPage() {
       sx={{
         minHeight: '100vh',
         position: 'relative',
-        background:
-          'linear-gradient(180deg, #F6E8DE 0%, #F7EDE6 16%, #F6F0EA 34%, #FBF8F4 58%, #FBF8F4 100%)',
+          background: 'rgba(237, 232, 226, 0.9)',
         pb: { xs: 6, md: 8 },
         '&::before': {
           content: '""',
@@ -749,10 +644,7 @@ export default function YourNetworkPage() {
           left: '50%',
           width: '150vw',
           height: 900,
-          transform: 'translateX(-50%)',
-          background:
-            'radial-gradient(circle at 18% 18%, rgba(216, 90, 48, 0.72) 0%, rgba(216, 90, 48, 0.18) 26%, rgba(216, 90, 48, 0) 54%), radial-gradient(circle at 82% 12%, rgba(159, 108, 255, 0.54) 0%, rgba(159, 108, 255, 0.16) 24%, rgba(159, 108, 255, 0) 52%), linear-gradient(180deg, #C65436 0%, #DB7A4A 28%, rgba(244, 193, 171, 0.72) 58%, rgba(246, 240, 234, 0) 100%)',
-          pointerEvents: 'none',
+          transform: 'translateX(-50%)',pointerEvents: 'none',
           zIndex: 0,
         },
         '&::after': {
@@ -763,16 +655,16 @@ export default function YourNetworkPage() {
           width: 420,
           height: 420,
           borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)',
           pointerEvents: 'none',
           zIndex: 0,
         },
       }}
     >
       <Container
+        disableGutters
         maxWidth={false}
         sx={{
+          background: 'transparent',
           position: 'relative',
           zIndex: 1,
           maxWidth: 1300,
@@ -780,16 +672,6 @@ export default function YourNetworkPage() {
           pt: 8,
         }}
       >
-        <NetworkHeroSection
-          activeBuddies={activeBuddies}
-          buddyCount={buddyCount}
-          heroMoments={heroMoments}
-          isAuthenticated={Boolean(isAuthenticated)}
-          onPlanClick={() => navigate('/search')}
-          onSearchClick={() => navigate('/search')}
-          stats={heroStats}
-        />
-
         <Box sx={{ mt: { xs: 3, md: 4 } }}>
           <Box
             sx={{
@@ -839,9 +721,10 @@ export default function YourNetworkPage() {
           }}
         >
           <NetworkActivitySection
-            activityItems={displayActivity}
+            activityGroups={networkActivityGroups}
             isAuthenticated={Boolean(isAuthenticated)}
             onFindEvents={() => navigate('/search')}
+            orbitFriendsByCategorySlug={orbitFriendsByCategorySlug}
           />
 
           <SuggestedPeopleSection

@@ -1300,7 +1300,7 @@ export function usePlanningSections({
     if (!addons || addons.length === 0) return <Box />;
 
     return (
-      <Box sx={{ mx: 1.75, mt: 1.75 }}>
+      <Box sx={{ mx: 1, mt: 1 }}>
         <Typography
           sx={{
             fontSize: 10,
@@ -1317,7 +1317,7 @@ export function usePlanningSections({
         <Box sx={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: 1.25,
+          gap: 1,
         }}>
           {addons.map((addon, idx) => {
             const isExpanded = expandedAddon === addon.slug;
@@ -1331,7 +1331,6 @@ export function usePlanningSections({
                 sx={{
                   background: '#fff',
                   borderRadius: '14px',
-                  p: 1.75,
                   gridColumn: gridSpan,
                   border: '0.5px solid #F0EDE8',
                   cursor: 'pointer',
@@ -1347,20 +1346,23 @@ export function usePlanningSections({
                   })
                 }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.75 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   
                 <Typography
                   sx={{
                     display: 'inline-flex',
                     fontFamily: 'Syne, sans-serif',
-                    fontSize: 12.5,
+                    fontSize: 11,
                     fontWeight: 700,
-                    color: '#1A1A1A',
-                    mb: 0.35,
+                    color: 'rgb(56, 56, 56)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     lineHeight: 1.3,
+                    px: 1.75,
+                    pt: 1,
                   }}
                 >
-                  <Typography sx={{ fontSize: 24, pr: 1 }}>
+                  <Typography sx={{ fontSize: 16, pr: 1 }}>
                     {addon.icon}</Typography>
 
                   {addon.title}
@@ -1372,6 +1374,8 @@ export function usePlanningSections({
                       disabled={isSaving[addon.slug]}
                       sx={{
                         minWidth: 0,
+                        mr: 1,
+                        mt: 1,
                         p: 0.5,
                         borderRadius: '50%',
                         backgroundColor: 'rgba(0,0,0,0.04)',
@@ -1391,6 +1395,8 @@ export function usePlanningSections({
                 {!isExpanded && (
                   <Typography
                     sx={{
+                      px: 1.75,
+                      mb: 1,
                       fontSize: 11,
                       color: localDescriptions[addon.slug] ? '#D85A30' : '#888780',
                       lineHeight: 1.35,
@@ -1405,8 +1411,8 @@ export function usePlanningSections({
                   </Typography>
                 )}
                 {isExpanded && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography sx={{ fontSize: 11, color: '#888780', lineHeight: 1.35, mb: 1.5 }}>
+                  <Box sx={{ m: 1 }}>
+                    <Typography sx={{ fontSize: 11, color: 'rgba(0,0,0,0.4)', lineHeight: 1.35, mb: 1.5 }}>
                       {addon.description}
                     </Typography>
                     <Box onClick={(e) => e.stopPropagation()}>

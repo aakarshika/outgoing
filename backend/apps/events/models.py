@@ -699,6 +699,17 @@ class EventPrivateConversation(models.Model):
         return f"{self.participant1.username} <-> {self.participant2.username}"
 
 
+def resolve_orbit_category_for_event(event: "Event") -> EventCategory:
+    """Category used to scope buddy friendships for an event; shared fallback when uncategorized."""
+    if event.category_id:
+        return event.category
+    category, _ = EventCategory.objects.get_or_create(
+        slug="orbit-unknown",
+        defaults={"name": "Orbit Unknown", "icon": "Orbit"},
+    )
+    return category
+
+
 class Friendship(models.Model):
     """Friendship or friendship request between two users."""
 
@@ -742,6 +753,11 @@ class Friendship(models.Model):
         blank=True,
         related_name="friendships_met_here",
     )
+    orbit_category = models.ForeignKey(
+        EventCategory,
+        on_delete=models.PROTECT,
+        related_name="friendships",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -749,7 +765,7 @@ class Friendship(models.Model):
         ordering = ["-updated_at"]
         constraints = [
             models.UniqueConstraint(
-                fields=["user1", "user2"],
+                fields=["user1", "user2", "orbit_category"],
                 name="unique_friendship_pair",
             ),
             models.CheckConstraint(
@@ -761,6 +777,8 @@ class Friendship(models.Model):
     def save(self, *args, **kwargs):
         if self.user1_id and self.user2_id and self.user1_id > self.user2_id:
             self.user1_id, self.user2_id = self.user2_id, self.user1_id
+        if self.met_at_event_id and self.met_at_event and self.met_at_event.category_id:
+            self.orbit_category_id = self.met_at_event.category_id
         super().save(*args, **kwargs)
 
     def __str__(self):

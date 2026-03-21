@@ -44,6 +44,8 @@ HELPERS_DIR = HERE / "seed-helper-data"
 EVENT_CATEGORIES_PATH = HELPERS_DIR / "event_categories.json"
 LIVE_EVENT_RATIO = 0.2
 LIVE_EVENT_USED_TICKET_RATIO = 0.9
+# Fraction of co-attendee pairs that become seeded friendships (rest skipped).
+FRIENDSHIP_PAIR_KEEP_RATIO = 0.1
 
 
 def _filename_for_image_url(url: str, fallback_stem: str):
@@ -438,8 +440,20 @@ class Command(BaseCommand):
                         if pair in seen_pairs:
                             continue
                         seen_pairs.add(pair)
+                        if rng.random() >= FRIENDSHIP_PAIR_KEEP_RATIO:
+                            continue
                         user1, user2 = (a, b) if a.id < b.id else (b, a)
-                        if Friendship.objects.filter(user1=user1, user2=user2).exists():
+                        orbit_category = event.category
+                        if orbit_category is None:
+                            orbit_category, _ = EventCategory.objects.get_or_create(
+                                slug="orbit-unknown",
+                                defaults={"name": "Orbit Unknown", "icon": "Orbit"},
+                            )
+                        if Friendship.objects.filter(
+                            user1=user1,
+                            user2=user2,
+                            orbit_category=orbit_category,
+                        ).exists():
                             continue
                         Friendship.objects.create(
                             user1=user1,
@@ -448,6 +462,7 @@ class Command(BaseCommand):
                             status=Friendship.STATUS_ACCEPTED,
                             accepted_at=now,
                             met_at_event=event,
+                            orbit_category=orbit_category,
                         )
                         created_count += 1
             self.stdout.write(f"  Created {created_count} friendships.")

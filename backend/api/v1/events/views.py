@@ -1,6 +1,7 @@
 """Views for event endpoints."""
 
 import json
+from collections import defaultdict
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -29,12 +30,16 @@ from apps.events.models import (
     EventPrivateMessage,
     Friendship,
     EventAddon,
+    resolve_orbit_category_for_event,
 )
 from apps.needs.models import EventNeed
 from apps.tickets.models import Ticket
 from core.responses import error_response, success_response
+from core.utils import resolve_media_url
 
 from .serializers import (
+    ConversationInboxGroupSerializer,
+    ConversationInboxPrivateSerializer,
     EventAttendeeSerializer,
     EventCategorySerializer,
     EventCreateSerializer,
@@ -1090,6 +1095,88 @@ class EventPrivateConversationListView(APIView):
         )
 
 
+class ConversationInboxListView(APIView):
+    """
+    Unified conversation list: only threads with at least one message,
+    ordered by most recent message (group, event-scoped private, user-user).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        group_chats = (
+            Event.objects.filter(host_vendor_messages__isnull=False)
+            .filter(
+                Q(host=user)
+                | Q(needs__applications__vendor=user)
+                | Q(tickets__goer=user, tickets__status__in=["active", "used"])
+            )
+            .annotate(latest_message_at=Max("host_vendor_messages__created_at"))
+            .annotate(
+                latest_message_text=Subquery(
+                    EventHostVendorMessage.objects.filter(event=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("text")[:1]
+                )
+            )
+            .annotate(
+                latest_message_sender_username=Subquery(
+                    EventHostVendorMessage.objects.filter(event=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("sender__username")[:1]
+                )
+            )
+            .distinct()
+        )
+
+        private_conversations = (
+            EventPrivateConversation.objects.filter(
+                Q(participant1=user) | Q(participant2=user)
+            )
+            .annotate(last_message_at=Max("messages__created_at"))
+            .filter(last_message_at__isnull=False)
+            .annotate(
+                latest_message_text=Subquery(
+                    EventPrivateMessage.objects.filter(conversation=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("text")[:1]
+                )
+            )
+            .annotate(
+                latest_message_sender_username=Subquery(
+                    EventPrivateMessage.objects.filter(conversation=OuterRef("pk"))
+                    .order_by("-created_at")
+                    .values("sender__username")[:1]
+                )
+            )
+            .select_related(
+                "event",
+                "participant1",
+                "participant1__profile",
+                "participant2",
+                "participant2__profile",
+            )
+        )
+
+        serializer_context = {"request": request}
+        group_payload = ConversationInboxGroupSerializer(
+            group_chats, many=True, context=serializer_context
+        ).data
+        private_payload = ConversationInboxPrivateSerializer(
+            private_conversations, many=True, context=serializer_context
+        ).data
+
+        combined = list(group_payload) + list(private_payload)
+        combined.sort(
+            key=lambda row: row.get("last_message_at") or "",
+            reverse=True,
+        )
+
+        return success_response(data={"conversations": combined})
+
+
 class EventPrivateConversationMessageListCreateView(APIView):
     """List or create messages within a private conversation."""
 
@@ -1203,7 +1290,10 @@ class EventFriendshipRequestCreateView(APIView):
             )
 
         user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
-        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+        orbit_category = resolve_orbit_category_for_event(event)
+        friendship = Friendship.objects.filter(
+            user1=user1, user2=user2, orbit_category=orbit_category
+        ).first()
 
         if friendship is None:
             return success_response(data=None)
@@ -1240,7 +1330,10 @@ class EventFriendshipRequestCreateView(APIView):
             return error_response(message="Validation Error", errors=serializer.errors)
 
         user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
-        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+        orbit_category = resolve_orbit_category_for_event(event)
+        friendship = Friendship.objects.filter(
+            user1=user1, user2=user2, orbit_category=orbit_category
+        ).first()
 
         if friendship and friendship.status == Friendship.STATUS_ACCEPTED:
             return error_response(message="You are already buddies", status=409)
@@ -1255,6 +1348,7 @@ class EventFriendshipRequestCreateView(APIView):
             friendship.status = Friendship.STATUS_PENDING
             friendship.accepted_at = None
             friendship.met_at_event = event
+            friendship.orbit_category = orbit_category
             friendship.save(
                 update_fields=[
                     "request_sender",
@@ -1262,6 +1356,7 @@ class EventFriendshipRequestCreateView(APIView):
                     "status",
                     "accepted_at",
                     "met_at_event",
+                    "orbit_category",
                     "updated_at",
                 ]
             )
@@ -1273,6 +1368,7 @@ class EventFriendshipRequestCreateView(APIView):
                 request_message=request_message,
                 status=Friendship.STATUS_PENDING,
                 met_at_event=event,
+                orbit_category=orbit_category,
             )
 
         return success_response(
@@ -1304,7 +1400,10 @@ class EventFriendshipRequestCreateView(APIView):
             return error_response(message="Validation Error", errors=serializer.errors)
 
         user1, user2 = sorted([request.user, target_user], key=lambda user: user.id)
-        friendship = Friendship.objects.filter(user1=user1, user2=user2).first()
+        orbit_category = resolve_orbit_category_for_event(event)
+        friendship = Friendship.objects.filter(
+            user1=user1, user2=user2, orbit_category=orbit_category
+        ).first()
         if friendship is None:
             return error_response(message="Buddy request not found", status=404)
 
@@ -1383,6 +1482,90 @@ class MyFriendshipsView(APIView):
                 "accepted": accepted,
                 "pending_incoming": pending_incoming,
                 "pending_outgoing": pending_outgoing,
+            }
+        )
+
+
+def _grouped_friendships_by_orbit_for_user(user, request):
+    """
+    Accepted friendships for `user`, grouped by Friendship.orbit_category (orbit).
+    """
+    friendships = Friendship.objects.filter(
+        Q(user1=user) | Q(user2=user),
+        status=Friendship.STATUS_ACCEPTED,
+    ).select_related(
+        "user1",
+        "user1__profile",
+        "user2",
+        "user2__profile",
+        "orbit_category",
+        "met_at_event",
+    )
+
+    grouped = {}
+    for friendship in friendships:
+        other_user = friendship.user2 if friendship.user1_id == user.id else friendship.user1
+        met_event = friendship.met_at_event
+        category = friendship.orbit_category
+
+        category_key = category.slug if category else "unknown"
+        if category_key not in grouped:
+            grouped[category_key] = {
+                "category": {
+                    "id": category.id if category else None,
+                    "name": category.name if category else "Unknown",
+                    "slug": category.slug if category else "unknown",
+                },
+                "friendships": [],
+            }
+
+        grouped[category_key]["friendships"].append(
+            {
+                "friendship_id": friendship.id,
+                "friend": _network_person(other_user, request),
+                "met_at_event": {
+                    "id": met_event.id if met_event else None,
+                    "title": met_event.title if met_event else None,
+                },
+                "status": friendship.status,
+                "accepted_at": friendship.accepted_at,
+            }
+        )
+
+    return list(grouped.values())
+
+
+class UserFriendshipsByCategoryView(APIView):
+    """List a user's accepted friendships grouped by met-at event category."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        User = get_user_model()
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return error_response(message="User not found", status=404)
+
+        return success_response(
+            data={
+                "user_id": user.id,
+                "grouped_friendships": _grouped_friendships_by_orbit_for_user(user, request),
+            }
+        )
+
+
+class MyFriendshipsByOrbitCategoryView(APIView):
+    """List the current user's accepted friendships grouped by orbit (EventCategory)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return success_response(
+            data={
+                "grouped_friendships": _grouped_friendships_by_orbit_for_user(
+                    request.user, request
+                ),
             }
         )
 
@@ -1512,16 +1695,6 @@ class MyNetworkPeopleView(APIView):
         )
 
 
-def _network_activity_actor(user):
-    """Minimal actor dict for network activity."""
-    return {
-        "id": user.id,
-        "username": user.username,
-        "first_name": getattr(user, "first_name", "") or "",
-        "last_name": getattr(user, "last_name", "") or "",
-    }
-
-
 def _event_subtitle(event):
     """Build a short event subtitle: e.g. 'Sat · 8:00 PM · Indiranagar'."""
     start = event.start_time
@@ -1532,128 +1705,187 @@ def _event_subtitle(event):
     return f"{time_str} · {location}"
 
 
+def _primary_friend_activity(activities):
+    """Prefer hosting > servicing > going for a single primary label."""
+    for p in ("hosting", "servicing", "going"):
+        if p in activities:
+            return p
+    return activities[0] if activities else None
+
+
+def _friend_attendee_dict(user_obj, request, activities):
+    profile = getattr(user_obj, "profile", None)
+    avatar = (
+        resolve_media_url(profile.avatar, request)
+        if profile and profile.avatar
+        else None
+    )
+    primary = _primary_friend_activity(activities)
+    return {
+        "user_id": user_obj.id,
+        "username": user_obj.username,
+        "first_name": getattr(user_obj, "first_name", "") or "",
+        "last_name": getattr(user_obj, "last_name", "") or "",
+        "avatar": avatar,
+        "role": "friend",
+        "activities": activities,
+        "primary_activity": primary,
+    }
+
+
+def _network_activity_groups_for_user(request, user, max_events=50):
+    """
+    Events where accepted friends are going, hosting, or servicing — grouped by event.category.
+
+    An event is included only if at least one active friend shares a friendship orbit
+    matching that event's category. All friends active on the event are listed in
+    relevant_attendees (any orbit).
+    """
+    friend_ids = set()
+    friend_orbit_slugs = defaultdict(set)
+    for f in Friendship.objects.filter(
+        (Q(user1=user) | Q(user2=user)),
+        status=Friendship.STATUS_ACCEPTED,
+    ).select_related("orbit_category"):
+        other_id = f.user2_id if f.user1_id == user.id else f.user1_id
+        friend_ids.add(other_id)
+        if f.orbit_category_id and f.orbit_category and f.orbit_category.slug:
+            friend_orbit_slugs[other_id].add(f.orbit_category.slug)
+
+    if not friend_ids:
+        return []
+
+    going = defaultdict(set)
+    for row in Ticket.objects.filter(
+        goer_id__in=friend_ids,
+        status__in=["active", "used"],
+        event__status="published",
+    ).values("event_id", "goer_id"):
+        going[row["event_id"]].add(row["goer_id"])
+
+    hosting = defaultdict(set)
+    for row in Event.objects.filter(
+        host_id__in=friend_ids,
+        status="published",
+    ).values("id", "host_id"):
+        hosting[row["id"]].add(row["host_id"])
+
+    servicing = defaultdict(set)
+    need_rows = list(
+        EventNeed.objects.filter(assigned_vendor_id__in=friend_ids).values(
+            "event_id", "assigned_vendor_id"
+        )
+    )
+    need_event_ids = {r["event_id"] for r in need_rows}
+    published_need_events = set(
+        Event.objects.filter(id__in=need_event_ids, status="published").values_list(
+            "id", flat=True
+        )
+    )
+    for r in need_rows:
+        if r["event_id"] in published_need_events:
+            servicing[r["event_id"]].add(r["assigned_vendor_id"])
+
+    all_event_ids = set(going.keys()) | set(hosting.keys()) | set(servicing.keys())
+    if not all_event_ids:
+        return []
+
+    events = (
+        Event.objects.filter(id__in=all_event_ids, status="published")
+        .select_related("category", "host")
+        .order_by("-start_time")
+    )
+
+    User = get_user_model()
+    users_by_id = {
+        u.id: u
+        for u in User.objects.filter(id__in=friend_ids).select_related("profile")
+    }
+
+    event_payloads = []
+    for event in events:
+        if len(event_payloads) >= max_events:
+            break
+        eid = event.id
+        active = (going[eid] | hosting[eid] | servicing[eid]) & friend_ids
+        if not active:
+            continue
+
+        cat_slug = event.category.slug if event.category_id else None
+        if cat_slug:
+            gate_ok = any(cat_slug in friend_orbit_slugs[fid] for fid in active)
+        else:
+            gate_ok = bool(active)
+
+        if not gate_ok:
+            continue
+
+        attendees = []
+        for fid in sorted(active):
+            fu = users_by_id.get(fid)
+            if not fu:
+                continue
+            acts = []
+            if fid in hosting[eid]:
+                acts.append("hosting")
+            if fid in servicing[eid]:
+                acts.append("servicing")
+            if fid in going[eid]:
+                acts.append("going")
+            attendees.append(_friend_attendee_dict(fu, request, acts))
+
+        start = event.start_time
+        if timezone.is_naive(start):
+            start = timezone.make_aware(start)
+
+        slug = cat_slug or "other"
+        cat_name = event.category.name if event.category_id else "Other"
+        event_payloads.append(
+            (
+                slug,
+                cat_name,
+                {
+                    "event_id": event.id,
+                    "title": event.title,
+                    "subtitle": _event_subtitle(event),
+                    "start_time": start.isoformat(),
+                    "relevant_attendees": attendees,
+                },
+            )
+        )
+
+    event_payloads.sort(key=lambda x: x[2]["start_time"], reverse=True)
+
+    groups_by_slug = {}
+    slug_order = []
+    for slug, cat_name, ev_payload in event_payloads:
+        if slug not in groups_by_slug:
+            groups_by_slug[slug] = {
+                "category_slug": slug,
+                "category_name": cat_name,
+                "events": [],
+            }
+            slug_order.append(slug)
+        groups_by_slug[slug]["events"].append(ev_payload)
+
+    ordered = sorted(slug_order, key=lambda s: (s == "other", s))
+    return [groups_by_slug[s] for s in ordered]
+
+
 class MyNetworkActivityView(APIView):
     """
-    List recent activity from the current user's network for 'The network is not static':
-    - hosting: someone in my network is hosting an event (published)
-    - going: someone in my network has a ticket (active or used) to an event
-    - interested: someone in my network marked interest in an event
+    Friend-centric network activity: published events grouped by event.category.
+
+    Each event lists accepted friends who are going, hosting, or servicing.
+    Events appear only if at least one such friend shares an orbit (friendship
+    orbit_category) matching the event's category.
     """
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        my_used_event_ids = set(
-            Ticket.objects.filter(goer=user, status="used")
-            .values_list("event_id", flat=True)
-            .distinct()
-        )
-        friend_ids = set()
-        for f in Friendship.objects.filter(
-            (Q(user1=user) | Q(user2=user)),
-            status=Friendship.STATUS_ACCEPTED,
-        ):
-            other_id = f.user2_id if f.user1_id == user.id else f.user1_id
-            friend_ids.add(other_id)
-        went_with_ids = set()
-        if my_used_event_ids:
-            went_with_ids = set(
-                Ticket.objects.filter(
-                    event_id__in=my_used_event_ids,
-                    status="used",
-                )
-                .exclude(goer=user)
-                .exclude(goer_id__in=friend_ids)
-                .values_list("goer_id", flat=True)
-                .distinct()
-            )
-        hosts_met_ids = set()
-        vendors_met_ids = set()
-        if my_used_event_ids:
-            hosts_met_ids = set(
-                Event.objects.filter(id__in=my_used_event_ids)
-                .exclude(host=user)
-                .values_list("host_id", flat=True)
-                .distinct()
-            )
-            vendors_met_ids = set(
-                EventNeed.objects.filter(
-                    event_id__in=my_used_event_ids,
-                    assigned_vendor__isnull=False,
-                )
-                .values_list("assigned_vendor_id", flat=True)
-                .distinct()
-            )
-        network_user_ids = friend_ids | went_with_ids | hosts_met_ids | vendors_met_ids
-        network_user_ids.discard(user.id)
-
-        activity_items = []
-        limit = 20
-
-        # Hosting: events hosted by someone in network (published), ordered by created_at
-        hosting_events = (
-            Event.objects.filter(
-                host_id__in=network_user_ids,
-                status="published",
-            )
-            .select_related("host")
-            .order_by("-created_at")[:limit]
-        )
-        for event in hosting_events:
-            activity_items.append({
-                "kind": "hosting",
-                "actor": _network_activity_actor(event.host),
-                "event_id": event.id,
-                "event_title": event.title,
-                "event_subtitle": _event_subtitle(event),
-                "happened_at": event.created_at.isoformat(),
-            })
-
-        # Going: tickets (active or used) where goer is in network, event published
-        going_tickets = (
-            Ticket.objects.filter(
-                goer_id__in=network_user_ids,
-                status__in=["active", "used"],
-            )
-            .select_related("goer", "event")
-            .filter(event__status="published")
-            .order_by("-purchased_at")[:limit * 2]
-        )
-        for tick in going_tickets:
-            when = tick.used_at or tick.purchased_at
-            if when:
-                activity_items.append({
-                    "kind": "going",
-                    "actor": _network_activity_actor(tick.goer),
-                    "event_id": tick.event_id,
-                    "event_title": tick.event.title,
-                    "event_subtitle": _event_subtitle(tick.event),
-                    "happened_at": when.isoformat() if hasattr(when, "isoformat") else str(when),
-                })
-
-        # Interested: EventInterest where user in network
-        interests = (
-            EventInterest.objects.filter(user_id__in=network_user_ids)
-            .select_related("user", "event")
-            .order_by("-created_at")[:limit]
-        )
-        for interest in interests:
-            if interest.event.status != "published":
-                continue
-            activity_items.append({
-                "kind": "interested",
-                "actor": _network_activity_actor(interest.user),
-                "event_id": interest.event_id,
-                "event_title": interest.event.title,
-                "event_subtitle": _event_subtitle(interest.event),
-                "happened_at": interest.created_at.isoformat(),
-            })
-
-        activity_items.sort(key=lambda x: x["happened_at"], reverse=True)
-        activity_items = activity_items[:limit]
-
-        return success_response(data={"activity": activity_items})
+        groups = _network_activity_groups_for_user(request, request.user)
+        return success_response(data={"groups": groups})
 
 class EventAddonView(APIView):
     """Create or update an add-on description for an event."""

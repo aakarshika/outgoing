@@ -46,6 +46,36 @@ function getRoleStyle(kind: 'hosting' | 'saved' | 'attending' | 'vendor' | 'unkn
       return { label: 'Going', background: 'transparent', color: 'transparent' };
   }
 }
+
+function getCategoryIconGlyph(icon?: string | null) {
+  switch (icon) {
+    case 'palette':
+      return '🎨';
+    case 'music':
+      return '♪';
+    case 'utensils':
+      return '🍴';
+    case 'users':
+      return '👥';
+    case 'laugh':
+      return '😂';
+    case 'heart-handshake':
+      return '♥';
+    case 'party-popper':
+      return '🎉';
+    case 'mountain':
+      return '⛰';
+    case 'moon':
+      return '🌙';
+    case 'dumbbell':
+      return '🏋';
+    case 'book-open':
+      return '📖';
+    case 'cpu':
+    default:
+      return '⚙';
+  }
+}
 export function MyHomeUpcomingSection({
   hasUpcomingEvents,
   upcomingEvents,
@@ -82,11 +112,7 @@ export function MyHomeUpcomingSection({
     <Box
       sx={{
         px: { xs: 2, sm: 3, md: 4 },
-        py: { xs: 3, md: 4 },
-        borderBottom: '1px solid rgba(143, 105, 66, 0.10)',
-        background:
-          'linear-gradient(135deg, rgba(216,90,48,0.12) 0%, rgba(250,238,218,0.2) 60%, rgba(255,255,255,0.12) 100%)',
-      }}
+        py: { xs: 3, md: 4 },}}
     >
       <Stack spacing={3}>
         <Box
@@ -97,6 +123,15 @@ export function MyHomeUpcomingSection({
           }}
         >
           {/* first of the upcoming events. */}
+          <Box
+          sx={{
+            
+            position: 'relative',
+            borderRadius: '28px',
+            color: '#fff',
+            boxShadow: `0 24px 52px ${categoryTheme.tape}`,
+          }}
+          >
 
           <Box
             onClick={() => navigate('/events-new/' + nextEvent.id)}
@@ -136,9 +171,15 @@ export function MyHomeUpcomingSection({
                 sx={{
                   position: 'absolute',
                   inset: 0,
-                  backgroundColor: categoryTheme.bg,
-                  backgroundImage: categoryTheme.pattern,
-                  backgroundSize: '20px 20px',
+                  background: `linear-gradient(145deg, ${categoryTheme.bg} 0%, #F7F2EA 62%, #EEE5D8 100%)`,
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: categoryTheme.pattern,
+                    backgroundSize: '20px 20px',
+                    opacity: 0.65,
+                  },
                 }}
               />
             )}
@@ -147,10 +188,43 @@ export function MyHomeUpcomingSection({
               sx={{
                 position: 'absolute',
                 inset: 0,
-                background:
-                  'linear-gradient(135deg, rgba(24, 24, 24, 0.42) 0%, rgba(24, 24, 24, 0.58) 100%)',
+                background: nextEvent.cover_image
+                  ? 'linear-gradient(135deg, rgba(24, 24, 24, 0.42) 0%, rgba(24, 24, 24, 0.58) 100%)'
+                  : 'linear-gradient(135deg, rgba(51, 39, 26, 0.34) 0%, rgba(33, 26, 18, 0.1) 100%)',
               }}
             />
+
+            {!nextEvent.cover_image ? (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  right: { xs: 14, sm: 20 },
+                  top: { xs: 14, sm: 20 },
+                  width: { xs: 52, sm: 58 },
+                  height: { xs: 52, sm: 58 },
+                  borderRadius: '16px',
+                  zIndex: 5,
+                  display: 'grid',
+                  placeItems: 'center',
+                  border: '1px solid rgba(255,255,255,0.35)',
+                  background: 'rgba(255,255,255,0.22)',
+                  backdropFilter: 'blur(4px)',
+                  boxShadow: '0 8px 18px rgba(0,0,0,0.18)',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: { xs: 26, sm: 30 },
+                    fontWeight: 800,
+                    color: '#fff',
+                    lineHeight: 1,
+                    textShadow: '0 1px 4px rgba(0,0,0,0.28)',
+                  }}
+                >
+                  {getCategoryIconGlyph(categoryTheme?.icon)}
+                </Typography>
+              </Box>
+            ) : null}
 
             <Chip
               label={
@@ -162,7 +236,7 @@ export function MyHomeUpcomingSection({
                 bottom: { xs: 16, sm: 20 },
                 zIndex: 5,
                 width: 'fit-content',
-                bgcolor: 'rgba(255,255,255,0.20)',
+                bgcolor: nextEvent.cover_image ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.24)',
                 color: '#fff',
                 fontWeight: 700,
                 letterSpacing: '0.03em',
@@ -177,6 +251,38 @@ export function MyHomeUpcomingSection({
                 justifyContent="space-between"
                 alignItems={{ xs: 'flex-start', sm: 'flex-end' }}
               >
+              <Box
+                sx={{
+                  minWidth: 118,
+                  alignSelf: { xs: 'stretch', sm: 'auto' },
+                  p: 1.6,
+                  borderRadius: '22px',
+                  background: nextEvent.cover_image ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.24)',
+                  border: `1px solid ${categoryTheme.tape}`,
+                  textAlign: { xs: 'left', sm: 'right' },
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: 'Syne, sans-serif',
+                    fontSize: 40,
+                    fontWeight: 800,
+                    lineHeight: 1,
+                  }}
+                >
+                  {nextEventCountdown.countdown}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.76)',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {nextEventCountdown.countdownLabel}
+                </Typography>
+              </Box>
                 <Box>
                   <Typography
                     sx={{
@@ -206,40 +312,28 @@ export function MyHomeUpcomingSection({
                     </Typography>
                   </Stack>
                 </Box>
-                <Box
-                  sx={{
-                    minWidth: 118,
-                    alignSelf: { xs: 'stretch', sm: 'auto' },
-                    p: 1.6,
-                    borderRadius: '22px',
-                    background: 'rgba(255,255,255,0.18)',
-                    border: `1px solid ${categoryTheme.tape}`,
-                    textAlign: { xs: 'left', sm: 'right' },
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: 'Syne, sans-serif',
-                      fontSize: 40,
-                      fontWeight: 800,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {nextEventCountdown.countdown}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      color: 'rgba(255,255,255,0.76)',
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {nextEventCountdown.countdownLabel}
-                  </Typography>
-                </Box>
               </Stack>
             </Stack>
+          </Box>
+
+          <Chip
+                    label={nextEvent.pill.label}
+                    sx={{
+                      position: 'absolute',
+                      left: -2,
+                      bottom: -3,
+                      zIndex: 12,
+                      color: nextEvent.i_am_host ? '#fff' : nextEvent.user_is_vendor ? '#fff' : nextEvent.pill?.color,
+                      lineHeight: 1,
+                      bgcolor: nextEvent.i_am_host ? '#8b5cf6' : nextEvent.user_is_vendor ? '#0eacac' : nextEvent.pill.background,
+                      p: 0,
+                      borderRadius: '2px',
+                      fontFamily: 'serif',
+                      fontSize: '0.7rem',
+                      m: 0,
+                      padding: 0,
+                    }}
+                  />  
           </Box>
           {/* rest of the upcoming events. */}
           <Stack spacing={1.4}>
@@ -247,17 +341,27 @@ export function MyHomeUpcomingSection({
               const eventTheme = getCategoryTheme(event.category ?? undefined);
 
               return (
-                <Box
+                <Box 
                   key={event.id}
                   component={Link}
-                  to={`/events-new/${event.id}`}
+                  to={`/events-new/${event.id}`} 
+                  sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}>
+                <Box
                   sx={{
                     position: 'relative',
                     display: 'flex',
-                    alignItems: 'center',
+                    width: '100%',
+                    
                     gap: 1.4,
                     p: 1.2,
-                    pr: 1.35,
+                  pr: 1.35,
                     borderRadius: '22px',
                     background: 'rgba(255,255,255,0.92)',
                     border: `1px solid ${eventTheme.tape}`,
@@ -311,31 +415,35 @@ export function MyHomeUpcomingSection({
                       sx={{
                         position: 'absolute',
                         inset: 0,
-                        background:
-                          'linear-gradient(180deg, rgba(24, 24, 24, 0.18) 0%, rgba(24, 24, 24, 0.42) 100%)',
+                        background: event.cover_image
+                          ? 'linear-gradient(180deg, rgba(24, 24, 24, 0.18) 0%, rgba(24, 24, 24, 0.42) 100%)'
+                          : 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.24) 100%)',
                       }}
                     />
+                    {!event.cover_image ? (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'grid',
+                          placeItems: 'center',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: 28,
+                            fontWeight: 800,
+                            lineHeight: 1,
+                            color: 'rgba(43,33,24,0.62)',
+                          }}
+                        >
+                          {getCategoryIconGlyph(eventTheme?.icon)}
+                        </Typography>
+                      </Box>
+                    ) : null}
 
                   </Box>
 
-                  <Chip
-                    label={event.pill.label}
-                    sx={{
-                      position: 'absolute',
-                      left: -2,
-                      bottom: -3,
-                      zIndex: 2,
-                      color: event.i_am_host ? '#fff' : event.user_is_vendor ? '#fff' : event.pill?.color,
-                      lineHeight: 1,
-                      bgcolor: event.i_am_host ? '#8b5cf6' : event.user_is_vendor ? '#0eacac' : event.pill.background,
-                      p: 0,
-                      borderRadius: '2px',
-                      fontFamily: 'serif',
-                      fontSize: '0.7rem',
-                      m: 0,
-                      padding: 0,
-                    }}
-                  />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack
                       direction="row"
@@ -414,6 +522,25 @@ export function MyHomeUpcomingSection({
                       </Typography>
                     </Box>
                   </Box>
+                </Box>
+                  <Chip
+                    label={event.pill.label}
+                    sx={{
+                      position: 'absolute',
+                      left: -2,
+                      bottom: -3,
+                      zIndex: 12,
+                      color: event.i_am_host ? '#fff' : event.user_is_vendor ? '#fff' : event.pill?.color,
+                      lineHeight: 1,
+                      bgcolor: event.i_am_host ? '#8b5cf6' : event.user_is_vendor ? '#0eacac' : event.pill.background,
+                      p: 0,
+                      borderRadius: '2px',
+                      fontFamily: 'serif',
+                      fontSize: '0.7rem',
+                      m: 0,
+                      padding: 0,
+                    }}
+                  />
                 </Box>
               );
             })}

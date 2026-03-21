@@ -122,7 +122,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             pb: 2,
           }}
         >
-          <NormalHostStripModule event={event} isHost={isHost} />
 
           <NormalDivider />
 
@@ -131,12 +130,12 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           <NormalChipsModule event={event} />
           <NormalAddonsModule event={event} />
 
-          <NormalCalendarMapModule event={event} />
-          <NormalDivider />
           <NormalStatusModule event={event} isHost={isHost} />
 
           <NormalGoersModule event={event} isEventOver={isEventOver} />
 
+          <NormalCalendarMapModule event={event} />
+          <NormalDivider />
 {/* 
           <NormalSaveToggleModule
             event={event}

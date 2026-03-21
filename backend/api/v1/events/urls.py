@@ -10,6 +10,8 @@ from .views import (
     EventAddonView,
     EventFriendshipRequestCreateView,
     MyFriendshipsView,
+    MyFriendshipsByOrbitCategoryView,
+    UserFriendshipsByCategoryView,
     MyNetworkActivityView,
     MyNetworkPeopleView,
     EventHighlightListCreateView,
@@ -29,6 +31,7 @@ from .views import (
     MyEventsView,
     MyInterestedEventsView,
     EventHostVendorMessageListCreateView,
+    ConversationInboxListView,
     EventPrivateConversationGetOrCreateView,
     EventPrivateConversationListView,
     EventPrivateConversationMessageListCreateView,
@@ -44,6 +47,16 @@ urlpatterns = [
         "my/interested/", MyInterestedEventsView.as_view(), name="my_interested_events"
     ),
     path("friendships/", MyFriendshipsView.as_view(), name="my_friendships"),
+    path(
+        "friendships/by-orbit-category/",
+        MyFriendshipsByOrbitCategoryView.as_view(),
+        name="my_friendships_by_orbit_category",
+    ),
+    path(
+        "friendships/by-user/<int:user_id>/by-category/",
+        UserFriendshipsByCategoryView.as_view(),
+        name="user_friendships_by_category",
+    ),
     path("network/people/", MyNetworkPeopleView.as_view(), name="my_network_people"),
     path("network/activity/", MyNetworkActivityView.as_view(), name="my_network_activity"),
     path(
@@ -116,6 +129,11 @@ urlpatterns = [
         "conversations/",
         EventPrivateConversationListView.as_view(),
         name="private_conversation_list",
+    ),
+    path(
+        "conversations/inbox/",
+        ConversationInboxListView.as_view(),
+        name="conversation_inbox_list",
     ),
     path(
         "conversations/<int:conversation_id>/messages/",

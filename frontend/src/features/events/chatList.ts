@@ -2,7 +2,11 @@ import { formatDistanceToNow } from 'date-fns';
 
 import type { EventOverviewRow } from '@/pages/alerts/utils';
 
-import type { AllChatsListResponse, FriendshipItem } from './api';
+import type {
+  AllChatsListResponse,
+  ConversationInboxItem,
+  FriendshipItem,
+} from './api';
 
 export type AllChatMode = 'group' | 'private' | 'direct';
 export type AllChatSectionKey = 'management' | 'network';
@@ -26,6 +30,7 @@ export interface AllChatEntry {
   targetUsername?: string;
   otherUsername?: string | null;
   otherAvatar?: string | null;
+  otherUserId?: number;
   eventTitle?: string | null;
   coverImage?: string | null;
   isPlaceholder?: boolean;
@@ -158,6 +163,7 @@ export function buildAllChatEntries({
         conversationId: chat.conversation_id,
         otherUsername: chat.other_username,
         otherAvatar: chat.other_avatar,
+        otherUserId: chat.other_user_id ?? undefined,
         eventTitle: chat.event_title,
         coverImage: chat.event_id
           ? eventRowsById.get(chat.event_id)?.event_details?.cover_image || null
@@ -184,6 +190,7 @@ export function buildAllChatEntries({
           conversationId: chat.conversation_id,
           otherUsername: chat.other_username,
           otherAvatar: chat.other_avatar,
+          otherUserId: chat.other_user_id ?? undefined,
           eventTitle: chat.event_title,
           targetUsername: chat.other_username ?? undefined,
         };
@@ -265,6 +272,88 @@ export function buildAllChatEntries({
   }
 
   return sortByUpdatedAtDesc(entries);
+}
+
+/** Map unified inbox API rows to list entries (already ordered by last message). */
+export function buildConversationInboxEntries(
+  items: ConversationInboxItem[] | undefined | null,
+): AllChatEntry[] {
+  if (!items?.length) return [];
+
+  return items.map((item) => {
+    if (item.kind === 'group') {
+      const eventId = item.event_id;
+      if (eventId == null) {
+        return null;
+      }
+      return {
+        id: `group-${eventId}`,
+        mode: 'group' as const,
+        section: 'management' as const,
+        title: item.event_title || 'Event group chat',
+        subtitle: 'Host + vendor group chat',
+        badgeLabel: 'Group',
+        updatedAt: item.last_message_at || null,
+        latestMessageText: item.latest_message_text || null,
+        latestMessageSenderUsername: item.latest_message_sender_username || null,
+        groupRole: item.group_role ?? null,
+        attendeeCount: item.attendee_count ?? null,
+        locationName: item.location_name ?? null,
+        startTime: item.start_time ?? null,
+        eventId,
+        eventTitle: item.event_title ?? null,
+        coverImage: item.cover_image ?? null,
+      };
+    }
+
+    const conversationId = item.conversation_id;
+    if (conversationId == null) {
+      return null;
+    }
+    const otherUserId = item.other_user_id ?? undefined;
+
+    if (item.kind === 'event_private') {
+      return {
+        id: `private-${conversationId}`,
+        mode: 'private' as const,
+        section: 'management' as const,
+        title: item.event_title || item.other_username || 'Event chat',
+        subtitle: item.other_username
+          ? `Private chat with @${item.other_username}`
+          : 'Private event conversation',
+        badgeLabel: 'Event',
+        updatedAt: item.last_message_at || null,
+        latestMessageText: item.latest_message_text || null,
+        latestMessageSenderUsername: item.latest_message_sender_username || null,
+        eventId: item.event_id ?? undefined,
+        conversationId,
+        otherUsername: item.other_username,
+        otherAvatar: item.other_avatar,
+        otherUserId,
+        eventTitle: item.event_title ?? null,
+        coverImage: item.cover_image ?? null,
+      };
+    }
+
+    return {
+      id: `private-${conversationId}`,
+      mode: 'private' as const,
+      section: 'network' as const,
+      title: item.other_username ? `@${item.other_username}` : 'Direct chat',
+      subtitle: item.event_title ? `Met through ${item.event_title}` : 'User chat',
+      badgeLabel: 'Direct',
+      updatedAt: item.last_message_at || null,
+      latestMessageText: item.latest_message_text || null,
+      latestMessageSenderUsername: item.latest_message_sender_username || null,
+      eventId: item.event_id ?? undefined,
+      conversationId,
+      otherUsername: item.other_username,
+      otherAvatar: item.other_avatar,
+      otherUserId,
+      eventTitle: item.event_title ?? null,
+      targetUsername: item.other_username ?? undefined,
+    };
+  }).filter(Boolean) as AllChatEntry[];
 }
 
 export function formatChatTimestamp(value?: string | null) {

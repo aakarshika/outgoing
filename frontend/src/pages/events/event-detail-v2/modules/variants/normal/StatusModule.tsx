@@ -1,3 +1,4 @@
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
@@ -105,7 +106,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         }
       : remainingRatio < 0.5
         ? {
-            accent: '#C88A16',
+            accent: getCategoryTheme(event.category).accent,
             soft: '#FCF1D7',
             text: '#8A5A00',
             track: 'rgba(200, 138, 22, 0.18)',
@@ -130,6 +131,85 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
       }}
     >
 
+<Typography
+        sx={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: 'var(--color-text-secondary, #6b7280)',
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          mb: 1.5,
+          fontFamily: '"Syne", sans-serif',
+        }}
+      >
+        {/* {isEventOver ? 'Who went' : "Who's going"} */}
+        join the
+        <Typography
+          component="span"
+          sx={{ fontWeight: 700,
+            fontSize: 15, px: 0.5,
+            bgcolor: 'transparent',
+            color: getCategoryTheme(event.category).accent,
+           }}
+          >
+            {event.category.name}
+          </Typography>
+         circle
+
+      </Typography>
+
+{showCountdown && countdown && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 0.75,
+            pb: 1,
+          }}
+        >
+          {[
+            { label: 'Days', value: countdown.days },
+            { label: 'Hours', value: countdown.hours },
+            { label: 'Mins', value: countdown.minutes },
+            { label: 'Secs', value: countdown.seconds },
+          ].map((item) => (
+            <Box
+              key={item.label}
+              sx={{
+                borderRadius: '10px',
+                border: '1px solid '+urgency.accent,
+                bgcolor: '#fff',
+                py: 0.9,
+                textAlign: 'center',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 16,
+                  lineHeight: 1,
+                  fontWeight: 700,
+                  color: '#111',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {String(item.value).padStart(2, '0')}
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.35,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#6b7280',
+                }}
+              >
+                {item.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
       {capacity != null && (<Box
         sx={{
           height: 6,
@@ -160,7 +240,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         }}
       >
         <span>
-          {soldCount} of {capacityLabel} spots filled
+          {' '}
         </span>
         <span>{remainingLabel}</span>
       </Box>
@@ -200,58 +280,6 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         </Box>
       )}
 
-      {showCountdown && countdown && (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: 0.75,
-          }}
-        >
-          {[
-            { label: 'Days', value: countdown.days },
-            { label: 'Hours', value: countdown.hours },
-            { label: 'Mins', value: countdown.minutes },
-            { label: 'Secs', value: countdown.seconds },
-          ].map((item) => (
-            <Box
-              key={item.label}
-              sx={{
-                borderRadius: '10px',
-                border: '1px solid #111',
-                bgcolor: '#fff',
-                px: 0.75,
-                py: 0.9,
-                textAlign: 'center',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  lineHeight: 1,
-                  fontWeight: 700,
-                  color: '#111',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {String(item.value).padStart(2, '0')}
-              </Typography>
-              <Typography
-                sx={{
-                  mt: 0.35,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: '#6b7280',
-                }}
-              >
-                {item.label}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      )}
     </Box>
   );
 }

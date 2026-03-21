@@ -41,7 +41,7 @@ export function LandscapeEventCardLow({
     return config[event.lifecycle_state] ?? config.published;
   }, [event.lifecycle_state]);
 
-  const openNeedsCount = event.needs.filter((need) => need.status !== 'fulfilled').length;
+  const openNeedsCount = event.needs?.filter((need) => need.status !== 'fulfilled').length ?? 0;
   const ticketGoal = event.capacity ?? 0;
   const lowThreshold = ticketGoal > 0 && event.ticket_count < Math.ceil(ticketGoal * 0.65);
   const needsAttention = event.lifecycle_state === 'at_risk' || openNeedsCount > 0 || lowThreshold;

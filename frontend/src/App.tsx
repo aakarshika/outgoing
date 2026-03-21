@@ -10,7 +10,7 @@ import { AppBottomNav } from './components/navigation/AppBottomNav';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
 import { ServicesProvider } from './features/vendors/ServicesContext';
-import { SimpleNavbar } from './pages/search/components/SimpleNavbar';
+import { SimpleNavbarMobile } from './pages/search/components/SimpleNavbarMobile';
 import { AppRoutes } from './routes/AppRoutes';
 import { ThemeProvider } from './theme/ThemeProvider';
 
@@ -60,8 +60,8 @@ function AppContent() {
   return (
     <div className="relative flex min-h-screen flex-col pb-40 text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbar />}
+      {/* {!isSearchRoute && <SimpleNavbarMobile />} */}
+      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbarMobile />}
 
       <Toaster />
       <main className="flex-1 bg-transparent pb-32">
