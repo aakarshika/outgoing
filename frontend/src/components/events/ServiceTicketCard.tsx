@@ -7,41 +7,10 @@ import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { formatShortDate, formatTime } from '@/utils/date';
 import { NormalTicketManagementModal } from '@/pages/events/event-detail-v2/modules/variants/normal/components/NormalTicketManagementModal';
 
+import { PseudoBarcode } from './PseudoBarcode';
+
 interface ServiceTicketCardProps {
   item: ManagingItem;
-}
-
-/**
- * A sub-component that renders a pseudo-barcode for the ticket stub.
- */
-function PseudoBarcode({ seed }: { seed: number }) {
-  const bars = useMemo(() => {
-    const generatedBars = [];
-    let s = seed || 1234;
-    for (let i = 0; i < 24; i++) {
-      s = (s * 1664525 + 1013904223) & 0xffffffff;
-      const width = (Math.abs(s) % 3) + 1;
-      const height = i % 4 === 0 ? 32 : i % 3 === 0 ? 26 : i % 2 === 0 ? 22 : 18;
-      generatedBars.push({ width, height });
-    }
-    return generatedBars;
-  }, [seed]);
-
-  return (
-    <Stack direction="row" spacing={0.2} alignItems="flex-end" sx={{ height: 32 }}>
-      {bars.map((bar, idx) => (
-        <Box
-          key={idx}
-          sx={{
-            width: bar.width,
-            height: bar.height,
-            bgcolor: '#1A1A1A',
-            borderRadius: '1px',
-          }}
-        />
-      ))}
-    </Stack>
-  );
 }
 
 export function ServiceTicketCard({ item }: ServiceTicketCardProps) {

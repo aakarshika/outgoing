@@ -1,9 +1,10 @@
 import { Box, Typography } from '@mui/material';
-import { Globe, MapPin, Navigation } from 'lucide-react';
+import { Clock, Globe, MapPin, Navigation } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getNearYouCoords, getStoredSearchLocation } from '@/utils/locationPrefs';
 import { buildGoogleExternalUrl } from '@/utils/mapEmbed';
+import { Icon } from '@iconify/react';
 
 interface NormalCalendarMapModuleProps {
   event: any;
@@ -224,166 +225,255 @@ export function NormalCalendarMapModule({ event }: NormalCalendarMapModuleProps)
 
   return (
     <Box sx={{ px: 2, pt: 2 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
-        {/* Date Card */}
-        <Box
-          sx={{
-            bgcolor: 'var(--color-background-secondary, #f9fafb)',
-            borderRadius: 'var(--border-radius-lg, 12px)',
-            p: 1.5,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            minHeight: 120,
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: 10,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#D85A30',
-              mb: 0.25,
-            }}
-          >
-            {month}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: '"Syne", sans-serif',
-              fontSize: 28,
-              fontWeight: 800,
-              color: 'var(--color-text-primary, #111)',
-              lineHeight: 1,
-            }}
-          >
-            {day}
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 12,
-              color: 'var(--color-text-secondary, #6b7280)',
-              mt: 0.5,
-            }}
-          >
-            {weekday} · {timeStart} – {timeEnd}
-          </Typography>
-
-      {/* Location strip */}
-      <Box
-        component="div"
-        onClick={handleOpenMap}
-        sx={{
-          display: 'flex',
+      <Box sx={{
+        position: 'relative',
+        color: 'rgba(0, 0, 0, 0.68)',
+      }}>
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 20,
+          width: '100%',
           alignItems: 'center',
-          gap: 1,
-          mt: 1.25,
-          px: 0.5,
-          py: 0.75,
-          color: 'inherit',
-          borderRadius: 'var(--border-radius-md, 8px)',
-          transition: 'background 0.15s',
-          cursor: mapUrl ? 'pointer' : 'default',
-          '&:hover': mapUrl ? { bgcolor: 'rgba(0,0,0,0.03)' } : undefined,
-        }}
-      >
-        {isOnline ? (
-          <Globe size={14} color="#2563eb" style={{ flexShrink: 0 }} />
-        ) : (
-          <MapPin size={14} color="#D85A30" style={{ flexShrink: 0 }} />
-        )}
-        <Box sx={{ minWidth: 0, maxWidth: 140, flex: 1 }}>
-          <Typography
-            sx={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--color-text-primary, #111)',
-              lineHeight: 1.3,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {isOnline ? 'Online Event' : locationName || 'Location'}
-          </Typography>
-          {!isOnline && locationAddress && (
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: 'var(--color-text-secondary, #6b7280)',
-                lineHeight: 1.3,
-                lineClamp: 2,
-              }}
-            >
-              {locationAddress}
-            </Typography>
-          )}
-        </Box>
-      </Box>
+          justifyContent: 'center',
+          display: 'flex',
+        }}>
+          <Box sx={{
+            backgroundColor: 'rgba(255,255,255,1)',
+            borderRadius: '12px 0 0 12px',
+            p: 2,
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+            display: 'inline-flex',
+            alignItems: 'center',
+          }}>
+          <Icon icon="healthicons:i-schedule-school-date-time" 
+          width={24} height={24} /> 
+           When
+
+
+
+
+          </Box>
+
+          <Box sx={{
+            backgroundColor: 'rgba(255,255,255,1)',
+            borderRadius: '0 12px 12px 0',
+            p: 2,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 1,
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+          }}>
+            Where 
+            <Icon icon="gis:map-route" 
+            width={18} height={18} color="currentColor" />
+
+
+
+
+          </Box>
         </Box>
 
-        {/* Map Card */}
-        <Box
-          ref={mapBoxRef}
-          onClick={handleOpenMap}
-          sx={{
-            bgcolor: '#E1F5EE',
-            borderRadius: 'var(--border-radius-lg, 12px)',
-            position: 'relative',
-            overflow: 'hidden',
-            cursor: mapUrl ? 'pointer' : 'default',
-            aspectRatio: '1 / 1',
-            minHeight: 140,
-          }}
-        >
-          {embedUrl ? (
-            <>
-              <iframe
-                src={embedUrl}
-                loading="lazy"
-                title="Event location"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  filter: 'grayscale(15%) contrast(1.05)',
-                  pointerEvents: 'none',
-                }}
-              />
-              {eventMarker && (
-                <PinMarker
-                  label="Event"
-                  color="#dc2626"
-                  left={eventMarker.left}
-                  top={eventMarker.top}
-                />
-              )}
-              {userMarker && (
-                <PinMarker
-                  label="You"
-                  color="#2563eb"
-                  left={userMarker.left}
-                  top={userMarker.top}
-                />
-              )}
-            </>
-          ) : (
+        <Box sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          zIndex: 20,
+          width: '100%',
+          height: '10%',
+          backgroundColor: 'rgb(255, 255, 255)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          display: 'flex',
+        }}>
+        </Box>
+        <Box sx={{
+          position: '',
+          top: 0,
+          right: 0,
+        }}>
+
+          <Box sx={{ display: 'flex', flexDirection: 'row', pt:2, gap: 1.25 }}>
+            {/* Date Card */}
             <Box
               sx={{
-                width: '100%',
-                height: '100%',
+                flex: 1,
+                minWidth: 0,
+                bgcolor: 'var(--color-background-secondary, #f9fafb)',
+                borderRadius: 'var(--border-radius-lg, 12px)',
+                p: 1,
+                pb: 3,
                 display: 'flex',
-                alignItems: 'center',
+                flexDirection: 'column',
                 justifyContent: 'center',
               }}
             >
-              <MapPin size={20} color="#085041" opacity={0.35} />
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: '#D85A30',
+                  mb: 0.25,
+                }}
+              >
+                {month}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: '"Syne", sans-serif',
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: 'var(--color-text-primary, #111)',
+                  lineHeight: 1,
+                }}
+              >
+                {day}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  color: 'var(--color-text-secondary, #6b7280)',
+                  mt: 0.5,
+                }}
+              >
+                {weekday} · {timeStart} – {timeEnd}
+              </Typography>
+
+              {/* Location strip */}
+              <Box
+                component="span"
+                onClick={handleOpenMap}
+                sx={{
+                  display: 'inline',
+                  alignSelf: 'flex-start',
+                  mt: 1.25,
+                  px: 0.5,
+                  py: 0.75,
+                  color: 'inherit',
+                  borderRadius: 'var(--border-radius-md, 8px)',
+                  transition: 'background 0.15s',
+                  cursor: mapUrl ? 'pointer' : 'default',
+                  lineHeight: 1.4,
+                  '&:hover': mapUrl ? { bgcolor: 'rgba(0,0,0,0.03)' } : undefined,
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-flex',
+                    verticalAlign: 'middle',
+                    mr: 0.5,
+                    position: 'relative',
+                    top: -1,
+                  }}
+                >
+                  {isOnline ? (
+                    <Globe size={14} color="#2563eb" />
+                  ) : (
+                    <MapPin size={12}  />
+                  )}
+                </Box>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'var(--color-text-primary, #111)',
+                  }}
+                >
+                  {isOnline ? 'Online Event' : locationName || 'Location'}
+                </Typography>
+                {!isOnline && locationAddress && (
+                  <>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: 12,
+                        color: 'var(--color-text-secondary, #6b7280)',
+                        mx: 0.5,
+                      }}
+                    >
+                      ·
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: 12,
+                        color: 'var(--color-text-secondary, #6b7280)',
+                      }}
+                    >
+                      {locationAddress}
+                    </Typography>
+                  </>
+                )}
+              </Box>
             </Box>
-          )}
+
+            {/* Map Card */}
+            <Box
+              ref={mapBoxRef}
+              onClick={handleOpenMap}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                bgcolor: '#E1F5EE',
+                borderRadius: 'var(--border-radius-lg, 12px)',
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: mapUrl ? 'pointer' : 'default',
+                aspectRatio: '1 / 1',
+              }}
+            >
+              {embedUrl ? (
+                <>
+                  <iframe
+                    src={embedUrl}
+                    loading="lazy"
+                    title="Event location"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      filter: 'grayscale(15%) contrast(1.05)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                  {eventMarker && (
+
+                    <Icon icon="fa6-solid:location-dot" 
+                    width={24} height={24} color="rgb(216, 90, 48)"
+                    style={{ position: 'absolute', left: (parseFloat(eventMarker.left)-12+'%'), top: (parseFloat(eventMarker.top)-12+'%') }}
+                     />
+                  )}
+                  {userMarker && (
+                    <Icon icon="gis:location-man" 
+                    width={24} height={24} color="#2563eb"
+                    style={{ position: 'absolute', left: (parseFloat(userMarker.left)-12+'%'), top: (parseFloat(userMarker.top)-12+'%') }}
+                    />
+                  )}
+                </>
+              ) : (
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <MapPin size={20} color="#085041" opacity={0.35} />
+                </Box>
+              )}
+            </Box>
+          </Box>
         </Box>
       </Box>
-
     </Box>
   );
 }

@@ -7,6 +7,7 @@ import {
   useHostVendorMessages,
   useAddHostVendorMessage,
 } from '@/features/events/hooks';
+import { SubHeaderEventPage } from './SubHeaderEventPage';
 
 interface NormalChatModuleProps {
   event: any;
@@ -92,22 +93,18 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
 
   if (!canAccessEventChat) return null;
 
+  if (!(event.lifecycle_state == 'completed' || event.lifecycle_state == 'live' 
+    || event.lifecycle_state == 'event_ready')) return null;
+  
   return (
     <Box sx={{ px: 2, pt: 2, pb: 4 }}>
-      <Typography
-        sx={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: 'var(--color-text-secondary, #6b7280)',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          mb: 1.5,
-          fontFamily: '"Syne", sans-serif',
-        }}
-      >
-        Event chat
-      </Typography>
-
+      
+      
+      <SubHeaderEventPage
+        heading="Event chat"
+        icon="material-symbols-light:conversation"
+        description="Join the conversation and share your thoughts and experiences with the community."
+      />
       <Box
         sx={{
           border: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
@@ -151,7 +148,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                 color: 'var(--color-text-primary, #111)',
               }}
             >
-              Live chat
+              {event.lifecycle_state == 'live' ? 'Live ' : 'Chat has ended'}
             </Typography>
           </Box>
           <Typography

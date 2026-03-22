@@ -144,13 +144,13 @@ export function LargeEventCard({
           spacing={0.3}
           sx={{
             minHeight: 0,
-            px: 1,
+              pt: 1.5,
+              px: 1,
             alignItems: 'flex-start',
           }}
         >
           <DateAndLocation />
           <Stack
-            spacing={1.1}
             sx={{
               position: 'relative',
               minHeight: 0,
@@ -257,12 +257,12 @@ export function LargeEventCard({
                 spacing={0.7}
                 sx={{ minWidth: 0 }}
               >
-                <Description />
                 {!showNeeds && <Going />}
               </Stack>
             </Stack>
           </Stack>
         </Stack>
+        <Description />
 
         {showNeeds && <Needs />}
       </Stack>

@@ -1,4 +1,4 @@
-import { Box, Grid, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Grid, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { useToggleInterest } from '@/features/events/hooks';
@@ -30,6 +30,9 @@ import { NormalSaveToggleModule } from './variants/normal/SaveToggleModule';
 import { NormalServicesModule } from './variants/normal/ServicesModule';
 import { NormalStatusModule } from './variants/normal/StatusModule';
 import { NormalTicketsModule } from './variants/normal/TicketsModule';
+import { WayChoice, WayInModule } from './variants/normal/WayInModule';
+import { PurchasedTickets } from './variants/normal/PurchasedTickets';
+import { NormalServicesAfterModule } from './variants/normal/ServicesAfterModule';
 
 interface VariantRegistryProps {
   variant: ThemeVariant;
@@ -40,7 +43,21 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [wayInSelected, setWayInSelected] = useState<WayChoice>('buyin');
 
+  const {
+    event,
+    isHost,
+    highlights,
+    displayNeeds,
+    reviews,
+    isEventOver,
+    canAccessEventChat,
+    capabilities,
+    isAuthenticated,
+  } = viewModel;
+
+  const [showStubs, setShowStubs] = useState(capabilities.showTicketPurchase && !(event.user_tickets && event.user_tickets.length > 0));
   useEffect(() => {
     const checkMobile = () => {
       setIsMobileDevice(
@@ -55,17 +72,6 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const {
-    event,
-    isHost,
-    highlights,
-    displayNeeds,
-    reviews,
-    isEventOver,
-    canAccessEventChat,
-    capabilities,
-    isAuthenticated,
-  } = viewModel;
 
   const toggleInterest = useToggleInterest();
 
@@ -136,7 +142,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
 
           <NormalCalendarMapModule event={event} />
           <NormalDivider />
-{/* 
+          {/* 
           <NormalSaveToggleModule
             event={event}
             isAuthenticated={isAuthenticated}
@@ -146,16 +152,31 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           /> */}
 
           <NormalDivider />
-
-          <NormalTicketsModule />
-
-          <NormalDivider />
-
-          <NormalServicesModule
+          <PurchasedTickets showStubs={showStubs} setShowStubs={setShowStubs} />
+          {(event.lifecycle_state === 'completed' || event.lifecycle_state === 'live') && (
+          <NormalServicesAfterModule
             event={event}
             displayNeeds={displayNeeds}
             isAuthenticated={isAuthenticated}
           />
+        )}
+          {showStubs && !(event.lifecycle_state === 'completed' || event.lifecycle_state === 'live') &&(
+            <>
+              <WayInModule
+                defaultWay={wayInSelected}
+                onWayChange={(way) => {
+                  setWayInSelected(way);
+                }}
+              />
+              {wayInSelected == 'buyin' && (<NormalTicketsModule />)}
+              {wayInSelected == 'chipin' && (
+                <NormalServicesModule
+                  event={event}
+                  displayNeeds={displayNeeds}
+                  isAuthenticated={isAuthenticated}
+                />)}
+              <NormalDivider />
+            </>)}
 
           <NormalDivider />
 
@@ -192,8 +213,25 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             </>
           ) : null}
 
-          <NormalBrowseModule event={event} />
-          <NormalDivider />
+    <Box sx={{ px: 2, pt: 2, mb: 8 }}>
+      <Typography
+        sx={{
+          fontSize: 14,
+          color: 'var(--color-text-secondary, #6b7280)',
+          textAlign: 'center',
+          py: 12,
+          px: 4,
+        }}
+      >
+        {event.lifecycle_state === 'live' ? 'Event is live!' : 
+        event.lifecycle_state == 'draft' ? 'This event is in DRAFT mode, only visible to the host' : 
+        event.lifecycle_state == 'completed' ? 'This event has ended' : 
+        event.lifecycle_state == 'cancelled' ? 'This event has been cancelled' : 
+        event.lifecycle_state == 'published' ? 'This event is published, collecting vendors and tickets' : 
+        ''
+        }
+      </Typography>
+    </Box>
           <NormalRecommendedModule currentEventId={event.id} />
         </Box>
       </Box>
@@ -237,14 +275,34 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
           disabled={!capabilities.canSaveEvent}
         />
         <NormalDivider />
-        <NormalTicketsModule />
-        <NormalDivider />
-        <NormalServicesModule
-          event={event}
-          displayNeeds={displayNeeds}
-          isAuthenticated={isAuthenticated}
+        <WayInModule
+          defaultWay={wayInSelected}
+          onWayChange={(way) => {
+            setWayInSelected(way);
+          }}
         />
-        <NormalDivider />
+        <PurchasedTickets showStubs={showStubs} setShowStubs={setShowStubs} />
+        {(event.lifecycle_state === 'completed' || event.lifecycle_state === 'live') && (
+          <NormalServicesAfterModule
+            event={event}
+            displayNeeds={displayNeeds}
+            isAuthenticated={isAuthenticated}
+          />
+        )}
+
+        {showStubs && !(event.lifecycle_state === 'completed' || event.lifecycle_state === 'live') &&(
+          <>
+            {wayInSelected == 'buyin' && (<NormalTicketsModule />)}
+            {wayInSelected == 'chipin' && (
+              <NormalServicesModule
+                event={event}
+                displayNeeds={displayNeeds}
+                isAuthenticated={isAuthenticated}
+              />
+            )}
+            <NormalDivider />
+          </>
+        )}
         <NormalGoersModule event={event} isEventOver={isEventOver} />
         <NormalDivider />
         <NormalChatModule event={event} canAccessEventChat={canAccessEventChat} />

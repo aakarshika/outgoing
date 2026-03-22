@@ -453,6 +453,7 @@ export function useAddEventHighlight() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['eventHighlights', variables.eventId] });
     },
   });
 }

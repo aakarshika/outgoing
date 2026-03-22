@@ -437,6 +437,7 @@ class EventDetailSerializer(EventListSerializer):
                         "title": need.title,
                         "vendor_name": vendor_name,
                         "vendor_avatar": vendor_avatar,
+                        "need_category": need.category,
                     }
                 )
         return vendors
@@ -708,7 +709,6 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
     event_id = serializers.IntegerField(source="event.id", read_only=True)
-    media_file = serializers.SerializerMethodField()
     # Basic event card details for scrapbook components on the frontend
     event = serializers.SerializerMethodField()
 
@@ -744,8 +744,12 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "event",
         ]
 
-    def get_media_file(self, obj):
-        return resolve_media_url(obj.media_file, self.context.get("request"))
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["media_file"] = resolve_media_url(
+            instance.media_file, self.context.get("request")
+        )
+        return ret
 
     def get_likes_count(self, obj):
         return obj.likes.count()

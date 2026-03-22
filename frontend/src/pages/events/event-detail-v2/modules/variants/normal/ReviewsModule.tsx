@@ -2,6 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { Star } from 'lucide-react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { Icon } from '@iconify/react';
 
 interface NormalReviewsModuleProps {
   event: any;
@@ -28,18 +29,45 @@ export function NormalReviewsModule({
 
   return (
     <Box sx={{ px: 2, pt: 2 }}>
-      <Typography
-        sx={{
-          fontFamily: '"Syne", sans-serif',
-          fontSize: 13,
-          fontWeight: 700,
-          color: 'var(--color-text-primary, #111)',
-          mb: 1.25,
-          letterSpacing: '0.01em',
-        }}
-      >
-        Word on the street
-      </Typography>
+      
+      <Box sx={{ display: 'flex', width: '100%', flexDirection: 'row', alignItems: 'center', gap: 1.5 }}>
+        
+      <Box sx={{
+          // circle with checkmark
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 1,
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          backgroundColor: 'rgb(255, 217, 183)',
+        }}>
+          <Box position="absolute" >
+            <Icon icon="streamline-cyber:bubble-chat-double-text-1" 
+            width={54} height={54} 
+            color="#D85A30" />
+          </Box>
+        </Box>
+        <Typography
+          sx={{
+            fontFamily: 'Syne, sans-serif',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#64748b',
+            letterSpacing: '0.02em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Word on the street
+        </Typography>
+        <Box sx={{ flex: 1, minWidth: 0, height: '1px', backgroundColor: '#e5e7eb' }} />
+
+      </Box>
 
       {hostReviews.length === 0 ? (
         <Box
