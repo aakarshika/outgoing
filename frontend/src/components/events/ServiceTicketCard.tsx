@@ -17,13 +17,11 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const event = item.event;
-  // console.log(item);
+  console.log(event?.user_tickets?.length, event?.user_tickets);
   if (!event || event.lifecycle_state == 'draft' || event.user_tickets?.length == 0) return null;
 
   const categoryTheme = getCategoryTheme(event.category);
-  // console.log(categoryTheme.icon);
-  const isCancelled = item.status?.toLowerCase() === 'cancelled';
-  const isAdmitted = item.status?.toLowerCase() === 'admitted' || (item.isPast && !isCancelled);
+
 
   // Derive display values
   const userTickets = event.user_tickets ?? [];
@@ -46,6 +44,10 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
     return y;
   }, [userTickets, event.ticket_tiers]);
 
+  const admittedCount = userTickets.filter((t) => t.status === 'used').length;
+  const cancelledCount = userTickets.filter((t) => t.status === 'cancelled').length;
+
+  const isAllCancelled = cancelledCount === ticketCount;
 
 
   const uniqueTierNames = useMemo(() => {
@@ -87,7 +89,7 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
         position: 'relative',
         mb: 2,
         filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.10))',
-        opacity: isCancelled ? 0.6 : 1
+        opacity: isAllCancelled ? 0.6 : 1
       }}
     >
       <Box
@@ -225,23 +227,26 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
             sx={{
               fontSize: 12,
               fontWeight: 600,
-              color: isCancelled ? '#888780' : '#D85A30',
-              cursor: isCancelled ? 'default' : 'pointer',
+              color: isAllCancelled ? '#888780' : '#D85A30',
+              cursor: isAllCancelled ? 'default' : 'pointer',
               whiteSpace: 'nowrap'
             }}
           >
-            {isCancelled ? 'View ›' : 'View details ›'}
+            {isAllCancelled ? 'View ›' : 'View details ›'}
           </Typography>
         </Stack>
       </Box>
 
       {/* STAMPS */}
-      {isAdmitted && !isCancelled && (
+      {(admittedCount > 0) && !isAllCancelled && (
         <Box
           sx={{
             position: 'absolute',
             top: '50%',
             left: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             transform: 'translate(-50%, -50%) rotate(-18deg)',
             border: '3px solid #1D9E75',
             borderRadius: '8px',
@@ -259,11 +264,11 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
             bgcolor: 'rgba(255,255,255,0.7)'
           }}
         >
-          Admitted
+          Admitted X {admittedCount}
         </Box>
       )}
 
-      {isCancelled && (
+      {cancelledCount > 0 && (
         <Box
           sx={{
             position: 'absolute',
@@ -286,7 +291,7 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
             bgcolor: 'rgba(255,255,255,0.7)'
           }}
         >
-          Cancelled
+          Cancelled X {cancelledCount}
         </Box>
       )}
 

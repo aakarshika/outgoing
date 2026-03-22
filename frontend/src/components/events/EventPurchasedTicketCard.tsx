@@ -58,7 +58,7 @@ export function EventPurchasedTicketCard({
     (tierTickets?.length ?? 0) > 0 && validTickets.length === 0;
   const allAdmitted =
     validTickets.length > 0 &&
-    validTickets.every((t) => String(t.status || '').toLowerCase() === 'admitted');
+    validTickets.every((t) => String(t.status || '').toLowerCase() === 'used');
 
   const primaryTicket = ticketsForDisplay[0];
   const tierIdx = useMemo(() => {

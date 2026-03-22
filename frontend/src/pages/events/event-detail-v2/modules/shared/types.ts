@@ -29,6 +29,8 @@ export interface EventDetailV2ViewModel {
   onViewTicket: (ticketId: number) => void;
   onOpenHighlightComposer: () => void;
   onOpenReviewComposer: () => void;
+  onEditReview: (review: any) => void;
+  onDeleteReview: (reviewId: number) => void;
   deleteReview: UseMutationResult<any, any, any, any>;
   themeVariant: ThemeVariant;
 }

@@ -159,6 +159,7 @@ export default function EventDetailPageV2() {
       rating: rev.rating,
       comment: rev.text,
       avatar: rev.reviewer_avatar,
+      media: rev.media || [],
       likesCount: rev.likes_count || 0,
       commentsCount: rev.comments_count || 0,
       userHasLiked: rev.user_has_liked || false,
@@ -220,11 +221,13 @@ export default function EventDetailPageV2() {
           gap: 1.5,
         }}
       >
-        <Typography sx={{ fontWeight: 600, textAlign: 'center', p: 4 }}>Seems like you're not authorized to be here</Typography>
-        <Typography sx={{ color: 'text.secondary' }}>
-          404
+        <Typography sx={{ fontWeight: 600, textAlign: 'center', p: 4 }}>
+          Seems like you're not authorized to be here
         </Typography>
-        <MuiButton variant="contained" onClick={() => navigate('/')}>Go Home</MuiButton>
+        <Typography sx={{ color: 'text.secondary' }}>404</Typography>
+        <MuiButton variant="contained" onClick={() => navigate('/')}>
+          Go Home
+        </MuiButton>
       </Box>
     );
   }
@@ -339,6 +342,16 @@ export default function EventDetailPageV2() {
     onViewTicket: handleViewTicket,
     onOpenHighlightComposer: () => setIsHighlightOpen(true),
     onOpenReviewComposer: () => setIsReviewOpen(true),
+    onEditReview: (review: any) => {
+      setEditReviewData(review);
+      setIsReviewOpen(true);
+    },
+    onDeleteReview: (reviewId: number) => {
+      deleteReview.mutate(reviewId, {
+        onSuccess: () => toast.success('Review deleted successfully.'),
+        onError: () => toast.error('Failed to delete review.'),
+      });
+    },
     deleteReview,
     themeVariant,
   };
@@ -384,7 +397,6 @@ export default function EventDetailPageV2() {
           selections={selectedSelections}
           onSuccess={handleTicketingSuccess}
         />
-
 
         <NormalTicketConfirmationModal
           isOpen={!!confirmedTicket}

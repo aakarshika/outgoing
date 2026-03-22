@@ -514,27 +514,28 @@ class Command(BaseCommand):
                 event_obj["features"] = features
             out_events.append(event_obj)
 
-            # Tiers
-            num_tiers = rng.randint(1, 3)
-            tier_names = ["General", "Premium", "VIP", "Adults + 1 Child"]
-            tier_cap = capacity // num_tiers
-            has_paid_tier = rng.random() < 0.7
-            for t_idx in range(num_tiers):
-                if has_paid_tier and t_idx > 0:
-                    price = rng.choice(PAID_TIER_PRICES)
-                elif has_paid_tier and num_tiers == 1:
-                    price = rng.choice(PAID_TIER_PRICES)
-                else:
-                    price = 0
+            # Tiers (draft events have no purchasable tiers / tickets)
+            if status != "draft":
+                num_tiers = rng.randint(1, 3)
+                tier_names = ["General", "Premium", "VIP", "Adults + 1 Child"]
+                tier_cap = capacity // num_tiers
+                has_paid_tier = rng.random() < 0.7
+                for t_idx in range(num_tiers):
+                    if has_paid_tier and t_idx > 0:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    elif has_paid_tier and num_tiers == 1:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    else:
+                        price = 0
 
-                tier_obj = {
-                    "_key": f"{event_key}_tier_{t_idx}",
-                    "event": event_key,
-                    "name": tier_names[t_idx],
-                    "price": price,
-                    "capacity": tier_cap
-                }
-                out_event_ticket_tiers.append(tier_obj)
+                    tier_obj = {
+                        "_key": f"{event_key}_tier_{t_idx}",
+                        "event": event_key,
+                        "name": tier_names[t_idx],
+                        "price": price,
+                        "capacity": tier_cap
+                    }
+                    out_event_ticket_tiers.append(tier_obj)
 
             # --- Phase 3: Event Needs ---
             num_needs = rng.randint(2, 6)
@@ -571,6 +572,8 @@ class Command(BaseCommand):
 
         for goer in goers:
             for ev in out_events:
+                if ev.get("status") == "draft":
+                    continue
                 if rng.random() < 0.3:
                     # Filter tiers for this event that still have capacity
                     ev_tiers = [

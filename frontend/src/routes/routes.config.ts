@@ -190,6 +190,16 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/mock/user-profile/:username',
+    componentName: 'UserProfileMock',
+    isPublic: true,
+  },
+  {
+    path: '/mock/user-profile',
+    componentName: 'UserProfileMock',
+    isPublic: true,
+  },
+  {
     path: '/profile/settings-new',
     componentName: 'SettingsNew',
     roles: [UserRole.USER, UserRole.ADMIN],

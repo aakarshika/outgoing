@@ -67,17 +67,18 @@ export function PurchasedTicketsModule({
         icon="emojione-monotone:old-key"
         description={(userTickets.some((ticket: any) => ticket.status === 'used')) ? 'How\'s it? Add some Highlightings of your experience there' : ''}
       />
-      {!(userTickets.some((ticket: any) => ticket.status === 'used')) && (<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {tierGroups.map(({ tierKey, tickets }) => (
-          <EventPurchasedTicketCard
-            key={tierKey}
-            event={event}
-            tierTickets={tickets}
-            ticketTiers={ticketTiers}
-            onViewTicket={onViewTicket}
-          />
-        ))}
-      </Box>
+      {!(event.lifecycle_state == 'completed' && went) && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {tierGroups.map(({ tierKey, tickets }) => (
+            <EventPurchasedTicketCard
+              key={tierKey}
+              event={event}
+              tierTickets={tickets}
+              ticketTiers={ticketTiers}
+              onViewTicket={onViewTicket}
+            />
+          ))}
+        </Box>
       )}
 
     </Box>

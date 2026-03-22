@@ -48,6 +48,7 @@ type MenuItem = {
   muted?: boolean;
   count?: number;
   color?: string;
+  highlighted?: boolean;
 };
 
 async function fetchEventOverview() {
@@ -199,6 +200,7 @@ export function SimpleNavbarMobile({
         label: 'Sign In',
         to: '/signin',
         icon: 'solar:user-linear',
+        highlighted: true,
       });
     }
     if (location.pathname !== '/signup') {
@@ -206,6 +208,7 @@ export function SimpleNavbarMobile({
         label: 'Sign Up',
         to: '/signup',
         icon: 'solar:user-plus-linear',
+        highlighted: true,
       });
     }
   }
@@ -250,8 +253,8 @@ export function SimpleNavbarMobile({
       : !isMobile
         ? [
           [
-            { label: 'Sign In', icon: 'solar:user-linear', action: 'signin' as const },
-            { label: 'Sign Up', icon: 'solar:user-plus-linear', action: 'signup' as const },
+            { label: 'Sign In', icon: 'solar:user-linear', action: 'signin' as const, highlighted: true },
+            { label: 'Sign Up', icon: 'solar:user-plus-linear', action: 'signup' as const, highlighted: true },
           ],
         ]
         : []),
@@ -768,10 +771,12 @@ export function SimpleNavbarMobile({
                       px: 1.5,
                       py: 1.15,
                       border: 0,
-                      backgroundColor: 'transparent',
+                      backgroundColor: item.highlighted ? '' : 'transparent',
                       textAlign: 'left',
-                      fontSize: 13,
-                      color: item.muted ? 'rgba(61,49,36,0.58)' : '#3D3124',
+                      fontSize: item.highlighted ? 15 : 13,
+                      color: item.muted ? 'rgba(61,49,36,0.58)' :
+                        item.highlighted ? '#D85A30' :
+                       '#3D3124',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

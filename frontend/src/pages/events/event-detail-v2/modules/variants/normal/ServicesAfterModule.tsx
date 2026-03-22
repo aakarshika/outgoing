@@ -32,7 +32,7 @@ export function NormalServicesAfterModule({
 
   const participatingVendors = event.participating_vendors || [];
   
-  if (participatingVendors.length === 0 && displayNeeds?.length === 0) {
+  if (participatingVendors.length === 0 || displayNeeds?.length === 0) {
     return null;
   }
 

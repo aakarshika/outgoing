@@ -366,26 +366,27 @@ class Command(BaseCommand):
             self.stdout.write("Seeding Event Tiers...")
             for t in tiers_data:
                 event = event_map.get(t["event"])
-                if event:
-                    tier, created = EventTicketTier.objects.get_or_create(
-                        event=event,
-                        name=t["name"],
-                        defaults={
-                            "price": t["price"],
-                            "capacity": t["capacity"]
-                        }
-                    )
-                    if not created:
-                        fields_to_update = []
-                        if tier.price != t["price"]:
-                            tier.price = t["price"]
-                            fields_to_update.append("price")
-                        if tier.capacity != t["capacity"]:
-                            tier.capacity = t["capacity"]
-                            fields_to_update.append("capacity")
-                        if fields_to_update:
-                            tier.save(update_fields=fields_to_update)
-                    tier_map[t["_key"]] = tier
+                if not event or event.status == "draft":
+                    continue
+                tier, created = EventTicketTier.objects.get_or_create(
+                    event=event,
+                    name=t["name"],
+                    defaults={
+                        "price": t["price"],
+                        "capacity": t["capacity"]
+                    }
+                )
+                if not created:
+                    fields_to_update = []
+                    if tier.price != t["price"]:
+                        tier.price = t["price"]
+                        fields_to_update.append("price")
+                    if tier.capacity != t["capacity"]:
+                        tier.capacity = t["capacity"]
+                        fields_to_update.append("capacity")
+                    if fields_to_update:
+                        tier.save(update_fields=fields_to_update)
+                tier_map[t["_key"]] = tier
 
             self.stdout.write("Seeding Event Needs...")
             for n in needs_data:
@@ -404,7 +405,7 @@ class Command(BaseCommand):
             for t in tickets_data:
                 goer = user_map.get(t["goer"])
                 tier = tier_map.get(t["tier"])
-                if goer and tier:
+                if goer and tier and tier.event.status != "draft":
                     ticket_status = "active"
                     used_at = None
                     if tier.event_id in live_event_ids and rng.random() < LIVE_EVENT_USED_TICKET_RATIO:

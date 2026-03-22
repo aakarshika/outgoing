@@ -3,6 +3,7 @@ import { Send, Plus } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { useAuth } from '@/features/auth/hooks';
 import {
   useHostVendorMessages,
   useAddHostVendorMessage,
@@ -25,6 +26,7 @@ const AVATAR_COLORS = [
 ];
 
 export function NormalChatModule({ event, canAccessEventChat }: NormalChatModuleProps) {
+  const { user } = useAuth();
   const eventId = event?.id;
   const { data: messagesResponse, isLoading } = useHostVendorMessages(
     eventId,
@@ -194,6 +196,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
             </Typography>
           ) : (
             groupedMessages.map((group, groupIdx) => {
+              const isMine = user?.id != null && String(group.sender_id) === String(user.id);
               const colorIdx = group.sender_id
                 ? typeof group.sender_id === 'number'
                   ? group.sender_id
@@ -202,7 +205,16 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
               const color = AVATAR_COLORS[colorIdx % AVATAR_COLORS.length];
 
               return (
-                <Box key={groupIdx} sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                <Box
+                  key={groupIdx}
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    mt: 1,
+                    alignSelf: isMine ? 'flex-end' : 'flex-start',
+                    flexDirection: isMine ? 'row-reverse' : 'row',
+                  }}
+                >
                   <Box
                     sx={{
                       width: 28,
@@ -233,6 +245,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                       flexDirection: 'column',
                       gap: 0.25,
                       maxWidth: '80%',
+                      alignItems: isMine ? 'flex-end' : 'flex-start',
                     }}
                   >
                     <Typography
@@ -240,6 +253,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                         fontSize: 10,
                         color: 'var(--color-text-secondary, #6b7280)',
                         px: 0.5,
+                        textAlign: isMine ? 'right' : 'left',
                       }}
                     >
                       {group.sender_name}
@@ -250,10 +264,17 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                       const isSolo = group.messages.length === 1;
 
                       let borderRadius = '14px';
-                      if (isSolo) borderRadius = '14px 14px 14px 3px';
-                      else if (isFirst) borderRadius = '14px 14px 14px 3px';
-                      else if (isLast) borderRadius = '3px 14px 14px 14px';
-                      else borderRadius = '3px 14px 14px 3px';
+                      if (isMine) {
+                        if (isSolo) borderRadius = '14px 14px 3px 14px';
+                        else if (isFirst) borderRadius = '14px 14px 3px 14px';
+                        else if (isLast) borderRadius = '14px 3px 14px 14px';
+                        else borderRadius = '14px 3px 3px 14px';
+                      } else {
+                        if (isSolo) borderRadius = '14px 14px 14px 3px';
+                        else if (isFirst) borderRadius = '14px 14px 14px 3px';
+                        else if (isLast) borderRadius = '3px 14px 14px 14px';
+                        else borderRadius = '3px 14px 14px 3px';
+                      }
 
                       return (
                         <Box
@@ -263,6 +284,7 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                             display: 'flex',
                             alignItems: 'center',
                             gap: 0.5,
+                            flexDirection: isMine ? 'row-reverse' : 'row',
                             '&:hover .msg-actions': { opacity: 1 },
                           }}
                         >
@@ -271,7 +293,9 @@ export function NormalChatModule({ event, canAccessEventChat }: NormalChatModule
                               p: '7px 11px',
                               fontSize: 13,
                               color: 'var(--color-text-primary, #111)',
-                              bgcolor: 'var(--color-background-secondary, #f3f4f6)',
+                              bgcolor: isMine
+                                ? 'rgba(21, 128, 61, 0.12)'
+                                : 'var(--color-background-secondary, #f3f4f6)',
                               borderRadius,
                               lineHeight: 1.4,
                             }}
