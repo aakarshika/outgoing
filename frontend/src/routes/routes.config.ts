@@ -76,6 +76,16 @@ export const routesConfig: RouteDefinition[] = [
     componentName: 'Chats',
     roles: [UserRole.USER, UserRole.ADMIN],
   },
+  {
+    path: '/allchats',
+    componentName: 'AllChats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
+  {
+    path: '/allchats/t/:encodedKey',
+    componentName: 'AllChats',
+    roles: [UserRole.USER, UserRole.ADMIN],
+  },
   // {
   //   path: '/special',
   //   componentName: 'EventsSpecial',

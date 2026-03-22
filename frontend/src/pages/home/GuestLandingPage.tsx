@@ -22,7 +22,12 @@ import {
 } from '@/features/events/hooks';
 import { HighlightCard } from '@/pages/events/components/HighlightCard';
 import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
-import type { BaseFeedEventItem, BaseFeedParams, EventCategory } from '@/types/events';
+import {
+  DISCOVERABLE_LIFECYCLE_STATES,
+  type BaseFeedEventItem,
+  type BaseFeedParams,
+  type EventCategory,
+} from '@/types/events';
 import {
   getStoredSearchLocation,
   inferCityFromLocationLabel,
@@ -94,7 +99,6 @@ const filterChips = [
 
 type FilterChip = (typeof filterChips)[number];
 
-const DISCOVERABLE_STATUSES = ['published', 'event_ready', 'live'] as const;
 const SMALL_SECTION_CARD_LIMIT = 8;
 const THINGS_TO_DO_CARD_LIMIT = 6;
 
@@ -353,7 +357,7 @@ export default function GuestLandingPage() {
   const nearbyFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: locationCoords ? 'distance' : 'popularity',
-      status: [...DISCOVERABLE_STATUSES],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: feedTimeContext.nowIso,
       lat: locationCoords?.lat,
       lng: locationCoords?.lng,
@@ -366,7 +370,7 @@ export default function GuestLandingPage() {
     () => ({
       sort: 'popularity',
       online: true,
-      status: [...DISCOVERABLE_STATUSES],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: feedTimeContext.nowIso,
       page_size: 24,
     }),
@@ -378,7 +382,7 @@ export default function GuestLandingPage() {
       'This weekend': {
         baseParams: {
           sort: 'start_time',
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.weekend.start_time_gte,
           start_time_lte: feedTimeContext.weekend.start_time_lte,
           page_size: 32,
@@ -393,7 +397,7 @@ export default function GuestLandingPage() {
       Tonight: {
         baseParams: {
           sort: 'start_time',
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.tonight.start_time_gte,
           start_time_lte: feedTimeContext.tonight.start_time_lte,
           page_size: 32,
@@ -411,7 +415,7 @@ export default function GuestLandingPage() {
         baseParams: {
           sort: 'popularity',
           free_only: true,
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.nowIso,
           page_size: 32,
         },
@@ -421,7 +425,7 @@ export default function GuestLandingPage() {
       'Under $20': {
         baseParams: {
           sort: 'popularity',
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.nowIso,
           page_size: 40,
         },
@@ -434,7 +438,7 @@ export default function GuestLandingPage() {
       Outdoors: {
         baseParams: {
           sort: 'popularity',
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.nowIso,
           categories: outdoorCategorySlugs.length ? outdoorCategorySlugs : undefined,
           page_size: 32,
@@ -447,7 +451,7 @@ export default function GuestLandingPage() {
       'New in town': {
         baseParams: {
           sort: 'created',
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.nowIso,
           page_size: 32,
         },
@@ -458,7 +462,7 @@ export default function GuestLandingPage() {
         baseParams: {
           sort: 'popularity',
           has_needs: true,
-          status: [...DISCOVERABLE_STATUSES],
+          lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
           start_time_gte: feedTimeContext.nowIso,
           page_size: 32,
         },

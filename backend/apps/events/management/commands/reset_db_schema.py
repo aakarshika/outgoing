@@ -6,9 +6,12 @@ Use before `seed_simple` when you want a full structural reset (not just ORM del
   python manage.py reset_db_schema --yes
   python manage.py seed_simple
 
+Also creates a local-dev Django admin superuser (username/password: root / root).
+
 This does not transform or preserve data. Unsupported engines raise CommandError.
 """
 
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, connections
@@ -52,9 +55,31 @@ class Command(BaseCommand):
 
         self.stdout.write("Running migrate...")
         call_command("migrate", interactive=False, verbosity=1)
+        self._ensure_dev_superuser()
         self.stdout.write(
-            self.style.SUCCESS("Empty schema ready. Next: python manage.py seed_simple")
+            self.style.SUCCESS(
+                "Empty schema ready (admin: root / root). Next: python manage.py seed_simple"
+            )
         )
+
+    def _ensure_dev_superuser(self):
+        User = get_user_model()
+        username = "root"
+        password = "root"
+        email = "root@localhost"
+        user = User.objects.filter(username=username).first()
+        if user:
+            user.email = email
+            user.is_staff = True
+            user.is_superuser = True
+            user.set_password(password)
+            user.save()
+            self.stdout.write(self.style.SUCCESS(f"Updated superuser {username!r}."))
+        else:
+            User.objects.create_superuser(
+                username=username, email=email, password=password
+            )
+            self.stdout.write(self.style.SUCCESS(f"Created superuser {username!r}."))
 
     def _drop_all_sqlite(self):
         with connection.cursor() as cursor:

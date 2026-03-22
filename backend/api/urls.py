@@ -13,4 +13,5 @@ urlpatterns = [
     path("needs/", include("api.v1.needs.urls")),
     path("requests/", include("api.v1.requests.urls")),
     path("alerts/", include("api.v1.alerts.urls")),
+    path("chat/", include("api.v1.chat.urls")),
 ]

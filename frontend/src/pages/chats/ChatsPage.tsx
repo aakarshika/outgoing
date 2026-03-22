@@ -7,11 +7,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { Inbox, MapPin, Search, Users } from 'lucide-react';
+import { Inbox, MapPin, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '@/features/auth/hooks';
 import { type ChatParams, useChatDrawer } from '@/features/events/ChatDrawerContext';
+import { ChatListAvatar } from '@/features/chat/ChatListAvatar';
 import {
   type AllChatEntry,
   buildConversationInboxEntries,
@@ -19,8 +20,6 @@ import {
   formatChatRelativeTime,
 } from '@/features/events/chatList';
 import { useConversationInbox } from '@/features/events/hooks';
-import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
-import { FriendAvatar } from '@/features/events/FriendAvatar';
 
 type ChatFilter = 'all' | 'events' | 'people';
 
@@ -60,95 +59,6 @@ function buildChatDrawerParams(chat: AllChatEntry): ChatParams {
     otherUsername: chat.otherUsername,
     otherAvatar: chat.otherAvatar,
   };
-}
-
-function ChatListAvatar({
-  chat,
-}: {
-  chat: Pick<
-    AllChatEntry,
-    | 'mode'
-    | 'title'
-    | 'coverImage'
-    | 'otherAvatar'
-    | 'otherUserId'
-    | 'otherUsername'
-    | 'groupRole'
-    | 'badgeLabel'
-  >;
-}) {
-  if (chat.mode === 'group') {
-    return (
-      <Box
-        sx={{
-          position: 'relative',
-          width: 72,
-          height: 66,
-          flexShrink: 0,
-          overflow: 'visible',
-          boxShadow: '0 10px 24px rgba(86, 58, 28, 0.12)',
-        }}
-      >
-        {chat.coverImage ? (
-          <Box
-            component="img"
-            src={chat.coverImage}
-            alt={chat.title}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              borderRadius: '14px',
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'grid',
-              placeItems: 'center',
-              background: '#FAECE7',
-              color: '#D85A30',
-              borderRadius: '14px',
-            }}
-          >
-            <Users size={18} />
-          </Box>
-        )}
-        {chat.groupRole ? (
-          <HostVendorBadge
-            isHost={chat.groupRole === 'hosting'}
-            variant="short"
-            sx={{
-              left: -6,
-              bottom: -6,
-              zIndex: 2,
-              pointerEvents: 'none',
-              px: '4px',
-              py: '1px',
-              fontSize: '0.52rem',
-              lineHeight: 1.05,
-              borderRadius: '4px',
-            }}
-          />
-        ) : null}
-      </Box>
-    );
-  }
-
-  const isFriend = chat.badgeLabel === 'Friend';
-
-  return (
-    <Box sx={{ position: 'relative', flexShrink: 0 }}>
-      <FriendAvatar
-        userId={chat.otherUserId ?? 0}
-        size={45}
-        imageUrl={chat.otherAvatar}
-      />
-    </Box>
-  );
 }
 
 export default function ChatsPage() {

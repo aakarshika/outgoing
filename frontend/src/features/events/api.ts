@@ -95,6 +95,7 @@ export async function fetchFeed(params: {
 export async function fetchBaseFeed(params: BaseFeedParams = {}) {
   const normalizedParams = {
     ...params,
+    lifecycle_states: params.lifecycle_states?.join(','),
     status: Array.isArray(params.status) ? params.status.join(',') : params.status,
     categories: params.categories?.join(','),
   };

@@ -1,15 +1,15 @@
 # Chat system redesign — handoff document
 
-This document captures **product intent**, **decisions**, and **technical shape** for replacing the current fragmented chat backend and wiring a URL-driven inbox + drawer on the frontend. It is meant to be given to **another engineer or AI** with no prior context.
+This document captures **product intent**, **decisions**, **rollout phases**, and **technical shape** for replacing chat with a greenfield stack. It is meant for **another engineer or AI** with no prior context.
 
 ---
 
 ## 1. Product intent (how the owner thinks about it)
 
-- The **existing chat stack** (separate host–vendor messages, private conversations, direct messages, multiple tables and endpoints) is considered **the wrong shape** for the long term. The goal is a **clean-slate backend design** with **one primary messages table** and **new APIs**, not a careful migration of old rows in the first phase.
-- **Frontend** should feel simple: **one Chats experience** that lists conversations by recency, and **one thread = one URL**, so links, refresh, and back button behave predictably. Opening that URL should show the **chat drawer** (not only imperative “open drawer” calls).
-- **Direct vs “friend” chat** is a **UI/serializer concern**: the database does **not** store two different channel types for user-to-user. Whether the UI shows “friend” styling is based on **friendship data**, not a `channel_kind` column.
-- **Event live / public chat** was discussed in terms of **who can send** (product/frontend checks were mentioned earlier in discovery); the **current written plan defers all authorization and validation** on the backend for this phase—implementers should not assume server-side rules exist yet unless added later.
+- The **existing chat stack** (host–vendor messages, private conversations, direct messages, inbox aggregation, `ChatDrawerContext`, etc.) is **end-of-life**. The replacement is **clean-slate** backend APIs + **new frontend routes and components**.
+- **Legacy chat will not keep working** once the cutover happens: **delete** legacy backend endpoints/models usage and **delete or stop wiring** legacy frontend chat flows. **The frontend is allowed to break** anywhere it still depended on old APIs until the new `/allnewchats` experience is wired.
+- **Direct vs “friend”** remains a **UI/serializer** concern: not a separate DB channel for user–user (see backend model).
+- Backend **authorization / validation** for this written plan remain **deferred** unless a later pass adds them.
 
 ---
 
@@ -17,62 +17,80 @@ This document captures **product intent**, **decisions**, and **technical shape*
 
 | Topic | Decision |
 | ----- | -------- |
-| Legacy data | **Do not migrate** old `EventHostVendorMessage` / `EventPrivateConversation` / etc. into the new schema in this phase. Old code can coexist until the new stack ships. |
-| Backend auth / validation | **Out of scope for this phase**—no permission matrix, no “exactly one recipient” enforcement, no request validation requirements in the written plan. |
-| Channel typing in DB | **No `channel_kind` column.** The kind of thread is **inferred** from which nullable `recipient_*` foreign key is set. |
-| User-user “direct” vs “friend” | **Same storage.** Serializer adds read-only fields (e.g. `peer_is_friend`) using **`Friendship`** (or buddy model). |
-| Thread identity | Every message row has a required **`thread_key`** string, **namespaced** so threads never collide (e.g. `user:1:2`, `event_public:5`, `event_vendor:5`, `special_group:9`). |
-| `thread_key` vs SQL UNIQUE | **Many rows share one `thread_key`.** Do **not** put `UNIQUE` on `chat_message.thread_key`. Uniqueness is **logical** (one string per thread), not one row per thread. |
-| Column naming | All receiver FKs use a **`recipient_` prefix** (e.g. `recipient_event_public_chat_event_id`, not a bare `event_id` on the message). |
-| Frontend routing | **Chats page** lists conversations ordered by **last message**; each row navigates to a **dedicated URL**; that route **opens [`ChatDrawer`](frontend/src/pages/events/components/ChatDrawer.tsx)** (URL-driven, sync with browser back). |
-| Frontend files in scope | **[`ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx)** and **[`ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx)** are the explicit touchpoints for this slice. |
-| Special group chats | **In the backend data model** (`chat_special_group`, members, `recipient_special_group_id`). **Out of scope on the frontend for now**—no special-group creation, list, or thread UI in this phase. |
-| Related frontend work | [`ChatThreadPanel`](frontend/src/pages/chats/components/ChatThreadPanel.tsx), [`ChatDrawerContext`](frontend/src/features/events/ChatDrawerContext.tsx), [`App.tsx`](frontend/src/App.tsx) (`GlobalChatDrawer`), [`routes.config.ts`](frontend/src/routes/routes.config.ts), [`AppRoutes.tsx`](frontend/src/routes/AppRoutes.tsx) will likely need updates to support `thread_key` + routing. |
+| Legacy stack | **Remove, do not maintain.** Delete legacy chat **APIs** (host-vendor messages, direct messages, private conversation messages, conversation inbox built on old tables, etc.) and **frontend** callers (`useHostVendorMessages`, `useDirectMessages`, old `ChatsPage` / `GlobalChatDrawer` / `ChatThreadPanel` integration, etc.). Expect breakage until the new UI ships. |
+| Legacy data | **No migration** of old rows into the new schema in phase 1. Old DB tables may remain empty or be dropped in a separate cleanup—product call. |
+| New frontend surface | **New route prefix `/allnewchats`** with **new** list page and **new** drawer—**do not** evolve old `ChatsPage` / `ChatDrawer` in phase 1. |
+| Thread presentation | **Drawer only.** The message thread (list + composer) always lives **inside** the new drawer. If a “full page” route exists someday, it is only a **shell** that navigates or mounts the **same** drawer behavior—**no separate full-page thread layout.** |
+| Backend model | Single `chat_message` + `thread_key`; four `recipient_*` FKs; optional special-group tables (see §3). |
+| Channel typing in DB | **No `channel_kind`.** Inferred from which `recipient_*` is set. |
+| User-user “direct” vs “friend” | **Same storage.** Serializer / UI use **`Friendship`** (or buddy model) for labels. |
+| `thread_key` | Required on every message row; namespaced strings (`user:…`, `event_public:…`, `event_vendor:…`, `special_group:…`). **Not** SQL-`UNIQUE` on the message table (many rows per thread). |
+| Special group (FE) | **Still out of scope** on the frontend until explicitly scheduled—no `special_group:*` UI in phase 1. |
 
 ---
 
-## 3. Backend — data model
+## 3. Rollout phases (frontend + backend)
 
-### 3.1 `chat_special_group` + members
+### Phase 1 — **Super basic (ship first)**
+
+**Goal:** Prove the loop: **conversations list → open thread → read/send messages → URL + drawer behavior.**
+
+| Deliverable | Detail |
+| ----------- | ------ |
+| **New routes** | **`/allnewchats`** — conversations list (new page). **`/allnewchats/t/:threadKeyEncoded`** (or equivalent; encode/decode must round-trip to backend `thread_key`) — URL causes the **new chat drawer** to open with that `thread_key`. **Back / close** updates the URL (e.g. strip `/t/...` or navigate to `/allnewchats`). **No standalone full-page thread route** in phase 1. |
+| **New components** | **New list page** (not `ChatsPage.tsx`). **New drawer** (not `ChatDrawer.tsx`)—URL-driven; contains **one** minimal **thread view** (messages + composer). There is no second thread layout for “full screen.” |
+| **APIs** | `GET /api/v1/chat/conversations/`, `GET /api/v1/chat/messages/?thread_key=…`, `POST /api/v1/chat/messages/` (shapes per backend). |
+| **UI quality** | **Intentionally plain**—no scrapbook styling, no parity with old chat chrome. |
+
+**Explicitly not in phase 1:** “In-between” / activity rows (see §5). Special-group UX. Porting old `ChatsPage` / `ChatThreadPanel` look-and-feel.
+
+### Phase 2 — **In-between (activity) messages**
+
+**Goal:** Interleave **non-chat** timeline rows with real messages (same idea as today’s `buildChatTimeline` + `ChatActivityRow`), backed by a **separate API** or server-computed payload so the **messages API stays only persisted chat lines**.
+
+See **§5** for the **full catalog** of legacy in-between types and **data sources**.
+
+### Phase 3 — **Polish / port old UI**
+
+**Goal:** Bring visual and UX quality from legacy **[`ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx)** and **[`ChatThreadPanel.tsx`](frontend/src/pages/chats/components/ChatThreadPanel.tsx)** (avatars, headers, badges, gradients, buddy strip, etc.) **into** the new `/allnewchats` routes and new components—**after** phase 1 and 2 are stable.
+
+---
+
+## 4. Backend — data model
+
+### 4.1 `chat_special_group` + members
 
 | Table | Purpose |
 | ----- | ------- |
 | `chat_special_group` | Ad hoc multi-person thread container (`id`, optional `name`, `created_by_id`, `created_at`). |
 | `chat_special_group_member` | Membership (`group_id`, `user_id`, `joined_at`); **unique** `(group_id, user_id)`. |
 
-*(Frontend does not build flows for this yet; backend may still define tables for future use.)*
+*(No frontend for special groups in phase 1.)*
 
-### 3.2 `chat_message` (single messages table)
+### 4.2 `chat_message`
 
 | Column | Notes |
 | ------ | ----- |
 | `id` | PK |
 | `sender_id` | FK → user, always set |
-| `recipient_user_id` | Nullable; set for **user–user** only |
-| `recipient_event_public_chat_event_id` | Nullable; **event public / live** channel |
-| `recipient_event_vendor_group_event_id` | Nullable; **host + vendor** group for that event |
-| `recipient_special_group_id` | Nullable; **special group** thread |
+| `recipient_user_id` | Nullable; **user–user** |
+| `recipient_event_public_chat_event_id` | Nullable; **event public / live** |
+| `recipient_event_vendor_group_event_id` | Nullable; **host + vendor** |
+| `recipient_special_group_id` | Nullable; **special group** |
 | `body` | Text |
 | `created_at` | Auto |
-| `thread_key` | **Required** on every row; canonical formats below |
+| `thread_key` | **Required**; canonical formats below |
 
-**Design intent:** exactly **one** of the four `recipient_*` columns is non-null per row (plus `sender_id`). The plan does **not** require DB `CHECK` or app validation in this phase—still the intended invariant.
+**Canonical `thread_key`**
 
-**Canonical `thread_key` values**
-
-| Shape | `thread_key` format |
-| ----- | ------------------- |
+| Shape | Format |
+| ----- | ------ |
 | User–user | `user:{min_user_id}:{max_user_id}` |
 | Event public | `event_public:{event_id}` |
 | Event vendor | `event_vendor:{event_id}` |
 | Special group | `special_group:{group_id}` |
 
-**Indexes (recommended)**
-
-- `(thread_key, created_at DESC)` — inbox + thread history
-- Optional extra indexes on `recipient_*` if useful for admin or joins
-
-### 3.3 Mermaid (entity sketch)
+**Indexes:** `(thread_key, created_at DESC)` primary; optional indexes on `recipient_*`.
 
 ```mermaid
 flowchart LR
@@ -89,89 +107,98 @@ flowchart LR
   ep --> Event
   ev --> Event
   sg --> Group[chat_special_group]
-  Group --> members[chat_special_group_member]
-  members --> MemberUser[User]
 ```
 
 ---
 
-## 4. Backend — APIs (suggested)
+## 5. Phase 2 — In-between messages (spec)
 
-Prefix: `/api/v1/chat/` (auth classes not specified in this plan).
+Today these are **not** from the messages API. They are built in **[`buildUserChatActivities`](frontend/src/features/events/chatTimeline.ts)** from several hooks, then merged in **[`buildChatTimeline`](frontend/src/features/events/chatTimeline.ts)** with real messages by **`occurredAt`**.
+
+**Direction for phase 2:** Treat them as a **separate concern**:
+
+- **Option A:** `GET /api/v1/chat/thread-insights/?thread_key=…` (or `peer_username=…` for user–user) returns `{ id, type, occurred_at, label, event_id?, event_title?, … }[]`—frontend merges + sorts like `buildChatTimeline`.
+- **Option B:** Keep deriving on the client from existing friendship/network/overview endpoints—duplicates logic; prefer **Option A** long term.
+
+**Catalog — all legacy “in-between” kinds and where they came from**
+
+| # | User-visible label (pattern) | Source today | Origin data |
+| - | ----------------------------- | ------------ | ------------- |
+| 1 | “Became friends” | `buildUserChatActivities` | `FriendshipItem`: `accepted_at` or `created_at` |
+| 2 | “Met at {event title}” (link to event) | same | `friendship.met_at_event`, `met_at_event_title`; time from `eventOverviewRows[event].event_details.start_time` or friendship dates |
+| 3 | “Went to {event} together” | same | `networkPeople.went_to_events_with` row for **target** user: `event_id`, `event_title`; time from `eventOverviewRows` start_time |
+| 4 | “You hosted {target}” | same | Same past-event row when **current user** is host (`eventOverviewRows.host_user_id === currentUserId`) |
+| 5 | “{target} hosted you” | same | Same row when **target** is host |
+| 6 | “Going to {event} together” | same | `networkActivity` filtered to target, `kind === 'going'`, `happened_at` |
+| 7 | “{target} hosted you” (from activity) | same | `networkActivity` `kind === 'hosting'`, host is target |
+| 8 | “You hosted {target}” (from activity) | same | `networkActivity` `kind === 'hosting'`, current user is host |
+| 9 | “{target} is servicing {event}” | same | `networkActivity` `kind === 'servicing'` |
+
+**Notes**
+
+- **Group / event host–vendor threads** in legacy use **messages only**—no activity merge in `ChatThreadPanel` for `mode === 'group'`. Phase 2 can scope **user–user threads first** if desired.
+- Deduplication today uses stable string ids (`friends-{id}`, `went-{eventId}`, etc.)—preserve that idea in API payloads.
+- Sorting: merge with messages on **`occurred_at`**; on equal timestamps, legacy sorts **activity** before **message** (`buildChatTimeline`).
+
+---
+
+## 6. Backend — APIs (suggested)
+
+Prefix: `/api/v1/chat/`.
 
 | Method | Path | Role |
 | ------ | ---- | ---- |
-| POST | `/messages/` | Create message; set one `recipient_*` + `thread_key` |
-| GET | `/messages/` | List messages for a `thread_key` (pagination) |
-| GET | `/conversations/` | Inbox: distinct threads + last message preview + enrichment; user–user rows include serializer friendship fields |
-| POST | `/groups/` | (Future / parallel) create special group |
-| POST/DELETE | `/groups/{id}/members/` | (Future / parallel) membership |
-
-**Inbox:** aggregate with `GROUP BY thread_key`; last message = max `created_at` per key.
-
----
-
-## 5. Backend — implementation order
-
-1. Django app (e.g. `apps/chat`): models above + index on `(thread_key, created_at)`; `save()` sets `thread_key` from whichever `recipient_*` is written.
-2. Serializers + friendship prefetch for user–user presentation fields.
-3. Services: inbox query + thread history filter.
-4. Views/URLs for POST/GET messages and GET conversations.
-5. Optional smoke tests.
+| POST | `/messages/` | Create message + `thread_key` |
+| GET | `/messages/` | List by `thread_key` |
+| GET | `/conversations/` | Inbox by `thread_key` + last message + enrichment |
+| (Phase 2) | `/thread-insights/` or similar | In-between rows for a thread / peer |
+| POST | `/groups/` | Special group (when needed) |
+| POST/DELETE | `/groups/{id}/members/` | Membership |
 
 ---
 
-## 6. Frontend plan
+## 7. Legacy deletion checklist (non-exhaustive — grep and remove)
 
-### 6.1 Goals
+**Backend (delete or stop registering):** routes such as `host-vendor-messages`, `direct-messages`, `conversations/…` messages, old inbox listers tied to `EventHostVendorMessage` / `EventPrivateConversation` (see [`backend/api/v1/events/urls.py`](backend/api/v1/events/urls.py)) and related views/serializers when the new app is authoritative.
 
-1. **One URL per thread** — Encode `thread_key` safely (e.g. `encodeURIComponent(thread_key)` or base64url). Example routes: `/chats` (inbox) and `/chats/t/<encodedThreadKey>` (thread open). Must decode back to the exact backend `thread_key`.
-
-2. **Chats page** — [`ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx) loads **`GET /conversations/`** (new API), sorts by **last message time**, renders rows that **navigate** to the thread URL on click.
-
-3. **Drawer from URL** — When the thread route is active, show [`ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx) **driven by the route** (deep link + refresh). Closing the drawer updates history (e.g. navigate to `/chats` or `navigate(-1)`).
-
-### 6.2 Integration notes
-
-- Today [`ChatDrawerProvider`](frontend/src/features/events/ChatDrawerContext.tsx) + [`GlobalChatDrawer`](frontend/src/App.tsx) use **imperative** `openChat`. Move toward **router-first** or **sync route ↔ context** so list clicks, direct URLs, and back stay consistent.
-- [`ChatThreadPanel`](frontend/src/pages/chats/components/ChatThreadPanel.tsx) should read/write the **new** APIs using **`thread_key`** (and whatever POST body the backend defines).
-- Register routes in [`routes.config.ts`](frontend/src/routes/routes.config.ts) / [`AppRoutes.tsx`](frontend/src/routes/AppRoutes.tsx).
-
-### 6.3 In scope vs out of scope (frontend)
-
-| In scope | Out of scope (this phase) |
-| -------- | ------------------------- |
-| [`ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx) — list + navigate | **Special group chats** — no UI for create, manage, or open `special_group:*` threads |
-| [`ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx) — URL-opened drawer | Special-group **backend** endpoints can exist; **do not** prioritize consumer UI |
-| Per-thread URL + history sync | Embedding public/vendor threads on event detail pages (unless you explicitly add later) |
-| Wiring `ChatThreadPanel` to new APIs | Realtime (WS/SSE) unless added later |
+**Frontend:** remove or orphan hooks and API clients used only for old chat; remove **`GlobalChatDrawer` / `openChat`** usage from flows that are replaced by **`/allnewchats`**; old **[`ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx)**, **[`ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx)**, **[`ChatThreadPanel.tsx`](frontend/src/pages/chats/components/ChatThreadPanel.tsx)** are **not** phase-1 targets—they are **legacy** to delete or leave unused after cutover (phase 3 may **borrow** UI patterns only).
 
 ---
 
-## 7. Questions for the next implementer
+## 8. Phase 1 — routes & files to add (suggested)
 
-**No blocking questions** are left from the planning conversation; the owner signed off with “perfect” on the URL + drawer approach.
+| Piece | Suggestion |
+| ----- | ---------- |
+| List route | `/allnewchats` → e.g. `AllNewChatsPage.tsx` |
+| Thread + drawer route | `/allnewchats/t/:threadKeyEncoded` → layout that renders list + **`AllNewChatDrawer`** with decoded `thread_key` |
+| Optional full-page thread | `/allnewchats/thread/:threadKeyEncoded` if you want a non-drawer full page for testing |
+| Register | [`routes.config.ts`](frontend/src/routes/routes.config.ts), [`AppRoutes.tsx`](frontend/src/routes/AppRoutes.tsx) |
 
-**Optional follow-ups** (if product changes):
-
-- Exact path prefix for chats (`/chats` vs nested under another layout).
-- Whether `thread_key` in the URL should be encoded only for user–user threads or always.
-- When to turn **authorization / validation** back on for the backend.
+New API client module under e.g. `frontend/src/features/chat/` (name as you prefer).
 
 ---
 
-## 8. File index (quick reference)
+## 9. Questions for the next implementer
 
-| Area | Path |
+- Exact child path (`/allnewchats/t/...` vs query `?thread=`).
+- Whether phase 1 uses **drawer-over-list** only or also a **standalone thread page**.
+- When to add **auth** on new endpoints.
+
+**Resolved:** Thread UX is **drawer-only**; any future “full page” reuses that drawer, not a parallel thread layout.
+
+---
+
+## 10. File index
+
+| Role | Path |
 | ---- | ---- |
-| Chats list (in scope) | [`frontend/src/pages/chats/ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx) |
-| Drawer shell (in scope) | [`frontend/src/pages/events/components/ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx) |
-| Thread UI | [`frontend/src/pages/chats/components/ChatThreadPanel.tsx`](frontend/src/pages/chats/components/ChatThreadPanel.tsx) |
-| Drawer context | [`frontend/src/features/events/ChatDrawerContext.tsx`](frontend/src/features/events/ChatDrawerContext.tsx) |
-| Global drawer mount | [`frontend/src/App.tsx`](frontend/src/App.tsx) |
+| **Legacy** list (replace, not extend in phase 1) | [`frontend/src/pages/chats/ChatsPage.tsx`](frontend/src/pages/chats/ChatsPage.tsx) |
+| **Legacy** drawer | [`frontend/src/pages/events/components/ChatDrawer.tsx`](frontend/src/pages/events/components/ChatDrawer.tsx) |
+| **Legacy** thread / timeline | [`frontend/src/pages/chats/components/ChatThreadPanel.tsx`](frontend/src/pages/chats/components/ChatThreadPanel.tsx), [`frontend/src/features/events/chatTimeline.ts`](frontend/src/features/events/chatTimeline.ts) |
 | Routes | [`frontend/src/routes/routes.config.ts`](frontend/src/routes/routes.config.ts), [`frontend/src/routes/AppRoutes.tsx`](frontend/src/routes/AppRoutes.tsx) |
-| Legacy chat APIs (to be replaced over time) | [`backend/api/v1/events/urls.py`](backend/api/v1/events/urls.py) (host-vendor, direct, conversations) |
+| Legacy backend URLs | [`backend/api/v1/events/urls.py`](backend/api/v1/events/urls.py) |
+| **Phase 1** | **New files** under e.g. `frontend/src/pages/all-new-chats/` (or similar) + feature API folder |
 
 ---
 
-*Document generated from the chat redesign planning thread. Backend §1–6 and frontend §6 align with the Cursor plan `chat_backend_redesign_d92e3a41.plan.md`.*
+*Aligned with Cursor plan `chat_backend_redesign_d92e3a41.plan.md` for backend shape; this doc is the source of truth for **phasing**, **legacy removal**, and **`/allnewchats`**.*

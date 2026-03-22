@@ -182,6 +182,7 @@ class PublicShowcaseView(APIView):
 
         base_data = {
             "username": user.username,
+            "user_id": user.id,
             "first_name": user.first_name if profile.privacy_name else "",
             "last_name": user.last_name if profile.privacy_name else "",
             "date_joined": user.date_joined,

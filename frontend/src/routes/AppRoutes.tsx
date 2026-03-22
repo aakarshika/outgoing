@@ -40,6 +40,7 @@ const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPa
 // const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const TestFeedPage = lazy(() => import('@/pages/home/TestFeedPage'));
 const ChatsPage = lazy(() => import('@/pages/chats/ChatsPage'));
+const AllChatsPage = lazy(() => import('@/pages/all-chats/AllChatsPage'));
 // const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
 const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 // const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
@@ -75,6 +76,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   // Requests: RequestsPage,
   // Alerts: AlertsPage,
   Chats: ChatsPage,
+  AllChats: AllChatsPage,
   // EventsSpecial: EventsSpecialPage,
   Gallery: GalleryPage,
   // BrowseFeed: BrowseFeedPage,

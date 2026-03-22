@@ -81,6 +81,7 @@ class EventTicketTierSerializer(serializers.ModelSerializer):
 class EventHostSerializer(serializers.Serializer):
     """Lightweight serializer for the event host."""
 
+    id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
     first_name = serializers.CharField()
     avatar = serializers.SerializerMethodField()
@@ -477,6 +478,7 @@ class EventDetailSerializer(EventListSerializer):
 
                 attendees.append(
                     {
+                        "user_id": user.id,
                         "username": user.username,
                         "name": user.first_name or "",
                         "avatar": avatar_url,

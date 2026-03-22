@@ -23,7 +23,6 @@ import { ComicIconButton } from '@/components/ui/ComicIconButton';
 import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import type { EventSearchSuggestion } from '@/types/events';
 
-import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 
 export const dashboardLinks: {
@@ -348,26 +347,13 @@ export const LogoSection = () => {
 };
 
 export const IconButtonsSection = () => {
-  const {
-    alertsCount,
-    isVendor,
-    isEventHost,
-    setIsQuickCreateOpen,
-    setIsAllChatsSidebarOpen,
-  } = useNavbarContext();
+  const { alertsCount, isVendor, isEventHost, setIsQuickCreateOpen } = useNavbarContext();
 
   return (
     <div>
-      <AllChatsList />
       <div className="hidden sm:flex xs:flex items-center gap-2">
-        <ComicIconButton
-          onClick={() => setIsAllChatsSidebarOpen(true)}
-          variant="ghost"
-          size="icon"
-          asChild
-          Icon={MessageSquareIcon}
-        >
-          <Link to="#" aria-label="AllchatsList" onClick={(e) => e.preventDefault()}>
+        <ComicIconButton variant="ghost" size="icon" asChild Icon={MessageSquareIcon}>
+          <Link to="/allchats" aria-label="Chats">
             <div className="absolute top-0 right-0 h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white z-10">
               {alertsCount > 0 && <span>{alertsCount}</span>}
             </div>

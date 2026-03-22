@@ -8,7 +8,11 @@ import { useAuth } from '@/features/auth/hooks';
 import { useBaseFeed } from '@/features/events/hooks';
 import { useEventOverviewRows } from '@/features/events/hooks';
 import { ProfileService } from '@/pages/profile/Profile.service';
-import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
+import {
+  DISCOVERABLE_LIFECYCLE_STATES,
+  type BaseFeedEventItem,
+  type BaseFeedParams,
+} from '@/types/events';
 import {
   getStoredSearchLocation,
   inferCityFromLocationLabel,
@@ -221,7 +225,7 @@ export default function MyHomePage() {
   const trendingFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: 'popularity',
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       free_only: selectedFormatFilters.includes('free') || undefined,
       online: selectedFormatFilters.includes('online') || undefined,
       categories: trendingCategorySlugs.length ? trendingCategorySlugs : undefined,
@@ -234,7 +238,7 @@ export default function MyHomePage() {
   const recommendedFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: 'popularity',
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 24,
     }),
@@ -254,7 +258,7 @@ export default function MyHomePage() {
     () => ({
       sort: 'popularity',
       has_needs: true,
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 6,
     }),

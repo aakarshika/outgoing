@@ -105,12 +105,25 @@ class BaseFeedView(APIView):
                 | Q(location_address__iexact="online event")
             )
 
-        # Status filter supports single value or comma-separated values
-        status = request.query_params.get("status", "").strip()
-        if status:
-            statuses = [value.strip() for value in status.split(",") if value.strip()]
-            if statuses:
-                events = events.filter(status__in=statuses)
+        # Prefer lifecycle_states (canonical). Legacy `status` matches the coarse Event.status column.
+        lifecycle_csv = request.query_params.get("lifecycle_states", "").strip()
+        if lifecycle_csv:
+            allowed = {choice[0] for choice in Event.LIFECYCLE_CHOICES}
+            states = [
+                s.strip()
+                for s in lifecycle_csv.split(",")
+                if s.strip() in allowed
+            ]
+            if states:
+                events = events.filter(lifecycle_state__in=states)
+        else:
+            status = request.query_params.get("status", "").strip()
+            if status:
+                statuses = [
+                    value.strip() for value in status.split(",") if value.strip()
+                ]
+                if statuses:
+                    events = events.filter(status__in=statuses)
 
         # Start time range filter
         start_at = self._parse_datetime_param(request.query_params.get("start_time_gte"))

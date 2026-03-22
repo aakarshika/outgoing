@@ -5,11 +5,13 @@ import { useSearchParams } from 'react-router-dom';
 
 import { LargeEventCard } from '@/components/events/LargeEventCard';
 import { useBaseFeed } from '@/features/events/hooks';
-import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
+import {
+  DISCOVERABLE_LIFECYCLE_STATES,
+  type BaseFeedEventItem,
+  type BaseFeedParams,
+} from '@/types/events';
 
 import { SimpleNavbar } from './components/SimpleNavbar';
-
-const DISCOVERABLE_STATUSES = ['published', 'event_ready', 'live'] as const;
 
 const exploreTabs = [
   {
@@ -263,7 +265,7 @@ export default function SearchPage() {
   const feedParams = useMemo<BaseFeedParams>(() => {
     const params: BaseFeedParams = {
       sort: tab === 'upcoming' ? 'start_time' : 'popularity',
-      status: [...DISCOVERABLE_STATUSES],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 100,
       lat: hasCoords && tab !== 'online' ? lat : undefined,

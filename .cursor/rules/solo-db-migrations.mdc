@@ -12,16 +12,16 @@ alwaysApply: true
 
 ## Rules for every AI
 
-1. **Never add** `0002_*`, `0003_*`, or new migration files under project apps. **Only edit** existing **`0001_initial.py`** (or the single initial file) per app — or, for a **brand-new app**, add **one** `0001_initial` once.
+1. **First-party apps:** there is **only one** migration module per app — the **initial** (`0001_initial.py`). **Always edit that file** when `models.py` changes. **Never** add another numbered migration (`0002_*`, `0003_*`, or any new `00xx_*.py`). **Do not** use `makemigrations` to create new migration files for these apps. For a **brand-new** first-party app, add that **single** initial file once; after that, same rule — **only edits**, no new `00xx_` files.
 2. After **any model / schema change**, the workflow is **`python manage.py reset_db_schema --yes`** (from `backend/`), then **`python manage.py seed_simple`** if they need data. **Do not** instruct `makemigrations` + incremental `migrate` as the primary path.
 3. **`reset_db_schema`** drops tables (and SQLite views), then runs **`migrate` from zero** using those initial files. So schema still comes from migration files — they must stay **consistent with `models.py`**, but history stays flat.
 4. **Exception — cross-app cycle:** This repo uses **`apps/events/migration_operations.py`** (`AddFieldVendors`) so `vendors` stays a single initial. If you change that pattern, keep **one file per first-party app**.
-5. **Do not** recommend squashing, migration graphs, or “run migrate to catch up” for local dev — recommend **reset + seed** instead.
+5. **Do not** recommend squashing, migration graphs, or “run migrate to catch up” for local dev — recommend **reset + seed** (`python manage.py chats` or `reset_db_schema --yes` then `seed_simple`) instead.
 
 ## Quick reference
 
 | Do | Don’t |
 |----|--------|
-| Edit `backend/apps/*/migrations/0001_initial.py` to match models | Add `0002_…` migrations |
-| `reset_db_schema --yes` then `seed_simple` | `makemigrations` every small change (as default advice) |
+| Edit `backend/apps/*/migrations/0001_initial.py` to match models | Any new `00xx_*.py` migration files |
+| `python manage.py chats` or `reset_db_schema --yes` then `seed_simple` | New `00xx_*.py` migrations or `makemigrations` churn (as default advice) |
 | Document in `backend/docs/local-database.md` if workflow shifts | Assume production/long-lived DB upgrade path |

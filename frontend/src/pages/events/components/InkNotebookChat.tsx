@@ -8,16 +8,19 @@ import {
   Paper,
   Typography,
 } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, UserPlus } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Hostname } from '@/components/ui/Hostname';
 import { useAuth } from '@/features/auth/hooks';
-import { useChatDrawer } from '@/features/events/ChatDrawerContext';
+import { chatApi } from '@/features/chat/api';
 import {
-  useAddHostVendorMessage,
-  useHostVendorMessages,
-} from '@/features/events/hooks';
+  buildEventPublicThreadKey,
+  buildUserThreadKey,
+  encodeThreadKey,
+} from '@/features/chat/threadKeyCodec';
 
 import { BuddyRequestPanel } from './BuddyRequestPanel';
 
@@ -35,11 +38,31 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
   canAccessChat = false,
 }) => {
   const { user } = useAuth();
-  const { data: messagesResponse } = useHostVendorMessages(eventId, canAccessChat);
-  const addMessage = useAddHostVendorMessage();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const threadKey = buildEventPublicThreadKey(eventId);
+
+  const { data: messages = [], isLoading: messagesLoading } = useQuery({
+    queryKey: ['chat', 'messages', threadKey],
+    queryFn: async () => {
+      const res = await chatApi.listMessages(threadKey, { page_size: 200 });
+      if (!res.success) throw new Error(res.message || 'Failed to load event chat');
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: Boolean(user && canAccessChat && eventId),
+  });
+
+  const postMessage = useMutation({
+    mutationFn: (body: string) => chatApi.postMessage(threadKey, body),
+    onSuccess: (res) => {
+      if (res.success) {
+        void queryClient.invalidateQueries({ queryKey: ['chat', 'messages', threadKey] });
+      }
+    },
+  });
+
   const [messageText, setMessageText] = useState('');
   const [friendTargetUsername, setFriendTargetUsername] = useState<string | null>(null);
-  const { openChat } = useChatDrawer();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -50,44 +73,28 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messagesResponse?.data]);
+  }, [messages]);
 
   if (!user || !canAccessChat) {
     return null;
   }
 
   const handleAddMessage = () => {
-    if (!messageText.trim() || !eventId) return;
-    addMessage.mutate(
-      {
-        eventId: eventId,
-        payload: { text: messageText },
+    const text = messageText.trim();
+    if (!text || !eventId) return;
+    postMessage.mutate(text, {
+      onSuccess: (res) => {
+        if (res.success) setMessageText('');
       },
-      {
-        onSuccess: () => {
-          setMessageText('');
-        },
-      },
-    );
+    });
   };
 
-  const handlePrivateChatClick = (targetUsername: string) => {
-    if (!user || user.username === targetUsername) return;
-
-    console.debug('[InkNotebookChat] chat icon clicked', {
-      eventId,
-      currentUsername: user.username,
-      targetUsername,
-    });
-
-    openChat({
-      title: `Chat with ${targetUsername}`,
-      mode: 'direct',
-      eventId,
-      targetUsername,
-      otherUsername: targetUsername,
-      badgeLabel: 'Direct',
-    });
+  /** Direct / private chat uses the canonical `user:min:max` thread in `/allchats`. */
+  const handlePrivateChatClick = (peerUserId: number) => {
+    if (!user || peerUserId === user.id) return;
+    navigate(
+      `/allchats/t/${encodeThreadKey(buildUserThreadKey(user.id, peerUserId))}`,
+    );
   };
 
   const handleOpenFriendDialog = (targetUsername: string) => {
@@ -200,16 +207,22 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
             },
           }}
         >
-          {messagesResponse?.data?.length === 0 ? (
+          {messagesLoading ? (
+            <Box sx={{ textAlign: 'center', py: 8, opacity: 0.5 }}>
+              <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.4rem' }}>
+                Loading…
+              </Typography>
+            </Box>
+          ) : messages.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 8, opacity: 0.5 }}>
               <Typography sx={{ fontFamily: '"Caveat", cursive', fontSize: '1.8rem' }}>
                 Share with the group
               </Typography>
             </Box>
           ) : (
-            messagesResponse?.data?.map((msg: any) => {
+            messages.map((msg) => {
               const role = getRoleInfo(msg.sender_username);
-              const isMine = user?.username === msg.sender_username;
+              const isMine = user.id === msg.sender_id;
               return (
                 <Box
                   key={msg.id}
@@ -232,14 +245,14 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
                   >
                     <Hostname
                       username={msg.sender_username}
-                      avatarSrc={msg.sender_avatar}
+                      avatarSrc={msg.sender_avatar ?? undefined}
                       mode="normal"
                     />
                     {!isMine && (
                       <>
                         <IconButton
                           size="small"
-                          onClick={() => handlePrivateChatClick(msg.sender_username)}
+                          onClick={() => handlePrivateChatClick(msg.sender_id)}
                           sx={{
                             p: 0.5,
                             color: role.color,
@@ -302,7 +315,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
                         : {},
                     }}
                   >
-                    {msg.text}
+                    {msg.body}
                   </Typography>
                 </Box>
               );
@@ -347,7 +360,7 @@ export const InkNotebookChat: React.FC<InkNotebookChatProps> = ({
             <IconButton
               sx={{ p: '10px', color: '#334155' }}
               onClick={handleAddMessage}
-              disabled={!messageText.trim() || addMessage.isPending}
+              disabled={!messageText.trim() || postMessage.isPending}
             >
               <Send size={24} />
             </IconButton>

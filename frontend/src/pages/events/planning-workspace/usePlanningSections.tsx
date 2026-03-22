@@ -1,5 +1,9 @@
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { chatApi } from '@/features/chat/api';
+import { ThreadKeyChatDrawer } from '@/features/chat/ThreadKeyChatDrawer';
+import { buildEventVendorThreadKey } from '@/features/chat/threadKeyCodec';
 import { BaseFeedEventItem, EventDetail, type EventLifecycleState } from '@/types/events';
+import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Stack, Drawer, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
@@ -7,12 +11,10 @@ import { Box, Typography, Stack, Drawer, Button, Dialog, DialogTitle, DialogCont
 import {
   useCategories,
   useEvent,
-  useHostVendorMessages,
   useMyFriendships,
   usePrivateMessages,
   useTransitionEventLifecycle,
 } from '@/features/events/hooks';
-import { ChatDrawer } from '../components/ChatDrawer';
 import { buildPlanningChecklist, formatChecklistDeadline } from '@/features/events/planningChecklist';
 import { useEventNeeds } from '@/features/needs/hooks';
 import addons from './addons.json';
@@ -39,6 +41,8 @@ import { FEATURE_ITEMS, TAG_COLORS } from '@/pages/events/manage/ManageDetailsSe
 import type { PlanningChecklistRuleKey } from '@/features/events/planningChecklistConfig';
 import { useNavigate } from 'react-router-dom';
 import { LiveAttendanceCompactStep } from '../components/manage-redesign/LiveAttendanceCompactStep';
+import { ChatThreadContainer } from '@/features/chat/ChatThreadContainer';
+import { SubHeaderEventPage } from '../event-detail-v2/modules/variants/normal/SubHeaderEventPage';
 
 type PlanningSections = {
   HeroSectionEventStats: () => JSX.Element;
@@ -636,7 +640,7 @@ export function usePlanningSections({
 
 
     const handleQuickEditSubmit = async (
-      action: 'plan' | 'post' | 'tickets-more' | 'needs-more',
+      _action: 'plan' | 'post' | 'tickets-more' | 'needs-more',
       payload: QuickEditEventSubmitPayload,
     ) => {
       setIsQuickCreateSubmitting(true);
@@ -650,7 +654,9 @@ export function usePlanningSections({
       formData.set('category_id', String(payload.categoryId));
       formData.set('start_time', payload.startTimeIso);
       formData.set('end_time', payload.endTimeIso);
-      formData.set('status', action === 'post' ? 'published' : 'draft');
+      // Do not send `status` here. Quick edit uses action `plan`, which previously set
+      // status=draft and triggered Event.save() to force lifecycle_state=draft, wiping
+      // event_ready / live. Partial PATCH without status leaves both unchanged.
 
       if (payload.locationMode === 'online') {
         formData.set('location_name', payload.onlineUrl || 'Online Event');
@@ -676,8 +682,8 @@ export function usePlanningSections({
       }
 
       try {
-        const result = await updateEvent(eventId, formData);
-
+        await updateEvent(eventId, formData);
+        await refetchEvent();
         setIsQuickCreateOpen(false);
       } catch (error: any) {
         toast.error(error?.response?.data?.message || 'Could not create this event');
@@ -1540,108 +1546,16 @@ export function usePlanningSections({
     );
   };
   const Chat = () => {
-    const { data: messagesData } = useHostVendorMessages(eventId);
-    const messages = messagesData?.data || [];
-    const lastMessages = messages.slice(-3).reverse();
-
+    const threadKey = `event_vendor:${eventId}`;
     return (
-      <Box sx={{ mx: 1.75, mt: 1.75, mb: 2 }}>
-        <Box
-          onClick={() => setIsChatDrawerOpen(true)}
-          sx={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.25,
-            px: 2,
-            py: 1.25,
-            borderRadius: '14px',
-            background: '#fff',
-            border: '0.5px solid #F0EDE8',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              background: '#fdfdfd',
-              borderColor: 'rgba(216, 90, 48, 0.2)',
-              boxShadow: '0 4px 12px rgba(86, 58, 28, 0.04)',
-            },
-          }}
-        >
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '10px',
-              background: '#FAECE7',
-              color: '#D85A30',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              flexShrink: 0,
-            }}
-          >
-            💬
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', mb: 0.25 }}>
-              Organisers Chat
-            </Typography>
-            {lastMessages.length > 0 ? (
-              <Stack spacing={0.25}>
-                {lastMessages.map((msg: any, idx: number) => (
-                  <Typography
-                    key={msg.id || idx}
-                    sx={{
-                      fontSize: 12,
-                      color: '#888780',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    <Box component="span" sx={{ fontWeight: 600, color: '#5F5E5A' }}>
-                      @{msg.sender_username}:
-                    </Box>{' '}
-                    {msg.text}
-                  </Typography>
-                ))}
-              </Stack>
-            ) : (
-              <Typography sx={{ fontSize: 12, color: '#888780' }}>
-                No messages yet. Click to start the conversation.
-              </Typography>
-            )}
-          </Box>
-          {messages.length > 0 && (
-            <Box
-              sx={{
-                background: '#FAECE7',
-                color: '#D85A30',
-                fontSize: 10,
-                fontWeight: 700,
-                px: 1,
-                py: 0.4,
-                borderRadius: '8px',
-                ml: 1,
-              }}
-            >
-              {messages.length}
-            </Box>
-          )}
-        </Box>
-
-        <ChatDrawer
-          isOpen={isChatDrawerOpen}
-          onClose={() => setIsChatDrawerOpen(false)}
-          mode="group"
-          eventId={eventId}
-          title="Organisers Chat"
-          subtitle="Host + vendor team communication"
-        />
-      </Box>
-    );
+    <Box sx={{ mt: 1.5, mx: 1.75, mb: 20 }}>
+      <SubHeaderEventPage
+        heading="Organizer's Group Chat"
+        
+        description="Organizers and vendors can discuss the event and share their thoughts and experiences."
+      />
+      <ChatThreadContainer threadKey={threadKey} />
+      </Box>)
   };
 
 

@@ -20,7 +20,7 @@ import {
   useCategories,
   useBaseFeed,
 } from '@/features/events/hooks';
-import type { BaseFeedSort } from '@/types/events';
+import type { BaseFeedSort, EventLifecycleState } from '@/types/events';
 import { LargeEventCard } from '@/components/events/LargeEventCard';
 import { LandscapeEventCard } from '@/components/events/LandscapeEventCard';
 
@@ -50,7 +50,7 @@ export default function TestFeedPage() {
   const [online, setOnline] = useState(false);
   const [freeOnly, setFreeOnly] = useState(false);
   const [hasNeeds, setHasNeeds] = useState(false);
-  const [status, setStatus] = useState<string[]>([]);
+  const [lifecycleStates, setLifecycleStates] = useState<EventLifecycleState[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [startTimeGteLocal, setStartTimeGteLocal] = useState('');
   const [startTimeLteLocal, setStartTimeLteLocal] = useState('');
@@ -64,7 +64,7 @@ export default function TestFeedPage() {
     return {
       sort,
       online: online || undefined,
-      status: status.length ? status : undefined,
+      lifecycle_states: lifecycleStates.length ? lifecycleStates : undefined,
       start_time_gte: toIsoOrUndefined(startTimeGteLocal),
       start_time_lte: toIsoOrUndefined(startTimeLteLocal),
       categories: categories.length ? categories : undefined,
@@ -86,7 +86,7 @@ export default function TestFeedPage() {
     sort,
     startTimeGteLocal,
     startTimeLteLocal,
-    status,
+    lifecycleStates,
   ]);
 
   const { data: nearbyResponse, isLoading: loadingNearby } = useBaseFeed(baseFeedParams);
@@ -104,12 +104,13 @@ export default function TestFeedPage() {
     return ret;
   });
 
-  const statusOptions = [
+  const lifecycleFilterOptions: EventLifecycleState[] = [
     'draft',
     'published',
+    'at_risk',
+    'postponed',
     'event_ready',
     'live',
-    'postponed',
     'cancelled',
     'completed',
   ];
@@ -183,13 +184,15 @@ export default function TestFeedPage() {
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
               <FormControl size="small" sx={{ minWidth: 280, flex: 1 }}>
-                <InputLabel id="base-feed-status-label">Status</InputLabel>
+                <InputLabel id="base-feed-lifecycle-label">Lifecycle state</InputLabel>
                 <Select
-                  labelId="base-feed-status-label"
+                  labelId="base-feed-lifecycle-label"
                   multiple
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as string[])}
-                  input={<OutlinedInput label="Status" />}
+                  value={lifecycleStates}
+                  onChange={(e) =>
+                    setLifecycleStates(e.target.value as EventLifecycleState[])
+                  }
+                  input={<OutlinedInput label="Lifecycle state" />}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {selected.map((value) => (
@@ -198,7 +201,7 @@ export default function TestFeedPage() {
                     </Box>
                   )}
                 >
-                  {statusOptions.map((value) => (
+                  {lifecycleFilterOptions.map((value) => (
                     <MenuItem key={value} value={value}>
                       {value}
                     </MenuItem>

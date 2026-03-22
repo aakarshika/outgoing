@@ -45,9 +45,10 @@ export function AppBottomNav() {
       key: 'chats',
       label: 'Chats',
       icon: 'fluent:people-chat-16-regular',
-      to: '/chats',
+      to: '/allchats',
       guestTo: '/signin',
-      match: (pathname) => pathname === '/chats' || pathname.startsWith('/chats/'),
+      match: (pathname) =>
+        pathname === '/allchats' || pathname.startsWith('/allchats/'),
     });
     items.push({
       key: 'profile',

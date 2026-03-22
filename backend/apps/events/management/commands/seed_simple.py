@@ -45,7 +45,7 @@ EVENT_CATEGORIES_PATH = HELPERS_DIR / "event_categories.json"
 LIVE_EVENT_RATIO = 0.2
 LIVE_EVENT_USED_TICKET_RATIO = 0.9
 # Fraction of co-attendee pairs that become seeded friendships (rest skipped).
-FRIENDSHIP_PAIR_KEEP_RATIO = 0.1
+FRIENDSHIP_PAIR_KEEP_RATIO = 0.3
 
 
 def _filename_for_image_url(url: str, fallback_stem: str):
@@ -460,7 +460,11 @@ class Command(BaseCommand):
                             user1=user1,
                             user2=user2,
                             request_sender=user1,
-                            status=Friendship.STATUS_ACCEPTED,
+                            status=(
+                                Friendship.STATUS_ACCEPTED
+                                if rng.random() < 0.5
+                                else Friendship.STATUS_PENDING
+                            ),
                             accepted_at=now,
                             met_at_event=event,
                             orbit_category=orbit_category,
