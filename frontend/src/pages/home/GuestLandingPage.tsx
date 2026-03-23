@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { LargeEventCard } from '@/components/events/LargeEventCard';
 import { SmallEventCard } from '@/components/events/SmallEventCard';
-import { HostCard } from '@/components/ui/HostCard';
+import { AnyUserCard } from '@/features/events/AnyUserCard';
 import {
   useBaseFeed,
   useCategories,
@@ -872,12 +872,16 @@ export default function GuestLandingPage() {
             '&::-webkit-scrollbar': { display: 'none' },
           }}
         >
-          {iconicHosts.map((host: any) => (
-            <Box key={host.id} sx={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
-              <HostCard
-                host={host}
-                rating={host.avg_rating ? Number(host.avg_rating) : undefined}
-              />
+          {iconicHosts.map((host: { id: number }) => (
+            <Box
+              key={host.id}
+              sx={{
+                scrollSnapAlign: 'start',
+                flexShrink: 0,
+                width: 'min(320px, calc(100vw - 48px))',
+              }}
+            >
+              <AnyUserCard userId={host.id} />
             </Box>
           ))}
         </Box>

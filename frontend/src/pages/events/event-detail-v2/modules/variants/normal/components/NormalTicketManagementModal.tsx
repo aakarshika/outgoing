@@ -56,7 +56,8 @@ export function NormalTicketManagementModal({
 
   const a = tickets?.[activeIndex];
   const t = event.ticket_tiers?.find((tier: TicketTier) => String(tier.id) === String(a?.tier_id));
-  const currentTicket = {...a,  ...t};
+  // Tier first, then ticket — so purchase id / guest fields win (spreading tier after ticket overwrote id with tier_id).
+  const currentTicket = { ...t, ...a };
 
   useEffect(() => {
     setGuestName(currentTicket?.guest_name || '');
