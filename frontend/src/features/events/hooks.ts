@@ -17,9 +17,10 @@ import {
   deleteEvent,
   deleteEventReview,
   fetchAllChatsList,
+  fetchBaseFeed,
   fetchCarouselEvents,
   fetchCategories,
-  fetchBaseFeed,
+  fetchConversationInbox,
   fetchDirectMessages,
   fetchEvent,
   fetchEventAttendees,
@@ -39,6 +40,8 @@ import {
   fetchIconicHostsFeed,
   fetchMyEvents,
   fetchMyFriendships,
+  fetchMyFriendshipsByOrbitCategory,
+  fetchUserFriendshipsByOrbitCategory,
   fetchMyInterestedEvents,
   fetchMyTickets,
   fetchNetworkActivity,
@@ -189,7 +192,9 @@ export function useTrendingHighlights(pageSize = 20) {
       if (!storedOrder) {
         trendingHighlightsOrderByPageSize.set(
           pageSize,
-          items.map((item) => item?.id).filter((id): id is number => typeof id === 'number'),
+          items
+            .map((item) => item?.id)
+            .filter((id): id is number => typeof id === 'number'),
         );
         return response;
       }
@@ -451,6 +456,9 @@ export function useAddEventHighlight() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+      queryClient.invalidateQueries({
+        queryKey: ['eventHighlights', variables.eventId],
+      });
     },
   });
 }
@@ -620,6 +628,7 @@ export function useAddHostVendorMessage() {
       queryClient.invalidateQueries({
         queryKey: ['hostVendorMessages', variables.eventId],
       });
+      queryClient.invalidateQueries({ queryKey: ['conversation-inbox'] });
     },
   });
 }
@@ -780,6 +789,7 @@ export function useAddPrivateMessage() {
       queryClient.invalidateQueries({
         queryKey: ['private-messages', variables.conversationId],
       });
+      queryClient.invalidateQueries({ queryKey: ['conversation-inbox'] });
     },
   });
 }
@@ -814,6 +824,15 @@ export function useAllChatsList(enabled = true) {
   });
 }
 
+export function useConversationInbox(enabled = true) {
+  return useQuery({
+    queryKey: ['conversation-inbox'],
+    queryFn: fetchConversationInbox,
+    enabled,
+    refetchInterval: 10000,
+  });
+}
+
 export function useEventOverviewRows(enabled = true) {
   return useQuery({
     queryKey: ['event-overview-rows'],
@@ -837,6 +856,7 @@ export function useAddDirectMessage() {
       queryClient.invalidateQueries({
         queryKey: ['direct-messages', variables.targetUsername],
       });
+      queryClient.invalidateQueries({ queryKey: ['conversation-inbox'] });
     },
   });
 }
@@ -862,6 +882,7 @@ export function useSendFriendRequest() {
         ],
       });
       queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships-by-orbit'] });
     },
   });
 }
@@ -871,6 +892,25 @@ export function useMyFriendships(enabled = true) {
     queryKey: ['my-friendships'],
     queryFn: () => fetchMyFriendships(),
     enabled,
+  });
+}
+
+export function useMyFriendshipsByOrbitCategory(enabled = true) {
+  return useQuery({
+    queryKey: ['my-friendships-by-orbit'],
+    queryFn: () => fetchMyFriendshipsByOrbitCategory(),
+    enabled,
+  });
+}
+
+export function useUserFriendshipsByOrbitCategory(
+  userId?: number,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['user-friendships-by-orbit', userId],
+    queryFn: () => (userId ? fetchUserFriendshipsByOrbitCategory(userId) : null),
+    enabled: Boolean(userId) && enabled,
   });
 }
 
@@ -914,7 +954,7 @@ export function useUpdateFriendRequest() {
     }: {
       eventId: number;
       targetUsername: string;
-      payload: { action: 'accept' | 'withdraw' | 'unfriend' };
+      payload: { action: 'accept' | 'withdraw' | 'unfriend' | 'decline' };
     }) => updateFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -925,6 +965,7 @@ export function useUpdateFriendRequest() {
         ],
       });
       queryClient.invalidateQueries({ queryKey: ['my-friendships'] });
+      queryClient.invalidateQueries({ queryKey: ['my-friendships-by-orbit'] });
     },
   });
 }

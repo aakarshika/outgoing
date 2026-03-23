@@ -8,7 +8,8 @@ import {
   MessageSquare,
   Navigation,
   CheckCircle2,
-  Clock
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -22,6 +23,7 @@ import type { NeedApplication } from '@/types/needs';
 import type { EventCardEvent } from './useEventCards';
 import { APPLICATION_STATUS_STYLES } from '@/pages/managing/useManaging';
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { useNavigate } from 'react-router-dom';
 
 interface ServiceApplicationEventCardProps {
   application: NeedApplication;
@@ -100,6 +102,7 @@ export function ServiceApplicationEventCard({
     });
   }, [user, event.host, event.id, openChat]);
 
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -121,7 +124,7 @@ export function ServiceApplicationEventCard({
           gap: 1.5,
           padding: '14px 16px',
           cursor: 'pointer',
-          borderLeft: `3px solid ${getCategoryTheme(event.category?.slug || '')?.accent}`,
+          borderLeft: `3px solid ${getCategoryTheme(event.category || '')?.accent}`,
           borderBottom: isExpanded ? '0.5px solid #F0EDE8' : 'none',
           '&:hover': {
             background: 'rgba(245, 240, 235, 0.3)'
@@ -146,7 +149,9 @@ export function ServiceApplicationEventCard({
           ) : event.title?.charAt(0).toUpperCase()}
         </Box>
 
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 0,
+
+         }}>
           <Typography
             sx={{
               fontFamily: 'Syne, sans-serif',
@@ -193,7 +198,9 @@ export function ServiceApplicationEventCard({
 
       {/* EXPANDED BODY */}
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-        <Box sx={{ padding: '16px' }}>
+        <Box sx={{ padding: '16px',
+          borderLeft: `3px solid ${getCategoryTheme(event.category || '')?.accent}`,
+        }}>
 
           {/* COMPENSATION */}
           <Box
@@ -350,6 +357,7 @@ export function ServiceApplicationEventCard({
             >
               Message Host
             </Button>
+            <Stack spacing={1} direction="row">
             <Button
               fullWidth
               variant="outlined"
@@ -368,6 +376,26 @@ export function ServiceApplicationEventCard({
             >
               Get directions
             </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => navigate(`/events-new/${event.id}`)}
+              startIcon={<ArrowRight size={18} />}
+              sx={{
+                background: 'rgb(222, 187, 179)',
+                color: '#fff',
+                borderRadius: '12px',
+                padding: '13px',
+                fontSize: 14,
+                fontWeight: 600,
+                textTransform: 'none',
+                '&:hover': { background: '#2B2B2B' }
+              }}
+            >
+              Go to event
+            </Button>
+          </Stack>
+
           </Stack>
 
         </Box>

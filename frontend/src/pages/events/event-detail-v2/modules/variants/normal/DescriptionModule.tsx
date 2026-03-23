@@ -1,3 +1,4 @@
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { Box, Typography } from '@mui/material';
 
 interface NormalDescriptionModuleProps {
@@ -12,6 +13,21 @@ export function NormalDescriptionModule({ event }: NormalDescriptionModuleProps)
 
   return (
     <Box sx={{ px: 2, mt: 1.5 }}>
+
+<Typography
+          sx={{
+            pt: 2,
+            fontFamily: '"Syne", sans-serif',
+            fontSize: 24,
+            fontWeight: 800,
+            color: 'rgb(17, 24, 39)',
+            lineHeight: 1.15,
+            letterSpacing: '-0.3px',
+            mb: 1,
+          }}
+        >
+          {event.title}
+        </Typography>
       <Typography
         sx={{
           fontSize: 14,

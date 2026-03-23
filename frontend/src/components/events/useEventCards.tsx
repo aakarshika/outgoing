@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { useToggleInterest } from '@/features/events/hooks';
 
 import { EventNeedsStack } from './EventNeedsStack';
+import { formatTime } from '@/utils/date';
 
 export type EventCardEvent = BaseFeedEventItem;
 
@@ -159,8 +160,6 @@ export function useEventCards({
   const timeLabel = isValidStartDate
     ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     : '';
-  const subtitle =
-    'subtitle' in event && event.subtitle ? event.subtitle : event.location_name;
   const parseTicketPrice = (value: string | number | null | undefined) => {
     if (typeof value === 'number') {
       return Number.isFinite(value) ? value : null;
@@ -334,14 +333,18 @@ export function useEventCards({
       sx={{
         position: 'relative',
         minHeight: 0,
-        py: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
       }}
     >
       <Typography
         sx={{
-          fontSize: 20,
+          fontSize: 25,
           fontWeight: 700,
           textTransform: 'uppercase',
+          p:0,
           color: 'rgba(66, 50, 28, 0.56)',
         }}
       >
@@ -351,12 +354,25 @@ export function useEventCards({
         component="span"
         sx={{
           flexShrink: 0,
+          p:0,
           fontSize: 12,
           color: 'rgba(66, 50, 28, 0.68)',
           fontWeight: 500,
         }}
       >
         {monthLabel}
+      </Typography>
+      <Typography
+        component="span"
+        sx={{
+          flexShrink: 0,
+          p:0,
+          fontSize: 12,
+          color: 'rgba(66, 50, 28, 0.68)',
+          fontWeight: 500,
+        }}
+      >
+        {timeLabel}
       </Typography>
     </Stack>
   );
@@ -412,6 +428,7 @@ export function useEventCards({
   );
 
  // useEventCards.tsx — fix LocationStuff
+// useEventCards.tsx — fix LocationStuff
 const LocationStuff = () => (
   <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0, overflow: 'hidden' }}>
     <MapPin size={12} color="rgba(66, 50, 28, 0.68)" style={{ flexShrink: 0 }} />
@@ -428,7 +445,7 @@ const LocationStuff = () => (
         flex: 1,
       }}
     >
-      {subtitle}
+      {event.location_name}
     </Typography>
   </Stack>
 );
@@ -494,8 +511,7 @@ const LocationStuff = () => (
   );
 
   const Going = () => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
         <Avatar
           src={event.host.avatar || undefined}
           sx={{
@@ -515,7 +531,6 @@ const LocationStuff = () => (
           </Typography>
         ) : null}
       </Box>
-    </Box>
   );
 
   const needsBackground =

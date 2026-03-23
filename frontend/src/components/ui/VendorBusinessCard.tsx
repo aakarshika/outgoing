@@ -200,7 +200,7 @@ export const VendorBusinessCard = ({
         >
           <Box
             component="img"
-            src="/assets/go-symbol.png"
+            src="/assets/go-sym.png"
             alt="GO"
             sx={{
               opacity: 0.25,

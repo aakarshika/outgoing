@@ -15,6 +15,7 @@ const SignUpPage = lazy(() => import('@/pages/auth/signup/SignUpPage'));
 const SignInPage = lazy(() => import('@/pages/auth/signin/SignInPage'));
 // const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const UserProfilePage = lazy(() => import('@/pages/profile/UserProfilePage'));
+const UserProfileMockPage = lazy(() => import('@/pages/profile/UserProfileMockPage'));
 const SettingsNewPage = lazy(() => import('@/pages/profile/settings-new/SettingsNewPage'));
 const HomePage = lazy(() => import('@/pages/home/RootHomePage'));
 const HomePageRenewed = lazy(() => import('@/pages/home/HomePageRenewed'));
@@ -39,6 +40,7 @@ const VendorPortfolioPage = lazy(() => import('@/pages/vendors/VendorPortfolioPa
 // const RequestsPage = lazy(() => import('@/pages/requests/RequestsPage'));
 const TestFeedPage = lazy(() => import('@/pages/home/TestFeedPage'));
 const ChatsPage = lazy(() => import('@/pages/chats/ChatsPage'));
+const AllChatsPage = lazy(() => import('@/pages/all-chats/AllChatsPage'));
 // const EventsSpecialPage = lazy(() => import('@/pages/alerts/EventSpecialPage'));
 const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 // const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
@@ -50,6 +52,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignIn: SignInPage,
   // Profile: ProfilePage,
   UserProfile: UserProfilePage,
+  UserProfileMock: UserProfileMockPage,
   SettingsNew: SettingsNewPage,
   Home: HomePage,
   Highlights: HighlightsPage,
@@ -73,6 +76,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   // Requests: RequestsPage,
   // Alerts: AlertsPage,
   Chats: ChatsPage,
+  AllChats: AllChatsPage,
   // EventsSpecial: EventsSpecialPage,
   Gallery: GalleryPage,
   // BrowseFeed: BrowseFeedPage,

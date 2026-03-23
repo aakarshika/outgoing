@@ -96,22 +96,7 @@ export function NormalHeroModule({ event }: NormalHeroModuleProps) {
             mb: 1,
           }}
         >
-          <span style={{ fontSize: 13 }}>{categoryIcon}</span>
-          {categoryName}
         </Box>
-        <Typography
-          sx={{
-            fontFamily: '"Syne", sans-serif',
-            fontSize: 24,
-            fontWeight: 800,
-            color: '#fff',
-            lineHeight: 1.15,
-            letterSpacing: '-0.3px',
-            mb: 1,
-          }}
-        >
-          {event.title}
-        </Typography>
       </Box>
     </Box>
   );

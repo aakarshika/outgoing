@@ -2,6 +2,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { HighlightChainViewer } from '@/pages/events/components/HighlightChainViewer';
+import { SubHeaderEventPage } from './SubHeaderEventPage';
 
 const HIGHLIGHT_ICONS: Record<string, string> = {
   music: '🎵',
@@ -47,31 +48,12 @@ export function NormalHighlightsModule({
   if (showPublishedPlaceholder && displayHighlights.length === 0) {
     return (
       <Box sx={{ px: 2, pt: compact ? 1 : 2, pb: compact ? 1 : 0.5 }}>
-        <Typography
-          sx={{
-            fontFamily: '"Syne", sans-serif',
-            fontSize: 13,
-            fontWeight: 700,
-            color: 'var(--color-text-primary, #111)',
-            mb: 0.75,
-            letterSpacing: '0.01em',
-          }}
-        >
-          Highlights
-        </Typography>
-        <Box
-          sx={{
-            border: '0.5px dashed #d1d5db',
-            borderRadius: '12px',
-            px: 2,
-            py: 1.5,
-            bgcolor: '#fafafa',
-          }}
-        >
-          <Typography sx={{ fontSize: 13, color: '#6b7280' }}>
-            Memories to come
-          </Typography>
-        </Box>
+        <SubHeaderEventPage
+          heading="Highlights"
+          icon="material-symbols:photo-prints-sharp"
+          description="Memories to come"
+          iconSide="right"
+        />
       </Box>
     );
   }
@@ -82,23 +64,15 @@ export function NormalHighlightsModule({
     <Box sx={{ px: 2, pt: compact ? 1 : 2, pb: compact ? 4 : 2 }}>
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 1.5,
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: '"Syne", sans-serif',
-            fontSize: 13,
-            fontWeight: 700,
-            color: 'var(--color-text-primary, #111)',
-            letterSpacing: '0.01em',
-          }}
-        >
-          Highlights
-        </Typography>
+
+        <SubHeaderEventPage
+          heading="Highlights"
+          icon="material-symbols:photo-prints-sharp"
+          description="Memories from the event"
+          iconSide="right"
+        />
       </Box>
 
       {displayHighlights.length > 0 ? (
@@ -225,20 +199,7 @@ export function NormalHighlightsModule({
           })}
         </Box>
       ) : (
-        <Box
-          sx={{
-            border: '0.5px dashed #d1d5db',
-            borderRadius: '12px',
-            px: 2,
-            py: 3,
-            bgcolor: '#fafafa',
-            textAlign: 'center',
-          }}
-        >
-          <Typography sx={{ fontSize: 13, color: '#6b7280' }}>
-            No highlights yet. Be the first to share your experience!
-          </Typography>
-        </Box>
+        null
       )}
 
       {canUpload && (

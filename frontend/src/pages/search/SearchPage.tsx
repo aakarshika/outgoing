@@ -5,11 +5,14 @@ import { useSearchParams } from 'react-router-dom';
 
 import { LargeEventCard } from '@/components/events/LargeEventCard';
 import { useBaseFeed } from '@/features/events/hooks';
-import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
+import {
+  DISCOVERABLE_LIFECYCLE_STATES,
+  type BaseFeedEventItem,
+  type BaseFeedParams,
+} from '@/types/events';
 
-import { SimpleNavbar } from './components/SimpleNavbar';
-
-const DISCOVERABLE_STATUSES = ['published', 'event_ready', 'live'] as const;
+import { SimpleNavbarMobile } from './components/SimpleNavbarMobile';
+import { SimpleNavbarSearch } from './components/SimpleNavbarSearch';
 
 const exploreTabs = [
   {
@@ -208,7 +211,7 @@ function ExploreStat({
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tabShrinkProgress, setTabShrinkProgress] = useState(0);
+  const [tabShrinkProgress, setTabShrinkProgress] = useState(2);
   const rawTab = searchParams.get('tab');
   const tab = normalizeTab(rawTab);
   const search = (searchParams.get('search') || '').trim().toLowerCase();
@@ -225,23 +228,13 @@ export default function SearchPage() {
     setSearchParams(next, { replace: true });
   }, [rawTab, searchParams, setSearchParams, tab]);
 
-  useEffect(() => {
-    const updateTabShrinkProgress = () => {
-      const nextProgress = Math.min(window.scrollY / TAB_SHRINK_DISTANCE, 1);
-      setTabShrinkProgress(nextProgress);
-    };
-
-    updateTabShrinkProgress();
-    window.addEventListener('scroll', updateTabShrinkProgress, { passive: true });
-
-    return () => window.removeEventListener('scroll', updateTabShrinkProgress);
-  }, []);
-
-  const activeTab = exploreTabs.find((item) => item.id === tab) || exploreTabs[0];
   const tabMetrics = useMemo(() => {
     const progress = tabShrinkProgress;
 
     return {
+      /** Fully hidden at end of tab shrink range (no mini title). */
+      exploreSectionMaxHeight: 140 * (1 - progress),
+      exploreSectionOpacity: 1 - progress,
       borderRadius: 22 - progress * 4,
       px: 1.4 - progress * 0.3,
       py: 1.2 - progress * 0.35,
@@ -260,7 +253,7 @@ export default function SearchPage() {
   const feedParams = useMemo<BaseFeedParams>(() => {
     const params: BaseFeedParams = {
       sort: tab === 'upcoming' ? 'start_time' : 'popularity',
-      status: [...DISCOVERABLE_STATUSES],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 100,
       lat: hasCoords && tab !== 'online' ? lat : undefined,
@@ -282,44 +275,6 @@ export default function SearchPage() {
     return params;
   }, [hasCoords, lat, lng, nowIso, tab]);
 
-  const tabCopy = useMemo<Record<ExploreTabId, { title: string; description: string }>>(
-    () => ({
-      trending: {
-        title: 'Popular events right now',
-        description: locationLabel
-          ? `What people are checking out around ${locationLabel}.`
-          : 'What people are checking out right now.',
-      },
-      upcoming: {
-        title: 'Coming up next',
-        description: 'A time-sorted list of upcoming events.',
-      },
-      free: {
-        title: 'Free to join',
-        description: 'Events you can jump into without buying a ticket.',
-      },
-      opportunities: {
-        title: 'Events with open contributor spots',
-        description: 'Hosts looking for help, services, or collaborators.',
-      },
-      online: {
-        title: 'Happening online',
-        description: 'Join from anywhere.',
-      },
-    }),
-    [locationLabel],
-  );
-
-  const emptyStateCopy = useMemo<Record<ExploreTabId, string>>(
-    () => ({
-      trending: 'No events are available right now.',
-      upcoming: 'No upcoming events are lined up right now.',
-      free: 'No free events are open right now.',
-      opportunities: 'No events with open contributor spots are available right now.',
-      online: 'No online events are open right now.',
-    }),
-    [],
-  );
 
   const { data: feedResponse, isLoading } = useBaseFeed(feedParams);
 
@@ -350,97 +305,36 @@ export default function SearchPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const heroCopy = useMemo<Record<ExploreTabId, { eyebrow: string; badge: string }>>(
-    () => ({
-      trending: {
-        eyebrow: 'Explore what is buzzing',
-        badge: 'Most active now',
-      },
-      upcoming: {
-        eyebrow: 'Plan your next move',
-        badge: 'Sorted by time',
-      },
-      free: {
-        eyebrow: 'Low-friction plans',
-        badge: 'Zero-cost picks',
-      },
-      opportunities: {
-        eyebrow: 'Jump in and help shape it',
-        badge: 'Open contributor spots',
-      },
-      online: {
-        eyebrow: 'Join from anywhere',
-        badge: 'Remote-friendly events',
-      },
-    }),
-    [],
-  );
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-                borderRadius: '28px',
-                border: '1px solid rgba(120, 94, 60, 0.12)',
-                background:
-                  'linear-gradient(135deg, #FFF7EA 0%, #FAECE7 34%, #FAEEDA 68%, #FFF9F0 100%)',
-                // p: { xs: 2, md: 3 },
-                boxShadow: '0 24px 60px rgba(86, 58, 28, 0.08)',
+        backgroundColor: 'rgba(237, 232, 226, 0.9)',
+        boxShadow: '0 24px 60px rgba(86, 58, 28, 0.08)',
       }}
     >
-      <SimpleNavbar />
-
+      <SimpleNavbarSearch />
       <Box sx={{  }}>
         <Box
           sx={{
             position: 'sticky',
             top: 0,
             zIndex: 30,
-            backdropFilter: 'blur(10px)',
-            background: 'linear-gradient(0deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%)',
-            WebkitBackdropFilter: 'blur(10px)',
+        backgroundColor: 'rgba(237, 232, 226, 0.9)',
             
             // borderBottom: '1px solid rgba(120, 94, 60, 0.12)',
           }}
         >
           <Container
+          disableGutters
             maxWidth={false}
-            sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 2 }}
+            sx={{ maxWidth: 1040, pt: 8}}
           >
             <Box
               sx={{
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                spacing={2}
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-                justifyContent="space-between"
-              >
-                <Stack spacing={1.1} sx={{ minWidth: 0, maxWidth: 620 }}>
-                  
-                  <Typography
-                    sx={{
-                      fontFamily: 'Syne, sans-serif',
-                      fontSize: { xs: 30, md: 42 },
-                      fontWeight: 800,
-                      letterSpacing: '-0.05em',
-                      color: '#3D3124',
-                      lineHeight: 1.02,
-                    }}
-                  >
-                    Explore
-                  </Typography>
-
-                </Stack>
-
-              </Stack>
-            </Box>
-
-            <Box
-              sx={{
                 display: 'flex',
-                gap: 1,
+                // gap: 1,
                 overflowX: 'auto',
                 '&::-webkit-scrollbar': {
                   display: 'none',
@@ -458,27 +352,14 @@ export default function SearchPage() {
                     type="button"
                     onClick={() => handleTabChange(item.id)}
                     sx={{
-                      border: '1px solid',
-                      borderColor: isActive ? item.accent : 'rgba(120, 94, 60, 0.12)',
-                      background: isActive ? item.accent : item.wash,
-                      color: isActive ? '#fff' : '#3D3124',
-                      borderRadius: `${tabMetrics.borderRadius}px`,
+                      color: isActive ? '#D85A30' : '#3D3124',
+                      // borderRadius: `${tabMetrics.borderRadius}px`,
                       px: tabMetrics.px,
                       py: tabMetrics.py,
-                      my: tabMetrics.my,
                       minWidth: { xs: tabMetrics.minWidthXs, md: tabMetrics.minWidthMd },
                       fontSize: 14,
                       fontWeight: 700,
                       whiteSpace: 'nowrap',
-                      transition: 'all 180ms ease',
-                      boxShadow: isActive
-                        ? `0 9px 5px ${item.accent}33`
-                        : '0 7px 5px rgba(86, 58, 28, 0.06)',
-                      '&:hover': {
-                        borderColor: item.accent,
-                        background: isActive ? item.accent : '#FFF1DE',
-                        transform: 'translateY(-1px)',
-                      },
                     }}
                   >
                     <Stack
@@ -495,8 +376,6 @@ export default function SearchPage() {
                           width: tabMetrics.iconSize,
                           height: tabMetrics.iconSize,
                           borderRadius: `${tabMetrics.iconRadius}px`,
-                          background: isActive ? 'rgba(255,255,255,0.18)' : '#fff',
-                          color: isActive ? '#fff' : item.accent,
                         }}
                       >
                         <item.Icon size={tabMetrics.glyphSize} strokeWidth={tabMetrics.iconStroke} />
@@ -524,19 +403,11 @@ export default function SearchPage() {
           sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 1 }}
         >
 
-          {isLoading ? (
-            <Box sx={{ display: 'grid', placeItems: 'center', py: 8 }}>
-              <CircularProgress sx={{ color: '#D85A30' }} />
-            </Box>
-          ) : events.length === 0 ? (
-            <ExploreEmptyState message={emptyStateCopy[tab]} />
-          ) : (
-            <Stack spacing={3}>
-              {events.map((event) => (
+              <Stack spacing={3}>
+              {events?.map((event) => (
                 <LargeEventCard key={event.id} event={event} />
               ))}
             </Stack>
-          )}
         </Container>
       </Box>
     </Box>

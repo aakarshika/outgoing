@@ -51,7 +51,6 @@ export function NetworkHeroSection({
                   maxWidth: 560,
                 }}
               >
-                Your people, in motion.
               </Typography>
               <Stack
                 direction={{ xs: 'column', md: 'row' }}

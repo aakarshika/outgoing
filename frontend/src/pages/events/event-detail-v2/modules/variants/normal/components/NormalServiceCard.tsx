@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { Attendee, AttendeePopover } from '@/components/ui/AttendeePopover';
 import { useAuth } from '@/features/auth/hooks';
 import { applyToNeed } from '@/features/needs/api';
+import { VENDOR_CATEGORIES } from '@/constants/categories';
 
 const NEED_CATEGORY_ICONS: Record<string, string> = {
   photographer: '📸',
@@ -95,10 +96,6 @@ export function NormalServiceCard({
     [myServices, need.category],
   );
 
-  const getIcon = (title: string) => {
-    const key = title?.toLowerCase().slice(0, 12) || 'default';
-    return NEED_CATEGORY_ICONS[key] || NEED_CATEGORY_ICONS.default;
-  };
 
   const getBgColor = (title: string) => {
     const key = title?.toLowerCase().slice(0, 12) || 'default';
@@ -291,8 +288,6 @@ export function NormalServiceCard({
       sx={{
         bgcolor: 'var(--color-background-primary, #fff)',
         border: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
-        borderLeft: `3px solid ${need.status === 'filled' ? '#1D9E75' : '#EF9F27'}`,
-        borderRadius: 'var(--border-radius-lg, 12px)',
         p: 1.375,
         mb: 1.5,
         opacity: need.status === 'filled' && !assignedVendor ? 0.75 : 1,
@@ -307,12 +302,11 @@ export function NormalServiceCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 16,
+            fontSize: 36,
             flexShrink: 0,
-            bgcolor: getBgColor(need.title),
           }}
         >
-          {getIcon(need.title)}
+          { VENDOR_CATEGORIES.find((category: any) => category.items.find((item: any) => item.id === need.category))?.items.find((item: any) => item.id === need.category)?.icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
@@ -338,10 +332,10 @@ export function NormalServiceCard({
               overflow: 'hidden',
             }}
           >
-            {need.description || 'Help needed'}
+            {need.description || ''}
           </Typography>
         </Box>
-        <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+        {need.status !== 'filled' && (<Box sx={{ textAlign: 'right', flexShrink: 0 }}>
           {need.budget_max || need.budget_min ? (
             <>
               <Typography
@@ -359,47 +353,39 @@ export function NormalServiceCard({
               <Typography
                 sx={{ fontSize: 10, color: 'var(--color-text-secondary, #6b7280)' }}
               >
-                {need.is_reimbursed ? 'reimbursed' : 'budget'}
+                {need.is_reimbursed ? '' : ''}
               </Typography>
             </>
           ) : (
+            
             <Typography
-              sx={{ fontSize: 10, color: 'var(--color-text-secondary, #6b7280)' }}
-            >
-              Comp TBD
-            </Typography>
+            sx={{
+              fontFamily: '"Syne", sans-serif',
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#BA7517',
+            }}
+          >
+            Free in
+          </Typography>
           )}
-        </Box>
+        </Box>)}
       </Box>
 
       {/* Applications / Status Section */}
       <Box
         sx={{
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
+          flexDirection: 'row' ,
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'space-between',
           gap: { xs: 1, sm: 0 },
-          mt: 1.125,
-          pt: 1,
-          borderTop: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
+          mt: need.status === 'filled' ? 0 : 1.125,
+          pt: need.status === 'filled' ? 0 : 1,
+          borderTop: need.status === 'filled' ? 'none' : '0.5px solid var(--color-border-tertiary, #e5e7eb)',
         }}
       >
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-          <Box
-            sx={{
-              fontSize: 10,
-              fontWeight: 500,
-              px: 1,
-              py: 0.25,
-              borderRadius: 999,
-              bgcolor: need.status === 'filled' ? '#EAF3DE' : '#FAEEDA',
-              color: need.status === 'filled' ? '#3B6D11' : '#854F0B',
-              textTransform: 'capitalize',
-            }}
-          >
-            {need.status || 'Open'}
-          </Box>
           {(need.applications?.length || 0) > 0 && need.status !== 'filled' && (
             <Typography
               sx={{ fontSize: 11, color: 'var(--color-text-secondary, #6b7280)' }}
@@ -411,71 +397,53 @@ export function NormalServiceCard({
         {renderAction()}
       </Box>
 
-      {/* Accepted Vendor Section */}
+      <Box >
+        <Box display="flex" flexDirection="row" justifyContent="flex-end" gap={1}>
+          {/* Accepted Vendor Section */}
       {need.status === 'filled' && assignedVendor && (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.75,
-            mt: 1,
-            pt: 1,
-            borderTop: '0.5px solid var(--color-border-tertiary, #e5e7eb)',
-          }}
+        
+        <AttendeePopover
+          attendee={
+            {
+              username:
+                assignedVendor.username || assignedVendor.vendor_name || 'user',
+              name: assignedVendor.name,
+              avatar: assignedVendor.avatar,
+              is_verified: assignedVendor.is_verified || false,
+              bio: assignedVendor.bio,
+            } as Attendee
+          }
+          variant="normal"
         >
-          <AttendeePopover
-            attendee={
-              {
-                username:
-                  assignedVendor.username || assignedVendor.vendor_name || 'user',
-                name: assignedVendor.name,
-                avatar: assignedVendor.avatar,
-                is_verified: assignedVendor.is_verified || false,
-                bio: assignedVendor.bio,
-              } as Attendee
-            }
-            variant="normal"
+          <Box
+            sx={{
+              mt: -2,
+              display: 'inline-flex',
+              bgcolor: '#F0FDF4',
+              border: '1.5px solid #BBF7D0',
+              py: 0.6,
+              px: 1.25,
+            }}
           >
-            <Box
+            <Typography
               sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.5,
-                bgcolor: '#F0FDF4',
-                border: '1.5px solid #BBF7D0',
-                borderRadius: 'var(--border-radius-full, 999px)',
-                py: 0.6,
-                px: 1.25,
-                cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  bgcolor: '#DCFCE7',
-                  borderColor: '#86EFAC',
-                  transform: 'translateY(-1px)',
-                },
+                fontSize: 11,
+                color: '#166534',
+                fontWeight: 500,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: 11,
-                  color: '#166534',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.4,
-                  lineHeight: 1,
-                }}
-              >
-                <span>✨</span>
-                <Box component="span" sx={{ fontWeight: 800, color: '#15803D' }}>
-                  {assignedVendor.username || assignedVendor.vendor_name}
-                </Box>
-                <span>chipped in! 🚀</span>
-              </Typography>
-            </Box>
-          </AttendeePopover>
+              <Box component="span" sx={{ fontWeight: 800, color: '#15803D' }}>
+                {assignedVendor.username || assignedVendor.vendor_name}
+              </Box>
+              <span> is chipping in!</span>
+            </Typography>
+          </Box>
+        </AttendeePopover>
+    )}
+
         </Box>
-      )}
+
+      </Box>
 
       {/* Application Form */}
       <Collapse in={showApplicationForm}>

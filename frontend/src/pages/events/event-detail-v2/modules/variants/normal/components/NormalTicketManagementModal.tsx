@@ -56,7 +56,8 @@ export function NormalTicketManagementModal({
 
   const a = tickets?.[activeIndex];
   const t = event.ticket_tiers?.find((tier: TicketTier) => String(tier.id) === String(a?.tier_id));
-  const currentTicket = {...a,  ...t};
+  // Tier first, then ticket — so purchase id / guest fields win (spreading tier after ticket overwrote id with tier_id).
+  const currentTicket = { ...t, ...a };
 
   useEffect(() => {
     setGuestName(currentTicket?.guest_name || '');
@@ -127,8 +128,7 @@ export function NormalTicketManagementModal({
             borderRadius: '24px 24px 0 0',
             bgcolor: '#F5F0EB',
             width: '100%',
-            maxWidth: 390,
-            pb: 4
+            pb: 14
           }
         }
       }}
@@ -201,14 +201,14 @@ export function NormalTicketManagementModal({
                 Hosted by {event?.host?.first_name || 'Host'} · {event?.location_name}
               </Typography>
 
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25, mb: 1.75 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1.25, mb: 1.75 }}>
                 {[
                   { label: 'Date', val: formatShortDate(event?.start_time) },
                   { label: 'Tier', val: currentTicket.name },
                   { label: 'Time', val: formatTime(event?.start_time) },
                   { label: 'Price', val: currentTicket.price === 0 ? 'Free' : `₹${currentTicket.price}` },
                 ].map((detail, idx) => (
-                  <Box key={idx}>
+                  <Box key={idx} sx={{ flex: 1 }}>
                     <Typography sx={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#888780', mb: 0.4 }}>
                       {detail.label}
                     </Typography>

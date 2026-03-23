@@ -28,6 +28,7 @@ import {
   UserRound,
   Users,
   Wrench,
+  MessageSquare,
   MoreHorizontal,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -38,7 +39,8 @@ import { Media } from '@/components/ui/media';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
 import { useSendFriendRequest, useUpdateFriendRequest } from '@/features/events/hooks';
-import { ProfileService } from './Profile.service';
+import { buildUserThreadKey, encodeThreadKey } from '@/features/chat/threadKeyCodec';
+import { ProfileService, unwrapPublicProfileResponse } from './Profile.service';
 
 type SharedEvent = {
   id: number;
@@ -69,6 +71,7 @@ type ProfileAccess = {
 
 type PublicProfile = {
   username: string;
+  user_id: number;
   first_name?: string;
   last_name?: string;
   is_verified?: boolean;
@@ -157,7 +160,7 @@ export default function UserProfilePage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: authUser } = useAuth();
   const sendFriendRequest = useSendFriendRequest();
   const updateFriendRequest = useUpdateFriendRequest();
   const [isFriendDialogOpen, setIsFriendDialogOpen] = useState(false);
@@ -196,7 +199,9 @@ export default function UserProfilePage() {
     );
   }
 
-  if (error || !response?.data) {
+  const profilePayload = unwrapPublicProfileResponse(response);
+
+  if (error || !profilePayload) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: '#FDF8F3', display: 'grid', placeItems: 'center', px: 3 }}>
         <Typography sx={{ color: '#7A5A43', fontWeight: 500, textAlign: 'center' }}>
@@ -206,8 +211,10 @@ export default function UserProfilePage() {
     );
   }
 
-  const profile = response.data as PublicProfile;
+  const profile = profilePayload as PublicProfile;
   const displayName = getDisplayName(profile);
+  const showMessageCta =
+    isAuthenticated && !!authUser && profile.user_id !== authUser.id;
   const attendedEvents = profile.attended_events || [];
   const hostedEvents = profile.hosted_events || [];
   const services = profile.services || [];
@@ -471,7 +478,9 @@ export default function UserProfilePage() {
   })();
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#FDF8F3', pb: 14 }}>
+    <Box sx={{ minHeight: '100vh', 
+      background: 'rgba(237, 232, 226, 0.9)',
+       pb: 14 }}>
       <Box sx={{ maxWidth: 430, mx: 'auto', position: 'relative' }}>
 
         <Box sx={{ position: 'relative' }}>
@@ -706,7 +715,7 @@ export default function UserProfilePage() {
             </Box>
           )}
 
-          {headerAction && (
+          {(headerAction || showMessageCta) && (
             <Box
               sx={{
                 flex: { xs: '1 1 100%', sm: '0 0 auto' },
@@ -715,8 +724,34 @@ export default function UserProfilePage() {
                 alignItems: 'center',
                 justifyContent: { xs: 'stretch', sm: 'flex-end' },
                 gap: 1,
+                flexWrap: 'wrap',
               }}
             >
+              {showMessageCta && authUser && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  startIcon={<MessageSquare size={14} />}
+                  onClick={() => {
+                    const tk = buildUserThreadKey(authUser.id, profile.user_id);
+                    navigate(`/allchats/t/${encodeThreadKey(tk)}`);
+                  }}
+                  sx={{
+                    minWidth: { xs: '100%', sm: 'unset' },
+                    borderRadius: '18px',
+                    px: 2,
+                    py: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: 12.5,
+                    borderColor: '#C4A882',
+                    color: '#5C4A3A',
+                    '&:hover': { borderColor: '#A88B6A', bgcolor: 'rgba(196, 168, 130, 0.08)' },
+                  }}
+                >
+                  Message
+                </Button>
+              )}
               {headerAction}
             </Box>
           )}

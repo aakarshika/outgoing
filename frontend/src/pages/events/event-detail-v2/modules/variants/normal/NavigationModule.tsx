@@ -66,7 +66,7 @@ export function NormalNavigationModule({
       </IconButton>
       <Box sx={{ display: 'flex', gap: 1 }}>
         {isHost && (<IconButton
-          onClick={() => navigate('/events/' + event.id + '/workspace')}
+          onClick={() => navigate('/events/' + event.id + '/manage')}
           sx={{
             width: 34,
             height: 34,

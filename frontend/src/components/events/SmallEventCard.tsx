@@ -26,7 +26,6 @@ export function SmallEventCard({
   const {
     ImageFrame,
     DateAndLocation,
-    ManageButton,
     Category,
     LocationStuff,
     Going,
@@ -41,26 +40,11 @@ export function SmallEventCard({
 
   return (
     <Box
-      component={motion.div}
-      layout
-      initial={false}
-      animate={{
-        scale: isSaved ? [1, 1.03, 1] : 1,
-        boxShadow: isSaved
-          ? '0 20px 40px rgba(216, 90, 48, 0.12)'
-          : '0 10px 30px rgba(43, 33, 24, 0.04)'
-      }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+    onClick={() => navigate(`/events-new/${event.id}`)}
       sx={getCardSx([{ mb: IMAGE_HEIGHT / 30 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])])}
     >
-      <Box
-        component={Link}
-        to={`/events-new/${event.id}`}
-        sx={{ textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', height: '100%' }}
-      >
         <ImageFrame />
-      </Box>
-
+      
       <HeartButton />
 
       {isLive ? (
@@ -131,7 +115,6 @@ export function SmallEventCard({
           sx={{
             minHeight: 0,
             p: 1,
-            alignItems: 'flex-start',
           }}
         >
 
@@ -153,6 +136,8 @@ export function SmallEventCard({
               spacing={1}
             >
               <Category />
+              <Going />
+
             </Stack>
 
             <Typography
@@ -160,7 +145,7 @@ export function SmallEventCard({
                 fontFamily: 'Syne, sans-serif',
                 fontSize: 15,
                 fontWeight: 700,
-                lineHeight: 1.3,
+                lineHeight: 1.4,
                 color: '#000000',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -168,28 +153,24 @@ export function SmallEventCard({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 minWidth: 0,
+                // Reserve vertical space for two lines even when title is short
+                minHeight: 42,
               }}
             >
               {event.title}
             </Typography>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              spacing={0.75}
+            <Box
+              sx={{
+                display: 'inline-flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 0.75,
+              }}
             >
-              <Stack
-                direction="row"
-                alignItems="center"
-              >
-                <LocationStuff />
-              </Stack>
-              <Going />
-            </Stack>
-
-              {isHost && location.pathname.includes('/managing') && (
-                <ManageButton />
-              )}
+              <LocationStuff />
+            </Box>
           </Stack>
         </Stack>
       </Stack>

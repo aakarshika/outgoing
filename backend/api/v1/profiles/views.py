@@ -4,7 +4,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.events.models import Event, EventReview, Friendship
+from apps.events.models import Event, EventReview, Friendship, resolve_orbit_category_for_event
 from apps.profiles.services import get_or_create_profile
 from apps.profiles.user_tags import get_user_tags
 from apps.tickets.models import Ticket
@@ -62,7 +62,7 @@ class PublicShowcaseView(APIView):
             return []
 
         target_tickets = (
-            Ticket.objects.select_related("event")
+            Ticket.objects.select_related("event", "event__category")
             .filter(
                 goer=target_user,
                 status="used",
@@ -77,12 +77,14 @@ class PublicShowcaseView(APIView):
             if ticket.event_id in seen_event_ids or not ticket.event:
                 continue
             seen_event_ids.add(ticket.event_id)
+            orbit_cat = resolve_orbit_category_for_event(ticket.event)
             shared_events.append(
                 {
                     "id": ticket.event.id,
                     "title": ticket.event.title,
                     "start_time": ticket.event.start_time,
                     "location_name": ticket.event.location_name,
+                    "orbit_category_slug": orbit_cat.slug,
                     "cover_image": (
                         resolve_media_url(ticket.event.cover_image, request)
                         if ticket.event.cover_image
@@ -93,10 +95,13 @@ class PublicShowcaseView(APIView):
 
         return shared_events
 
-    def get(self, request, username):
+    def get(self, request, username=None, user_id=None):
         """Get public showcase data for a user."""
         try:
-            user = User.objects.select_related("profile").get(username=username)
+            if user_id is not None:
+                user = User.objects.select_related("profile").get(id=user_id)
+            else:
+                user = User.objects.select_related("profile").get(username=username)
         except User.DoesNotExist:
             return error_response(message="User not found", status=404)
 
@@ -112,7 +117,10 @@ class PublicShowcaseView(APIView):
             shared_events = self._serialize_shared_events(request.user, user, request)
 
             user1_id, user2_id = sorted([request.user.id, user.id])
-            friendship = Friendship.objects.select_related("met_at_event").filter(
+            friendship = Friendship.objects.select_related(
+                "met_at_event",
+                "met_at_event__category",
+            ).filter(
                 user1_id=user1_id,
                 user2_id=user2_id,
             ).first()
@@ -134,9 +142,7 @@ class PublicShowcaseView(APIView):
             else False
         )
 
-        can_view_full_profile = is_self_profile or (
-            is_authenticated_viewer and has_shared_events
-        )
+        can_view_full_profile = True
 
         if not is_authenticated_viewer:
             cta = "login_required"
@@ -168,12 +174,18 @@ class PublicShowcaseView(APIView):
             "met_at_event_title": (
                 friendship.met_at_event.title if friendship and friendship.met_at_event else None
             ),
+            "orbit_category_slug": (
+                friendship.orbit_category.slug
+                if friendship and friendship.orbit_category_id
+                else None
+            ),
             "can_view_full_profile": can_view_full_profile,
             "cta": cta,
         }
 
         base_data = {
             "username": user.username,
+            "user_id": user.id,
             "first_name": user.first_name if profile.privacy_name else "",
             "last_name": user.last_name if profile.privacy_name else "",
             "date_joined": user.date_joined,
@@ -181,22 +193,29 @@ class PublicShowcaseView(APIView):
             "access": access,
         }
 
-        if not can_view_full_profile:
-            return success_response(data=base_data)
-
-        # Hosted Events
+        # Attended events + count (must use the same filters so counts match the list).
+        attended_count = 0
+        attended_events = []
         if profile.privacy_events_attending or profile.privacy_events_attended:
-            tickets_query = Ticket.objects.select_related("event").filter(
+            tickets_query = Ticket.objects.select_related(
+                "event",
+                "event__category",
+            ).filter(
                 goer=user,
                 status__in=["active", "used"],
                 event__lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES,
             )
-            
+
             if not profile.privacy_events_attending:
-                tickets_query = tickets_query.filter(event__lifecycle_state="completed") # Only show past if attending is hidden
+                tickets_query = tickets_query.filter(
+                    event__lifecycle_state="completed",
+                )
             if not profile.privacy_events_attended:
-                tickets_query = tickets_query.exclude(event__lifecycle_state="completed")
-                
+                tickets_query = tickets_query.exclude(
+                    event__lifecycle_state="completed",
+                )
+
+            attended_count = tickets_query.count()
             tickets = tickets_query.order_by("-event__start_time")[:10]
 
             attended_events = [
@@ -206,17 +225,23 @@ class PublicShowcaseView(APIView):
                     "slug": t.event.slug,
                     "start_time": t.event.start_time,
                     "location_name": t.event.location_name,
+                    "category": (
+                        t.event.category.name
+                        if t.event.category_id
+                        else None
+                    ),
                     "cover_image": resolve_media_url(t.event.cover_image, request)
                     if t.event.cover_image
                     else None,
                 }
                 for t in tickets
             ]
-        else:
-            attended_events = []
 
-        # Hosted Events
+        # Hosted preview list and hosted_count share the same lifecycle filter.
         if profile.privacy_hosted_events:
+            hosted_visible_qs = user.hosted_events.filter(
+                lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
+            ).select_related("category")
             hosted_events = [
                 {
                     "id": e.id,
@@ -224,16 +249,17 @@ class PublicShowcaseView(APIView):
                     "slug": e.slug,
                     "start_time": e.start_time,
                     "location_name": e.location_name,
+                    "category": e.category.name if e.category_id else None,
                     "cover_image": resolve_media_url(e.cover_image, request)
                     if e.cover_image
                     else None,
                 }
-                for e in user.hosted_events.filter(
-                    lifecycle_state__in=Event.VISIBLE_LIFECYCLE_STATES
-                ).order_by("-start_time")[:10]
+                for e in hosted_visible_qs.order_by("-start_time")[:10]
             ]
+            hosted_count = hosted_visible_qs.count()
         else:
             hosted_events = []
+            hosted_count = 0
 
         # Vendor Services
         active_services = VendorService.objects.filter(
@@ -255,17 +281,18 @@ class PublicShowcaseView(APIView):
         # User category tags (computed from activity)
         user_tags = get_user_tags(user)
 
-        # Backward-compatible badges list (derived from user_tags)
+        # Backward-compatible badges list — only tags the user has actually earned
         badges = [
             {
                 "id": t["id"],
                 "label": f'{t["emoji"]} {t["label"]}',
                 "icon": t["icon"],
                 "color": t["color"],
-                "is_earned": t.get("is_earned", False),
+                "is_earned": True,
                 "description": t.get("description", ""),
             }
             for t in user_tags["all_tags"]
+            if t.get("is_earned", False)
         ]
 
         # Testimonials
@@ -336,8 +363,8 @@ class PublicShowcaseView(APIView):
             "location_city": profile.location_city,
             "hosted_events": hosted_events,
             "attended_events": attended_events,
-            "hosted_count": user.hosted_events.filter(lifecycle_state='completed').count(),
-            "attended_count": Ticket.objects.filter(goer=user, status__in=['active', 'used']).count(),
+            "hosted_count": hosted_count,
+            "attended_count": attended_count,
             "total_goers": sum(e.ticket_count or 0 for e in user.hosted_events.all()),
             "total_reviews": len(testimonials),
             "services": services,

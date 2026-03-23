@@ -10,7 +10,7 @@ import { AppBottomNav } from './components/navigation/AppBottomNav';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthProvider } from './features/auth/hooks';
 import { ServicesProvider } from './features/vendors/ServicesContext';
-import { SimpleNavbar } from './pages/search/components/SimpleNavbar';
+import { SimpleNavbarMobile } from './pages/search/components/SimpleNavbarMobile';
 import { AppRoutes } from './routes/AppRoutes';
 import { ThemeProvider } from './theme/ThemeProvider';
 
@@ -24,6 +24,12 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 
 import { Box } from '@mui/material';
 
+import {
+  GlobalThreadChatDrawer,
+} from '@/features/chat/GlobalThreadChatDrawer';
+import {
+  GlobalThreadChatDrawerProvider,
+} from '@/features/chat/GlobalThreadChatDrawerContext';
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
@@ -60,14 +66,15 @@ function AppContent() {
   return (
     <div className="relative flex min-h-screen flex-col pb-40 text-foreground transition-colors duration-300">
       {backgroundComponent}
-      {/* {!isSearchRoute && <SimpleNavbar />} */}
-      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbar />}
+      {/* {!isSearchRoute && <SimpleNavbarMobile />} */}
+      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbarMobile />}
 
       <Toaster />
       <main className="flex-1 bg-transparent pb-32">
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
+      <GlobalThreadChatDrawer />
       {!isEventDetailRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
@@ -86,10 +93,12 @@ function App() {
           <BrowserRouter>
             <BackgroundProvider>
               <ServicesProvider>
-                <ChatDrawerProvider>
-                  <ScrollToTop />
-                  <AppContent />
-                </ChatDrawerProvider>
+                <GlobalThreadChatDrawerProvider>
+                  <ChatDrawerProvider>
+                    <ScrollToTop />
+                    <AppContent />
+                  </ChatDrawerProvider>
+                </GlobalThreadChatDrawerProvider>
               </ServicesProvider>
             </BackgroundProvider>
           </BrowserRouter>

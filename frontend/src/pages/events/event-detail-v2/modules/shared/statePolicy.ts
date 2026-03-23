@@ -31,10 +31,9 @@ export interface EventDetailCapabilities {
   showPublishedHighlightsPlaceholder: boolean;
 }
 
-const TICKET_OPEN_STATES: EventLifecycleState[] = ['published', 'at_risk', 'postponed'];
+const TICKET_OPEN_STATES: EventLifecycleState[] = ['published', 'event_ready', 'live'];
 const REVIEW_OPEN_STATES: EventLifecycleState[] = ['event_ready', 'live', 'completed'];
 const HIGHLIGHTS_TOP_STATES: EventLifecycleState[] = [
-  'event_ready',
   'live',
   'completed',
 ];
@@ -50,7 +49,7 @@ export function buildEventDetailCapabilities(
   const canAccessEventChat = !isDraft && (isHost || hasTicket || isAcceptedVendor);
 
   const canUploadHighlights =
-    HIGHLIGHTS_TOP_STATES.includes(lifecycleState) || (isPublished && isHost);
+    HIGHLIGHTS_TOP_STATES.includes(lifecycleState) && ((isHost || hasTicket || isAcceptedVendor));
 
   return {
     canViewDraftPage: !isDraft || isHost,

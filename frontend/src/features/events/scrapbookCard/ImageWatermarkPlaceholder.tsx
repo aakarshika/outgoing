@@ -18,7 +18,7 @@ interface ImageWatermarkPlaceholderProps {
   sx?: SxProps<Theme>;
 }
 
-const GO_SYMBOL_URL = '/assets/go-symbol.png';
+const GO_SYMBOL_URL = '/assets/go-sym.png';
 
 export function ImageWatermarkPlaceholder({
   theme = { bg: 'rgb(242, 242, 242)', accent: 'rgb(159, 100, 28)', pattern: 'none' },

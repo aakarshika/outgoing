@@ -9,6 +9,8 @@ export const CATEGORY_THEMES: Record<
     accent: string;
     tape: string;
     icon: string;
+    name: string;
+    emoticon: string;
   }
 > = {
   default: {
@@ -18,6 +20,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(71, 85, 105)',
     tape: 'rgba(71, 85, 105, 0.1)',
     icon: 'cpu',
+    name: 'Default',
+    emoticon: '💻',
   },
   arts: {
     bg: 'rgb(231, 236, 182)',
@@ -25,6 +29,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(179, 190, 81)',
     tape: 'rgba(179, 190, 81, 0.1)',
     icon: 'palette',
+    name: 'Arts & Culture',
+    emoticon: '🎨',
   },
   music: {
     bg: 'rgb(235, 217, 235)',
@@ -33,6 +39,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(166, 16, 171)',
     tape: 'rgba(166, 16, 171, 0.1)',
     icon: 'music',
+    name: 'Music',
+    emoticon: '🎵',
   },
   food: {
     bg: 'rgb(251, 227, 190)',
@@ -40,6 +48,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(250, 168, 45)',
     tape: 'rgba(250, 168, 45, 0.1)',
     icon: 'utensils',
+    name: 'Food & Drink',
+    emoticon: '🍽️',
   },
   networking: {
     bg: 'rgb(222, 223, 250)',
@@ -48,6 +58,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(59, 130, 246)',
     tape: 'rgba(59, 130, 246, 0.1)',
     icon: 'users',
+    name: 'Networking',
+    emoticon: '🤝',
   },
   comedy: {
     bg: 'rgb(252, 222, 218)',
@@ -55,6 +67,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(206, 62, 9)',
     tape: 'rgba(206, 62, 9, 0.1)',
     icon: 'laugh',
+    name: 'Comedy',
+    emoticon: '😄',
   },
   social: {
     bg: 'rgb(229, 241, 222)',
@@ -63,6 +77,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(146, 47, 82)',
     tape: 'rgba(146, 47, 82, 0.1)',
     icon: 'heart-handshake',
+    name: 'Social & Community',
+    emoticon: '💬',
   },
   festivals: {
     bg: 'rgb(253, 243, 214)',
@@ -71,6 +87,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(216, 177, 20)',
     tape: 'rgba(216, 177, 20, 0.1)',
     icon: 'party-popper',
+    name: 'Festivals',
+    emoticon: '🎪',
   },
   outdoors: {
     bg: 'rgb(229, 241, 222)',
@@ -79,6 +97,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(17, 145, 128)',
     tape: 'rgba(17, 145, 128, 0.1)',
     icon: 'mountain',
+    name: 'Outdoors & Adventure',
+    emoticon: '🌿',
   },
   nightlife: {
     bg: 'rgb(236, 230, 249)',
@@ -87,6 +107,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(93, 63, 211)',
     tape: 'rgba(93, 63, 211, 0.1)',
     icon: 'moon',
+    name: 'Nightlife & Parties',
+    emoticon: '🌙',
   },
   sports: {
     bg: 'rgb(218, 245, 237)',
@@ -95,6 +117,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(20, 133, 108)',
     tape: 'rgba(20, 133, 108, 0.1)',
     icon: 'dumbbell',
+    name: 'Sports & Fitness',
+    emoticon: '💪',
   },
   tech: {
     bg: 'rgb(233, 234, 236)',
@@ -103,6 +127,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(80, 61, 153)',
     tape: 'rgba(80, 61, 153, 0.1)',
     icon: 'cpu',
+    name: 'Tech & Innovation',
+    emoticon: '💻',
   },
   workshops: {
     bg: 'rgb(225, 235, 252)',
@@ -111,6 +137,8 @@ export const CATEGORY_THEMES: Record<
     accent: 'rgb(37, 99, 235)',
     tape: 'rgba(37, 99, 235, 0.1)',
     icon: 'book-open',
+    name: 'Workshops & Classes',
+    emoticon: '📖',
   },
 };
 
@@ -122,6 +150,10 @@ export const resolveCategorySlug = (category?: {
 }) => {
   return category?.slug || '';
 };
+
+export const getCategoryThemeSlug = (slug?: any) => {
+  return CATEGORY_THEMES[slug];
+}
 
 export const getCategoryTheme = (category?: any) => {
   return CATEGORY_THEMES[resolveCategorySlug(category)];

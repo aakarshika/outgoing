@@ -37,13 +37,28 @@ from apps.requests.models import EventRequest, RequestUpvote, RequestWishlist
 from apps.tickets.models import Ticket
 from apps.vendors.models import VendorReview, VendorService
 from django.contrib.auth import get_user_model
+
+from apps.events.management.commands.generate_seed_simple import (
+    _get_pexels_api_key,
+    normalize_cached_cover_urls,
+    pexels_image_urls,
+)
+
 User = get_user_model()
 
 HERE = Path(__file__).resolve().parent
 HELPERS_DIR = HERE / "seed-helper-data"
 EVENT_CATEGORIES_PATH = HELPERS_DIR / "event_categories.json"
+EVENT_HIGHLIGHTS_SEED_PATH = HELPERS_DIR / "event_highlights_seed.json"
+PEXELS_CACHE_PATH = HELPERS_DIR / "pexels_cover_images_cache.json"
 LIVE_EVENT_RATIO = 0.2
 LIVE_EVENT_USED_TICKET_RATIO = 0.9
+# Fraction of co-attendee pairs that become seeded friendships (rest skipped).
+FRIENDSHIP_PAIR_KEEP_RATIO = 0.3
+# Each ticket goer independently posts a highlight with this probability.
+HIGHLIGHT_PER_GOER_PROBABILITY = 0.3
+# Among created highlights, this fraction get a Pexels image (download like event covers).
+HIGHLIGHT_WITH_IMAGE_PROBABILITY = 0.5
 
 
 def _filename_for_image_url(url: str, fallback_stem: str):
@@ -100,6 +115,22 @@ def random_event_window_in_coming_month(rng, now):
     return start_time, end_time
 
 
+def random_event_window_in_past_month(rng, now):
+    """Return start/end datetimes constrained to the previous 30 days."""
+    month_start = now - timedelta(days=30)
+
+    # Keep at least one hour for duration by reserving room from month_start.
+    earliest_start = month_start + timedelta(hours=1)
+    total_start_seconds = max(1, int((now - earliest_start).total_seconds()))
+    start_time = earliest_start + timedelta(seconds=rng.randint(0, total_start_seconds))
+
+    # Keep duration short (1-48 hours) but always within the past window.
+    max_duration_seconds = max(3600, int((now - start_time).total_seconds()))
+    duration_seconds = rng.randint(3600, min(max_duration_seconds, 48 * 3600))
+    end_time = start_time + timedelta(seconds=duration_seconds)
+    return start_time, end_time
+
+
 def _load_event_categories_by_slug():
     try:
         with open(EVENT_CATEGORIES_PATH, "r", encoding="utf-8") as f:
@@ -113,6 +144,64 @@ def _load_event_categories_by_slug():
             continue
         out[slug] = {"name": c.get("name") or slug, "icon": c.get("icon") or "calendar"}
     return out
+
+
+def _load_event_highlights_by_category():
+    """category_slug -> list of highlight text strings."""
+    try:
+        with open(EVENT_HIGHLIGHTS_SEED_PATH, "r", encoding="utf-8") as f:
+            raw = json.load(f) or {}
+    except Exception:
+        return {}
+    out = {}
+    for slug, lines in raw.items():
+        if not slug or not isinstance(lines, list):
+            continue
+        texts = [str(t).strip() for t in lines if isinstance(t, str) and str(t).strip()]
+        if texts:
+            out[str(slug)] = texts
+    return out
+
+
+def _load_pexels_cache():
+    raw = {}
+    if PEXELS_CACHE_PATH.exists():
+        try:
+            with open(PEXELS_CACHE_PATH, "r", encoding="utf-8") as f:
+                raw = json.load(f) or {}
+        except Exception:
+            raw = {}
+    return {
+        k: normalize_cached_cover_urls(v)
+        for k, v in raw.items()
+        if normalize_cached_cover_urls(v)
+    }
+
+
+def _next_pexels_image_url(slug, pexels_cache, rot_by_slug, api_key, *, debug, log_write):
+    """
+    Pick next image URL for a category slug (same cache + API pattern as generate_seed_simple covers).
+    Mutates pexels_cache when fetching from API. Returns (url_or_none, cache_was_mutated).
+    """
+    if not slug:
+        return None, False
+    mutated = False
+    cached_urls = list(normalize_cached_cover_urls(pexels_cache.get(slug)))
+    if api_key and len(cached_urls) < 2:
+        q = slug.replace("-", " ")
+        urls, err = pexels_image_urls(q, api_key, per_page=30)
+        if urls:
+            pexels_cache[slug] = urls
+            cached_urls = urls
+            mutated = True
+        elif debug:
+            log_write(f"[seed_simple] pexels_fail highlight query={q!r} err={err}")
+    if not cached_urls:
+        return None, mutated
+    idx = rot_by_slug.get(slug, 0)
+    url = cached_urls[idx % len(cached_urls)]
+    rot_by_slug[slug] = idx + 1
+    return url, mutated
 
 
 class Command(BaseCommand):
@@ -182,6 +271,7 @@ class Command(BaseCommand):
             data = json.load(f)
 
         category_defaults_by_slug = _load_event_categories_by_slug()
+        highlights_by_category = _load_event_highlights_by_category()
 
         if not options.get("no_wipe"):
             self.wipe_data()
@@ -196,15 +286,27 @@ class Command(BaseCommand):
         tickets_data = data.get("tickets", [])
         live_event_keys = set()
         if events_data:
-            live_event_count = max(1, int(len(events_data) * LIVE_EVENT_RATIO))
-            live_event_count = min(live_event_count, len(events_data))
-            live_event_keys = {event["_key"] for event in rng.sample(events_data, live_event_count)}
+            # Only choose non-completed events as "live". If the generator accidentally marks
+            # something as completed, we never want it to become live.
+            eligible_for_live = [
+                e for e in events_data if (e.get("status") not in {"completed", "draft"})
+            ]
+            if eligible_for_live:
+                live_event_count = max(1, int(len(events_data) * LIVE_EVENT_RATIO))
+                live_event_count = min(live_event_count, len(eligible_for_live))
+                live_event_keys = {
+                    event["_key"] for event in rng.sample(eligible_for_live, live_event_count)
+                }
 
         user_map = {}
         event_map = {}
         tier_map = {}
         live_event_ids = set()
         cover_bytes_cache = {}
+        pexels_cache = _load_pexels_cache()
+        pexels_rot_by_slug = {}
+        pexels_api_key = _get_pexels_api_key()
+        pexels_cache_dirty = False
 
         with transaction.atomic():
             self.stdout.write("Seeding Users...")
@@ -242,14 +344,27 @@ class Command(BaseCommand):
                 host = user_map.get(e["host"])
                 if host:
                     is_live_event = e["_key"] in live_event_keys
+
+                    raw_status = e.get("status") or "published"
+                    # Hard guarantee: no draft events in seeded data.
+                    if raw_status == "draft":
+                        raw_status = "published"
+
+                    is_completed_event = raw_status == "completed"
                     if is_live_event:
-                        # Start in ~1 hour so "tonight" feed (start_time_gte=now) includes them
+                        # Start in ~1 hour so "tonight" feed includes them.
                         start_time = now + timedelta(hours=1)
                         end_time = start_time + timedelta(hours=3)
+                        event_status = "published"
+                        event_lifecycle_state = "live"
+                    elif is_completed_event:
+                        start_time, end_time = random_event_window_in_past_month(rng, now)
+                        event_status = "completed"
+                        event_lifecycle_state = "completed"
                     else:
                         start_time, end_time = random_event_window_in_coming_month(rng, now)
-                    event_status = "published" if is_live_event else e["status"]
-                    event_lifecycle_state = "live" if is_live_event else e["lifecycle_state"]
+                        event_status = "published"
+                        event_lifecycle_state = "published"
                     # Depending on exact mandatory fields, add standard defaults for others
                     cat_defaults = category_defaults_by_slug.get(e["category"]) or {}
                     category_obj, _ = EventCategory.objects.get_or_create(
@@ -364,26 +479,27 @@ class Command(BaseCommand):
             self.stdout.write("Seeding Event Tiers...")
             for t in tiers_data:
                 event = event_map.get(t["event"])
-                if event:
-                    tier, created = EventTicketTier.objects.get_or_create(
-                        event=event,
-                        name=t["name"],
-                        defaults={
-                            "price": t["price"],
-                            "capacity": t["capacity"]
-                        }
-                    )
-                    if not created:
-                        fields_to_update = []
-                        if tier.price != t["price"]:
-                            tier.price = t["price"]
-                            fields_to_update.append("price")
-                        if tier.capacity != t["capacity"]:
-                            tier.capacity = t["capacity"]
-                            fields_to_update.append("capacity")
-                        if fields_to_update:
-                            tier.save(update_fields=fields_to_update)
-                    tier_map[t["_key"]] = tier
+                if not event or event.status == "draft":
+                    continue
+                tier, created = EventTicketTier.objects.get_or_create(
+                    event=event,
+                    name=t["name"],
+                    defaults={
+                        "price": t["price"],
+                        "capacity": t["capacity"]
+                    }
+                )
+                if not created:
+                    fields_to_update = []
+                    if tier.price != t["price"]:
+                        tier.price = t["price"]
+                        fields_to_update.append("price")
+                    if tier.capacity != t["capacity"]:
+                        tier.capacity = t["capacity"]
+                        fields_to_update.append("capacity")
+                    if fields_to_update:
+                        tier.save(update_fields=fields_to_update)
+                tier_map[t["_key"]] = tier
 
             self.stdout.write("Seeding Event Needs...")
             for n in needs_data:
@@ -402,10 +518,13 @@ class Command(BaseCommand):
             for t in tickets_data:
                 goer = user_map.get(t["goer"])
                 tier = tier_map.get(t["tier"])
-                if goer and tier:
+                if goer and tier and tier.event.status != "draft":
                     ticket_status = "active"
                     used_at = None
-                    if tier.event_id in live_event_ids and rng.random() < LIVE_EVENT_USED_TICKET_RATIO:
+                    if tier.event.status == "completed":
+                        ticket_status = "used"
+                        used_at = now
+                    elif tier.event_id in live_event_ids and rng.random() < LIVE_EVENT_USED_TICKET_RATIO:
                         ticket_status = "used"
                         used_at = now
                     Ticket.objects.create(
@@ -415,6 +534,86 @@ class Command(BaseCommand):
                         status=ticket_status,
                         used_at=used_at,
                     )
+
+            self.stdout.write("Seeding Event Highlights (from ticket goers)...")
+            event_goers_for_highlights = {}
+            for tick in Ticket.objects.select_related("event", "event__category", "goer"):
+                ev = tick.event
+                # Only attach highlights to events that are currently live or already completed.
+                if ev.lifecycle_state not in {"live", "completed"}:
+                    continue
+                eid = ev.id
+                if eid not in event_goers_for_highlights:
+                    event_goers_for_highlights[eid] = {"event": ev, "goers": set()}
+                event_goers_for_highlights[eid]["goers"].add(tick.goer)
+            highlight_count = 0
+            highlight_with_image_count = 0
+            for _eid, payload in event_goers_for_highlights.items():
+                event = payload["event"]
+                slug = event.category.slug if event.category_id else None
+                pool = highlights_by_category.get(slug) if slug else None
+                if not pool:
+                    continue
+                for goer in payload["goers"]:
+                    if rng.random() >= HIGHLIGHT_PER_GOER_PROBABILITY:
+                        continue
+                    media_file = None
+                    if rng.random() < HIGHLIGHT_WITH_IMAGE_PROBABILITY:
+                        img_url, mutated = _next_pexels_image_url(
+                            slug,
+                            pexels_cache,
+                            pexels_rot_by_slug,
+                            pexels_api_key,
+                            debug=debug,
+                            log_write=self.stdout.write,
+                        )
+                        if mutated:
+                            pexels_cache_dirty = True
+                        if img_url:
+                            try:
+                                if debug:
+                                    self.stdout.write(
+                                        f"[seed_simple] highlight_download event_id={event.id} url={img_url}"
+                                    )
+                                if img_url in cover_bytes_cache:
+                                    img_bytes, _content_type = cover_bytes_cache[img_url]
+                                else:
+                                    img_bytes, content_type = _download_image_bytes(img_url)
+                                    cover_bytes_cache[img_url] = (img_bytes, content_type)
+                                if img_bytes:
+                                    stem = f"seed_hl_e{event.id}_u{goer.id}_{rng.getrandbits(32)}"
+                                    filename = _filename_for_image_url(
+                                        img_url, fallback_stem=stem
+                                    )
+                                    media_file = ContentFile(img_bytes, name=filename)
+                                    if debug:
+                                        self.stdout.write(
+                                            f"[seed_simple] highlight_download_ok bytes={len(img_bytes)} "
+                                            f"content_type={content_type!r}"
+                                        )
+                            except Exception:
+                                if debug:
+                                    import traceback
+
+                                    self.stdout.write(
+                                        "[seed_simple] highlight_download_fail\n"
+                                        + traceback.format_exc()
+                                    )
+                                media_file = None
+                    EventHighlight.objects.create(
+                        event=event,
+                        author=goer,
+                        role="goer",
+                        text=rng.choice(pool),
+                        media_file=media_file,
+                    )
+                    highlight_count += 1
+                    if media_file is not None:
+                        highlight_with_image_count += 1
+            self.stdout.write(
+                f"  Created {highlight_count} highlights "
+                f"({highlight_with_image_count} with images)."
+            )
 
             self.stdout.write("Seeding Friendships (from used tickets)...")
             used_tickets = Ticket.objects.filter(status="used").select_related("event", "goer")
@@ -438,19 +637,44 @@ class Command(BaseCommand):
                         if pair in seen_pairs:
                             continue
                         seen_pairs.add(pair)
+                        if rng.random() >= FRIENDSHIP_PAIR_KEEP_RATIO:
+                            continue
                         user1, user2 = (a, b) if a.id < b.id else (b, a)
-                        if Friendship.objects.filter(user1=user1, user2=user2).exists():
+                        orbit_category = event.category
+                        if orbit_category is None:
+                            orbit_category, _ = EventCategory.objects.get_or_create(
+                                slug="orbit-unknown",
+                                defaults={"name": "Orbit Unknown", "icon": "Orbit"},
+                            )
+                        if Friendship.objects.filter(
+                            user1=user1,
+                            user2=user2,
+                            orbit_category=orbit_category,
+                        ).exists():
                             continue
                         Friendship.objects.create(
                             user1=user1,
                             user2=user2,
                             request_sender=user1,
-                            status=Friendship.STATUS_ACCEPTED,
+                            status=(
+                                Friendship.STATUS_ACCEPTED
+                                if rng.random() < 0.5
+                                else Friendship.STATUS_PENDING
+                            ),
                             accepted_at=now,
                             met_at_event=event,
+                            orbit_category=orbit_category,
                         )
                         created_count += 1
             self.stdout.write(f"  Created {created_count} friendships.")
+
+        if pexels_cache_dirty:
+            try:
+                HELPERS_DIR.mkdir(parents=True, exist_ok=True)
+                with open(PEXELS_CACHE_PATH, "w", encoding="utf-8") as f:
+                    json.dump(pexels_cache, f, indent=2)
+            except Exception:
+                pass
 
         self.stdout.write(self.style.SUCCESS("Seeding complete!"))
 

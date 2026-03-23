@@ -1,4 +1,4 @@
-import { Home, type LucideIcon, MessageCircle, Sparkles, User } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks';
@@ -8,54 +8,62 @@ import { UserAvatar } from '@/components/ui/UserAvatar';
 type NavItem = {
   key: string;
   label: string;
-  Icon: LucideIcon;
+  icon: string;
   to: string;
   guestTo?: string;
   match: (pathname: string) => boolean;
 };
 
-const navItems: (user: any) => NavItem[] = (user) => [
-  {
-    key: 'home',
-    label: 'Home',
-    Icon: Home,
-    to: '/',
-    match: (pathname) => pathname === '/',
-  },
-  {
-    key: 'highlightsreels',
-    label: 'Highlights',
-    Icon: Sparkles,
-    to: '/highlightsreels',
-    match: (pathname) => pathname.startsWith('/highlightsreels'),
-  },
-  {
-    key: 'chats',
-    label: 'Chats',
-    Icon: MessageCircle,
-    to: '/chats',
-    guestTo: '/signin',
-    match: (pathname) => pathname === '/chats' || pathname.startsWith('/chats/'),
-  },
-  {
-    key: 'profile',
-    label: 'Profile',
-    Icon: User,
-    to: user?.username ? `/user/${user.username}` : '/profile',
-    guestTo: '/signin',
-    match: (pathname) =>
-      pathname === '/profile' ||
-      pathname.startsWith('/profile/') ||
-      (user?.username && (pathname === `/user/${user.username}` || pathname.startsWith(`/user/${user.username}/`))),
-  },
-];
 
 export function AppBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const pathname = location.pathname;
 
-  const items = navItems(user);
+  const items: NavItem[] = [
+    {
+      key: 'home',
+      label: 'Home',
+      icon: 'line-md:home',
+      to: '/',
+      match: (pathname) => pathname === '/',
+    },
+    {
+      key: 'highlightsreels',
+      label: 'Highlights',
+      icon: 'tabler:camera-star',
+      to: '/highlightsreels',
+      match: (pathname) => pathname.startsWith('/highlightsreels'),
+    },
+  ];
+
+  if (isAuthenticated) {
+    const username = user?.username;
+
+    items.push({
+      key: 'chats',
+      label: 'Chats',
+      icon: 'fluent:people-chat-16-regular',
+      to: '/allchats',
+      guestTo: '/signin',
+      match: (pathname) =>
+        pathname === '/allchats' || pathname.startsWith('/allchats/'),
+    });
+    items.push({
+      key: 'profile',
+      label: 'Profile',
+      icon: 'solar:user-linear',
+      to: username ? `/user/${username}` : '/profile',
+      guestTo: '/signin',
+      match: (pathname) =>
+        pathname === '/profile' ||
+        pathname.startsWith('/profile/') ||
+        (Boolean(username) && (pathname === `/user/${username}` || pathname.startsWith(`/user/${username}/`))),
+    });
+  }
+
+  const hasNonHomeMatch = items.some((item) => item.key !== 'home' && item.match(pathname));
 
   return (
     <nav
@@ -65,20 +73,19 @@ export function AppBottomNav() {
       <div
         className="pointer-events-auto relative backdrop-blur-xl"
         style={{
-          background: 'rgba(255, 248, 241, 0.96)',
+          background: 'rgba(237, 232, 226, 0.9)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+          WebkitBackdropFilter: 'blur(10px)',
+          backdropFilter: 'blur(10px)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-1"
-          style={{ background: '#D85A30' }}
-        />
-        <div
-          className="grid grid-cols-4 gap-2 p-2 sm:p-2.5 mx-auto max-w-[1040px]"
+          className="flex flex-row gap-1 mx-3 max-w-[1040px]"
           style={{ background: 'var(--color-background-secondary)' }}
         >
-          {items.map(({ key, label, Icon, to, guestTo, match }) => {
-            const isActive = match(location.pathname);
+          {items.map(({ key, label, icon, to, guestTo, match }) => {
+            const isActive = key === 'home' ? match(pathname) || !hasNonHomeMatch : match(pathname);
             const target = isAuthenticated ? to : guestTo || to;
 
             return (
@@ -89,14 +96,14 @@ export function AppBottomNav() {
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => navigate(target)}
                 className={cn(
-                  'relative flex h-14 items-center justify-center rounded-[22px]  transition-all duration-200',
+                  'relative flex my-3  items-center justify-center rounded-lg transition-all duration-200',
                   isActive
-                    ? 'text-white'
-                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                    ? 'text-white h-12 flex w-full items-center justify-center'
+                    : 'aspect-square h-12 w-12 ',
                 )}
                 style={{
                   fontFamily: 'Syne, sans-serif',
-                  background: isActive ? '#D85A30' : '#F9F9F9',
+                  background: isActive ? 'white' : 'white',
                   borderColor: isActive ? '#D85A30' : 'var(--color-border-tertiary)',
                   boxShadow: isActive ? '0 10px 22px rgba(216, 90, 48, 0.24)' : 'none',
                 }}
@@ -111,21 +118,21 @@ export function AppBottomNav() {
                       username={user?.username}
                       size="xs"
                       className={cn(
-                        "ring-2 transition-all duration-200",
+                        "ring-2 transition-all duration-200 inline-flex items-center justify-center",
                         isActive ? "ring-white/80" : "ring-transparent"
                       )}
                     />
+                    {isActive && <span className="text-[#D85A30] pl-2">{user?.username}</span>}
                   </div>
                 ) : (
-                  <Icon className="h-5 w-5" strokeWidth={2.3} />
+                  <>
+                    <Icon
+                      icon={icon}
+                      className={`h-5 w-5 ${!isActive ? 'text-gray-500' : 'text-[#D85A30]'}`}
+                    />
+                    {isActive && <span className=" text-[#D85A30] pl-2">{label}</span>}
+                  </>
                 )}
-                <span
-                  className={cn(
-                    'pointer-events-none absolute bottom-1.5 h-1 w-6 rounded-full transition-opacity duration-200',
-                    isActive ? 'opacity-100' : 'opacity-0',
-                  )}
-                  style={{ background: 'rgba(255,255,255,0.72)' }}
-                />
               </button>
             );
           })}

@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "apps.needs",
     "apps.requests",
     "apps.content_generator",
+    "apps.chat",
 ]
 
 MIDDLEWARE = [

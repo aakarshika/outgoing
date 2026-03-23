@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { useToggleHighlightLike } from '@/features/events/hooks';
 
 import { HighlightCommentDrawer } from './HighlightCommentDrawer';
+import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 
 const BOTTOM_NAV_OFFSET = 'calc(88px + env(safe-area-inset-bottom, 0px))';
 const TOP_SAFE_OFFSET = 'calc(16px + env(safe-area-inset-top, 0px))';
@@ -27,12 +28,14 @@ function FrostedActionButton({
   count,
   onClick,
   active = false,
+  lightMode = false,
 }: {
   icon: ReactNode;
   label: string;
   count?: number;
   onClick: () => void;
   active?: boolean;
+  lightMode?: boolean;
 }) {
   return (
     <Stack alignItems="center" spacing={0.9}>
@@ -42,14 +45,27 @@ function FrostedActionButton({
         sx={{
           width: { xs: 58, sm: 64 },
           height: { xs: 58, sm: 64 },
-          color: active ? '#ff6b81' : '#fff',
-          bgcolor: 'rgba(255,255,255,0.16)',
-          border: '1px solid rgba(255,255,255,0.28)',
-          backdropFilter: 'blur(18px)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.24)',
-          '&:hover': {
-            bgcolor: 'rgba(255,255,255,0.24)',
-          },
+          ...(lightMode
+            ? {
+                color: active ? '#ff6b81' : '#111',
+                bgcolor: 'rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.12)',
+                backdropFilter: 'blur(18px)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                '&:hover': {
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                },
+              }
+            : {
+                color: active ? '#ff6b81' : '#fff',
+                bgcolor: 'rgba(255,255,255,0.16)',
+                border: '1px solid rgba(255,255,255,0.28)',
+                backdropFilter: 'blur(18px)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.24)',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.24)',
+                },
+              }),
         }}
       >
         {icon}
@@ -58,8 +74,8 @@ function FrostedActionButton({
         sx={{
           fontSize: '0.78rem',
           fontWeight: 700,
-          color: 'white',
-          textShadow: '0 2px 10px rgba(0,0,0,0.45)',
+          color: lightMode ? '#111' : 'white',
+          textShadow: lightMode ? 'none' : '0 2px 10px rgba(0,0,0,0.45)',
         }}
       >
         {count ?? ''}
@@ -224,6 +240,7 @@ export const HighlightFeedViewer = ({
           inset: 0,
           zIndex: 60,
           bgcolor: '#050505',
+          pt:8  
         }}
       >
         <Box
@@ -241,6 +258,12 @@ export const HighlightFeedViewer = ({
         >
           {highlights.map((highlight) => {
             const isLiked = Boolean(highlight.user_has_liked);
+            const mediaUrl =
+              typeof highlight.media_file === 'string'
+                ? highlight.media_file.trim()
+                : highlight.media_file;
+            const hasPhoto = Boolean(mediaUrl);
+            const lightSlide = !hasPhoto;
 
             return (
               <Box
@@ -251,30 +274,42 @@ export const HighlightFeedViewer = ({
                   width: '100%',
                   scrollSnapAlign: 'start',
                   overflow: 'hidden',
-                  bgcolor: '#050505',
+                  bgcolor: lightSlide ? '#ffffff' : '#050505',
                 }}
               >
-                <Box
-                  component="img"
-                  src={highlight.media_file}
-                  alt={highlight.text || 'Highlight'}
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                />
+                {hasPhoto ? (
+                  <>
+                    <Box
+                      component="img"
+                      src={mediaUrl}
+                      alt={highlight.text || 'Highlight'}
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
 
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    background:
-                      'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.12) 28%, rgba(0,0,0,0.4) 58%, rgba(0,0,0,0.84) 100%)',
-                  }}
-                />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background:
+                          'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.12) 28%, rgba(0,0,0,0.4) 58%, rgba(0,0,0,0.84) 100%)',
+                      }}
+                    />
+                  </>
+                ) : (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      bgcolor: '#ffffff',
+                    }}
+                  />
+                )}
 
                 <Stack
                   direction="row"
@@ -300,16 +335,25 @@ export const HighlightFeedViewer = ({
                         px: { xs: 1.5, sm: 2 },
                         py: 1.25,
                         borderRadius: 999,
-                        border: '1px solid rgba(255,255,255,0.26)',
-                        bgcolor: 'rgba(15,15,15,0.42)',
-                        backdropFilter: 'blur(18px)',
-                        boxShadow: '0 18px 50px rgba(0,0,0,0.25)',
+                        ...(lightSlide
+                          ? {
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              bgcolor: 'rgba(0,0,0,0.04)',
+                              backdropFilter: 'blur(18px)',
+                              boxShadow: '0 8px 28px rgba(0,0,0,0.08)',
+                            }
+                          : {
+                              border: '1px solid rgba(255,255,255,0.26)',
+                              bgcolor: 'rgba(15,15,15,0.42)',
+                              backdropFilter: 'blur(18px)',
+                              boxShadow: '0 18px 50px rgba(0,0,0,0.25)',
+                            }),
                       }}
                     >
                       <Box sx={{ minWidth: 0 }}>
                         <Typography
                           sx={{
-                            color: 'white',
+                            color: lightSlide ? '#111' : 'white',
                             fontWeight: 800,
                             fontSize: { xs: '0.95rem', sm: '1rem' },
                             whiteSpace: 'nowrap',
@@ -322,7 +366,9 @@ export const HighlightFeedViewer = ({
                         <Typography
                           sx={{
                             mt: 0.25,
-                            color: 'rgba(255,255,255,0.78)',
+                            color: lightSlide
+                              ? 'rgba(0,0,0,0.58)'
+                              : 'rgba(255,255,255,0.78)',
                             fontSize: '0.8rem',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
@@ -347,8 +393,10 @@ export const HighlightFeedViewer = ({
                           px: { xs: 1.4, sm: 1.8 },
                           py: 0.9,
                           borderRadius: 999,
-                          border: '1px solid rgba(255,255,255,0.24)',
-                          bgcolor: '#fff6dd',
+                          border: lightSlide
+                            ? '1px solid rgba(0,0,0,0.22)'
+                            : '1px solid rgba(255,255,255,0.24)',
+                          bgcolor: lightSlide ? 'rgba(255,255,255,0.9)' : '#fff6dd',
                           color: '#111',
                           fontWeight: 800,
                           fontSize: '0.8rem',
@@ -366,15 +414,53 @@ export const HighlightFeedViewer = ({
                     sx={{
                       width: 48,
                       height: 48,
-                      color: 'white',
-                      border: '1px solid rgba(255,255,255,0.26)',
-                      bgcolor: 'rgba(15,15,15,0.42)',
+                      color: lightSlide ? '#111' : 'white',
+                      border: lightSlide
+                        ? '1px solid rgba(0,0,0,0.12)'
+                        : '1px solid rgba(255,255,255,0.26)',
+                      bgcolor: lightSlide
+                        ? 'rgba(0,0,0,0.06)'
+                        : 'rgba(15,15,15,0.42)',
                       backdropFilter: 'blur(18px)',
                     }}
                   >
                     <X size={24} />
                   </IconButton>
                 </Stack>
+
+                {!hasPhoto && highlight.text && (
+                  <Box
+                    sx={{
+                      bgcolor: getCategoryTheme(highlight.event.category).tape,
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      px: { xs: 3, sm: 5 },
+                      pt: `calc(${TOP_SAFE_OFFSET} + 56px)`,
+                      pb: `calc(${BOTTOM_NAV_OFFSET} + 100px)`,
+                      overflow: 'auto',
+                      WebkitOverflowScrolling: 'touch',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        maxWidth: 'min(640px, 100%)',
+                        color: getCategoryTheme(highlight.event.category).accent,
+                        fontSize: { xs: '1.35rem', sm: '1.6rem' },
+                        fontWeight: 600,
+                        lineHeight: 1.45,
+                        textAlign: 'center',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {highlight.text}
+                    </Typography>
+                  </Box>
+                )}
 
                 <Box
                   sx={{
@@ -390,17 +476,17 @@ export const HighlightFeedViewer = ({
                       username={highlight.author_username}
                       avatarSrc={highlight.author_avatar}
                       mode="normal"
-                      className="!text-white"
+                      className={lightSlide ? '!text-black' : '!text-white'}
                       sx={{
-                        color: 'white',
+                        color: lightSlide ? '#111' : 'white',
                         '& .MuiTypography-root': {
-                          color: 'white',
+                          color: lightSlide ? '#111' : 'white',
                         },
                       }}
                     />
                   </Stack>
 
-                  {highlight.text && (
+                  {hasPhoto && highlight.text && (
                     <Typography
                       sx={{
                         mt: 1.2,
@@ -435,6 +521,7 @@ export const HighlightFeedViewer = ({
                       label="Like highlight"
                       count={highlight.likes_count || 0}
                       active={isLiked}
+                      lightMode={lightSlide}
                       onClick={() =>
                         toggleLike.mutate(highlight.id, {
                           onError: () => toast.error('Could not update like right now'),
@@ -453,6 +540,7 @@ export const HighlightFeedViewer = ({
                   <FrostedActionButton
                     label="Open comments"
                     count={highlight.comments_count || 0}
+                    lightMode={lightSlide}
                     onClick={() => {
                       setActiveHighlightId(highlight.id);
                       setIsCommentsOpen(true);
@@ -462,6 +550,7 @@ export const HighlightFeedViewer = ({
 
                   <FrostedActionButton
                     label="Share highlight"
+                    lightMode={lightSlide}
                     onClick={() => handleShare(highlight)}
                     icon={<Share2 size={28} strokeWidth={2.1} />}
                   />

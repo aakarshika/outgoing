@@ -36,18 +36,36 @@ export type BuddyRequestCard = {
   secondaryAction?: string;
 };
 
+import type { NetworkActivityAttendee } from '@/features/events/api';
+
 export type ActivityItem = {
   initial: string;
-  color: string;
+  /** Accent from the event category (activity group theme). */
+  category_color: string;
   text: string;
   time: string;
   cta?: string;
+  /** Event category slug from API; used to group network activity. */
+  eventCategorySlug?: string | null;
+  /** When multiple people share the same event + action, listed in sentence order. */
+  goerNames?: readonly string[];
+  /** IDs of people represented by this merged activity item. */
+  goerIds?: readonly number[];
+  /** Friend attendees from API (going / hosting / servicing). */
+  relevantAttendees?: readonly NetworkActivityAttendee[];
+  actionType?: 'hosting' | 'going' | 'interested' | 'servicing';
   event?: {
     icon: string;
     title: string;
     subtitle: string;
     eventId?: number;
   };
+};
+
+export type NetworkActivityGroup = {
+  heading: string;
+  slugKey: string;
+  items: readonly ActivityItem[];
 };
 
 export type HeroStatItem = {

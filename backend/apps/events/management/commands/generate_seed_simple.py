@@ -19,6 +19,7 @@ SEED_CENTER_LAT = 39.37
 SEED_CENTER_LNG = -76.57
 SEED_RADIUS_MILES = 200
 PAID_TIER_PRICES = [15, 25, 35, 50, 75, 100]
+COMPLETED_EVENT_RATIO = 0.2
 
 FEATURE_POOL = [
     "Food",
@@ -459,8 +460,9 @@ class Command(BaseCommand):
                 longitude = None
 
             event_key = f"evt_{event_counter}"
-            is_published = rng.random() < 0.7
-            status = "published" if is_published else "draft"
+            # This generator should never create draft events.
+            # Seed stage will later upgrade a subset to lifecycle_state="live".
+            status = "completed" if rng.random() < COMPLETED_EVENT_RATIO else "published"
 
             cover_query = cat
             cached_urls = pexels_cache.get(cover_query, [])
@@ -506,7 +508,7 @@ class Command(BaseCommand):
                 # URL string; `seed_simple.py` will download and save into ImageField.
                 "cover_image": cover_url,
                 "status": status,
-                "lifecycle_state": status,
+                "lifecycle_state": status,  # Event model keeps status + lifecycle in sync.
                 "capacity": capacity
             }
             features = _random_features_for_event(rng)
@@ -514,40 +516,46 @@ class Command(BaseCommand):
                 event_obj["features"] = features
             out_events.append(event_obj)
 
-            # Tiers
-            num_tiers = rng.randint(1, 3)
-            tier_names = ["General", "Premium", "VIP", "Adults + 1 Child"]
-            tier_cap = capacity // num_tiers
-            has_paid_tier = rng.random() < 0.7
-            for t_idx in range(num_tiers):
-                if has_paid_tier and t_idx > 0:
-                    price = rng.choice(PAID_TIER_PRICES)
-                elif has_paid_tier and num_tiers == 1:
-                    price = rng.choice(PAID_TIER_PRICES)
-                else:
-                    price = 0
+            # Tiers (draft events have no purchasable tiers / tickets)
+            if status != "draft":
+                num_tiers = rng.randint(1, 3)
+                tier_names = ["General", "Premium", "VIP", "Adults + 1 Child"]
+                tier_cap = capacity // num_tiers
+                has_paid_tier = rng.random() < 0.7
+                for t_idx in range(num_tiers):
+                    if has_paid_tier and t_idx > 0:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    elif has_paid_tier and num_tiers == 1:
+                        price = rng.choice(PAID_TIER_PRICES)
+                    else:
+                        price = 0
 
-                tier_obj = {
-                    "_key": f"{event_key}_tier_{t_idx}",
-                    "event": event_key,
-                    "name": tier_names[t_idx],
-                    "price": price,
-                    "capacity": tier_cap
-                }
-                out_event_ticket_tiers.append(tier_obj)
+                    tier_obj = {
+                        "_key": f"{event_key}_tier_{t_idx}",
+                        "event": event_key,
+                        "name": tier_names[t_idx],
+                        "price": price,
+                        "capacity": tier_cap
+                    }
+                    out_event_ticket_tiers.append(tier_obj)
 
             # --- Phase 3: Event Needs ---
-            num_needs = rng.randint(2, 6)
-            need_categories = rng.sample(all_service_ids, min(num_needs, len(all_service_ids)))
-            for nc in need_categories:
-                need_obj = {
-                    "event": event_key,
-                    "category": nc,
-                    "title": None,
-                    "status": "pending",
-                    "assigned_vendor": None
-                }
-                out_event_needs.append(need_obj)
+            # Not every event lists vendor needs (e.g. simple / self-contained events).
+            if rng.random() < 0.35:
+                num_needs = 0
+            else:
+                num_needs = rng.randint(2, 6)
+            if num_needs > 0:
+                need_categories = rng.sample(all_service_ids, min(num_needs, len(all_service_ids)))
+                for nc in need_categories:
+                    need_obj = {
+                        "event": event_key,
+                        "category": nc,
+                        "title": None,
+                        "status": "pending",
+                        "assigned_vendor": None
+                    }
+                    out_event_needs.append(need_obj)
 
             event_counter += 1
 
@@ -571,6 +579,8 @@ class Command(BaseCommand):
 
         for goer in goers:
             for ev in out_events:
+                if ev.get("status") == "draft":
+                    continue
                 if rng.random() < 0.3:
                     # Filter tiers for this event that still have capacity
                     ev_tiers = [

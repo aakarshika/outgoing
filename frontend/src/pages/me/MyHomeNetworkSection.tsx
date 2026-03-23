@@ -1,6 +1,8 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 
 import { SectionHeading } from './MyHomeSectionHeading';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type NetworkGroup = {
   name: string;
@@ -17,7 +19,38 @@ type Props = {
 export function MyHomeNetworkSection({ groups, onClickGroup }: Props) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <SectionHeading eyebrow="Your network" title="" />
+      <SectionHeading eyebrow="Your network" title="Outgoers in your orbit"
+        action={
+          <Chip
+            component={Link}
+            to={"/network"}
+            clickable
+            label={
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                }}
+              >
+                Check it
+                <ArrowRight size={14} />
+              </Box>
+            }
+            sx={{
+              height: 34,
+              borderRadius: '999px',
+              px: 0.35,
+              color: 'rgba(66, 50, 28, 0.68)',
+              fontWeight: 700,
+              textDecoration: 'none',
+              '& .MuiChip-label': {
+                px: 1.4,
+              },
+            }}
+          />
+        }
+         />
       <Box
         sx={{
           display: 'flex',

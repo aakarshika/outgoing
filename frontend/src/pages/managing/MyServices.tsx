@@ -60,7 +60,8 @@ export function MyServices({
           p: 2.25,
           mb: 2.5,
           boxShadow: '0 4px 12px rgba(43, 33, 24, 0.04)',
-          border: '1px solid rgba(43, 33, 24, 0.06)'
+          border: '1px solid rgba(43, 33, 24, 0.06)',
+
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1.75} sx={{ mb: 2 }}>

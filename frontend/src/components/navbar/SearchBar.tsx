@@ -9,7 +9,6 @@ import { ComicIconButton } from '@/components/ui/ComicIconButton';
 import { ComicSinkButton } from '@/components/ui/ComicSinkButton';
 import type { EventSearchSuggestion } from '@/types/events';
 
-import { AllChatsList } from './AllChatsList';
 import { useNavbarContext } from './NavbarContext';
 
 export const SearchBar = () => {

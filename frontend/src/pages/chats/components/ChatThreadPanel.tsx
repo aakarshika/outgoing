@@ -13,6 +13,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
+import { flattenNetworkActivityForChat } from '@/features/events/api';
 import type { AllChatMode } from '@/features/events/chatList';
 import {
   buildChatTimeline,
@@ -155,7 +156,13 @@ function ChatMessageBubble({ message }: { message: any }) {
   );
 }
 
-function ChatActivityRow({ item }: { item: any }) {
+function ChatActivityRow({
+  item,
+  onNavigate,
+}: {
+  item: any;
+  onNavigate?: () => void;
+}) {
   const { label, eventId, eventTitle } = item || {};
 
   if (!eventId || !eventTitle) {
@@ -225,6 +232,7 @@ function ChatActivityRow({ item }: { item: any }) {
         <Box
           component={Link}
           to={`/events-new/${eventId}`}
+          onClick={onNavigate}
           sx={{
             color: '#D85A30',
             fontWeight: 600,
@@ -341,7 +349,9 @@ export function ChatThreadPanel({
               targetUsername: resolvedUsername,
               friendship,
               networkPeople,
-              networkActivity: networkActivity?.activity || [],
+              networkActivity: flattenNetworkActivityForChat(
+                networkActivity?.groups,
+              ),
               eventOverviewRows: eventOverviewRows || [],
             }),
           })
@@ -351,7 +361,7 @@ export function ChatThreadPanel({
       friendship,
       isUserUserChat,
       messages,
-      networkActivity?.activity,
+      networkActivity?.groups,
       networkPeople,
       resolvedUsername,
       user?.id,
@@ -373,6 +383,7 @@ export function ChatThreadPanel({
 
     const onSuccess = () => {
       setMessageText('');
+      queryClient.invalidateQueries({ queryKey: ['conversation-inbox'] });
       queryClient.invalidateQueries({ queryKey: ['all-chats-list'] });
     };
 
@@ -505,11 +516,11 @@ export function ChatThreadPanel({
             background: 'rgba(255,255,255,0.88)',
           }}
         >
-          <BuddyRequestPanel
+          {/* <BuddyRequestPanel
             eventId={eventId}
             targetUsername={resolvedUsername}
             compact
-          />
+          /> */}
         </Box>
       ) : null}
 
@@ -554,7 +565,11 @@ export function ChatThreadPanel({
           <Stack spacing={1.5}>
             {timelineItems.map((item, index) =>
               item.type === 'activity' ? (
-                <ChatActivityRow key={`${item.id}-${index}`} item={item} />
+                <ChatActivityRow
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  onNavigate={onClose}
+                />
               ) : (
                 <ChatMessageBubble key={`${item.id}-${index}`} message={item.message} />
               ),

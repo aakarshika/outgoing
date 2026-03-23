@@ -178,13 +178,14 @@ function ruleEventNeeds(
         due: tpl(copy.pendingDecision.duePending, {
           applicationCount: need.application_count,
           deadline,
+          title: need.title,
         }),
       };
     }
     return {
       label: tpl(copy.stillNeeded.label, { title: need.title }),
       status: urgent ? 'warn' : 'todo',
-      due: tpl(copy.stillNeeded.duePending, { deadline }),
+      due: tpl(copy.stillNeeded.duePending, { deadline, title: need.title }),
     };
   });
 }
@@ -207,38 +208,43 @@ function ruleCover(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigIt
 
 
 function ruleGoReady(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
-  if(ctx.event.lifecycle_state === 'draft') {
-    
-    return { label: cfg.label, 
-      status: 'todo', 
+  if (ctx.event.lifecycle_state === 'draft') {
+    return {
+      label: cfg.label,
+      status: 'todo',
       due: tpl(cfg.label ?? '', {}),
       variant: 'go_ready',
-    }
+    };
   }
 
-  const ok = (
-    ctx.event.lifecycle_state === 'live'|| 
-    ctx.event.lifecycle_state === 'completed'
-  ) && ctx.isDetailsComplete && ctx.salesItemsDone;
-  return { label: cfg.label, 
-    status: ok ? 'done' : 'todo', 
+  // Milestone satisfied once host has moved past "published" into ready / live / done.
+  const ok =
+    ctx.event.lifecycle_state === 'event_ready' ||
+    ctx.event.lifecycle_state === 'live' ||
+    ctx.event.lifecycle_state === 'completed';
+  return {
+    label: cfg.label,
+    status: ok ? 'done' : 'todo',
     due: ok ? tpl(cfg.dueDone ?? '', {}) : tpl(cfg.duePending ?? '', {}),
     variant: 'go_ready',
   };
 }
 function ruleGoLive(ctx: PlanningChecklistContext, cfg: PlanningChecklistConfigItem): PlanningChecklistItem {
-  if(ctx.event.lifecycle_state === 'draft' || ctx.event.lifecycle_state === 'published') {
-    return { label: cfg.label, 
-      status: 'todo', 
+  if (
+    ctx.event.lifecycle_state === 'draft' ||
+    ctx.event.lifecycle_state === 'published' ||
+    ctx.event.lifecycle_state === 'event_ready'
+  ) {
+    return {
+      label: cfg.label,
+      status: 'todo',
       due: tpl(cfg.label ?? '', {}),
       variant: 'go_live',
-    }
+    };
   }
-  const ok = (
-    ctx.event.lifecycle_state === 'event_ready' || 
-    ctx.event.lifecycle_state === 'live'|| 
-    ctx.event.lifecycle_state === 'completed'
-  ) && ctx.isDetailsComplete && ctx.salesItemsDone;
+  // Only complete once the event is actually live (or wrapped up).
+  const ok =
+    ctx.event.lifecycle_state === 'live' || ctx.event.lifecycle_state === 'completed';
   return {
     label: cfg.label,
     status: ok ? 'done' : 'todo',

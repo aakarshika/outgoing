@@ -1,9 +1,11 @@
-import { Box, Typography, Popover, Divider } from '@mui/material';
+import { Box, Typography, Popover, Divider, Chip } from '@mui/material';
 import { Plus, User, BadgeCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { AttendeePopover } from '@/components/ui/AttendeePopover';
+import { CategoryAvatarBasic } from '@/features/events/CategoryAvatarBasic';
+import { CategoryAvatar } from '@/features/events/CategoryAvatar';
+import { FriendAvatarPopover } from '@/features/events/FriendAvatarPopover';
 
 interface NormalGoersModuleProps {
   event: any;
@@ -45,75 +47,116 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
     }
   };
 
-  const AVATAR_COLORS = [
-    { bg: '#B5D4F4', text: '#0C447C' },
-    { bg: '#C0DD97', text: '#27500A' },
-    { bg: '#F5C4B3', text: '#71271E' },
-    { bg: '#CECBF6', text: '#3C3489' },
-    { bg: '#9FE1CB', text: '#085041' },
-    { bg: '#FAC775', text: '#633806' },
-    { bg: '#F4C0D1', text: '#72243E' },
-  ];
+  const CategoryAvatarWithPopover = ({
+    userId,
+    children,
+  }: {
+    userId: number;
+    children: React.ReactNode;
+  }) => {
+    const [avatarAnchorEl, setAvatarAnchorEl] = useState<HTMLElement | null>(null);
+    const popoverOpen = Boolean(avatarAnchorEl);
+    return (
+      <>
+        <Box
+          component="button"
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setAvatarAnchorEl(e.currentTarget);
+          }}
+          sx={{
+            border: 'none',
+            p: 0,
+            m: 0,
+            background: 'transparent',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {children}
+        </Box>
+        <FriendAvatarPopover
+          userId={userId}
+          open={popoverOpen}
+          anchorEl={avatarAnchorEl}
+          onClose={() => setAvatarAnchorEl(null)}
+        />
+      </>
+    );
+  };
 
-  return (
-    <Box sx={{ px: 2, pt: 2 }}>
-      <Typography
+  const AttendeeAvatar = ({attendee, idx}: {attendee: any, idx: number}) => {
+    console.log('attendee', attendee, '--- attendee avatar ---');
+    return (
+      <Box
+        key={attendee.id || idx}
         sx={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: 'var(--color-text-secondary, #6b7280)',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          mb: 1.5,
-          fontFamily: '"Syne", sans-serif',
+          ml: idx === 0 ? 0 : -0.75, // -6px roughly
+          zIndex: MAX_DISPLAY - idx,
+          transition: 'transform 0.15s',
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            zIndex: 20,
+          },
         }}
       >
-        {isEventOver ? 'Who went' : "Who's going"}
-      </Typography>
+          <CategoryAvatarWithPopover userId={attendee?.user_id}>
+            <CategoryAvatarBasic
+              userId={attendee?.user_id}
+              category={event?.category?.slug}
+              size={26}
+              sx={{
+                ml: -0.5,
+              }}
+            />
+          </CategoryAvatarWithPopover>
+      </Box>
+    );
+  };
 
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {displayAttendees.map((attendee: any, idx: number) => {
-            const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+
+  const HostAvatar = () => {
+    console.log('event.host', event.host, '--- host avatar ---');
+    return (
+      <Box
+        key={event.host.username}
+        sx={{
+          ml: 0, // -6px roughly
+          zIndex: MAX_DISPLAY + 1,
+          transition: 'transform 0.15s',
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            zIndex: 20,
+          },
+        }}
+      >
+          <CategoryAvatarWithPopover userId={event.host.id}>
+            <CategoryAvatar
+              userId={event.host.id}
+              category={event.category.slug}
+              size={55}
+              sx={{
+                ml: -0.5,
+              }}
+            />
+          </CategoryAvatarWithPopover>
+      </Box>
+
+    );
+  };
+
+
+  const AttendeeStack = ({ attendees }: { attendees: any[] }) => {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <>
+          {attendees.map((attendee: any, idx: number) => {
             return (
-              <Box
-                key={attendee.id || idx}
-                sx={{
-                  ml: idx === 0 ? 0 : -0.75, // -6px roughly
-                  zIndex: MAX_DISPLAY - idx,
-                  transition: 'transform 0.15s',
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    zIndex: 20,
-                  },
-                }}
-              >
-                <AttendeePopover attendee={attendee} variant="normal">
-                  <Box
-                    sx={{
-                      borderRadius: '50%',
-                      border: '2px solid var(--color-background-tertiary, #f3f4f6)',
-                      overflow: 'hidden',
-                      bgcolor: attendee.avatar ? 'transparent' : color.bg,
-                      color: color.text,
-                    }}
-                  >
-                    <UserAvatar
-                      src={attendee.avatar}
-                      username={attendee.username || attendee.name}
-                      size="md"
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: 'transparent', // Let the parent Box handle the colorful background
-                        color: 'inherit',
-                        fontSize: 13,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                </AttendeePopover>
-              </Box>
+              <AttendeeAvatar key={attendee.id || idx} attendee={attendee} idx={idx} />
             );
           })}
           {remainingCount > 0 && (
@@ -139,50 +182,37 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
               +{remainingCount}
             </Box>
           )}
+        </>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ px: 2, pt: 2}}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+        <HostAvatar />
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Typography sx={{
+            fontSize: 13,
+            pb: 0.5,
+            pl: 0.5,
+            color: 'var(--color-text-secondary,rgb(84, 84, 84))',
+          }}>
+
+            hosted by
+              <Typography
+                component="span"
+                sx={{ fontWeight: 600 , 
+                  fontSize: 13,px: 0.5}}>
+                {event.host.name || event.host.username}
+              </Typography>
+            , 36 going
+          </Typography>
+          <AttendeeStack attendees={displayAttendees} />
+
         </Box>
       </Box>
 
-      {!isEventOver && (
-        <Box
-          component="button"
-          onClick={handleShare}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.75,
-            px: 1.75,
-            py: 0.85,
-            borderRadius: '20px',
-            bgcolor: 'var(--color-background-primary, #fff)',
-            border: '0.5px solid var(--color-border-secondary, #e5e7eb)',
-            color: 'var(--color-text-primary, #111)',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            '&:hover': {
-              bgcolor: 'var(--color-background-secondary, #f9fafb)',
-              borderColor: 'var(--color-border-primary, #d1d5db)',
-            },
-          }}
-        >
-          <Box
-            component="span"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 14,
-              height: 14,
-              borderRadius: '50%',
-              border: '1.2px solid currentColor',
-            }}
-          >
-            <Plus size={10} strokeWidth={3} />
-          </Box>
-          Invite friends
-        </Box>
-      )}
 
       {/* Detailed Attendees Popover */}
       <Popover

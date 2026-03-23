@@ -25,20 +25,11 @@ export function PendingRequestsSection({
   onWithdraw: (eventId: number | null, username: string) => void;
   outgoingItems: readonly PendingRequestItem[];
 }) {
-  if (!fallbackRequests.length && !incomingItems.length) return null;
   return (
     <Box
       sx={{
-        borderRadius: '10px',
-        p: { xs: 2, md: 2.4 },
-        background: 'rgba(255,255,255,0.82)',
-        boxShadow: '0 24px 50px rgba(110, 74, 36, 0.06)',
       }}
     >
-      <SectionIntro
-        eyebrow="Buddy Requests need a reply"
-        title="Signals you should not leave hanging"
-      />
 
       {isLoading ? (
         <Typography sx={{ mt: 2, color: 'rgba(66,50,28,0.5)', fontSize: 14 }}>
@@ -53,6 +44,10 @@ export function PendingRequestsSection({
             mt: 2,
           }}
         >
+        {incomingItems.length > 0 && (<SectionIntro
+          eyebrow="Buddy Requests need a reply"
+          title=""
+        />)}
           {incomingItems.length > 0 ? (
             incomingItems.map((item) => (
               <RequestCard
@@ -68,9 +63,7 @@ export function PendingRequestsSection({
               <RequestCard key={request.name} request={request} />
             ))
           ) : hasFetchedFriendships ? (
-            <Typography sx={{ color: 'rgba(66,50,28,0.55)', fontSize: 14 }}>
-              No pending requests right now.
-            </Typography>
+            null
           ) : null}
 
           {outgoingItems.length > 0 ? (

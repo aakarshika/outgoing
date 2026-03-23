@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { HighlightComposer } from '@/components/events/HighlightComposer';
+import { QuickBuyPopup } from '@/components/events/QuickBuyPopup';
 import { ReviewComposer } from '@/components/events/ReviewComposer';
 import { useAuth } from '@/features/auth/hooks';
 import {
@@ -158,6 +159,7 @@ export default function EventDetailPageV2() {
       rating: rev.rating,
       comment: rev.text,
       avatar: rev.reviewer_avatar,
+      media: rev.media || [],
       likesCount: rev.likes_count || 0,
       commentsCount: rev.comments_count || 0,
       userHasLiked: rev.user_has_liked || false,
@@ -219,11 +221,13 @@ export default function EventDetailPageV2() {
           gap: 1.5,
         }}
       >
-        <Typography sx={{ fontWeight: 600 }}>This draft event is private</Typography>
-        <Typography sx={{ color: 'text.secondary' }}>
-          Only the host can preview this draft.
+        <Typography sx={{ fontWeight: 600, textAlign: 'center', p: 4 }}>
+          Seems like you're not authorized to be here
         </Typography>
-        <MuiButton onClick={() => navigate('/')}>Go Home</MuiButton>
+        <Typography sx={{ color: 'text.secondary' }}>404</Typography>
+        <MuiButton variant="contained" onClick={() => navigate('/')}>
+          Go Home
+        </MuiButton>
       </Box>
     );
   }
@@ -256,6 +260,41 @@ export default function EventDetailPageV2() {
     setOneClickStatus('idle');
   };
 
+  const handleQuickBuyConfirm = ({
+    guestName,
+  }: {
+    guestName: string;
+    paymentMethod: string;
+  }) => {
+    if (!quickBuyData) return;
+    setOneClickStatus('loading');
+
+    const tickets = Array.from({ length: quickBuyData.quantity }).map((_, i) => ({
+      tier_id: quickBuyData.tierId,
+      guest_name: i === 0 ? guestName.trim() : '',
+      is_18_plus: true,
+    }));
+
+    purchaseTicket.mutate(
+      { eventId: Number(id), tickets },
+      {
+        onSuccess: (_res: any) => {
+          setOneClickStatus('success');
+          toast.success('Quick Buy successful!');
+          setTimeout(() => {
+            setOneClickStatus('idle');
+            setQuickBuyData(null);
+            setClearTicketformTrigger((prev) => prev + 1);
+          }, 3000);
+        },
+        onError: () => {
+          setOneClickStatus('error');
+          toast.error('Purchase failed');
+          setTimeout(() => setOneClickStatus('idle'), 3000);
+        },
+      },
+    );
+  };
 
   const handleTicketingSuccess = (ticketsData: any[]) => {
     setIsTicketingModalOpen(false);
@@ -303,6 +342,16 @@ export default function EventDetailPageV2() {
     onViewTicket: handleViewTicket,
     onOpenHighlightComposer: () => setIsHighlightOpen(true),
     onOpenReviewComposer: () => setIsReviewOpen(true),
+    onEditReview: (review: any) => {
+      setEditReviewData(review);
+      setIsReviewOpen(true);
+    },
+    onDeleteReview: (reviewId: number) => {
+      deleteReview.mutate(reviewId, {
+        onSuccess: () => toast.success('Review deleted successfully.'),
+        onError: () => toast.error('Failed to delete review.'),
+      });
+    },
     deleteReview,
     themeVariant,
   };
@@ -349,7 +398,6 @@ export default function EventDetailPageV2() {
           onSuccess={handleTicketingSuccess}
         />
 
-
         <NormalTicketConfirmationModal
           isOpen={!!confirmedTicket}
           onClose={() => {
@@ -370,6 +418,21 @@ export default function EventDetailPageV2() {
             0,
             event.user_tickets?.findIndex((t: any) => t.id === selectedTicketId) ?? 0,
           )}
+        />
+
+        <QuickBuyPopup
+          isOpen={!!quickBuyData}
+          onClose={() => {
+            setQuickBuyData(null);
+            setOneClickStatus('idle');
+            setSelectedQuantity(null);
+          }}
+          event={event}
+          tierId={quickBuyData?.tierId ?? null}
+          quantity={quickBuyData?.quantity || 1}
+          user={user}
+          status={oneClickStatus}
+          onConfirm={handleQuickBuyConfirm}
         />
       </ThemeProvider>
     </EventDetailV2Provider>

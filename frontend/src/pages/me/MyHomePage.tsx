@@ -6,9 +6,13 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import type { EventCardEvent } from '@/components/events/useEventCards';
 import { useAuth } from '@/features/auth/hooks';
 import { useBaseFeed } from '@/features/events/hooks';
-import { ProfileService } from '@/pages/profile/Profile.service';
-import type { BaseFeedEventItem, BaseFeedParams } from '@/types/events';
 import { useEventOverviewRows } from '@/features/events/hooks';
+import { ProfileService } from '@/pages/profile/Profile.service';
+import {
+  DISCOVERABLE_LIFECYCLE_STATES,
+  type BaseFeedEventItem,
+  type BaseFeedParams,
+} from '@/types/events';
 import {
   getStoredSearchLocation,
   inferCityFromLocationLabel,
@@ -48,8 +52,10 @@ type TrendingFeedFilter = (typeof trendingFeedFilters)[number]['id'];
 
 import { MyHomeActionsSection } from './MyHomeActionsSection';
 import { MyHomeChipInSection } from './MyHomeChipInSection';
+import { MyHomeEmptyUpcomingCarousel } from './MyHomeEmptyUpcomingCarousel';
 import { MyHomeNetworkSection } from './MyHomeNetworkSection';
 import { MyHomeRecommendationsSection } from './MyHomeRecommendationsSection';
+import { SectionHeading } from './MyHomeSectionHeading';
 import { MyHomeTrendingSection } from './MyHomeTrendingSection';
 import { MyHomeUpcomingSection } from './MyHomeUpcomingSection';
 
@@ -99,7 +105,6 @@ function mapBaseFeedItemForCard(item: BaseFeedEventItem) {
     ...item.event,
     month: date.toLocaleDateString(undefined, { month: 'short' }),
     day: String(date.getDate()).padStart(2, '0'),
-    subtitle: `${item.event.location_name || 'Location TBD'} · ${formatTime(item.event.start_time)}`,
   } as BaseFeedEventItem;
 }
 
@@ -220,7 +225,7 @@ export default function MyHomePage() {
   const trendingFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: 'popularity',
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       free_only: selectedFormatFilters.includes('free') || undefined,
       online: selectedFormatFilters.includes('online') || undefined,
       categories: trendingCategorySlugs.length ? trendingCategorySlugs : undefined,
@@ -233,7 +238,7 @@ export default function MyHomePage() {
   const recommendedFeedParams = useMemo<BaseFeedParams>(
     () => ({
       sort: 'popularity',
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 24,
     }),
@@ -253,7 +258,7 @@ export default function MyHomePage() {
     () => ({
       sort: 'popularity',
       has_needs: true,
-      status: ['published', 'event_ready', 'live'],
+      lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 6,
     }),
@@ -326,7 +331,8 @@ export default function MyHomePage() {
         row.need_applied_to_user_id === userId ||
         row.need_application_requested_by_host_vendor_user_id === userId ||
         row.need_assigned_user_id === userId;
-      const isAttendee = row.attendee_user_id === userId && row.ticket_status !== 'cancelled';
+      const isAttendee =
+        row.attendee_user_id === userId && row.ticket_status !== 'cancelled';
 
       if (isHost || isVendor || isAttendee) {
         const item: BaseFeedEventItem = {
@@ -463,20 +469,37 @@ export default function MyHomePage() {
         maxWidth: 1240,
         mx: 'auto',
         minHeight: '100vh',
-        background:
-          'radial-gradient(circle at top, rgba(255, 244, 227, 0.9), transparent 32%), linear-gradient(180deg, #FFFDF8 0%, #FFF6EA 48%, #FFFDF8 100%)',
       }}
     >
-      <Box className="pt-10 pb-32">
-        <Box
-          sx={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,250,243,0.92) 100%)',
-            boxShadow: '0 32px 90px rgba(113, 74, 35, 0.10)',
-            backdropFilter: 'blur(14px)',
-          }}
-        >
-          <MyHomeUpcomingSection upcomingEvents={upcomingEvents} hasUpcomingEvents={upcomingEvents.length > 0} />
+      <Box
+        className="pt-14 pb-32"
+        sx={{
+          borderBottom: '1px solid rgba(143, 105, 66, 0.10)',
+          background:
+            'rgba(237, 232, 226, 0.9)',
+
+          backdropFilter: 'blur(14px)',
+        }}
+      >
+        <Box sx={{}}>
+          <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 4, md: 4 } }}>
+            <SectionHeading
+              eyebrow={`${upcomingEvents.length > 0 ? `Welcome back,` : `Welcome to Outgoing!`}`}
+              title={`Outgoer ${user?.username}!`}
+              description={`${
+                upcomingEvents.length > 1
+                  ? `Your ${upcomingEvents.length} upcoming events...`
+                  : upcomingEvents.length > 0
+                    ? `Your first upcoming event`
+                    : ``
+              }`}
+            />
+            {upcomingEvents.length === 0 ? <MyHomeEmptyUpcomingCarousel /> : null}
+          </Box>
+          <MyHomeUpcomingSection
+            upcomingEvents={upcomingEvents}
+            hasUpcomingEvents={upcomingEvents.length > 0}
+          />
           <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, md: 4 } }}>
             <Stack spacing={4}>
               <MyHomeTrendingSection

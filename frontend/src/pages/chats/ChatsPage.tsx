@@ -7,24 +7,19 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { Inbox, MapPin, Search, Users } from 'lucide-react';
+import { Inbox, MapPin, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
 import { type ChatParams, useChatDrawer } from '@/features/events/ChatDrawerContext';
+import { ChatListAvatar } from '@/features/chat/ChatListAvatar';
 import {
   type AllChatEntry,
-  buildAllChatEntries,
+  buildConversationInboxEntries,
   formatChatMessagePreview,
   formatChatRelativeTime,
 } from '@/features/events/chatList';
-import {
-  useAllChatsList,
-  useEventOverviewRows,
-  useMyFriendships,
-} from '@/features/events/hooks';
-import { HostVendorBadge } from '@/features/events/scrapbookCard/ScrapbookCardOverlays';
+import { useConversationInbox } from '@/features/events/hooks';
 
 type ChatFilter = 'all' | 'events' | 'people';
 
@@ -66,119 +61,6 @@ function buildChatDrawerParams(chat: AllChatEntry): ChatParams {
   };
 }
 
-function ChatListAvatar({
-  chat,
-}: {
-  chat: Pick<
-    AllChatEntry,
-    | 'mode'
-    | 'title'
-    | 'coverImage'
-    | 'otherAvatar'
-    | 'otherUsername'
-    | 'groupRole'
-    | 'badgeLabel'
-  >;
-}) {
-  if (chat.mode === 'group') {
-    return (
-      <Box
-        sx={{
-          position: 'relative',
-          width: 72,
-          height: 66,
-          flexShrink: 0,
-          overflow: 'visible',
-          boxShadow: '0 10px 24px rgba(86, 58, 28, 0.12)',
-        }}
-      >
-        {chat.coverImage ? (
-          <Box
-            component="img"
-            src={chat.coverImage}
-            alt={chat.title}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              borderRadius: '14px',
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'grid',
-              placeItems: 'center',
-              background: '#FAECE7',
-              color: '#D85A30',
-              borderRadius: '14px',
-            }}
-          >
-            <Users size={18} />
-          </Box>
-        )}
-        {chat.groupRole ? (
-          <HostVendorBadge
-            isHost={chat.groupRole === 'hosting'}
-            variant="short"
-            sx={{
-              left: -6,
-              bottom: -6,
-              zIndex: 2,
-              pointerEvents: 'none',
-              px: '4px',
-              py: '1px',
-              fontSize: '0.52rem',
-              lineHeight: 1.05,
-              borderRadius: '4px',
-            }}
-          />
-        ) : null}
-      </Box>
-    );
-  }
-
-  const isFriend = chat.badgeLabel === 'Friend';
-
-  return (
-    <Box sx={{ position: 'relative', flexShrink: 0 }}>
-      {isFriend ? (
-        <>
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: -2,
-              borderRadius: '999px',
-              border: '1.25px solid rgba(216, 90, 48, 0.28)',
-              transform: 'translate(-2px, -1px) rotate(-8deg)',
-              pointerEvents: 'none',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: -2,
-              borderRadius: '999px',
-              border: '1.25px solid rgba(216, 90, 48, 0.18)',
-              transform: 'translate(2px, 1px) rotate(6deg)',
-              pointerEvents: 'none',
-            }}
-          />
-        </>
-      ) : null}
-      <UserAvatar
-        src={chat.otherAvatar}
-        username={chat.otherUsername || chat.title}
-        size="md"
-        className="shadow-[0_8px_20px_rgba(86,58,28,0.12)]"
-      />
-    </Box>
-  );
-}
-
 export default function ChatsPage() {
   const { user, isAuthenticated } = useAuth();
   const { isOpen, params, openChat } = useChatDrawer();
@@ -187,23 +69,11 @@ export default function ChatsPage() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [chatFilter, setChatFilter] = useState<ChatFilter>('all');
 
-  const { data, isLoading } = useAllChatsList(true);
-  const { data: friendships, isLoading: friendshipsLoading } = useMyFriendships(
-    !!isAuthenticated && !!user,
-  );
-  const { data: eventOverviewRows, isLoading: eventOverviewLoading } =
-    useEventOverviewRows(!!isAuthenticated && !!user);
+  const { data, isLoading } = useConversationInbox(!!isAuthenticated && !!user);
 
   const chatEntries = useMemo(
-    () =>
-      buildAllChatEntries({
-        response: data?.data,
-        friendships: friendships?.accepted,
-        eventOverviewRows: eventOverviewRows || [],
-        currentUserId: user?.id,
-        currentUsername: user?.username,
-      }),
-    [data?.data, eventOverviewRows, friendships?.accepted, user?.id, user?.username],
+    () => buildConversationInboxEntries(data?.data?.conversations),
+    [data?.data?.conversations],
   );
 
   const selectedChatId = useMemo(() => {
@@ -211,7 +81,7 @@ export default function ChatsPage() {
     return chatEntries.find((chat) => matchesChatParams(chat, params))?.id ?? null;
   }, [chatEntries, isOpen, params]);
 
-  const isListLoading = isLoading || friendshipsLoading || eventOverviewLoading;
+  const isListLoading = isLoading;
 
   const filteredChatEntries = useMemo(() => {
     const baseChats =
@@ -512,15 +382,15 @@ export default function ChatsPage() {
                           'background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
                         '&::before': isGroupCard
                           ? {
-                              content: '""',
-                              position: 'absolute',
-                              left: 0,
-                              top: 8,
-                              bottom: 8,
-                              width: 4,
-                              borderRadius: '999px',
-                              background: '#D85A30',
-                            }
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: 8,
+                            bottom: 8,
+                            width: 4,
+                            borderRadius: '999px',
+                            background: '#D85A30',
+                          }
                           : undefined,
                         '&:hover': {
                           background: isGroupCard

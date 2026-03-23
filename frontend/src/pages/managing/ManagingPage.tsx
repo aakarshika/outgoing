@@ -439,9 +439,9 @@ export default function ManagingPage() {
     const attendee = new Map<number, EventOverviewRow>();
 
     overviewRows.forEach((row) => {
-      if (['completed', 'cancelled'].includes(row.event_lifecycle_state)) return;
+      console.log(row.event_id, row.attendee_user_id, row.ticket_status, user.id);
       if (!row.event_details) return;
-      if (row.attendee_user_id !== user.id || row.ticket_status === 'cancelled') return;
+      if (row.attendee_user_id !== user.id && row.ticket_status === 'cancelled') return;
 
       attendee.set(row.event_id, row);
     });
@@ -579,8 +579,8 @@ export default function ManagingPage() {
         pt: 8,
         pb: 20,
         minHeight: '100vh',
-        background:
-          'radial-gradient(circle at top, rgba(255, 244, 227, 0.9), transparent 32%), linear-gradient(180deg, #FFFDF8 0%, #FFF6EA 48%, #FFFDF8 100%)',
+        background: 'rgba(237, 232, 226, 0.9)',
+      
       }}
     >
       <Container maxWidth={false}>

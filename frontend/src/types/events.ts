@@ -11,6 +11,7 @@ export interface EventCategory {
 }
 
 export interface EventHost {
+  id: number;
   username: string;
   first_name: string;
   avatar: string | null;
@@ -61,6 +62,7 @@ export interface EventListItem {
   ticket_price_standard: string | null;
   ticket_price_flexible: string | null;
   cover_image: string | null;
+  /** @deprecated Use `lifecycle_state` for phase / visibility; synced legacy field from API. */
   status: string;
   lifecycle_state: EventLifecycleState;
   capacity: number | null;
@@ -147,6 +149,13 @@ export type EventLifecycleState =
   | 'cancelled'
   | 'completed';
 
+/** Public discovery: visible, bookable phases (omit draft and terminal states). */
+export const DISCOVERABLE_LIFECYCLE_STATES: readonly EventLifecycleState[] = [
+  'published',
+  'event_ready',
+  'live',
+] as const;
+
 export interface EventLifecycleTransition {
   id: number;
   from_state: EventLifecycleState;
@@ -209,6 +218,7 @@ export interface EventAttendee {
 }
 
 export interface AttendeeInfo {
+  user_id: number;
   username: string;
   avatar: string | null;
   is_verified: boolean;
@@ -234,6 +244,9 @@ export type BaseFeedSort = 'popularity' | 'distance' | 'created' | 'start_time';
 export interface BaseFeedParams {
   sort?: BaseFeedSort;
   online?: boolean;
+  /** Filter by `Event.lifecycle_state` (comma-separated in the request). Preferred over `status`. */
+  lifecycle_states?: EventLifecycleState[];
+  /** @deprecated Prefer `lifecycle_states`; this maps to the coarse legacy `Event.status` column. */
   status?: string | string[];
   include_host_drafts?: boolean;
   start_time_gte?: string;
@@ -318,6 +331,7 @@ export interface BaseFeedEventItem {
   ticket_price_standard: string | null;
   ticket_price_flexible: string | null;
   cover_image: string | null;
+  /** @deprecated Use `lifecycle_state` for phase / visibility; synced legacy field from API. */
   status: string;
   lifecycle_state: EventLifecycleState;
   capacity: number | null;

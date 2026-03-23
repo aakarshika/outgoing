@@ -29,6 +29,7 @@ from apps.events.models import (
     Friendship,
     EventAddon,
 )
+from apps.needs.models import EventNeed, NeedApplication
 from apps.tickets.models import Ticket
 from core.utils import resolve_media_url
 
@@ -80,6 +81,7 @@ class EventTicketTierSerializer(serializers.ModelSerializer):
 class EventHostSerializer(serializers.Serializer):
     """Lightweight serializer for the event host."""
 
+    id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
     first_name = serializers.CharField()
     avatar = serializers.SerializerMethodField()
@@ -436,6 +438,7 @@ class EventDetailSerializer(EventListSerializer):
                         "title": need.title,
                         "vendor_name": vendor_name,
                         "vendor_avatar": vendor_avatar,
+                        "need_category": need.category,
                     }
                 )
         return vendors
@@ -475,6 +478,7 @@ class EventDetailSerializer(EventListSerializer):
 
                 attendees.append(
                     {
+                        "user_id": user.id,
                         "username": user.username,
                         "name": user.first_name or "",
                         "avatar": avatar_url,
@@ -707,7 +711,6 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
     event_id = serializers.IntegerField(source="event.id", read_only=True)
-    media_file = serializers.SerializerMethodField()
     # Basic event card details for scrapbook components on the frontend
     event = serializers.SerializerMethodField()
 
@@ -743,8 +746,12 @@ class EventHighlightSerializer(serializers.ModelSerializer):
             "event",
         ]
 
-    def get_media_file(self, obj):
-        return resolve_media_url(obj.media_file, self.context.get("request"))
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["media_file"] = resolve_media_url(
+            instance.media_file, self.context.get("request")
+        )
+        return ret
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -1091,6 +1098,80 @@ class EventGroupChatListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ConversationInboxPrivateSerializer(EventPrivateConversationListSerializer):
+    """Private conversation row for the unified inbox (includes last message time)."""
+
+    kind = serializers.SerializerMethodField()
+    last_message_at = serializers.SerializerMethodField()
+
+    class Meta(EventPrivateConversationListSerializer.Meta):
+        fields = [
+            *EventPrivateConversationListSerializer.Meta.fields,
+            "kind",
+            "last_message_at",
+        ]
+
+    def get_kind(self, obj):
+        return "event_private" if obj.event_id else "direct"
+
+    def get_last_message_at(self, obj):
+        return getattr(obj, "last_message_at", None)
+
+
+class ConversationInboxGroupSerializer(serializers.ModelSerializer):
+    """Group chat row for the unified inbox."""
+
+    kind = serializers.SerializerMethodField()
+    event_id = serializers.IntegerField(source="id", read_only=True)
+    event_title = serializers.CharField(source="title", read_only=True)
+    last_message_at = serializers.DateTimeField(source="latest_message_at", read_only=True)
+    latest_message_text = serializers.CharField(read_only=True, allow_null=True)
+    latest_message_sender_username = serializers.CharField(read_only=True, allow_null=True)
+    cover_image = serializers.SerializerMethodField()
+    location_name = serializers.CharField(read_only=True)
+    start_time = serializers.DateTimeField(read_only=True)
+    attendee_count = serializers.IntegerField(source="ticket_count", read_only=True)
+    group_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = [
+            "kind",
+            "event_id",
+            "event_title",
+            "last_message_at",
+            "latest_message_text",
+            "latest_message_sender_username",
+            "cover_image",
+            "location_name",
+            "start_time",
+            "attendee_count",
+            "group_role",
+        ]
+        read_only_fields = fields
+
+    def get_kind(self, obj):
+        return "group"
+
+    def get_cover_image(self, obj):
+        if obj.cover_image:
+            return resolve_media_url(obj.cover_image, self.context.get("request"))
+        return None
+
+    def get_group_role(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if user is None or not user.is_authenticated:
+            return None
+        if obj.host_id == user.id:
+            return "hosting"
+        if EventNeed.objects.filter(event=obj, assigned_vendor=user).exists():
+            return "servicing"
+        if NeedApplication.objects.filter(need__event=obj, vendor=user).exists():
+            return "servicing"
+        return None
+
+
 class FriendshipSerializer(serializers.ModelSerializer):
     """Serializer for friendship requests and accepted friendships."""
 
@@ -1102,6 +1183,10 @@ class FriendshipSerializer(serializers.ModelSerializer):
     )
     met_at_event_title = serializers.CharField(
         source="met_at_event.title", read_only=True, allow_null=True
+    )
+    orbit_category_slug = serializers.CharField(
+        source="orbit_category.slug",
+        read_only=True,
     )
 
     class Meta:
@@ -1119,6 +1204,8 @@ class FriendshipSerializer(serializers.ModelSerializer):
             "accepted_at",
             "met_at_event",
             "met_at_event_title",
+            "orbit_category",
+            "orbit_category_slug",
             "created_at",
             "updated_at",
         ]
@@ -1134,6 +1221,8 @@ class FriendshipSerializer(serializers.ModelSerializer):
             "accepted_at",
             "met_at_event",
             "met_at_event_title",
+            "orbit_category",
+            "orbit_category_slug",
             "created_at",
             "updated_at",
         ]
@@ -1152,4 +1241,4 @@ class FriendshipRequestCreateSerializer(serializers.Serializer):
 class FriendshipActionSerializer(serializers.Serializer):
     """Validate supported friendship state transitions."""
 
-    action = serializers.ChoiceField(choices=["accept", "withdraw", "unfriend"])
+    action = serializers.ChoiceField(choices=["accept", "withdraw", "unfriend", "decline"])

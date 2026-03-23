@@ -21,11 +21,11 @@ export const HeroSection = () => (
             width: '1.3em',
             height: '1.3em',
             backgroundColor: '#eabe72', // use the explicit hex color rather than currentColor to be safe
-            maskImage: "url('/assets/go-symbol.png')",
+            maskImage: "url('/assets/go-sym.png')",
             maskSize: 'contain',
             maskRepeat: 'no-repeat',
             maskPosition: 'center',
-            WebkitMaskImage: "url('/assets/go-symbol.png')",
+            WebkitMaskImage: "url('/assets/go-sym.png')",
             WebkitMaskSize: 'contain',
             WebkitMaskRepeat: 'no-repeat',
             WebkitMaskPosition: 'center',

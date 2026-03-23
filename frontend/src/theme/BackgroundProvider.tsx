@@ -21,7 +21,7 @@ const DefaultBackground = () => (
     style={{
       zIndex: -1,
       pointerEvents: 'none',
-      backgroundColor: '#fefcf2ff',
+      backgroundColor: 'rgba(237, 232, 226, 0.9)',
     }}
   />
 );

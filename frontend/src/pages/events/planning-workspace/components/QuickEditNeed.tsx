@@ -7,6 +7,7 @@ import { Servicename } from '@/components/ui/Servicename';
 import { useReviewNeedApplication, useUpdateEventNeed } from '@/features/needs/hooks';
 import { toast } from 'sonner';
 import type { EventNeed } from '@/types/needs';
+import { FriendAvatar } from '@/features/events/FriendAvatar';
 
 export interface QuickEditNeedPayload {
   category: string;
@@ -262,7 +263,10 @@ export function QuickEditNeed({
                               color: isAccepted ? '#059669' : '#9CA3AF',
                               border: '1px solid rgba(0,0,0,0.03)'
                             }}>
-                              <User size={14} />
+                              <FriendAvatar 
+                                userId={Number(app.vendor_id)}
+                                size={28}
+                              />
                             </Box>
                             <Box>
                               <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#1A1A1A' }}>
