@@ -152,7 +152,8 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
             <>
               <WayInModule
                 defaultWay={wayInSelected}
-                onWayChange={(way) => {
+                  displayNeeds={displayNeeds}
+                  onWayChange={(way) => {
                   setWayInSelected(way);
                 }}
               />
@@ -285,6 +286,7 @@ export function VariantRegistry({ variant }: VariantRegistryProps) {
         <NormalDivider />
         <WayInModule
           defaultWay={wayInSelected}
+          displayNeeds={displayNeeds}
           onWayChange={(way) => {
             setWayInSelected(way);
           }}

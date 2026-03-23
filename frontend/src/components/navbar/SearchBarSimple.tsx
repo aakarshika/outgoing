@@ -31,6 +31,7 @@ export const SearchBarSimple = () => {
       >
         <div className="relative flex-1 min-w-0">
           <input
+          
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setShowSuggestions(true)}

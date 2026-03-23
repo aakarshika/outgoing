@@ -21,7 +21,6 @@ import {
   type QuickCreateAction,
 } from '@/components/events/QuickCreateSpark';
 import { NavbarProvider } from '@/components/navbar/NavbarContext';
-import { SearchBarSimple } from '@/components/navbar/SearchBarSimple';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { QuickCreateServiceDialog } from '@/components/vendors/QuickCreateServiceDialog';

@@ -575,9 +575,10 @@ export default function GuestLandingPage() {
         sx={{
           background: '#D85A30',
           textAlign: 'center',
-          height: '100vh',
+          height: 'auto',
           px: 2,
           pt: 12,
+          pb: 4,
         }}
       >
         <Container maxWidth={false} sx={{ maxWidth: 900, mb: 10 }}>

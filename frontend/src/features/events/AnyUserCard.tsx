@@ -16,6 +16,7 @@ import {
 } from '@/pages/profile/Profile.service';
 import { type FriendshipItem } from './api';
 import { useMyFriendships, useUserFriendshipsByOrbitCategory } from './hooks';
+import { useNavigate } from 'react-router-dom';
 
 type PopoverProfile = {
   username: string;
@@ -157,7 +158,7 @@ export function AnyUserCard(props: AnyUserCardProps) {
   const soul = soulMixFromProfile(profile, canViewFull, 0, 0, servicesLen);
 
   const handle = profile?.username;
-  const showAvatar = `https://i.pravatar.cc/150?u=${userId}`;
+  const showAvatar = profile?.avatar || `https://i.pravatar.cc/150?u=${userId}`;
 
   const targetOrbitSlugs = useMemo(() => {
     const slugs = new Set<string>();
@@ -212,7 +213,9 @@ export function AnyUserCard(props: AnyUserCardProps) {
     EVENT_ROLE_COLORS.hosting.dot,
   ];
 
-  return (
+  const navigate = useNavigate();
+
+    return (
     <motion.div
             initial={{ opacity: 0, scale: 0.94, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -251,7 +254,7 @@ export function AnyUserCard(props: AnyUserCardProps) {
               <div className="relative px-4 pb-3 pt-4">
                 <div className="flex flex-col items-center text-center">
                   <motion.div
-                    className="relative mb-3"
+                    className="relative mb-3 cursor-pointer"
                     initial={{ scale: 0.85 }}
                     animate={{ scale: 1 }}
                     transition={{
@@ -259,6 +262,9 @@ export function AnyUserCard(props: AnyUserCardProps) {
                       stiffness: 400,
                       damping: 22,
                       delay: 0.05,
+                    }}
+                    onClick={() => {
+                      navigate(`/mock/user-profile/${handle || ''}`);
                     }}
                   >
                     <div

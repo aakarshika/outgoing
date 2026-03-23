@@ -17,12 +17,15 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8998',
-        changeOrigin: true,
+        // Keep original Host so Django builds absolute media URLs
+        // with the LAN-visible frontend origin instead of localhost.
+        changeOrigin: false,
         secure: false,
       },
       '/media': {
         target: 'http://localhost:8998',
-        changeOrigin: true,
+        // Same rationale as /api.
+        changeOrigin: false,
         secure: false,
       },
     },

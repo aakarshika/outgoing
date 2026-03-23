@@ -662,26 +662,21 @@ export default function UserProfileMockPage() {
                     overflow: 'hidden',
                   }}
                 >
-                  {profile?.avatar ? (
-                    <Media
-                      src={profile.avatar}
+
+<div
+                    className="rounded-full p-[3px] h-full w-full"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.45), rgba(148, 163, 184, 0.2))',
+                      boxShadow: '0 0 0 1px hsl(var(--border) / 0.5), 0 10px 22px rgba(148, 163, 184, 0.25)',
+                    }}
+                  >
+                    <img
+                      src={profile?.avatar || 'https://i.pravatar.cc/150?u=' + profile?.user_id}
                       alt=""
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '50%',
-                      }}
+                      className="h-full w-full rounded-full object-cover"
                     />
-                  ) : (
-                    getInitials(
-                      profile ?? {
-                        username: '??',
-                        first_name: '',
-                        last_name: '',
-                      },
-                    )
-                  )}
+                  </div>
+
                 </Box>
               </Box>
               <Box

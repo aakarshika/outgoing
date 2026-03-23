@@ -2,6 +2,13 @@ import { Box, Typography } from '@mui/material';
 import { useCallback, useState } from 'react';
 import { SubHeaderEventPage } from './SubHeaderEventPage';
 
+export type DisplayNeed = {
+  id: number;
+  title: string;
+  status: string;
+  assigned_vendor: number | null;
+};
+
 export type WayChoice = 'buyin' | 'chipin';
 
 const BUYIN = '#D85A30';
@@ -11,10 +18,11 @@ const MUTED_TEXT = '#888780';
 
 export interface WayInModuleProps {
   defaultWay?: WayChoice;
+  displayNeeds?: DisplayNeed[];
   onWayChange?: (way: WayChoice) => void;
 }
 
-export function WayInModule({ defaultWay = 'buyin', onWayChange }: WayInModuleProps) {
+export function WayInModule({ defaultWay = 'buyin', displayNeeds, onWayChange }: WayInModuleProps) {
   const [choice, setChoice] = useState<WayChoice>(defaultWay);
 
   const pick = useCallback(
@@ -116,7 +124,7 @@ export function WayInModule({ defaultWay = 'buyin', onWayChange }: WayInModulePr
         </Box>
       </Box>
 
-      <Box
+      {displayNeeds && displayNeeds.length > 0 && (<Box
         component="button"
         type="button"
         onClick={() => pick('chipin')}
@@ -171,7 +179,7 @@ export function WayInModule({ defaultWay = 'buyin', onWayChange }: WayInModulePr
             borderLeft: `22px solid ${chipinActive ? CHIPIN : MUTED_BG}`,
           }}
         />
-      </Box>
+      </Box>)}
     </Box>
     </>
   );
