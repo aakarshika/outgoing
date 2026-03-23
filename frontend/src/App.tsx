@@ -24,6 +24,12 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 
 import { Box } from '@mui/material';
 
+import {
+  GlobalThreadChatDrawer,
+} from '@/features/chat/GlobalThreadChatDrawer';
+import {
+  GlobalThreadChatDrawerProvider,
+} from '@/features/chat/GlobalThreadChatDrawerContext';
 import { ChatDrawerProvider, useChatDrawer } from '@/features/events/ChatDrawerContext';
 import { ChatDrawer } from '@/pages/events/components/ChatDrawer';
 import { BackgroundProvider, useBackground } from '@/theme/BackgroundProvider';
@@ -68,6 +74,7 @@ function AppContent() {
         <AppRoutes />
       </main>
       <GlobalChatDrawer />
+      <GlobalThreadChatDrawer />
       {!isEventDetailRoute && <AppBottomNav />}
       {!isGallery && !isSignedOutRoot && (
         <div className="mt-50">
@@ -86,10 +93,12 @@ function App() {
           <BrowserRouter>
             <BackgroundProvider>
               <ServicesProvider>
-                <ChatDrawerProvider>
-                  <ScrollToTop />
-                  <AppContent />
-                </ChatDrawerProvider>
+                <GlobalThreadChatDrawerProvider>
+                  <ChatDrawerProvider>
+                    <ScrollToTop />
+                    <AppContent />
+                  </ChatDrawerProvider>
+                </GlobalThreadChatDrawerProvider>
               </ServicesProvider>
             </BackgroundProvider>
           </BrowserRouter>

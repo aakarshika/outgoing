@@ -1,7 +1,5 @@
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { chatApi } from '@/features/chat/api';
-import { ThreadKeyChatDrawer } from '@/features/chat/ThreadKeyChatDrawer';
-import { buildEventVendorThreadKey } from '@/features/chat/threadKeyCodec';
 import { BaseFeedEventItem, EventDetail, type EventLifecycleState } from '@/types/events';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';

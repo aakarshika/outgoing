@@ -719,9 +719,9 @@ export async function fetchAllChatsList() {
 }
 
 export async function fetchConversationInbox() {
-  const { data } = await client.get<ApiResponse<{ conversations: ConversationInboxItem[] }>>(
-    '/events/conversations/inbox/',
-  );
+  const { data } = await client.get<
+    ApiResponse<{ conversations: ConversationInboxItem[] }>
+  >('/events/conversations/inbox/');
   return data;
 }
 
@@ -761,7 +761,7 @@ export async function fetchFriendRequestStatus(
 export async function updateFriendRequest(
   eventId: number,
   targetUsername: string,
-  payload: { action: 'accept' | 'withdraw' | 'unfriend' },
+  payload: { action: 'accept' | 'withdraw' | 'unfriend' | 'decline' },
 ) {
   const { data } = await client.patch<ApiResponse<any>>(
     `/events/${eventId}/friendships/${targetUsername}/`,

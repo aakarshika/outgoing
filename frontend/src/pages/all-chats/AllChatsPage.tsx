@@ -2,86 +2,30 @@ import {
   Box,
   CircularProgress,
   Container,
-  Drawer,
   IconButton,
   InputBase,
   Stack,
   Typography,
 } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import { Inbox, Search } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/features/auth/hooks';
-import { chatApi, type ConversationItemDto } from '@/features/chat/api';
-import {
-  ChatListAvatar,
-  type ChatListAvatarChat,
-} from '@/features/chat/ChatListAvatar';
-import { ChatThreadCard } from '@/features/chat/ChatThreadCard';
-import { ChatThreadHeader } from '@/features/chat/ChatThreadHeader';
-import {
-  buildViewerRolesByEventId,
-  eventChatKindLabel,
-  eventIdForConversationRow,
-  formatViewerEventRoles,
-  peerDmChipLabel,
-} from '@/features/chat/conversationRowMeta';
+import { chatApi } from '@/features/chat/api';
 import { decodeThreadKey, encodeThreadKey } from '@/features/chat/threadKeyCodec';
-import { useChatThread } from '@/features/chat/useChatThread';
-import { FriendAvatar } from '@/features/events/FriendAvatar';
-import { useEventOverviewRows, useMyFriendships } from '@/features/events/hooks';
 
 import { AllChatsConversationRow } from './AllChatsConversationRow';
 
 type ChatFilter = 'all' | 'events' | 'people';
-
-/** Primary line — only uses `ConversationItemDto` sub-objects. */
-function rowPrimaryTitle(row: ConversationItemDto): string {
-  if (row.event) {
-    return row.event.title;
-  }
-  if (row.peer_user) {
-    const p = row.peer_user;
-    const n = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
-    return n || p.username || `User #${p.id}`;
-  }
-  return row.thread_key;
-}
-
-/** Group-style card (event thread, or no peer/event payload). */
-function isGroupStyleRow(row: ConversationItemDto): boolean {
-  return row.event != null || row.peer_user == null;
-}
-
-function avatarChatFromRow(row: ConversationItemDto): ChatListAvatarChat {
-  if (isGroupStyleRow(row)) {
-    return {
-      mode: 'group',
-      title: row.event?.title ?? row.thread_key,
-      coverImage: null,
-      groupRole: null,
-    };
-  }
-  const p = row.peer_user!;
-  const n = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
-  return {
-    mode: 'direct',
-    title: n || p.username || `User #${p.id}`,
-    otherUserId: p.id,
-    otherAvatar: p.avatar,
-    otherUsername: p.username,
-  };
-}
 
 export default function AllChatsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { encodedKey } = useParams<{ encodedKey?: string }>();
 
-  const [conversations, setConversations] = useState<ConversationItemDto[]>([]);
-  const [listLoading, setListLoading] = useState(true);
   const chatSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [chatSearch, setChatSearch] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -96,58 +40,20 @@ export default function AllChatsPage() {
     }
   }, [encodedKey]);
 
-  const drawerOpen = Boolean(encodedKey);
-
-  const activeConversation = useMemo(
-    () =>
-      threadKey
-        ? (conversations.find((c) => c.thread_key === threadKey) ?? null)
-        : null,
-    [conversations, threadKey],
-  );
-
-  const refreshConversations = useCallback(async () => {
-    setListLoading(true);
-    try {
-      const res = await chatApi.listConversations();
-      if (res.success) {
-        setConversations(Array.isArray(res.data) ? res.data : []);
-      }
-    } catch {
-      toast.error('Could not load conversations');
-    } finally {
-      setListLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refreshConversations();
-  }, [refreshConversations]);
-
-  useEffect(() => {
-    if (!encodedKey) return;
-    if (!threadKey) {
-      toast.error('Invalid chat link');
-      navigate('/allchats', { replace: true });
-    }
-  }, [encodedKey, threadKey, navigate]);
-
   const {
-    runs,
-    messagesLoading,
-    messagesContainerRef,
-    draft,
-    setDraft,
-    sending,
-    sendMessage,
-  } = useChatThread(threadKey, { onAfterSend: refreshConversations });
-
-  const { data: friendships } = useMyFriendships(Boolean(user?.id));
-  const { data: overviewRows } = useEventOverviewRows(Boolean(user?.id));
-  const eventRolesByEventId = useMemo(
-    () => buildViewerRolesByEventId(overviewRows, user?.id),
-    [overviewRows, user?.id],
-  );
+    data: conversations = [],
+    isLoading: listLoading,
+  } = useQuery({
+    queryKey: ['chat', 'conversations'],
+    queryFn: async () => {
+      const res = await chatApi.listConversations();
+      if (!res.success) {
+        toast.error('Could not load conversations');
+        return [];
+      }
+      return Array.isArray(res.data) ? res.data : [];
+    },
+  });
 
   useEffect(() => {
     if (!isSearchExpanded) return;
@@ -178,55 +84,9 @@ export default function AllChatsPage() {
     });
   }, [conversations, chatFilter, chatSearch]);
 
-  const closeDrawer = () => {
-    navigate('/allchats', { replace: true });
-  };
-
   const openThread = (tk: string) => {
     navigate(`/allchats/t/${encodeThreadKey(tk)}`);
   };
-
-  const drawerTitle = activeConversation
-    ? rowPrimaryTitle(activeConversation)
-    : (threadKey ?? 'Thread');
-  const drawerSubtitle =
-    activeConversation?.peer_user && !activeConversation.event
-      ? `@${activeConversation.peer_user.username}`
-      : '';
-
-  const drawerAvatarChat = activeConversation
-    ? avatarChatFromRow(activeConversation)
-    : null;
-
-  const drawerDmRelationshipLine = useMemo(() => {
-    if (!activeConversation?.peer_user || activeConversation.event) return null;
-    if (friendships === undefined || user?.id == null) return null;
-    const label = peerDmChipLabel(
-      activeConversation.peer_user.id,
-      user.id,
-      friendships,
-    );
-    return label ? `Relationship: ${label}` : null;
-  }, [activeConversation, friendships, user?.id]);
-
-  const drawerEventMetaLine = useMemo(() => {
-    if (!activeConversation || !isGroupStyleRow(activeConversation)) return null;
-    const parts: string[] = [];
-    const kind = eventChatKindLabel(activeConversation.thread_key);
-    if (kind) parts.push(kind);
-    if (overviewRows !== undefined) {
-      const eid = eventIdForConversationRow(activeConversation);
-      if (eid != null) {
-        const roles = eventRolesByEventId.get(eid) ?? {
-          host: false,
-          vendor: false,
-          goer: false,
-        };
-        parts.push(formatViewerEventRoles(roles));
-      }
-    }
-    return parts.length ? parts.join(' · ') : null;
-  }, [activeConversation, overviewRows, eventRolesByEventId]);
 
   return (
     <Box
@@ -487,129 +347,6 @@ export default function AllChatsPage() {
           </Box>
         </Stack>
       </Container>
-
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={closeDrawer}
-        ModalProps={{ keepMounted: true }}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 440, lg: 480 },
-            maxWidth: '100vw',
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,248,244,0.96) 100%)',
-            boxShadow: '-18px 0 48px rgba(86, 58, 28, 0.16)',
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <Stack sx={{ height: '100%', minHeight: 0 }}>
-          <ChatThreadHeader
-            onClose={closeDrawer}
-            leading={
-              drawerAvatarChat ? (
-                drawerAvatarChat.mode === 'group' ? (
-                  <ChatListAvatar chat={drawerAvatarChat} />
-                ) : (
-                  <FriendAvatar
-                    userId={drawerAvatarChat.otherUserId ?? 0}
-                    size={48}
-                    imageUrl={drawerAvatarChat.otherAvatar}
-                  />
-                )
-              ) : null
-            }
-            title={
-              <Typography
-                sx={{
-                  fontFamily: 'Syne, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 18,
-                  color: 'var(--color-text-primary)',
-                  lineHeight: 1.2,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {drawerTitle}
-              </Typography>
-            }
-            subtitle={
-              drawerSubtitle ? (
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    color: 'var(--color-text-secondary)',
-                    mt: 0.25,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {drawerSubtitle}
-                </Typography>
-              ) : null
-            }
-            details={
-              <>
-                {drawerDmRelationshipLine ? (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      mt: 0.25,
-                      color: 'rgba(66, 50, 28, 0.55)',
-                    }}
-                  >
-                    {drawerDmRelationshipLine}
-                  </Typography>
-                ) : null}
-                {drawerEventMetaLine ? (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      mt: 0.25,
-                      color: 'rgba(66, 50, 28, 0.55)',
-                      lineHeight: 1.35,
-                    }}
-                  >
-                    {drawerEventMetaLine}
-                  </Typography>
-                ) : null}
-              </>
-            }
-          />
-
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              px: 0,
-              py: 2,
-              background:
-                'linear-gradient(180deg, rgba(255,248,241,0.62) 0%, rgba(255,255,255,0.92) 100%)',
-            }}
-          >
-            <ChatThreadCard
-              runs={runs}
-              userId={user?.id}
-              messagesLoading={messagesLoading}
-              messagesContainerRef={messagesContainerRef}
-              draft={draft}
-              onDraftChange={setDraft}
-              onSend={() => void sendMessage()}
-              sending={sending}
-              inputEnabled={Boolean(threadKey)}
-              sendEnabled={Boolean(threadKey)}
-            />
-          </Box>
-        </Stack>
-      </Drawer>
     </Box>
   );
 }

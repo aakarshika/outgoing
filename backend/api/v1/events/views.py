@@ -1424,6 +1424,24 @@ class EventFriendshipRequestCreateView(APIView):
                 message="Buddy request withdrawn",
             )
 
+        if action == "decline":
+            if friendship.status != Friendship.STATUS_PENDING:
+                return error_response(message="Only pending buddy requests can be declined", status=400)
+            if friendship.request_sender_id == request.user.id:
+                return error_response(
+                    message="You cannot decline your own buddy request",
+                    status=403,
+                )
+
+            friendship.status = Friendship.STATUS_DECLINED
+            friendship.accepted_at = None
+            friendship.met_at_event = friendship.met_at_event or event
+            friendship.save(update_fields=["status", "accepted_at", "met_at_event", "updated_at"])
+            return success_response(
+                data=FriendshipSerializer(friendship).data,
+                message="Buddy request declined",
+            )
+
         if action == "unfriend":
             if friendship.status != Friendship.STATUS_ACCEPTED:
                 return error_response(message="Only accepted buddies can be removed", status=400)

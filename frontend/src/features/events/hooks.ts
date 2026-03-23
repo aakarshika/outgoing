@@ -17,10 +17,10 @@ import {
   deleteEvent,
   deleteEventReview,
   fetchAllChatsList,
-  fetchConversationInbox,
+  fetchBaseFeed,
   fetchCarouselEvents,
   fetchCategories,
-  fetchBaseFeed,
+  fetchConversationInbox,
   fetchDirectMessages,
   fetchEvent,
   fetchEventAttendees,
@@ -191,7 +191,9 @@ export function useTrendingHighlights(pageSize = 20) {
       if (!storedOrder) {
         trendingHighlightsOrderByPageSize.set(
           pageSize,
-          items.map((item) => item?.id).filter((id): id is number => typeof id === 'number'),
+          items
+            .map((item) => item?.id)
+            .filter((id): id is number => typeof id === 'number'),
         );
         return response;
       }
@@ -453,7 +455,9 @@ export function useAddEventHighlight() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['eventStory', variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
-      queryClient.invalidateQueries({ queryKey: ['eventHighlights', variables.eventId] });
+      queryClient.invalidateQueries({
+        queryKey: ['eventHighlights', variables.eventId],
+      });
     },
   });
 }
@@ -938,7 +942,7 @@ export function useUpdateFriendRequest() {
     }: {
       eventId: number;
       targetUsername: string;
-      payload: { action: 'accept' | 'withdraw' | 'unfriend' };
+      payload: { action: 'accept' | 'withdraw' | 'unfriend' | 'decline' };
     }) => updateFriendRequest(eventId, targetUsername, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

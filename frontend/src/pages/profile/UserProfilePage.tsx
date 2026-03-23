@@ -40,7 +40,7 @@ import { UserAvatar } from '@/components/ui/UserAvatar';
 import { useAuth } from '@/features/auth/hooks';
 import { useSendFriendRequest, useUpdateFriendRequest } from '@/features/events/hooks';
 import { buildUserThreadKey, encodeThreadKey } from '@/features/chat/threadKeyCodec';
-import { ProfileService } from './Profile.service';
+import { ProfileService, unwrapPublicProfileResponse } from './Profile.service';
 
 type SharedEvent = {
   id: number;
@@ -199,7 +199,9 @@ export default function UserProfilePage() {
     );
   }
 
-  if (error || !response?.data) {
+  const profilePayload = unwrapPublicProfileResponse(response);
+
+  if (error || !profilePayload) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: '#FDF8F3', display: 'grid', placeItems: 'center', px: 3 }}>
         <Typography sx={{ color: '#7A5A43', fontWeight: 500, textAlign: 'center' }}>
@@ -209,7 +211,7 @@ export default function UserProfilePage() {
     );
   }
 
-  const profile = response.data as PublicProfile;
+  const profile = profilePayload as PublicProfile;
   const displayName = getDisplayName(profile);
   const showMessageCta =
     isAuthenticated && !!authUser && profile.user_id !== authUser.id;

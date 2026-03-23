@@ -33,6 +33,7 @@ import {
 } from '@/utils/money';
 import { formatShortDate, formatTime } from '@/utils/date';
 import type { ApiResponse } from '@/api/types';
+import { EVENT_ROLE_COLORS } from '@/constants/eventRoleColors';
 import type { EventDetail, EventOverviewRow, NeedApplication } from '@/types/events';
 import type { ManagingKind, ManagingItem } from './MyUpcoming';
 
@@ -217,9 +218,7 @@ export const KIND_STYLES: Record<
 > = {
   hosting: {
     label: 'Hosting',
-    bg: '#E7EDFF',
-    color: '#2D4EDA',
-    dot: 'rgb(105, 37, 213)',
+    ...EVENT_ROLE_COLORS.hosting,
   },
   vendor_request: {
     label: 'Service request',
@@ -229,15 +228,11 @@ export const KIND_STYLES: Record<
   },
   vendor_application: {
     label: 'Servicing',
-    bg: '#E1F5EE',
-    color: '#0F6E56',
-    dot: 'rgb(0, 119, 99)',
+    ...EVENT_ROLE_COLORS.servicing,
   },
   attending: {
     label: 'Attending',
-    bg: '#FFF7CC',
-    color: '#8A6A00',
-    dot: 'rgb(247, 156, 21)',
+    ...EVENT_ROLE_COLORS.attending,
   },
 };
 
