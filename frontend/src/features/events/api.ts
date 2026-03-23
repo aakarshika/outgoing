@@ -704,6 +704,16 @@ export async function fetchMyFriendshipsByOrbitCategory(): Promise<MyFriendships
   return inner ?? { grouped_friendships: [] };
 }
 
+export async function fetchUserFriendshipsByOrbitCategory(
+  userId: number,
+): Promise<MyFriendshipsByOrbitCategoryResponse> {
+  const { data } = await client.get<ApiResponse<MyFriendshipsByOrbitCategoryResponse>>(
+    `/events/friendships/by-user/${userId}/by-category/`,
+  );
+  const inner = (data as ApiResponse<MyFriendshipsByOrbitCategoryResponse>)?.data;
+  return inner ?? { grouped_friendships: [] };
+}
+
 export async function fetchEventOverviewRows(): Promise<EventOverviewRow[]> {
   const { data } = await client.get<ApiResponse<EventOverviewRow[]>>(
     '/alerts/event-overview/',

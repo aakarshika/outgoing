@@ -13,6 +13,7 @@ import { CATEGORY_THEMES, getCategoryThemeSlug } from '@/features/events/Categor
 import {
   useMyFriendships,
   useMyFriendshipsByOrbitCategory,
+  useUserFriendshipsByOrbitCategory,
 } from '@/features/events/hooks';
 
 import { EVENT_ROLE_COLORS } from '@/constants/eventRoleColors';
@@ -29,7 +30,6 @@ type SharedEventPreview = {
 type ProfileAccess = {
   met_at_event_title?: string | null;
   orbit_category_slug?: string | null;
-  can_view_full_profile?: boolean;
   shared_events?: SharedEventPreview[];
 };
 
@@ -185,7 +185,9 @@ export default function UserProfileMockPage() {
   const { openThread } = useGlobalThreadChatDrawer();
   const { user, isAuthenticated } = useAuth();
   const username = usernameParam?.trim() || '';
-  const isSelfProfile = Boolean(user?.username && user.username === username);
+  const isSelfProfile = Boolean(
+    user?.username && username && normalizeU(user.username) === normalizeU(username),
+  );
 
   const {
     data: response,
@@ -198,8 +200,6 @@ export default function UserProfileMockPage() {
   });
 
   const fetchOrbits = Boolean(isAuthenticated && user && username);
-  const { data: orbitData, isLoading: orbitLoading } =
-    useMyFriendshipsByOrbitCategory(fetchOrbits);
 
   const fetchSharedOrbitsWithProfile = Boolean(fetchOrbits && !isSelfProfile);
   const { data: friendshipsPayload, isLoading: friendshipsLoading } = useMyFriendships(
@@ -207,7 +207,17 @@ export default function UserProfileMockPage() {
   );
 
   const profile = unwrapPublicProfileResponse(response) as PublicProfile | null;
-  const canViewFull = Boolean(profile?.access?.can_view_full_profile);
+  const targetUsername = profile?.username || username;
+  const targetUsernameNorm = targetUsername ? normalizeU(targetUsername) : '';
+
+  const fetchSelfOrbits = Boolean(fetchOrbits && isSelfProfile);
+  const fetchTargetOrbits = Boolean(fetchOrbits && !isSelfProfile && profile?.user_id);
+  const { data: selfOrbitData, isLoading: selfOrbitLoading } =
+    useMyFriendshipsByOrbitCategory(fetchSelfOrbits);
+  const { data: targetOrbitData, isLoading: targetOrbitLoading } =
+    useUserFriendshipsByOrbitCategory(profile?.user_id, fetchTargetOrbits);
+  const orbitData = isSelfProfile ? selfOrbitData : targetOrbitData;
+  const orbitLoading = isSelfProfile ? selfOrbitLoading : targetOrbitLoading;
 
   const dmThreadKey = useMemo(() => {
     if (!user?.id || profile?.user_id == null) return null;
@@ -224,7 +234,6 @@ export default function UserProfileMockPage() {
     user.id !== profile.user_id,
   );
 
-  /** Lists are only present on the payload when the API allows full profile; otherwise []. */
   const attendedEvents = profile?.attended_events ?? [];
   const hostedEvents = profile?.hosted_events ?? [];
   const services = profile?.services ?? [];
@@ -236,10 +245,7 @@ export default function UserProfileMockPage() {
   const handleLine = profile
     ? `@${profile.username}${profile.location_city ? ` · ${profile.location_city}` : ''}`
     : '@username';
-  const bioText =
-    profile && canViewFull
-      ? (profile.showcase_bio || profile.headline || '').trim() || null
-      : null;
+
   const metTitle = profile?.access?.met_at_event_title;
 
   const orbitGroups = useMemo(() => {
@@ -390,13 +396,15 @@ export default function UserProfileMockPage() {
     if (!fetchOrbits || orbitLoading) return undefined;
     if (isSelfProfile) return orbitGroups.length;
     return orbitGroups.filter((row) =>
-      row.friendships.some((f) => f.friend.username === username),
+      row.friendships.some(
+        (f) => normalizeU(f.friend.username) === targetUsernameNorm,
+      ),
     ).length;
-  }, [fetchOrbits, isSelfProfile, orbitGroups, orbitLoading, username]);
+  }, [fetchOrbits, isSelfProfile, orbitGroups, orbitLoading, targetUsernameNorm]);
 
   /** Bar only: plain split of attended_count · services.length · hosted_count (badge uses `badges` elsewhere). */
   const soulMix = useMemo(() => {
-    if (!canViewFull || !profile) {
+    if (!profile) {
       return {
         goodTimesPct: 100 / 3,
         hustlePct: 100 / 3,
@@ -422,13 +430,7 @@ export default function UserProfileMockPage() {
       thrownPct: (thrown / total) * 100,
       isLive: true,
     };
-  }, [
-    canViewFull,
-    profile,
-    attendedEvents.length,
-    services.length,
-    hostedEvents.length,
-  ]);
+  }, [profile, attendedEvents.length, services.length, hostedEvents.length]);
 
   const coverStyle =
     profile?.cover_photo && !showLoading && !showError
@@ -715,27 +717,6 @@ export default function UserProfileMockPage() {
               </Box>
             </Box>
 
-            <Box sx={{ mx: 2, mb: 1.75 }}>
-              {profile?.badges && profile.badges.length > 0 ? (
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    mt: 0.75,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    py: 0.5,
-                    px: 1.25,
-                    borderRadius: 999,
-                    bgcolor: '#faeeda',
-                    color: '#633806',
-                  }}
-                >
-                  {profile.badges[0].label}
-                </Box>
-              ) : null}
-            </Box>
             <Box sx={{ px: 2, pb: 1.5 }}>
               <Box
                 sx={{
@@ -754,18 +735,28 @@ export default function UserProfileMockPage() {
                   ? `@${profile.username}${profile.location_city ? ` · ${profile.location_city}` : ''}`
                   : handleLine}
               </Box>
-              {bioText ? (
-                <Box
-                  sx={{
-                    fontSize: 13,
-                    color: '#5a4a3a',
-                    mt: 0.75,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {bioText}
-                </Box>
-              ) : null}
+
+              <Box sx={{ mx: 2, mb: 1.75 }}>
+                {profile?.badges?.map((badge) => (
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      mt: 0.75,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      py: 0.5,
+                      px: 1.25,
+                      borderRadius: 999,
+                      bgcolor: '#faeeda',
+                      color: '#633806',
+                    }}
+                  >
+                    {badge.label}
+                  </Box>
+                ))}
+              </Box>
               {metTitle ? (
                 <Box
                   sx={{
@@ -809,9 +800,9 @@ export default function UserProfileMockPage() {
             >
               {(
                 [
-                  { v: canViewFull ? profile?.attended_count : undefined, l: 'Attended' },
-                  { v: canViewFull ? profile?.hosted_count : undefined, l: 'Hosted' },
-                  { v: canViewFull ? profile?.total_reviews : undefined, l: 'Reviews' },
+                  { v: profile?.attended_count, l: 'Attended' },
+                  { v: profile?.hosted_count, l: 'Hosted' },
+                  { v: profile?.total_reviews, l: 'Reviews' },
                   { v: inOrbitsStat, l: 'In orbits' },
                 ] as const
               ).map((row, i) => (
@@ -975,22 +966,22 @@ export default function UserProfileMockPage() {
                                       font: 'inherit',
                                       ...(incoming
                                         ? {
-                                            py: 1.5,
-                                            px: 1.75,
-                                            borderRadius: '14px',
-                                            bgcolor: 'rgba(255, 255, 255, 0.92)',
-                                            border: '1px solid rgba(216, 90, 48, 0.14)',
-                                            boxShadow: '0 4px 18px rgba(43, 33, 24, 0.06)',
-                                          }
+                                          py: 1.5,
+                                          px: 1.75,
+                                          borderRadius: '14px',
+                                          bgcolor: 'rgba(255, 255, 255, 0.92)',
+                                          border: '1px solid rgba(216, 90, 48, 0.14)',
+                                          boxShadow: '0 4px 18px rgba(43, 33, 24, 0.06)',
+                                        }
                                         : {
-                                            py: 0.75,
-                                            pl: 0.5,
-                                            pr: 1,
-                                            borderRadius: 0,
-                                            bgcolor: 'transparent',
-                                            border: 'none',
-                                            boxShadow: 'none',
-                                          }),
+                                          py: 0.75,
+                                          pl: 0.5,
+                                          pr: 1,
+                                          borderRadius: 0,
+                                          bgcolor: 'transparent',
+                                          border: 'none',
+                                          boxShadow: 'none',
+                                        }),
                                     }}
                                   >
                                     <Box
@@ -1227,17 +1218,17 @@ export default function UserProfileMockPage() {
                     if (!slug || !(slug in CATEGORY_THEMES)) return null;
                     const profileInOrbit =
                       !isSelfProfile &&
-                      Boolean(username) &&
-                      friends.some((f) => f.username === username);
+                      Boolean(targetUsernameNorm) &&
+                      friends.some((f) => normalizeU(f.username) === targetUsernameNorm);
                     const faceSource = profileInOrbit
-                      ? friends.filter((f) => f.username !== username)
+                      ? friends.filter((f) => normalizeU(f.username) !== targetUsernameNorm)
                       : friends;
                     const faces = faceSource.slice(0, 3);
                     const extra = Math.max(0, faceSource.length - 3);
                     const rowKey = `${row.category.id ?? 'cat'}-${slug}`;
 
                     const showJoinTheirOrbit =
-                      !isSelfProfile && Boolean(username) && !profileInOrbit;
+                      !isSelfProfile && Boolean(targetUsernameNorm) && !profileInOrbit;
                     const themeSlug = getCategoryThemeSlug(slug);
 
                     return (
@@ -1299,6 +1290,7 @@ export default function UserProfileMockPage() {
                               <FriendAvatar
                                 key={p.id}
                                 userId={p.id}
+                                username={p.username}
                                 size={20}
                                 sx={{ ml: -1 }}
                                 ringWidth={5}
@@ -1393,16 +1385,12 @@ export default function UserProfileMockPage() {
                   Good times had
                 </Box>
                 <Box sx={{ fontSize: 11, fontWeight: 500, color: '#d85a30', cursor: 'default' }}>
-                  {canViewFull && profile?.attended_count != null
+                  {profile?.attended_count != null
                     ? `See all ${profile.attended_count}`
                     : 'See all'}
                 </Box>
               </Box>
-              {!canViewFull && username ? (
-                <Placeholder>
-                  Attended events are hidden until you can view their full profile.
-                </Placeholder>
-              ) : attendedEvents.length === 0 ? (
+              {attendedEvents.length === 0 ? (
                 <Placeholder>No attended events to show yet.</Placeholder>
               ) : (
                 <Box
@@ -1506,16 +1494,12 @@ export default function UserProfileMockPage() {
                   Events they&apos;ve thrown
                 </Box>
                 <Box sx={{ fontSize: 11, fontWeight: 500, color: '#d85a30', cursor: 'default' }}>
-                  {canViewFull && profile?.hosted_count != null
+                  {profile?.hosted_count != null
                     ? `See all ${profile.hosted_count}`
                     : 'See all'}
                 </Box>
               </Box>
-              {!canViewFull && username ? (
-                <Placeholder>
-                  Hosted events are hidden until you can view their full profile.
-                </Placeholder>
-              ) : hostedEvents.length === 0 ? (
+              {hostedEvents.length === 0 ? (
                 <Placeholder>No hosted events to show yet.</Placeholder>
               ) : (
                 <Box
@@ -1629,11 +1613,7 @@ export default function UserProfileMockPage() {
                   Their hustle
                 </Box>
               </Box>
-              {!canViewFull && username ? (
-                <Placeholder>
-                  Services are hidden until you can view their full profile.
-                </Placeholder>
-              ) : services.length === 0 ? (
+              {services.length === 0 ? (
                 <Placeholder>No services listed yet.</Placeholder>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

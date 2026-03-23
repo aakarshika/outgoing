@@ -39,6 +39,7 @@ function themeForCategory(category?: EventCategory | string | null) {
 }
 
 export type CategoryAvatarProps = Omit<AvatarProps, 'sx'> & {
+  userId: number;
   index?: string;
   category?: EventCategory | string | null;
   /** Diameter of the inner avatar in px */
@@ -57,13 +58,12 @@ export type CategoryAvatarProps = Omit<AvatarProps, 'sx'> & {
  * derived from the same palette as {@link CATEGORY_THEMES}.
  */
 export function CategoryAvatarBasic({
-  index,
+  userId,
   category,
   size = 30,
   orbitGap = 6,
   animate = true,
   sx,
-  imageUrl,
   ...avatarProps
 }: CategoryAvatarProps) {
   const theme = useMemo(() => themeForCategory(category), [category]);
@@ -141,8 +141,7 @@ export function CategoryAvatarBasic({
 
       <Box
         component="img"
-        src={(imageUrl as string) || (avatarProps.src as string) || 'https://i.pravatar.cc/150?img=' + index}
-        alt={typeof avatarProps.alt === 'string' ? avatarProps.alt : 'avatar'}
+        src={`https://i.pravatar.cc/150?u=${userId}`}
         sx={{
           width: size,
           height: size,

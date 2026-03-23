@@ -3,10 +3,9 @@ import { Plus, User, BadgeCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { AttendeePopover } from '@/components/ui/AttendeePopover';
 import { CategoryAvatarBasic } from '@/features/events/CategoryAvatarBasic';
-import { getCategoryTheme } from '@/features/events/CategoricalBackground';
 import { CategoryAvatar } from '@/features/events/CategoryAvatar';
+import { FriendAvatarPopover } from '@/features/events/FriendAvatarPopover';
 
 interface NormalGoersModuleProps {
   event: any;
@@ -48,18 +47,50 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
     }
   };
 
-  const AVATAR_COLORS = [
-    { bg: '#B5D4F4', text: '#0C447C' },
-    { bg: '#C0DD97', text: '#27500A' },
-    { bg: '#F5C4B3', text: '#71271E' },
-    { bg: '#CECBF6', text: '#3C3489' },
-    { bg: '#9FE1CB', text: '#085041' },
-    { bg: '#FAC775', text: '#633806' },
-    { bg: '#F4C0D1', text: '#72243E' },
-  ];
+  const CategoryAvatarWithPopover = ({
+    userId,
+    children,
+  }: {
+    userId: number;
+    children: React.ReactNode;
+  }) => {
+    const [avatarAnchorEl, setAvatarAnchorEl] = useState<HTMLElement | null>(null);
+    const popoverOpen = Boolean(avatarAnchorEl);
+    return (
+      <>
+        <Box
+          component="button"
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setAvatarAnchorEl(e.currentTarget);
+          }}
+          sx={{
+            border: 'none',
+            p: 0,
+            m: 0,
+            background: 'transparent',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {children}
+        </Box>
+        <FriendAvatarPopover
+          userId={userId}
+          open={popoverOpen}
+          anchorEl={avatarAnchorEl}
+          onClose={() => setAvatarAnchorEl(null)}
+        />
+      </>
+    );
+  };
 
   const AttendeeAvatar = ({attendee, idx}: {attendee: any, idx: number}) => {
-    console.log(attendee);
+    console.log('attendee', attendee, '--- attendee avatar ---');
     return (
       <Box
         key={attendee.id || idx}
@@ -73,34 +104,23 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
           },
         }}
       >
-        <AttendeePopover
-          attendee={attendee}
-          variant="normal">
-          <Box
-            sx={{
-              borderRadius: '50%',
-              overflow: 'hidden',
-              // bgcolor: attendee.avatar ? 'transparent' : color.bg,
-              // color: color.text,
-            }}
-          >
+          <CategoryAvatarWithPopover userId={attendee?.user_id}>
             <CategoryAvatarBasic
-              imageUrl={attendee.avatar}
-              index={attendee?.username?.substring(attendee?.username?.indexOf('_'))}
+              userId={attendee?.user_id}
               category={event?.category?.slug}
               size={26}
               sx={{
                 ml: -0.5,
               }}
             />
-          </Box>
-        </AttendeePopover>
+          </CategoryAvatarWithPopover>
       </Box>
     );
   };
 
 
   const HostAvatar = () => {
+    console.log('event.host', event.host, '--- host avatar ---');
     return (
       <Box
         key={event.host.username}
@@ -114,28 +134,16 @@ export function NormalGoersModule({ event, isEventOver }: NormalGoersModuleProps
           },
         }}
       >
-        <AttendeePopover
-          attendee={event.host}
-          variant="normal">
-          <Box
-            sx={{
-              borderRadius: '50%',
-              overflow: 'hidden',
-              // bgcolor: attendee.avatar ? 'transparent' : color.bg,
-              // color: color.text,
-            }}
-          >
+          <CategoryAvatarWithPopover userId={event.host.id}>
             <CategoryAvatar
-              imageUrl={event.host.avatar}
-              index={event.host.username.substring(event.host.username.indexOf('_'))}
+              userId={event.host.id}
               category={event.category.slug}
               size={55}
               sx={{
                 ml: -0.5,
               }}
             />
-          </Box>
-        </AttendeePopover>
+          </CategoryAvatarWithPopover>
       </Box>
 
     );

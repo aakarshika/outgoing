@@ -41,6 +41,7 @@ import {
   fetchMyEvents,
   fetchMyFriendships,
   fetchMyFriendshipsByOrbitCategory,
+  fetchUserFriendshipsByOrbitCategory,
   fetchMyInterestedEvents,
   fetchMyTickets,
   fetchNetworkActivity,
@@ -899,6 +900,17 @@ export function useMyFriendshipsByOrbitCategory(enabled = true) {
     queryKey: ['my-friendships-by-orbit'],
     queryFn: () => fetchMyFriendshipsByOrbitCategory(),
     enabled,
+  });
+}
+
+export function useUserFriendshipsByOrbitCategory(
+  userId?: number,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['user-friendships-by-orbit', userId],
+    queryFn: () => (userId ? fetchUserFriendshipsByOrbitCategory(userId) : null),
+    enabled: Boolean(userId) && enabled,
   });
 }
 

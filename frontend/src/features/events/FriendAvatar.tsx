@@ -1,7 +1,8 @@
 import { Box, type SxProps, type Theme } from '@mui/material';
-import { useId, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 import { useAuth } from '@/features/auth/hooks';
+import { FriendAvatarPopover } from '@/features/events/FriendAvatarPopover';
 
 import { type FriendshipItem } from './api';
 import { CATEGORY_THEMES } from './CategoricalBackground';
@@ -32,45 +33,45 @@ export function FriendAvatar({
   size = 36,
   ringWidth = 6,
   sx,
-  imageUrl,
 }: FriendAvatarProps) {
   const { user, isAuthenticated } = useAuth();
   const { data: friendships } = useMyFriendships(Boolean(isAuthenticated && user?.id));
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const rawId = useId().replace(/:/g, '');
   const gradId = `fa-grad-${rawId}`;
 
+  const sharedAcceptedFriendships = useMemo(() => {
+    if (!user?.id) {
+      return [];
+    }
+    return (friendships?.accepted ?? []).filter((friendship) =>
+      sharedWithUser(friendship, user.id, userId),
+    );
+  }, [friendships?.accepted, user?.id, userId]);
+
   const categories = useMemo(() => {
-    const all = [
-      ...(friendships?.accepted ?? []),
-      ...(friendships?.pending_incoming ?? []),
-      ...(friendships?.pending_outgoing ?? []),
-    ];
     const slugs = new Set<string>();
-    for (const friendship of all) {
-      if (!user?.id || !sharedWithUser(friendship, user.id, userId)) {
-        continue;
-      }
+    for (const friendship of sharedAcceptedFriendships) {
       if (friendship.orbit_category_slug) {
         slugs.add(friendship.orbit_category_slug);
       }
     }
     return [...slugs];
-  }, [friendships, user?.id, userId]);
+  }, [sharedAcceptedFriendships]);
 
   const colors = useMemo(() => {
-    if (categories.length === 0) {
-      return [CATEGORY_THEMES.default.accent];
-    }
     return categories.map((slug) => CATEGORY_THEMES[slug]?.accent ?? CATEGORY_THEMES.default.accent);
   }, [categories]);
 
-  const accentForShadow = colors[0] ?? CATEGORY_THEMES.default.accent;
+  const accentForShadow = colors[0] ?? null;
   const outer = size + ringWidth * 2;
   const sw = ringWidth;
   const r = 50 - sw / 2 - 0.5;
   const cx = 50;
   const cy = 50;
   const n = colors.length;
+  const hasFriendshipColor = n > 0;
+  console.log('userId', userId ,'--- friend avatar ---');
 
   const segmentPaths =
     n > 1
@@ -94,6 +95,15 @@ export function FriendAvatar({
 
   return (
     <Box
+      role="button"
+      tabIndex={0}
+      onClick={(e) => setAnchorEl(e.currentTarget)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setAnchorEl(e.currentTarget);
+        }
+      }}
       sx={{
         position: 'relative',
         width: outer,
@@ -102,6 +112,7 @@ export function FriendAvatar({
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
+        cursor: 'pointer',
         ...sx,
       }}
     >
@@ -145,7 +156,7 @@ export function FriendAvatar({
 
       <Box
         component="img"
-        src={imageUrl || `https://i.pravatar.cc/150?u=${userId}`}
+        src={`https://i.pravatar.cc/150?u=${userId}`}
         alt="friend avatar"
         sx={{
           width: size,
@@ -154,8 +165,17 @@ export function FriendAvatar({
           objectFit: 'cover',
           position: 'relative',
           zIndex: 1,
-          boxShadow: `0 0 0 2px rgba(255,255,255,0.95), 0 0 0 3px ${accentForShadow}33`,
+          boxShadow: hasFriendshipColor
+            ? `0 0 0 2px rgba(255,255,255,0.95), 0 0 0 3px ${accentForShadow}33`
+            : '0 0 0 2px rgba(255,255,255,0.95)',
         }}
+      />
+
+      <FriendAvatarPopover
+        userId={userId}
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
       />
     </Box>
   );

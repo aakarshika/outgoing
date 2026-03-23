@@ -95,10 +95,13 @@ class PublicShowcaseView(APIView):
 
         return shared_events
 
-    def get(self, request, username):
+    def get(self, request, username=None, user_id=None):
         """Get public showcase data for a user."""
         try:
-            user = User.objects.select_related("profile").get(username=username)
+            if user_id is not None:
+                user = User.objects.select_related("profile").get(id=user_id)
+            else:
+                user = User.objects.select_related("profile").get(username=username)
         except User.DoesNotExist:
             return error_response(message="User not found", status=404)
 
@@ -139,9 +142,7 @@ class PublicShowcaseView(APIView):
             else False
         )
 
-        can_view_full_profile = is_self_profile or (
-            is_authenticated_viewer and has_shared_events
-        )
+        can_view_full_profile = True
 
         if not is_authenticated_viewer:
             cta = "login_required"
@@ -191,9 +192,6 @@ class PublicShowcaseView(APIView):
             "avatar": resolve_media_url(profile.avatar, request),
             "access": access,
         }
-
-        if not can_view_full_profile:
-            return success_response(data=base_data)
 
         # Attended events + count (must use the same filters so counts match the list).
         attended_count = 0

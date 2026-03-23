@@ -32,6 +32,10 @@ export const ProfileService = {
     const res = await client.get(`/profiles/${username}/`);
     return res.data;
   },
+  getPublicProfileByUserId: async (userId: number) => {
+    const res = await client.get(`/profiles/by-id/${userId}/`);
+    return res.data;
+  },
 };
 
 export const MetaService = {

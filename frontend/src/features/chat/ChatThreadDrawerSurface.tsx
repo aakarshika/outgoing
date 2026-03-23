@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/hooks';
 import type { ConversationItemDto } from '@/features/chat/api';
@@ -93,7 +93,9 @@ export function ChatThreadDrawerSurface({
       ? `@${activeConversation.peer_user.username}`
       : (fallbackSubtitle ?? '');
 
-  const drawerAvatarChat = activeConversation ? avatarChatFromRow(activeConversation) : null;
+  const drawerAvatarChat = activeConversation
+    ? avatarChatFromRow(activeConversation)
+    : null;
 
   const drawerDmRelationshipLine = useMemo(() => {
     if (!activeConversation?.peer_user || activeConversation.event) return null;
@@ -104,7 +106,7 @@ export function ChatThreadDrawerSurface({
       friendships,
     );
     return label ? `Relationship: ${label}` : null;
-  }, [activeConversation, friendships, user?.id]);
+  }, [activeConversation, friendships, user]);
 
   const drawerEventMetaLine = useMemo(() => {
     if (!activeConversation || !isGroupStyleRow(activeConversation)) return null;
