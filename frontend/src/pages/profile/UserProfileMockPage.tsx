@@ -1290,7 +1290,6 @@ export default function UserProfileMockPage() {
                               <FriendAvatar
                                 key={p.id}
                                 userId={p.id}
-                                username={p.username}
                                 size={20}
                                 sx={{ ml: -1 }}
                                 ringWidth={5}
