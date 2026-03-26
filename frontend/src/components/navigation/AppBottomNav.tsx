@@ -30,6 +30,13 @@ export function AppBottomNav() {
       match: (pathname) => pathname === '/',
     },
     {
+      key: 'nearby-map',
+      label: 'Nearby',
+      icon: 'uiw:map',
+      to: '/nearby-map',
+      match: (pathname) => pathname.startsWith('/nearby-map'),
+    },
+    {
       key: 'highlightsreels',
       label: 'Highlights',
       icon: 'tabler:camera-star',

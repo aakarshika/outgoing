@@ -75,7 +75,7 @@ function buildSearchHaystack(event: BaseFeedEventItem) {
 }
 
 
-export default function SearchPage() {
+export default function NearbyMapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get('tab');
   const tab = normalizeTab(rawTab);
@@ -164,11 +164,9 @@ export default function SearchPage() {
         maxWidth={false}
         sx={{ maxWidth: 1040, px: { xs: 2, md: 4 }, py: 1 }}
       >
-        <Stack spacing={3}>
-          {events?.map((event) => (
-            <LargeEventCard key={event.id} event={event} />
-          ))}
-        </Stack>
+        {/* TODO: Add map here */}
+        {/* the event markers will be circular markers with the event title as the label, and cover_image as the icon */}
+        {/* when clicked, there will be a bottom sheet with the event details - use LargeEventCard for the content */}
       </Container>
     </Box>
   );

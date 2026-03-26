@@ -46,6 +46,7 @@ const GalleryPage = lazy(() => import('@/pages/events/GalleryPage'));
 // const BrowseFeedPage = lazy(() => import('@/pages/events/BrowseFeedPage'));
 const SearchPage = lazy(() => import('@/pages/search/SearchPage'));
 const YourNetworkPage = lazy(() => import('@/pages/network/YourNetworkPage'));
+const NearbyMapPage = lazy(() => import('@/pages/search/NearbyMapPage'));
 
 const PageComponentRegistry: Record<string, React.ComponentType> = {
   SignUp: SignUpPage,
@@ -83,6 +84,7 @@ const PageComponentRegistry: Record<string, React.ComponentType> = {
   Search: SearchPage,
   YourNetwork: YourNetworkPage,
   HomeRenewed: HomePageRenewed,
+  NearbyMap: NearbyMapPage,
 };
 
 import { useAuth } from '@/features/auth/AuthContext';

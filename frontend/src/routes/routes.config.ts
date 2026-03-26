@@ -200,6 +200,11 @@ export const routesConfig: RouteDefinition[] = [
     isPublic: true,
   },
   {
+    path: '/nearby-map',
+    componentName: 'NearbyMap',
+    isPublic: true,
+  },
+  {
     path: '/mock/user-profile/:username',
     componentName: 'UserProfileMock',
     isPublic: true,

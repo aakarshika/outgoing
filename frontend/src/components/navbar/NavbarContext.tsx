@@ -195,7 +195,7 @@ export function useNavbarData() {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/search')) return;
+    if (!(location.pathname.startsWith('/search') || location.pathname.startsWith('/nearby-map'))) return;
 
     const params = normalizeSearchPageParams(new URLSearchParams(location.search));
     const nextSearch = params.get('search') || '';
@@ -204,7 +204,9 @@ export function useNavbarData() {
     const lng = params.get('lng');
 
     setSearch((current) => (current === nextSearch ? current : nextSearch));
-    setLocationSearch((current) => (current === nextLocation ? current : nextLocation));
+    if (nextLocation.trim()) {
+      setLocationSearch((current) => (current === nextLocation ? current : nextLocation));
+    }
 
     if (!nearYouEnabled) {
       if (nextLocation.trim()) {
@@ -219,20 +221,14 @@ export function useNavbarData() {
                 }
               : null,
         });
-      } else {
-        clearStoredSearchLocation();
       }
     }
   }, [location.pathname, location.search, nearYouEnabled]);
 
   const buildSearchPageParams = ({
     nextSearch = search,
-    nextLocation = locationSearch,
-    nextCoords = nearYouEnabled && coords ? coords : null,
   }: {
     nextSearch?: string;
-    nextLocation?: string;
-    nextCoords?: { lat: number | string; lng: number | string } | null;
   } = {}) => {
     const params = location.pathname.startsWith('/search')
       ? new URLSearchParams(location.search)
@@ -247,24 +243,11 @@ export function useNavbarData() {
       params.delete('search');
     }
 
-    const trimmedLocation = nextLocation.trim();
-    if (trimmedLocation) {
-      params.set('location', trimmedLocation);
-      params.delete('radius_miles');
-
-      if (nextCoords) {
-        params.set('lat', String(nextCoords.lat));
-        params.set('lng', String(nextCoords.lng));
-      } else {
-        params.delete('lat');
-        params.delete('lng');
-      }
-    } else {
-      params.delete('location');
-      params.delete('lat');
-      params.delete('lng');
-      params.delete('radius_miles');
-    }
+    // Location is global (local storage + near-you), not URL-driven.
+    params.delete('location');
+    params.delete('lat');
+    params.delete('lng');
+    params.delete('radius_miles');
 
     return params;
   };
@@ -304,10 +287,7 @@ export function useNavbarData() {
           city: inferCityFromLocationLabel(trimmedLocation),
           coords: nextCoords,
         });
-        navigateToSearch({
-          nextLocation: trimmedLocation,
-          nextCoords: nextCoords ?? null,
-        });
+        navigateToSearch();
       } else {
         clearStoredSearchLocation();
         navigateToSearch();
@@ -340,10 +320,7 @@ export function useNavbarData() {
     });
 
     if (location.pathname.startsWith('/search')) {
-      navigateToSearch({
-        nextLocation: suggestion.display_name,
-        nextCoords,
-      });
+      navigateToSearch();
     }
 
     setLocationDropdownOpen(false);
@@ -356,7 +333,7 @@ export function useNavbarData() {
       toggleNearYou();
     }
     if (location.pathname.startsWith('/search')) {
-      navigateToSearch({ nextLocation: '' });
+      navigateToSearch();
     }
   };
 
