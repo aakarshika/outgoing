@@ -14,6 +14,7 @@ import {
   type BaseFeedParams,
 } from '@/types/events';
 import {
+  getNearYouCoords,
   getStoredSearchLocation,
   inferCityFromLocationLabel,
   LOCATION_PREFERENCES_CHANGED_EVENT,
@@ -185,6 +186,11 @@ export default function MyHomePage() {
     '';
   const locationQuery =
     storedLocation?.label?.trim() || profile?.location_city?.trim() || undefined;
+
+  const effectiveCoords = useMemo(
+    () => getNearYouCoords() ?? storedLocation?.coords ?? null,
+    [storedLocation?.coords],
+  );
   const selectedDateFilters = selectedTrendingFilters.filter((filter) =>
     ['this-weekend', 'tonight'].includes(filter),
   );
@@ -228,12 +234,21 @@ export default function MyHomePage() {
       lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       free_only: selectedFormatFilters.includes('free') || undefined,
       online: selectedFormatFilters.includes('online') || undefined,
+      lat: selectedFormatFilters.includes('online') ? undefined : effectiveCoords?.lat,
+      lng: selectedFormatFilters.includes('online') ? undefined : effectiveCoords?.lng,
       categories: trendingCategorySlugs.length ? trendingCategorySlugs : undefined,
       start_time_gte: trendingTimeRange?.start_time_gte || nowIso,
       start_time_lte: trendingTimeRange?.start_time_lte,
       page_size: 120,
     }),
-    [nowIso, selectedFormatFilters, trendingCategorySlugs, trendingTimeRange],
+    [
+      effectiveCoords?.lat,
+      effectiveCoords?.lng,
+      nowIso,
+      selectedFormatFilters,
+      trendingCategorySlugs,
+      trendingTimeRange,
+    ],
   );
   const recommendedFeedParams = useMemo<BaseFeedParams>(
     () => ({
@@ -241,8 +256,10 @@ export default function MyHomePage() {
       lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 24,
+      lat: effectiveCoords?.lat,
+      lng: effectiveCoords?.lng,
     }),
-    [nowIso],
+    [effectiveCoords?.lat, effectiveCoords?.lng, nowIso],
   );
   // Replaced by useEventOverviewRows for personalized upcoming section
   // const upcomingFeedParams = useMemo<BaseFeedParams>(
@@ -261,8 +278,10 @@ export default function MyHomePage() {
       lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 6,
+      lat: effectiveCoords?.lat,
+      lng: effectiveCoords?.lng,
     }),
-    [nowIso],
+    [effectiveCoords?.lat, effectiveCoords?.lng, nowIso],
   );
   const { data: trendingResponse } = useBaseFeed(trendingFeedParams);
   const { data: recommendedResponse } = useBaseFeed(recommendedFeedParams);

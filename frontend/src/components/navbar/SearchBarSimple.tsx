@@ -121,7 +121,7 @@ export const SearchBarSimple = () => {
                 />
 
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
+                  <div className="absolute bg-white left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-[rgba(120,94,60,0.14)] shadow-[0_16px_32px_rgba(74,53,33,0.12)]">
                     {locationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}

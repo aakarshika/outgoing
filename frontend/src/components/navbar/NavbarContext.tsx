@@ -329,14 +329,24 @@ export function useNavbarData() {
       suggestion.address?.municipality ||
       suggestion.address?.county ||
       inferCityFromLocationLabel(suggestion.display_name);
+    const nextCoords = {
+      lat: Number(suggestion.lat),
+      lng: Number(suggestion.lon),
+    };
     setStoredSearchLocation({
       label: suggestion.display_name,
       city,
-      coords: {
-        lat: suggestion.lat,
-        lng: suggestion.lon,
-      },
+      coords: nextCoords,
     });
+
+    if (location.pathname.startsWith('/search')) {
+      navigateToSearch({
+        nextLocation: suggestion.display_name,
+        nextCoords,
+      });
+    }
+
+    setLocationDropdownOpen(false);
   };
 
   const clearLocationSelection = () => {

@@ -80,6 +80,8 @@ export function MyHomeUpcomingSection({
   hasUpcomingEvents,
   upcomingEvents,
 }: Props) {
+  const navigate = useNavigate();
+
   if (!hasUpcomingEvents) {
     return null;
   }
@@ -106,8 +108,6 @@ export function MyHomeUpcomingSection({
 
   const nextEventCountdown = getCountdownParts(nextEvent ? nextEvent.start_time : null);
   const categoryTheme = getCategoryTheme(nextEvent.category ?? undefined);
-
-  const navigate = useNavigate();
   return (
     <Box
       sx={{

@@ -3,12 +3,14 @@ import random
 import mimetypes
 import urllib.parse
 import urllib.request
+import hashlib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile
 from django.db import transaction, connection
+from django.contrib.auth.hashers import make_password
 
 # We explicitly import the models after Django has booted
 from apps.events.models import (
@@ -83,6 +85,26 @@ def _download_image_bytes(url: str):
         content_type = resp.headers.get("Content-Type") or ""
         data = resp.read()
     return data, content_type
+
+
+def _stable_hex(s: str) -> str:
+    return hashlib.sha1((s or "").encode("utf-8")).hexdigest()[:12]
+
+
+def _existing_storage_name(instance, field_name: str, filename: str) -> str | None:
+    """
+    If the file already exists in the configured storage backend, return the
+    fully resolved storage name (including upload_to path). Otherwise None.
+    """
+    f = instance._meta.get_field(field_name)
+    storage_name = f.generate_filename(instance, filename)
+    try:
+        if f.storage.exists(storage_name):
+            return storage_name
+    except Exception:
+        # If storage is unavailable, fall back to downloading.
+        return None
+    return None
 
 
 def normalize_need_status(raw_status):
@@ -219,6 +241,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Do not wipe existing data before seeding.",
         )
+        parser.add_argument(
+            "--skip-images",
+            action="store_true",
+            help="Skip downloading/saving cover + highlight images (much faster).",
+        )
         parser.add_argument("--debug", action="store_true", help="Enable verbose debug logging.")
 
     def wipe_data(self):
@@ -255,11 +282,397 @@ class Command(BaseCommand):
         EventCategory.objects.all().delete()
         self.stdout.write(self.style.SUCCESS("Data wiped successfully."))
 
+    def _seed_fresh_db_fast(
+        self,
+        *,
+        users_data,
+        services_data,
+        events_data,
+        tiers_data,
+        needs_data,
+        tickets_data,
+        live_event_keys,
+        category_defaults_by_slug,
+        highlights_by_category,
+        skip_images: bool,
+        debug: bool,
+        now,
+        rng,
+    ):
+        """
+        Fast seeding path intended for the default workflow (wipe DB then seed).
+
+        Key idea: avoid per-row get_or_create() calls and avoid scanning DB tables
+        we just created. Use bulk_create where possible, and build relationships
+        from the in-memory seed payload.
+        """
+        cover_bytes_cache = {}
+        pexels_cache = _load_pexels_cache()
+        pexels_rot_by_slug = {}
+        pexels_api_key = _get_pexels_api_key()
+        pexels_cache_dirty = False
+
+        # --- Categories (bulk) ---
+        all_category_slugs = {e.get("category") for e in (events_data or []) if e.get("category")}
+        all_category_slugs.add("orbit-unknown")
+        cat_objs = []
+        for slug in sorted(all_category_slugs):
+            defaults = category_defaults_by_slug.get(slug) or {}
+            cat_objs.append(
+                EventCategory(
+                    slug=slug,
+                    name=defaults.get("name") or slug.replace("-", " ").title(),
+                    icon=defaults.get("icon") or "calendar",
+                )
+            )
+        EventCategory.objects.bulk_create(cat_objs, ignore_conflicts=True)
+        category_map = EventCategory.objects.filter(slug__in=list(all_category_slugs)).in_bulk(
+            field_name="slug"
+        )
+        orbit_unknown = category_map.get("orbit-unknown")
+
+        # --- Users (bulk) ---
+        self.stdout.write("Seeding Users...")
+        user_objs = []
+        usernames = []
+        for u in users_data:
+            usernames.append(u["username"])
+            user_objs.append(
+                User(
+                    username=u["username"],
+                    email=u.get("email") or "",
+                    first_name=u.get("first_name") or "",
+                    last_name=u.get("last_name") or "",
+                    password=make_password(u.get("password") or ""),
+                )
+            )
+        User.objects.bulk_create(user_objs, ignore_conflicts=True)
+        user_map = User.objects.filter(username__in=usernames).in_bulk(field_name="username")
+
+        # --- Vendor services (bulk) ---
+        self.stdout.write("Seeding Services...")
+        svc_objs = []
+        for s in services_data:
+            vendor = user_map.get(s["vendor"])
+            if not vendor:
+                continue
+            svc_objs.append(
+                VendorService(
+                    vendor=vendor,
+                    title=s["title"],
+                    description=s.get("description") or "",
+                    category=s.get("category"),
+                    location_city=s.get("location_city") or "",
+                    base_price=0,
+                )
+            )
+        if svc_objs:
+            VendorService.objects.bulk_create(svc_objs)
+
+        # --- Events (bulk, with optional cover downloads) ---
+        self.stdout.write("Seeding Events...")
+        event_objs = []
+        event_keys = []
+        event_key_to_seed = {}
+        live_event_ids = set()
+
+        for e in events_data:
+            host = user_map.get(e["host"])
+            if not host:
+                continue
+            seed_key = e["_key"]
+            event_keys.append(seed_key)
+            event_key_to_seed[seed_key] = e
+
+            is_live_event = seed_key in live_event_keys
+            raw_status = e.get("status") or "published"
+            if raw_status == "draft":
+                raw_status = "published"
+            is_completed_event = raw_status == "completed"
+            if is_live_event:
+                start_time = now + timedelta(hours=1)
+                end_time = start_time + timedelta(hours=3)
+                event_status = "published"
+                event_lifecycle_state = "live"
+            elif is_completed_event:
+                start_time, end_time = random_event_window_in_past_month(rng, now)
+                event_status = "completed"
+                event_lifecycle_state = "completed"
+            else:
+                start_time, end_time = random_event_window_in_coming_month(rng, now)
+                event_status = "published"
+                event_lifecycle_state = "published"
+
+            category_obj = category_map.get(e["category"])
+
+            cover_image_file = None
+            if not skip_images:
+                cover_image_url = e.get("cover_image")
+                if isinstance(cover_image_url, str) and cover_image_url.startswith(("http://", "https://")):
+                    try:
+                        filename = _filename_for_image_url(
+                            cover_image_url,
+                            fallback_stem=f"seed_{seed_key}_cover",
+                        )
+                        # Prefer reusing an existing file already in storage.
+                        tmp_ev = Event(host=host, title=e["title"])
+                        existing_name = _existing_storage_name(tmp_ev, "cover_image", filename)
+                        if existing_name:
+                            cover_image_file = existing_name
+                        else:
+                            if cover_image_url in cover_bytes_cache:
+                                img_bytes, _content_type = cover_bytes_cache[cover_image_url]
+                            else:
+                                img_bytes, content_type = _download_image_bytes(cover_image_url)
+                                cover_bytes_cache[cover_image_url] = (img_bytes, content_type)
+                            if img_bytes:
+                                cover_image_file = ContentFile(img_bytes, name=filename)
+                    except Exception:
+                        cover_image_file = None
+
+            ev = Event(
+                host=host,
+                title=e["title"],
+                category=category_obj,
+                description=e.get("description", "") or "",
+                location_name=e.get("location_name", "Default Venue") or "Default Venue",
+                location_address=e.get("location_address", "") or "",
+                latitude=e.get("latitude"),
+                longitude=e.get("longitude"),
+                features=e.get("features", []) or [],
+                cover_image=cover_image_file,
+                start_time=start_time,
+                end_time=end_time,
+                status=event_status,
+                lifecycle_state=event_lifecycle_state,
+                capacity=e["capacity"],
+                slug=f"evt-{host.username}-{e['title'].replace(' ', '-').lower()}"[:50],
+            )
+            # Stash seed key for later mapping.
+            ev._seed_key = seed_key  # type: ignore[attr-defined]
+            event_objs.append(ev)
+
+        if event_objs:
+            Event.objects.bulk_create(event_objs)
+
+        event_map = {getattr(ev, "_seed_key"): ev for ev in event_objs}
+        for seed_key, ev in event_map.items():
+            if seed_key in live_event_keys:
+                live_event_ids.add(ev.id)
+
+        # --- Tiers (bulk) ---
+        self.stdout.write("Seeding Event Tiers...")
+        tier_objs = []
+        tier_keys = []
+        for t in tiers_data:
+            ev = event_map.get(t["event"])
+            if not ev or ev.status == "draft":
+                continue
+            tier = EventTicketTier(
+                event=ev,
+                name=t["name"],
+                price=t["price"],
+                capacity=t["capacity"],
+            )
+            tier._seed_key = t["_key"]  # type: ignore[attr-defined]
+            tier_objs.append(tier)
+            tier_keys.append(t["_key"])
+        if tier_objs:
+            EventTicketTier.objects.bulk_create(tier_objs)
+        tier_map = {getattr(t, "_seed_key"): t for t in tier_objs}
+
+        # --- Needs (bulk) ---
+        self.stdout.write("Seeding Event Needs...")
+        need_objs = []
+        for n in needs_data:
+            ev = event_map.get(n["event"])
+            if not ev:
+                continue
+            vendor = user_map.get(n["assigned_vendor"]) if n.get("assigned_vendor") else None
+            need_objs.append(
+                EventNeed(
+                    event=ev,
+                    category=n["category"],
+                    title=n["title"] or fallback_need_title(n["category"]),
+                    status=normalize_need_status(n.get("status")),
+                    assigned_vendor=vendor,
+                )
+            )
+        if need_objs:
+            EventNeed.objects.bulk_create(need_objs)
+
+        # --- Tickets (bulk) ---
+        self.stdout.write("Seeding Tickets...")
+        ticket_objs = []
+        used_ticket_goers_by_event_id = {}
+        goers_by_event_id = {}
+        for t in tickets_data:
+            goer = user_map.get(t["goer"])
+            tier = tier_map.get(t["tier"])
+            if not goer or not tier or tier.event.status == "draft":
+                continue
+            ticket_status = "active"
+            used_at = None
+            if tier.event.status == "completed":
+                ticket_status = "used"
+                used_at = now
+            elif tier.event_id in live_event_ids and rng.random() < LIVE_EVENT_USED_TICKET_RATIO:
+                ticket_status = "used"
+                used_at = now
+            ticket_objs.append(
+                Ticket(
+                    event=tier.event,
+                    goer=goer,
+                    tier=tier,
+                    status=ticket_status,
+                    used_at=used_at,
+                )
+            )
+
+            eid = tier.event_id
+            if eid not in goers_by_event_id:
+                goers_by_event_id[eid] = set()
+            goers_by_event_id[eid].add(goer)
+
+            if ticket_status == "used":
+                if eid not in used_ticket_goers_by_event_id:
+                    used_ticket_goers_by_event_id[eid] = []
+                used_ticket_goers_by_event_id[eid].append(goer)
+
+        if ticket_objs:
+            Ticket.objects.bulk_create(ticket_objs)
+
+        # --- Highlights (bulk, optional images) ---
+        self.stdout.write("Seeding Event Highlights (from ticket goers)...")
+        highlight_objs = []
+        highlight_with_image_count = 0
+        for eid, goers in goers_by_event_id.items():
+            ev = next((e for e in event_map.values() if e.id == eid), None)
+            if not ev:
+                continue
+            if ev.lifecycle_state not in {"live", "completed"}:
+                continue
+            slug = ev.category.slug if ev.category_id else None
+            pool = highlights_by_category.get(slug) if slug else None
+            if not pool:
+                continue
+            for goer in goers:
+                if rng.random() >= HIGHLIGHT_PER_GOER_PROBABILITY:
+                    continue
+                media_file = None
+                if (not skip_images) and (rng.random() < HIGHLIGHT_WITH_IMAGE_PROBABILITY):
+                    img_url, mutated = _next_pexels_image_url(
+                        slug,
+                        pexels_cache,
+                        pexels_rot_by_slug,
+                        pexels_api_key,
+                        debug=debug,
+                        log_write=self.stdout.write,
+                    )
+                    if mutated:
+                        pexels_cache_dirty = True
+                    if img_url:
+                        try:
+                            # Deterministic name so we can reuse across seed runs.
+                            stem = f"seed_hl_{getattr(ev, '_seed_key', ev.id)}_u{goer.id}_{_stable_hex(img_url)}"
+                            filename = _filename_for_image_url(img_url, fallback_stem=stem)
+
+                            tmp_hl = EventHighlight(event=ev, author=goer, role="goer", text="")
+                            existing_name = _existing_storage_name(tmp_hl, "media_file", filename)
+                            if existing_name:
+                                media_file = existing_name
+                            else:
+                                if img_url in cover_bytes_cache:
+                                    img_bytes, _content_type = cover_bytes_cache[img_url]
+                                else:
+                                    img_bytes, content_type = _download_image_bytes(img_url)
+                                    cover_bytes_cache[img_url] = (img_bytes, content_type)
+                                if img_bytes:
+                                    media_file = ContentFile(img_bytes, name=filename)
+                        except Exception:
+                            media_file = None
+                if media_file is not None:
+                    highlight_with_image_count += 1
+                highlight_objs.append(
+                    EventHighlight(
+                        event=ev,
+                        author=goer,
+                        role="goer",
+                        text=rng.choice(pool),
+                        media_file=media_file,
+                    )
+                )
+        if highlight_objs:
+            EventHighlight.objects.bulk_create(highlight_objs)
+        self.stdout.write(
+            f"  Created {len(highlight_objs)} highlights "
+            f"({highlight_with_image_count} with images)."
+        )
+
+        # --- Friendships (bulk) ---
+        self.stdout.write("Seeding Friendships (from used tickets)...")
+        friendship_objs = []
+        friendship_keys = set()
+        created_count = 0
+        for eid, goers in used_ticket_goers_by_event_id.items():
+            if len(goers) < 2:
+                continue
+            ev = next((e for e in event_map.values() if e.id == eid), None)
+            if not ev:
+                continue
+            orbit_category = ev.category or orbit_unknown
+            seen_pairs = set()
+            for i, a in enumerate(goers):
+                for b in goers[i + 1 :]:
+                    if a.id == b.id:
+                        continue
+                    pair = (min(a.id, b.id), max(a.id, b.id))
+                    if pair in seen_pairs:
+                        continue
+                    seen_pairs.add(pair)
+                    if rng.random() >= FRIENDSHIP_PAIR_KEEP_RATIO:
+                        continue
+                    user1, user2 = (a, b) if a.id < b.id else (b, a)
+                    key = (user1.id, user2.id, orbit_category.id if orbit_category else None)
+                    if key in friendship_keys:
+                        continue
+                    friendship_keys.add(key)
+                    friendship_objs.append(
+                        Friendship(
+                            user1=user1,
+                            user2=user2,
+                            request_sender=user1,
+                            status=(
+                                Friendship.STATUS_ACCEPTED
+                                if rng.random() < 0.5
+                                else Friendship.STATUS_PENDING
+                            ),
+                            accepted_at=now,
+                            met_at_event=ev,
+                            orbit_category=orbit_category,
+                        )
+                    )
+                    created_count += 1
+        if friendship_objs:
+            # Extra safety: if the model has additional unique constraints we missed,
+            # don't fail the seed run.
+            Friendship.objects.bulk_create(friendship_objs, ignore_conflicts=True)
+        self.stdout.write(f"  Created {created_count} friendships.")
+
+        if pexels_cache_dirty:
+            try:
+                HELPERS_DIR.mkdir(parents=True, exist_ok=True)
+                with open(PEXELS_CACHE_PATH, "w", encoding="utf-8") as f:
+                    json.dump(pexels_cache, f, indent=2)
+            except Exception:
+                pass
+
     def handle(self, *args, **options):
         input_path = Path(options["input"]).resolve()
         rng = random.Random()
         now = datetime.now(timezone.utc)
         debug = bool(options.get("debug"))
+        skip_images = bool(options.get("skip_images"))
         if debug:
             self.stdout.write(f"[seed_simple] input={input_path} no_wipe={bool(options.get('no_wipe'))}")
         
@@ -309,6 +722,27 @@ class Command(BaseCommand):
         pexels_cache_dirty = False
 
         with transaction.atomic():
+            # Fast path: when we're wiping, the DB is empty; bulk_create is safe and far faster.
+            # Keep the slower get_or_create path for --no-wipe runs where we must avoid duplicates.
+            if not options.get("no_wipe"):
+                self._seed_fresh_db_fast(
+                    users_data=users_data,
+                    services_data=services_data,
+                    events_data=events_data,
+                    tiers_data=tiers_data,
+                    needs_data=needs_data,
+                    tickets_data=tickets_data,
+                    live_event_keys=live_event_keys,
+                    category_defaults_by_slug=category_defaults_by_slug,
+                    highlights_by_category=highlights_by_category,
+                    skip_images=skip_images,
+                    debug=debug,
+                    now=now,
+                    rng=rng,
+                )
+                # Skip the legacy path below.
+                return
+
             self.stdout.write("Seeding Users...")
             for u in users_data:
                 user, created = User.objects.get_or_create(

@@ -312,7 +312,9 @@ class BaseFeedView(APIView):
             else None,
             "capacity": event.capacity,
             "interest_count": saved_count,
-            "ticket_count": event.ticket_count,
+            # `Event.ticket_count` is a denormalized field and may be stale in seeded/dev data.
+            # Prefer the annotated sold_ticket_count used everywhere else in this view.
+            "ticket_count": tickets_sold_count,
             "host": host_payload,
         }
 
@@ -390,6 +392,44 @@ class BaseFeedView(APIView):
         )
 
         events = self._apply_filters(events, request)
+
+        # Revised geo rules:
+        # - If ONLY lat/lng are provided (no other filters), sort purely by distance.
+        # - If lat/lng plus other filters are provided, first restrict results to a
+        #   100-mile radius, then apply the requested sort/filtering normally.
+        if query_lat is not None and query_lng is not None:
+            # Treat these as "filters" for the purpose of geo behavior.
+            has_other_filters = any(
+                [
+                    request.query_params.get("online") == "true",
+                    bool(request.query_params.get("lifecycle_states", "").strip()),
+                    bool(request.query_params.get("status", "").strip()),
+                    request.query_params.get("include_host_drafts") == "true",
+                    bool(request.query_params.get("start_time_gte")),
+                    bool(request.query_params.get("start_time_lte")),
+                    bool(request.query_params.get("category", "").strip()),
+                    bool(request.query_params.get("categories", "").strip()),
+                    request.query_params.get("free_only") == "true",
+                    request.query_params.get("has_needs") == "true",
+                ]
+            )
+
+            if has_other_filters:
+                radius_km = 160.934  # 100 miles
+                lat_delta = radius_km / 111.0
+                lng_scale = max(0.1, cos(radians(query_lat)))
+                lng_delta = radius_km / (111.0 * lng_scale)
+                events = events.filter(
+                    latitude__isnull=False,
+                    longitude__isnull=False,
+                    latitude__gte=query_lat - lat_delta,
+                    latitude__lte=query_lat + lat_delta,
+                    longitude__gte=query_lng - lng_delta,
+                    longitude__lte=query_lng + lng_delta,
+                )
+            else:
+                # Only coords given: enforce distance sorting.
+                sort = self.SORT_DISTANCE
 
         if sort == self.SORT_CREATED:
             events = events.order_by("-created_at", "-id")

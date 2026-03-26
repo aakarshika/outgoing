@@ -166,16 +166,18 @@ export function LargeEventCard({
               spacing={1}
             >
               <Category />
-              <HostStatusBadge status={event.host.username} />
+              <Going />
+              
             </Stack>
 
-            {isFree || weekdayLabel || timeLabel ? (
+            {(
               <Stack
                 direction="row"
                 alignItems="center"
                 spacing={0.6}
                 sx={{
                   minWidth: 0,
+                  py: 0.5,
                   flexWrap: 'wrap',
                   color: 'rgba(66, 50, 28, 0.72)',
                 }}
@@ -193,39 +195,29 @@ export function LargeEventCard({
                   >
                     Free
                   </Typography>
-                ) : null}
-                {isFree && (weekdayLabel || timeLabel) ? (
-                  <Typography component="span" sx={{ fontSize: 12, lineHeight: 1 }}>
-                    ·
-                  </Typography>
-                ) : null}
-                {weekdayLabel ? (
-                  <Typography component="span" sx={{ fontSize: 12, fontWeight: 600 }}>
-                    {weekdayLabel}
-                  </Typography>
-                ) : null}
-                {weekdayLabel && timeLabel ? (
-                  <Typography component="span" sx={{ fontSize: 12, lineHeight: 1 }}>
-                    ·
-                  </Typography>
-                ) : null}
-                {timeLabel ? (
-                  <Typography component="span" sx={{ fontSize: 12, fontWeight: 600 }}>
-                    {timeLabel}
-                  </Typography>
-                ) : null}
-                ·
-                {event.distance_km ? (
+                ) : <Typography
+                component="span"
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  color: '#2f7d32',
+                }}
+              >
+                ₹{event?.min_ticket_price?.toFixed(0)}
+              </Typography>}
+                {(event.distance_km || event.location_name) ? (
                   <Typography component="span" sx={{
                     display: 'inline-flex',
                     gap: 0.3,
                     alignItems: 'center', fontSize: 12, fontWeight: 600
                   }}>
-                    <MapPin size={10} /> {event.distance_km.toFixed(1)} km
+                    <MapPin size={10} /> {event.location_name}  {event.distance_km && ` · ${event.distance_km?.toFixed(1)} km`}
                   </Typography>
                 ) : null}
               </Stack>
-            ) : null}
+            )}
 
             <Typography
               sx={{
@@ -257,7 +249,6 @@ export function LargeEventCard({
                 spacing={0.7}
                 sx={{ minWidth: 0 }}
               >
-                {!showNeeds && <Going />}
               </Stack>
             </Stack>
           </Stack>

@@ -363,6 +363,7 @@ export function useEventCards({
       >
         {monthLabel}
       </Typography>
+
       <Typography
         component="span"
         sx={{
@@ -590,7 +591,7 @@ const LocationStuff = () => (
 
     return (
       <>
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ position: 'relative'}}>
           {needsOpen && (
             <Box
               ref={needsPanelRef}
@@ -626,7 +627,9 @@ const LocationStuff = () => (
             alignItems="center"
             spacing={0.75}
             sx={{
+              pr: 1,
               position: 'absolute',
+              width: '100%' 
             }}
           >
             <Box
@@ -658,7 +661,6 @@ const LocationStuff = () => (
                 </Typography>
               </>
             </Box>
-            <Going />
           </Stack>
         </Box>
 

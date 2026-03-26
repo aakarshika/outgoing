@@ -10,6 +10,7 @@ import {
   type BaseFeedEventItem,
   type BaseFeedParams,
 } from '@/types/events';
+import { getNearYouCoords, getStoredSearchLocation } from '@/utils/locationPrefs';
 
 import { SimpleNavbarMobile } from './components/SimpleNavbarMobile';
 import { SimpleNavbarSearch } from './components/SimpleNavbarSearch';
@@ -219,6 +220,26 @@ export default function SearchPage() {
   const lat = Number(searchParams.get('lat'));
   const lng = Number(searchParams.get('lng'));
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+  const storedSearchLocation = useMemo(() => getStoredSearchLocation(), []);
+  const nearYouCoords = useMemo(() => getNearYouCoords(), []);
+
+  const effectiveCoords = useMemo(() => {
+    if (tab === 'online') return null;
+    if (hasCoords) return { lat, lng };
+
+    // If the URL has a location label but no coords, try to hydrate from stored state
+    // so the /feed/base request can use distance-aware sorting/filtering.
+    if (locationLabel) {
+      if (storedSearchLocation?.label === locationLabel && storedSearchLocation.coords) {
+        return storedSearchLocation.coords;
+      }
+      return null;
+    }
+
+    // No location label in the URL (e.g. landing directly on /search):
+    // fall back to near-you coords (if enabled) or the last stored location coords.
+    return nearYouCoords ?? storedSearchLocation?.coords ?? null;
+  }, [hasCoords, lat, lng, locationLabel, nearYouCoords, storedSearchLocation, tab]);
   const nowIso = useMemo(() => new Date().toISOString(), []);
 
   useEffect(() => {
@@ -252,12 +273,17 @@ export default function SearchPage() {
 
   const feedParams = useMemo<BaseFeedParams>(() => {
     const params: BaseFeedParams = {
-      sort: tab === 'upcoming' ? 'start_time' : 'popularity',
+      sort:
+        tab === 'upcoming'
+          ? 'start_time'
+          : effectiveCoords
+            ? 'distance'
+            : 'popularity',
       lifecycle_states: [...DISCOVERABLE_LIFECYCLE_STATES],
       start_time_gte: nowIso,
       page_size: 100,
-      lat: hasCoords && tab !== 'online' ? lat : undefined,
-      lng: hasCoords && tab !== 'online' ? lng : undefined,
+      lat: effectiveCoords?.lat,
+      lng: effectiveCoords?.lng,
     };
 
     if (tab === 'free') {
@@ -273,7 +299,7 @@ export default function SearchPage() {
     }
 
     return params;
-  }, [hasCoords, lat, lng, nowIso, tab]);
+  }, [effectiveCoords, nowIso, tab]);
 
 
   const { data: feedResponse, isLoading } = useBaseFeed(feedParams);
