@@ -128,7 +128,7 @@ export function AnyUserCard(props: AnyUserCardProps) {
   const { data: friendships } = useMyFriendships(fetchFriendships);
   const { data: targetOrbitData } = useUserFriendshipsByOrbitCategory(
     userId,
-    isActive && Boolean(userId),
+    isActive && isAuthenticated && Boolean(userId),
   );
 
   const acceptedOrbitSlugs = useMemo(() => {

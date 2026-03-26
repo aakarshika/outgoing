@@ -53,6 +53,7 @@ export const PolaroidFrame = ({
   disableHover?: boolean;
 }) => {
   const baseRotation = useMemo(() => rotation ?? Math.random() * 8 - 4, [rotation]);
+  const hasMedia = Boolean(src);
   const hoverRotation = useMemo(
     () =>
       rotationhover !== undefined
@@ -89,23 +90,41 @@ export const PolaroidFrame = ({
         <Box
           sx={{
             aspectRatio: '1/1',
-            bgcolor: '#f0f0f0',
+            bgcolor: hasMedia ? '#f0f0f0' : '#fff',
             overflow: 'hidden',
             position: 'relative',
+            p: hasMedia ? 0 : 1.5,
+            display: hasMedia ? 'block' : 'flex',
+            alignItems: hasMedia ? 'stretch' : 'center',
+            justifyContent: hasMedia ? 'flex-start' : 'center',
           }}
         >
-          {type === 'video' ? (
-            <Media
-              type="video"
-              src={src || undefined}
-              controls
-              className="w-full h-full object-cover"
-            />
+          {hasMedia ? (
+            type === 'video' ? (
+              <Media
+                type="video"
+                src={src || undefined}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Media src={src || undefined} className="w-full h-full object-cover" />
+            )
           ) : (
-            <Media src={src || undefined} className="w-full h-full object-cover" />
+            <Typography
+              sx={{
+                fontFamily: '"Permanent Marker", cursive',
+                fontSize: '1rem',
+                textAlign: 'center',
+                whiteSpace: 'pre-wrap',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              {caption}
+            </Typography>
           )}
         </Box>
-        {caption && (
+        {hasMedia && caption && (
           <Typography
             sx={{
               fontFamily: '"Permanent Marker", cursive',

@@ -397,13 +397,15 @@ export async function cancelTicket(ticketId: number) {
 }
 
 export async function fetchMyTickets() {
-  const { data } = await client.get('/tickets/my/');
-  return data;
+  // Deprecated endpoint: /tickets/my/
+  // Intentionally return an empty payload to avoid hitting removed APIs.
+  return { success: true, message: '', data: [], meta: {} };
 }
 
 export async function fetchMyEvents() {
-  const { data } = await client.get('/events/my/');
-  return data;
+  // Deprecated endpoint: /events/my/
+  // Intentionally return an empty payload to avoid hitting removed APIs.
+  return { success: true, message: '', data: [], meta: {} };
 }
 
 export async function fetchMyInterestedEvents() {
@@ -707,6 +709,10 @@ export async function fetchMyFriendshipsByOrbitCategory(): Promise<MyFriendships
 export async function fetchUserFriendshipsByOrbitCategory(
   userId: number,
 ): Promise<MyFriendshipsByOrbitCategoryResponse> {
+  // Guest surfaces can render user cards; skip auth-only friendship calls without a token.
+  if (!localStorage.getItem('token')) {
+    return { grouped_friendships: [] };
+  }
   const { data } = await client.get<ApiResponse<MyFriendshipsByOrbitCategoryResponse>>(
     `/events/friendships/by-user/${userId}/by-category/`,
   );

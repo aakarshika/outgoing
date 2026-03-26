@@ -10,6 +10,8 @@ import { useToggleHighlightLike } from '@/features/events/hooks';
 
 import { HighlightCommentDrawer } from './HighlightCommentDrawer';
 import { getCategoryTheme } from '@/features/events/CategoricalBackground';
+import { LandscapeEventCard } from '@/components/events/LandscapeEventCard';
+import { LandscapeEventCardMinimal } from '@/components/events/LandscapeEventCardMinimal';
 
 const BOTTOM_NAV_OFFSET = 'calc(88px + env(safe-area-inset-bottom, 0px))';
 const TOP_SAFE_OFFSET = 'calc(16px + env(safe-area-inset-top, 0px))';
@@ -239,8 +241,7 @@ export const HighlightFeedViewer = ({
           position: 'fixed',
           inset: 0,
           zIndex: 60,
-          bgcolor: '#050505',
-          pt:8  
+          bgcolor: '#050505'
         }}
       >
         <Box
@@ -323,95 +324,22 @@ export const HighlightFeedViewer = ({
                     zIndex: 2,
                   }}
                 >
-                  {highlight.event && (
-                    <Box
+                  {(location.pathname.startsWith('/highlightsreels')) && (
+                    <LandscapeEventCardMinimal
+                      event={highlight.event}
                       sx={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 1.5,
-                        px: { xs: 1.5, sm: 2 },
-                        py: 1.25,
-                        borderRadius: 999,
-                        ...(lightSlide
-                          ? {
-                              border: '1px solid rgba(0,0,0,0.1)',
-                              bgcolor: 'rgba(0,0,0,0.04)',
-                              backdropFilter: 'blur(18px)',
-                              boxShadow: '0 8px 28px rgba(0,0,0,0.08)',
-                            }
-                          : {
-                              border: '1px solid rgba(255,255,255,0.26)',
-                              bgcolor: 'rgba(15,15,15,0.42)',
-                              backdropFilter: 'blur(18px)',
-                              boxShadow: '0 18px 50px rgba(0,0,0,0.25)',
-                            }),
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none',
                       }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          sx={{
-                            color: lightSlide ? '#111' : 'white',
-                            fontWeight: 800,
-                            fontSize: { xs: '0.95rem', sm: '1rem' },
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {highlight.event.title}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            mt: 0.25,
-                            color: lightSlide
-                              ? 'rgba(0,0,0,0.58)'
-                              : 'rgba(255,255,255,0.78)',
-                            fontSize: '0.8rem',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {highlight.event.location_name}
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        component="button"
-                        type="button"
-                        onClick={() => {
-                          const eventId = highlight.event?.id ?? highlight.event_id;
-                          if (eventId) {
-                            navigate(`/events-new/${eventId}`);
-                          }
-                        }}
-                        sx={{
-                          flexShrink: 0,
-                          px: { xs: 1.4, sm: 1.8 },
-                          py: 0.9,
-                          borderRadius: 999,
-                          border: lightSlide
-                            ? '1px solid rgba(0,0,0,0.22)'
-                            : '1px solid rgba(255,255,255,0.24)',
-                          bgcolor: lightSlide ? 'rgba(255,255,255,0.9)' : '#fff6dd',
-                          color: '#111',
-                          fontWeight: 800,
-                          fontSize: '0.8rem',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Go to Event
-                      </Box>
-                    </Box>
+                    />
                   )}
 
-                  <IconButton
+                  {!(location.pathname.startsWith('/highlightsreels')) && (<IconButton
                     aria-label="Close viewer"
                     onClick={onClose}
                     sx={{
+                      zIndex: 2,
                       width: 48,
                       height: 48,
                       color: lightSlide ? '#111' : 'white',
@@ -425,7 +353,7 @@ export const HighlightFeedViewer = ({
                     }}
                   >
                     <X size={24} />
-                  </IconButton>
+                  </IconButton>)}
                 </Stack>
 
                 {!hasPhoto && highlight.text && (
@@ -473,6 +401,7 @@ export const HighlightFeedViewer = ({
                 >
                   <Stack direction="row" alignItems="center" spacing={1.2}>
                     <Hostname
+                      userId={highlight.author_id}
                       username={highlight.author_username}
                       avatarSrc={highlight.author_avatar}
                       mode="normal"

@@ -706,6 +706,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
     """Serializer for event highlights."""
 
     author_username = serializers.CharField(source="author.username", read_only=True)
+    author_id = serializers.IntegerField(source="author.id", read_only=True)
     author_avatar = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
@@ -721,6 +722,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "author_username",
+            "author_id",
             "author_avatar",
             "role",
             "text",
@@ -736,6 +738,7 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "author_username",
+            "author_id",
             "author_avatar",
             "moderation_status",
             "created_at",
@@ -754,12 +757,21 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         return ret
 
     def get_likes_count(self, obj):
+        annotated = getattr(obj, "likes_count_annotated", None)
+        if annotated is not None:
+            return int(annotated)
         return obj.likes.count()
 
     def get_comments_count(self, obj):
+        annotated = getattr(obj, "comments_count_annotated", None)
+        if annotated is not None:
+            return int(annotated)
         return obj.comments.count()
 
     def get_user_has_liked(self, obj):
+        annotated = getattr(obj, "user_has_liked_annotated", None)
+        if annotated is not None:
+            return bool(annotated)
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
@@ -784,10 +796,35 @@ class EventHighlightSerializer(serializers.ModelSerializer):
         return EventListSerializer(obj.event, context=self.context).data
 
 
+class EventHighlightFeedSerializer(EventHighlightSerializer):
+    """Lightweight highlight serializer for feed/trending-highlights endpoint."""
+
+    def get_event(self, obj):
+        event = obj.event
+        request = self.context.get("request")
+        category = getattr(event, "category", None)
+        return {
+            "id": event.id,
+            "title": event.title,
+            "cover_image": (
+                resolve_media_url(event.cover_image, request) if event.cover_image else None
+            ),
+            "category": {
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug,
+                "icon": category.icon,
+            }
+            if category
+            else None,
+        }
+
+
 class EventHighlightCommentSerializer(serializers.ModelSerializer):
     """Serializer for event highlight comments."""
 
     author_username = serializers.CharField(source="author.username", read_only=True)
+    author_id = serializers.IntegerField(source="author.id", read_only=True)
     author_avatar = serializers.SerializerMethodField()
     replies = serializers.SerializerMethodField()
 
@@ -796,6 +833,7 @@ class EventHighlightCommentSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "author_username",
+            "author_id",
             "author_avatar",
             "text",
             "parent",
@@ -805,6 +843,7 @@ class EventHighlightCommentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "author_id",
             "author_username",
             "author_avatar",
             "created_at",
@@ -833,6 +872,7 @@ class EventReviewCommentSerializer(serializers.ModelSerializer):
     """Serializer for event review comments."""
 
     author_username = serializers.CharField(source="author.username", read_only=True)
+    author_id = serializers.IntegerField(source="author.id", read_only=True)
     author_avatar = serializers.SerializerMethodField()
     replies = serializers.SerializerMethodField()
 
@@ -841,6 +881,7 @@ class EventReviewCommentSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "author_username",
+            "author_id",
             "author_avatar",
             "text",
             "parent",
@@ -851,6 +892,7 @@ class EventReviewCommentSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "author_username",
+            "author_id",
             "author_avatar",
             "created_at",
             "updated_at",

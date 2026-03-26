@@ -61,13 +61,14 @@ function AppContent() {
   const isEventDetailRoute = location.pathname.startsWith('/events');
   const isSearchRoute = location.pathname.startsWith('/search');
   const isChatListRoute = location.pathname.startsWith('/chats');
+  const isHighlightRoute = location.pathname.startsWith('/highlights');
   const isSignedOutRoot = !isAuthenticated;
 
   return (
     <div className="relative flex min-h-screen flex-col pb-40 text-foreground transition-colors duration-300">
       {backgroundComponent}
       {/* {!isSearchRoute && <SimpleNavbarMobile />} */}
-      {!isSearchRoute && !isChatListRoute && !isEventDetailRoute && <SimpleNavbarMobile />}
+      {!isSearchRoute && !isChatListRoute && !isHighlightRoute && !isEventDetailRoute && <SimpleNavbarMobile />}
 
       <Toaster />
       <main className="flex-1 bg-transparent pb-32">

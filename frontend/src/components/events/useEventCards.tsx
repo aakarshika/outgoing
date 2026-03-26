@@ -281,6 +281,83 @@ export function useEventCards({
     </>
   );
 
+  const ImageFrameTiny = () => (
+    <>
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(255, 255, 255, 0.92)',
+          zIndex: 0,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            background: 'rgba(43, 33, 24, 0.18)',
+            filter: `blur(${imageHeight / 10}px)`,
+            pointerEvents: 'none',
+          },
+        }}
+      />
+
+      <Box
+        sx={{
+          width: isLandscape ? resolvedImageWidth : '100%',
+          height: isLandscape ? '100%' : imageHeight,
+          position: 'absolute',
+          overflow: 'visible',
+          zIndex: 2,
+        }}
+      >
+        {event.cover_image ? (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                ...(isLandscape
+                  ? {
+                    top: '12%',
+                    right: -12,
+                    width: 20,
+                    height: '76%',
+                  }
+                  : {
+                    left: '50%',
+                    bottom: -14,
+                    transform: 'translateX(-50%)',
+                    width: '85%',
+                    height: 20,
+                  }),
+                background: 'rgba(41, 30, 21, 0.2)',
+                filter: 'blur(8px)',
+                pointerEvents: 'none',
+              },
+            }}
+          >
+            <Box
+              component="img"
+              src={event.cover_image}
+              alt={event.title}
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          </Box>
+        ) : null}
+      </Box>
+    </>
+  );
+
   const DateAndLocationRow = () => (
     <Stack
       spacing={1}
@@ -734,6 +811,7 @@ const LocationStuff = () => (
 
   return {
     ImageFrame,
+    ImageFrameTiny,
     DateAndLocation,
     DateAndLocationFlat,
     Category,

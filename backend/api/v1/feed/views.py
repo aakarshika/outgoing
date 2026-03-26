@@ -5,16 +5,16 @@ from math import cos, radians
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Avg, Case, Count, IntegerField, Min, Q, Value, When
+from django.db.models import Avg, Case, Count, Exists, IntegerField, Min, OuterRef, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from api.v1.events.serializers import EventHighlightSerializer, EventListSerializer
+from api.v1.events.serializers import EventHighlightFeedSerializer, EventListSerializer
 from api.v1.vendors.serializers import VendorServiceSerializer
-from apps.events.models import Event, EventHighlight, EventView
+from apps.events.models import Event, EventHighlight, EventHighlightLike, EventView
 from apps.vendors.models import VendorService
 from core.responses import success_response
 from core.utils import resolve_media_url
@@ -905,6 +905,7 @@ class TrendingHighlightsFeedView(APIView):
 
         highlights = (
             EventHighlight.objects.filter(moderation_status="approved")
+            .select_related("author", "author__profile", "event", "event__category")
             .annotate(
                 likes_count_annotated=Count("likes", distinct=True),
                 comments_count_annotated=Count("comments", distinct=True),
@@ -918,7 +919,17 @@ class TrendingHighlightsFeedView(APIView):
             .order_by("-viral_score", "-created_at")[:page_size]
         )
 
-        serializer = EventHighlightSerializer(
+        if request.user.is_authenticated:
+            highlights = highlights.annotate(
+                user_has_liked_annotated=Exists(
+                    EventHighlightLike.objects.filter(
+                        highlight_id=OuterRef("pk"),
+                        user=request.user,
+                    )
+                )
+            )
+
+        serializer = EventHighlightFeedSerializer(
             highlights, many=True, context={"request": request}
         )
         return success_response(data=serializer.data)
