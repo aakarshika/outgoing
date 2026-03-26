@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "username": "shiv_c_m",
+      "username": "shiv_sri",
       "category_list": [
         "music",
         "comedy"
@@ -9,70 +9,70 @@
       "type": "Host"
     },
     {
-      "username": "shika_a",
+      "username": "shika_awesome",
       "category_list": [
         "arts"
       ],
       "type": "Host"
     },
     {
-      "username": "coco_a",
+      "username": "coco_chef",
       "category_list": [
         "arts"
       ],
       "type": "Vendor"
     },
     {
-      "username": "coco_c",
+      "username": "ishi_singh",
       "category_list": [
         "comedy"
       ],
       "type": "Vendor"
     },
     {
-      "username": "coco_m",
+      "username": "kris_vasu",
       "category_list": [
         "music"
       ],
       "type": "Vendor"
     },
     {
-      "username": "jello_a",
+      "username": "jello_biggy",
       "category_list": [
         "arts"
       ],
       "type": "Vendor"
     },
     {
-      "username": "jello_c",
+      "username": "mags_magic",
       "category_list": [
         "comedy"
       ],
       "type": "Vendor"
     },
     {
-      "username": "jello_m",
+      "username": "john_doe",
       "category_list": [
         "music"
       ],
       "type": "Vendor"
     },
     {
-      "username": "maggi_a",
+      "username": "chutney_chef",
       "category_list": [
         "arts"
       ],
       "type": "Vendor"
     },
     {
-      "username": "maggi_c",
+      "username": "razz_king",
       "category_list": [
         "comedy"
       ],
       "type": "Vendor"
     },
     {
-      "username": "maggi_m",
+      "username": "maggi_master",
       "category_list": [
         "music"
       ],

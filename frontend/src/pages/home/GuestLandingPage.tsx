@@ -570,7 +570,7 @@ export default function GuestLandingPage() {
     : 'Set a search location to sort this strip by distance.';
 
   return (
-    <Box sx={{ background: '#F9F9F9' }}>
+    <Box sx={{ background: 'rgba(237, 232, 226, 0.9)' }}>
       <Box
         sx={{
           background: '#D85A30',
