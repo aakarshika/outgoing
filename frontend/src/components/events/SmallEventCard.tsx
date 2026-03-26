@@ -105,16 +105,13 @@ export function SmallEventCard({
         />
       ) : null}
       <Stack
-        spacing={1.1}
         sx={getContentSx({ backgroundColor: '#fff' })}
       >
 
         <Stack
           direction="row"
-          spacing={0.7}
           sx={{
             minHeight: 0,
-            p: 1,
           }}
         >
 
@@ -133,7 +130,6 @@ export function SmallEventCard({
               direction="row"
               alignItems="center"
               justifyContent="space-between"
-              spacing={1}
             >
               <Category />
               <Going />
@@ -159,20 +155,21 @@ export function SmallEventCard({
             >
               {event.title}
             </Typography>
-            <Box
+            
+          </Stack>
+        </Stack>
+        <Box
               sx={{
+                pb: 1,
+                pl: 4.5,
                 display: 'inline-flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 0.75,
               }}
             >
               <LocationStuff />
             </Box>
-          </Stack>
-        </Stack>
       </Stack>
     </Box>
   );

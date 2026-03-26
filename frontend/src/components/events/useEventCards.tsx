@@ -12,6 +12,7 @@ import { useToggleInterest } from '@/features/events/hooks';
 
 import { EventNeedsStack } from './EventNeedsStack';
 import { formatTime } from '@/utils/date';
+import { format } from 'date-fns';
 
 export type EventCardEvent = BaseFeedEventItem;
 
@@ -158,8 +159,7 @@ export function useEventCards({
     ? startDate.toLocaleDateString('en-US', { weekday: 'short' })
     : '';
   const timeLabel = isValidStartDate
-    ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-    : '';
+    ? format(startDate, 'h:mmaaaaa'):'';
   const parseTicketPrice = (value: string | number | null | undefined) => {
     if (typeof value === 'number') {
       return Number.isFinite(value) ? value : null;
@@ -336,12 +336,13 @@ export function useEventCards({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
-        justifyContent: 'center',
+        pt: 0.5,
+        justifyContent: 'start',
       }}
     >
       <Typography
         sx={{
-          fontSize: 25,
+          fontSize: 23,
           fontWeight: 700,
           textTransform: 'uppercase',
           p:0,
@@ -685,6 +686,8 @@ const LocationStuff = () => (
       sx={{
         minWidth: 0,
         flex: 1,
+        px: 1,
+        pb: 0.5,
         fontSize: 12,
         color: 'rgba(74, 59, 37, 0.69)',
         fontWeight: 500,
@@ -702,7 +705,7 @@ const LocationStuff = () => (
   const getCardSx = (sx?: SxProps<Theme>): SxProps<Theme> => [
     {
       borderRadius: '22px',
-      overflow: 'visible',
+      overflow: 'hidden',
       cursor: 'pointer',
       textDecoration: 'none',
       color: 'inherit',
@@ -717,7 +720,6 @@ const LocationStuff = () => (
   const getContentSx = (extra?: SxProps<Theme>): SxProps<Theme> => [
     {
       position: 'relative',
-      p: 1,
       pt: isLandscape ? 1 : `calc(${imageHeight}px + 8px)`,
       pl: isLandscape ? `calc(${resolvedImageWidth}px + 8px)` : 1,
       zIndex: 1,
