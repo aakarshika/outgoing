@@ -1015,7 +1015,8 @@ class Command(BaseCommand):
                                     img_bytes, content_type = _download_image_bytes(img_url)
                                     cover_bytes_cache[img_url] = (img_bytes, content_type)
                                 if img_bytes:
-                                    stem = f"seed_hl_e{event.id}_u{goer.id}_{rng.getrandbits(32)}"
+                                    # Deterministic filename: no random suffix.
+                                    stem = f"seed_hl_e{event.id}_u{goer.id}_{_stable_hex(img_url)}"
                                     filename = _filename_for_image_url(
                                         img_url, fallback_stem=stem
                                     )
