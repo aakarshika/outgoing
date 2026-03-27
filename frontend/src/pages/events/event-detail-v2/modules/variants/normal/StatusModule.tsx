@@ -99,27 +99,69 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
   const urgency =
     remainingRatio < 0.2
       ? {
-          accent: '#C93C37',
-          soft: '#FCE9E7',
-          text: '#8D231F',
-          track: 'rgba(201, 60, 55, 0.16)',
-        }
+        accent: '#C93C37',
+        soft: '#FCE9E7',
+        text: '#8D231F',
+        track: 'rgba(201, 60, 55, 0.16)',
+      }
       : remainingRatio < 0.5
         ? {
-            accent: getCategoryTheme(event.category).accent,
-            soft: '#FCF1D7',
-            text: '#8A5A00',
-            track: 'rgba(200, 138, 22, 0.18)',
-          }
+          accent: getCategoryTheme(event.category).accent,
+          soft: '#FCF1D7',
+          text: '#8A5A00',
+          track: 'rgba(200, 138, 22, 0.18)',
+        }
         : {
-            accent: '#D85A30',
-            soft: '#FAECE7',
-            text: '#993C1D',
-            track: 'rgba(216, 90, 48, 0.16)',
-          };
+          accent: '#D85A30',
+          soft: '#FAECE7',
+          text: '#993C1D',
+          track: 'rgba(216, 90, 48, 0.16)',
+        };
 
   // Only show for upcoming events
-  if (!['published', 'event_ready', 'at_risk'].includes(lifecycle)) return null;
+  if (!['published', 'event_ready', 'at_risk'].includes(lifecycle)) 
+    return (
+      <Box
+      sx={{
+        mx: 2,
+        mt: 1.75,
+        bgcolor: '#fff',
+        p: 1.5,
+      }}
+    >
+
+      <Typography
+        sx={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: 'var(--color-text-secondary, #6b7280)',
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          fontFamily: '"Syne", sans-serif',
+        }}
+      >
+        {/* {isEventOver ? 'Who went' : "Who's going"} */}
+        Goers at this
+        <Typography
+          component="span"
+          sx={{
+            fontWeight: 700,
+            fontSize: 15, px: 0.5,
+            bgcolor: 'transparent',
+            color: getCategoryTheme(event.category).accent,
+          }}
+        >
+          {event.category.name}
+        </Typography>
+        event
+
+      </Typography>
+      </Box>
+    );
+
+
+
+
 
   return (
     <Box
@@ -131,7 +173,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
       }}
     >
 
-<Typography
+      <Typography
         sx={{
           fontSize: 13,
           fontWeight: 700,
@@ -146,19 +188,20 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
         join the
         <Typography
           component="span"
-          sx={{ fontWeight: 700,
+          sx={{
+            fontWeight: 700,
             fontSize: 15, px: 0.5,
             bgcolor: 'transparent',
             color: getCategoryTheme(event.category).accent,
-           }}
-          >
-            {event.category.name}
-          </Typography>
-         circle
+          }}
+        >
+          {event.category.name}
+        </Typography>
+        circle
 
       </Typography>
 
-{showCountdown && countdown && (
+      {showCountdown && countdown && (
         <Box
           sx={{
             display: 'grid',
@@ -177,7 +220,7 @@ export function NormalStatusModule({ event }: NormalStatusModuleProps) {
               key={item.label}
               sx={{
                 borderRadius: '10px',
-                border: '1px solid '+urgency.accent,
+                border: '1px solid ' + urgency.accent,
                 bgcolor: '#fff',
                 py: 0.9,
                 textAlign: 'center',
