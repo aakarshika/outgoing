@@ -188,6 +188,11 @@ export function SimpleNavbarMobile({
     color: KIND_STYLES.vendor_request.dot
   });
   hostingAndServicesItems.push({
+    label: 'My Earnings',
+    to: '/managing/earnings',
+    icon: 'fluent-mdl2:money',
+  });
+  hostingAndServicesItems.push({
     label: 'Saved dates',
     to: '/managing/saved',
     icon: 'solar:heart-linear',

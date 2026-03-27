@@ -68,7 +68,7 @@ export function ServiceTicketCard({ item }: ServiceTicketCardProps) {
     (total, ticket) => total + Number(ticket.price_paid ?? 0),
     0,
   );
-  const paidAmount = paidAmountNumber > 0 ? `₹${paidAmountNumber}` : '₹0';
+  const paidAmount = paidAmountNumber > 0 ? `₹${(paidAmountNumber+2)}` : '₹0';
   const ticketCode =
     userTickets.length > 0
       ? (() => {

@@ -26,6 +26,7 @@ import {
   Heart,
   Briefcase,
   Search,
+  Banknote,
 } from 'lucide-react';
 import { type MouseEvent, useState, useMemo } from 'react';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
@@ -202,6 +203,11 @@ export function SimpleNavbar({
     Icon: Briefcase,
     count: hasPendingApplications ? pendingApplicationsCount : 0,
     color: KIND_STYLES.vendor_request.dot
+  });
+  hostingAndServicesItems.push({
+    label: 'My Earnings',
+    to: '/managing/earnings',
+    Icon: Banknote,
   });
   hostingAndServicesItems.push({
     label: 'Saved dates',
