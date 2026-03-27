@@ -113,7 +113,7 @@ export const routesConfig: RouteDefinition[] = [
   // },
   {
     path: '/events/:id',
-    componentName: 'EventDetail',
+    componentName: 'EventDetailV2',
     isPublic: true,
   },
   {
@@ -196,7 +196,7 @@ export const routesConfig: RouteDefinition[] = [
   // },
   {
     path: '/user/:username',
-    componentName: 'UserProfile',
+    componentName: 'UserProfileMock',
     isPublic: true,
   },
   {
