@@ -61,7 +61,7 @@ export function AppBottomNav() {
       key: 'profile',
       label: 'Profile',
       icon: 'solar:user-linear',
-      to: username ? `/user/${username}` : '/profile',
+      to: username ? `/mock/user-profile/${username}` : '/profile',
       guestTo: '/signin',
       match: (pathname) =>
         pathname === '/profile' ||

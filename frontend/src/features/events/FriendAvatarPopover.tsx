@@ -1,4 +1,4 @@
-import { ClickAwayListener, Popover } from '@mui/material';
+import { Box, ClickAwayListener, Popover } from '@mui/material';
 import { AnyUserCard, type FriendAvatarPopoverProps } from './AnyUserCard';
 
 export type { FriendAvatarPopoverProps };
@@ -26,13 +26,15 @@ export function FriendAvatarPopover({
         }}
         disableRestoreFocus
       >
-        <ClickAwayListener onClickAway={onClose}>
-          <AnyUserCard
-            userId={userId}
-            open={isOpen}
-            anchorEl={anchorEl}
-            onClose={onClose}
-          />
+        <ClickAwayListener disableReactTree onClickAway={onClose}>
+          <Box>
+            <AnyUserCard
+              userId={userId}
+              open={isOpen}
+              anchorEl={anchorEl}
+              onClose={onClose}
+            />
+          </Box>
         </ClickAwayListener>
       </Popover>
   );

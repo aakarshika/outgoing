@@ -71,7 +71,6 @@ export function FriendAvatar({
   const cy = 50;
   const n = colors.length;
   const hasFriendshipColor = n > 0;
-  console.log('userId', userId ,'--- friend avatar ---');
 
   const segmentPaths =
     n > 1

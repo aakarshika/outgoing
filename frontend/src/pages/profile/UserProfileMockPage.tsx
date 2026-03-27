@@ -663,7 +663,7 @@ export default function UserProfileMockPage() {
                   }}
                 >
 
-<div
+                  <div
                     className="rounded-full p-[3px] h-full w-full"
                     style={{
                       background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.45), rgba(148, 163, 184, 0.2))',
@@ -734,6 +734,7 @@ export default function UserProfileMockPage() {
               <Box sx={{ mx: 2, mb: 1.75 }}>
                 {profile?.badges?.map((badge) => (
                   <Box
+                    key={badge.id}
                     sx={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -1314,31 +1315,18 @@ export default function UserProfileMockPage() {
                               {friends.length} budd{friends.length === 1 ? 'y' : 'ies'}
                             </Box>
                           ) : (
-                            <Box sx={{ fontSize: 10, color: '#a09080', flexShrink: 0, width: '100%' }}>
-                              {showJoinTheirOrbit ? (
-                                <Box
-                                  component="button"
-                                  type="button"
-                                  onClick={() => openJoinOrbit(slug)}
-                                  sx={{
-                                    width: '100%',
-                                    mt: 1.25,
-                                    bgcolor: 'transparent',
-                                    color: '#d85a30',
-                                    fontFamily: FONT_SYNE,
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    border: 'none',
-                                    p: 0,
-                                    font: 'inherit',
-                                    '&:hover': { bgcolor: 'rgba(216, 90, 48, 0.06)' },
-                                  }}
-                                >
-                                  + Join
-                                </Box>
-                              ) : null}
-                            </Box>
+                            <>
+                              {showJoinTheirOrbit && (<Box
+                                onClick={() => openJoinOrbit(slug)}
+                                sx={{
+                                  flexShrink: 0,
+                                  color: '#d85a30',
+                                  fontSize: 10,
+                                }}
+                              >
+                                + Join
+                              </Box>)}
+                            </>
                           )}
                         </Box>
                       </Box>
