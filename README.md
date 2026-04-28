@@ -33,17 +33,18 @@ Built for the Indian subcontinent market, with pricing, UX, and social mechanics
 ---
 
 ## Architecture
-/outgoing
-├── backend/               # Django + DRF
-│   ├── config/            # Settings: Base, Dev, Prod
-│   ├── core/              # Shared utils: unified response envelope, exceptions
-│   ├── apps/              # Domain logic: models (profiles, events, opportunities)
-│   └── api/               # Transport layer: serializers, views, URLs
-├── frontend/              # React + Vite
-│   ├── src/features/      # Domain features (auth, events, chip-in, orbits)
-│   ├── src/components/    # Shared UI (shadcn/ui components)
-│   └── src/hooks/         # Global hooks
-└── spec/                  # Product specs and design decisions
+
+    /outgoing
+    ├── backend/               # Django + DRF
+    │   ├── config/            # Settings: Base, Dev, Prod
+    │   ├── core/              # Shared utils: unified response envelope, exceptions
+    │   ├── apps/              # Domain logic: models (profiles, events, opportunities)
+    │   └── api/               # Transport layer: serializers, views, URLs
+    ├── frontend/              # React + Vite
+    │   ├── src/features/      # Domain features (auth, events, chip-in, orbits)
+    │   ├── src/components/    # Shared UI (shadcn/ui components)
+    │   └── src/hooks/         # Global hooks
+    └── spec/                  # Product specs and design decisions
 
 **API contract:** Every response follows a strict `{ success, message, data, meta }` envelope — no ad-hoc shapes.
 
