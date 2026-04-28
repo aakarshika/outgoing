@@ -33,3 +33,76 @@ Built for the Indian subcontinent market, with pricing, UX, and social mechanics
 ---
 
 ## Architecture
+/outgoing
+├── backend/               # Django + DRF
+│   ├── config/            # Settings: Base, Dev, Prod
+│   ├── core/              # Shared utils: unified response envelope, exceptions
+│   ├── apps/              # Domain logic: models (profiles, events, opportunities)
+│   └── api/               # Transport layer: serializers, views, URLs
+├── frontend/              # React + Vite
+│   ├── src/features/      # Domain features (auth, events, chip-in, orbits)
+│   ├── src/components/    # Shared UI (shadcn/ui components)
+│   └── src/hooks/         # Global hooks
+└── spec/                  # Product specs and design decisions
+
+**API contract:** Every response follows a strict `{ success, message, data, meta }` envelope — no ad-hoc shapes.
+
+**Auth:** JWT with auto-refresh via Axios interceptor. Token expiry is handled transparently — no logout on 401.
+
+---
+
+## Local Setup
+
+### Requirements
+- Python 3.11
+- Node.js v24 (via nvm)
+
+### Backend
+
+```bash
+cd backend
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python reset_database.py       # drops + recreates DB, seeds superuser
+python manage.py runserver 8998
+```
+
+Django admin: http://localhost:8998/admin · `root` / `root`
+API profiler (Silk): http://localhost:8998/silk/
+
+### Frontend
+
+```bash
+cd frontend
+nvm use          # picks up .nvmrc (Node v24)
+npm install
+npm run dev      # runs on localhost:5995, proxies /api → :8998
+```
+
+### Or just
+
+```bash
+make dev         # runs both concurrently
+```
+
+---
+
+## Design decisions worth noting
+
+**Ephemeral database in dev** — no migration files to manage. `reset_database.py` drops, recreates, and seeds from scratch. Fast to iterate, zero migration conflicts.
+
+**Strict API envelope** — all responses share one shape. The frontend never needs to handle ad-hoc error formats or inconsistent data structures.
+
+**Pre-push quality gates** — Pylint 10/10, Black, isort, and ESLint run automatically before every push. Nothing substandard gets in.
+
+**Card layout system** — event cards are context-aware. The same card component promotes different fields to "hero" position depending on the active browse tab. Time is hero on Tonight. Price is hero on Free & Cheap. Buddy faces are hero on My Network. One component, six layouts.
+
+**Social graph without explicit follows** — Orbits are auto-generated from shared event attendance. No follow requests, no social friction. Two people who attended the same event are automatically connected.
+
+---
+
+## Status
+
+Active development. Core auth, event browsing, and host management are implemented. Chip-in application flow and Orbits social graph are in progress.
+
