@@ -1,41 +1,66 @@
-# Outgoing — Spec Kit
+---
+title: Outgoing — Spec Index
+status: living
+last-updated: 2026-05-16
+---
 
-> Source of truth for the Outgoing platform — a decision and coordination engine for events, where organisers coordinate with hosts, vendors, and goers through a social marketplace.
+# Outgoing — Spec Index
 
-## Documents
+> Read this first. It is the entry point for any human or agent working in this repo.
 
-### Conceptual Layer (Business Domain)
+## TL;DR
 
-| Document | Purpose |
-| :--- | :--- |
-| [DOMAIN.md](./DOMAIN.md) | Conceptual domain model — actors, vendor classification, event lifecycle, system responsibilities |
-| [SCENARIOS.md](./SCENARIOS.md) | Business scenario inventory — vendor failure, cancellation, attendance, force majeure, decision paths |
+- **Outgoing** is an event discovery, ticketing, and contributor ("Chip In") platform for **urban India**. Full-stack web app.
+- **Backend:** Django 5.2 + DRF + SimpleJWT, every response wrapped in a `{ success, message, data, meta }` envelope. `backend/`.
+- **Frontend:** React 18 + Vite + TypeScript + React Query + Tailwind/shadcn (with some MUI). `frontend/`.
+- **One DB story:** dev = SQLite, prod = Supabase Postgres (via `DATABASE_URL`). Single editable `0001_initial` migration per app — **no `0002_*` migrations** ([workflows.md](workflows.md)).
+- **Honesty rule:** these docs describe what the code *does today*, not what it should do. WIP and known-broken things are called out, not hidden. See [conventions.md](conventions.md#known-reality-flags).
 
-### Product Layer (Features & Design)
+## What it is
 
-| Document | Purpose |
-| :--- | :--- |
-| [OVERVIEW.md](./OVERVIEW.md) | Vision, product positioning, actor model, differentiation |
-| [FEATURES.md](./FEATURES.md) | Feature inventory by role, statuses, user stories, business rule themes |
-| [UI-UX.md](./UI-UX.md) | Page inventory, navigation, user flows, abstract UI module mapping |
-| [AUTH.md](./AUTH.md) | Actor permissions, behavioral roles, vendor opt-in, token lifecycle |
+A web app where people discover events, buy tickets, express interest, and post requests for events they want — and where attendees can **"Chip In"** (DJ, cook, photograph, supply gear, staff the door) in exchange for discounted/free entry or cash. Social connections ("Orbits") form automatically when two people attend the same event. Built for ₹ pricing and Indian cities. Full positioning in [vision.md](vision.md).
 
-### Technical Layer (Implementation)
+## Actors
 
-| Document | Purpose |
-| :--- | :--- |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, tech stack, backend + frontend structure, responsibility areas |
-| [DATA-MODELS.md](./DATA-MODELS.md) | Model definitions, field-level detail, relationships, Django app layout |
-| [API-SPEC.md](./API-SPEC.md) | Full API surface with request/response contracts |
-| [ROADMAP.md](./ROADMAP.md) | Phased delivery plan with backend + frontend tasks per phase |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Infrastructure, file storage, payments, CI/CD, environment variables |
+- **Goer** — default for every user. Browses, buys tickets, expresses interest, posts event requests, attends.
+- **Host** — creates and runs an event, defines needs/contributor slots, manages applications and admission.
+- **Vendor / Contributor** — supplies a service to an event. "Vendor" = the service-listing concept; "Contributor / Chip In" = the same actor framed around an event need + reward.
+- **Admin** — Django `is_staff` / `is_superuser`. Overrides and platform health.
 
-## How to Read These Docs
+Roles are **behaviors, not account types** — one person hosts on Saturday, DJs on Sunday, attends on Monday. See [domain.md](domain.md).
 
-Start with **DOMAIN.md** and **SCENARIOS.md** for the business logic and decision framework. These define *what* the system must handle. Then read the product and technical layers for *how* it will be built.
+## Core entities
 
-## Conventions
+`Event` · `EventSeries` · `EventCategory` · `EventTicketTier` · `Ticket` · `EventNeed` · `NeedApplication` · `NeedInvite` · `VendorService` · `EventInterest` · `EventReview` · `EventHighlight` · `EventRequest` · `Friendship` · `UserProfile` · chat (`ChatMessage` + legacy event message models). Field-level detail in [data-models.md](data-models.md).
 
-- **Status tags**: Each section uses `[DRAFT]`, `[REVIEW]`, or `[FINAL]` to indicate maturity.
-- **TBD markers**: Open questions are marked with `<!-- TBD: ... -->` so they're easy to find.
-- **Updates**: When the spec changes, update the relevant doc and note the date in its changelog at the bottom.
+## Repo map
+
+```
+backend/        Django project (config/ settings, api/ transport, apps/ domain, core/ shared infra)
+frontend/       React app (src/api client, src/features domain, src/pages routes, src/components UI)
+spec/           This documentation set
+Makefile        Dev entry points (make dev, make lint, make check)
+```
+
+Backend and frontend connect through the Vite dev proxy: `/api` and `/media` → Django on `:8998`; frontend runs on `:5995`. See [architecture.md](architecture.md).
+
+## Spec index
+
+| File | Purpose | Read when |
+|---|---|---|
+| [vision.md](vision.md) | What Outgoing is, why it exists, the bets | Onboarding; product decisions |
+| [product.md](product.md) | Features by actor; what is live vs partial vs not built | Scoping any feature |
+| [domain.md](domain.md) | Entities, business rules, event lifecycle, Chip In, Orbits | Before changing behavior |
+| [architecture.md](architecture.md) | Stack, layout, how the pieces connect, known trade-offs | System-level changes |
+| [backend.md](backend.md) | How to work in Django/DRF here; add an endpoint | Backend work |
+| [frontend.md](frontend.md) | How to work in React/TS here; add a page/feature | Frontend work |
+| [api.md](api.md) | Envelope contract, auth, endpoints by domain | Wiring client↔server |
+| [data-models.md](data-models.md) | Every model, fields, enums, constraints | Data changes |
+| [conventions.md](conventions.md) | Do's / don'ts + known reality flags | Always |
+| [workflows.md](workflows.md) | Setup, make/seed commands, migrations, git flow | First run; PRs |
+
+## Read order for an agent
+
+1. This file → 2. [vision.md](vision.md) (1 min) → 3. [domain.md](domain.md) → 4. [architecture.md](architecture.md) → 5. the relevant side ([backend.md](backend.md) / [frontend.md](frontend.md)) → 6. [conventions.md](conventions.md) before writing code.
+
+Code is ground truth. Where a doc and the code disagree, the code wins — fix the doc.
