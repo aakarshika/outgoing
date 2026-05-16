@@ -10,15 +10,15 @@ The envelope, auth, conventions, and the endpoint surface by domain. Endpoints a
 
 ## TL;DR
 
-- Base path: **`/api/v1/`**. Auth: `Authorization: Bearer <access>`; default permission is authenticated, public endpoints are explicit.
-- **Every** response is the envelope: success `{ success:true, message, data, meta }`; error `{ success:false, message, errors, error_code }`.
+- URL base is **`/api/`** — there is **no `v1` in the URL**. The `v1` in `api/v1/<domain>/` is a Python module path only (`config/urls.py` mounts `api/` → `api.urls` → `api.v1.<domain>.urls`). Verified: `/api/events/categories/` → 200; `/api/v1/...` → 404.
+- Auth: `Authorization: Bearer <access>`; default permission is authenticated, public endpoints are explicit.
+- Success and most errors use the envelope: success `{ success:true, message, data, meta }`; error `{ success:false, message, errors, error_code }`. **The envelope is not universal — see "Error shapes" below.**
 - Pagination is **manual** — list endpoints take `page`/`page_size` query params and return `meta:{page,page_size,total_count}`. The configured `StandardPagination` envelope is rarely the active path.
-- `error_code` on caught DRF exceptions = the exception class name uppercased (e.g. `VALIDATIONERROR`, `NOTAUTHENTICATED`). Custom codes (e.g. `USERNAME_TAKEN`, `INVALID_CREDENTIALS`) are set explicitly in views.
 - The root `/` returns a plain non-enveloped JSON; uncaught (non-DRF) exceptions fall through to Django's default 500 (not enveloped).
 
 ## Envelope
 
-Defined in `core/responses.py`; DRF exceptions wrapped by `core/exceptions.custom_exception_handler`.
+Defined in `core/responses.py`. A `custom_exception_handler` is configured but the real error surface has caveats — see "Error shapes" below.
 
 **Success** — `success_response(data, message="Success", meta=None, status=200)`:
 ```json
@@ -30,6 +30,14 @@ Defined in `core/responses.py`; DRF exceptions wrapped by `core/exceptions.custo
 { "success": false, "message": "...", "errors": { "field": ["detail"] }, "error_code": "..." }
 ```
 
+### Error shapes (verified at runtime)
+
+The convention is "envelope everything," but the actual surface has three cases — know them before coding a client:
+
+- **Hand-built view errors (the common case)** — 400 validation, 404 not-found, ownership 403, etc. are constructed *in the view* via `error_response(...)`. They are enveloped, but `error_code` is usually the default **`"ERROR"`** unless the view sets a custom one (`USERNAME_TAKEN`, `INVALID_CREDENTIALS`, `FORBIDDEN`, …). Verified: `POST /api/auth/signin/` `{}` → `{"success":false,"message":"Validation Error","errors":{"username":["This field is required."]},"error_code":"ERROR"}`; missing event → `{"success":false,"message":"Event not found","errors":{},"error_code":"ERROR"}`.
+- **Authentication 401s are NOT enveloped** — missing/invalid credentials return raw DRF: `{"detail":"Authentication credentials were not provided."}`; an invalid bearer token returns SimpleJWT's `{"detail":"Given token not valid…","code":"token_not_valid","messages":[…]}`. Verified consistent across `auth/me/`, `chat/conversations/`, `tickets/my/`, `needs/applications/my/`. Frontend code keys off the `401` status, not the body.
+- **`custom_exception_handler`** (`core/exceptions.py`, wired via `EXCEPTION_HANDLER`) *would* wrap a DRF-handled exception with `message=str(exc)` and `error_code=<ExceptionClass>.upper()` — but in practice views build their own error responses and 401s bypass it, so this path rarely fires for the cases above. Don't rely on `error_code` being the exception class name.
+
 **Paginated** (when DRF auto-pagination is the path; most lists build `meta` manually with the same shape):
 ```json
 { "success": true, "message": "List retrieved",
@@ -39,20 +47,20 @@ Defined in `core/responses.py`; DRF exceptions wrapped by `core/exceptions.custo
 ## Auth headers & lifecycle
 
 - `Authorization: Bearer <access_token>`. Access token 24h, refresh 30d, refresh rotation on.
-- Obtain tokens via `POST /api/v1/auth/signup/` or `signin/` (custom views — **not** the SimpleJWT `TokenObtainPair`). Refresh via `POST /api/v1/auth/token/refresh/`.
+- Obtain tokens via `POST /api/auth/signup/` or `/api/auth/signin/` (custom views — **not** the SimpleJWT `TokenObtainPair`). Refresh via `POST /api/auth/token/refresh/`.
 - Default DRF permission is `IsAuthenticated`. Public endpoints set `AllowAny` explicitly (signup/signin, public showcase, several feed/list reads).
 - Dev only: `DevAuthentication` authenticates as `DEV_USER_EMAIL` with no credentials (development settings; never prod).
 
 ## Conventions
 
-- Versioned under `/api/v1/`. New endpoints go in the matching `api/v1/<domain>/urls.py`.
+- The URL is **not** versioned (`/api/<domain>/...`). New endpoints go in the matching `api/v1/<domain>/urls.py` module — that file path keeps the `v1`, the URL does not.
 - List filtering/sorting via explicit query params (e.g. `?category=`, `?sort=trending|newest`) — there is no generic filter backend.
 - File uploads: `multipart/form-data`, `ImageField`, validated by `core.validators.validate_image_upload`. Media served at `/media/` (Vite-proxied in dev; only when `DEBUG`).
 - URL ordering matters where specific segments precede `<str:...>` catch-alls (notably `profiles/`).
 
 ## Endpoints by domain
 
-All paths relative to `/api/v1/`. Methods are per-view; list/create views are GET/POST, toggles POST/DELETE, detail views GET/PATCH/DELETE.
+All paths relative to `/api/` (e.g. `auth/signup/` → `/api/auth/signup/`). Methods are per-view; list/create views are GET/POST, toggles POST/DELETE, detail views GET/PATCH/DELETE.
 
 ### auth
 | Method | Path | Purpose |

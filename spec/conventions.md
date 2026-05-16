@@ -10,7 +10,7 @@ The rules to follow, and the honest list of what's currently off so you don't co
 
 ## TL;DR
 
-- Every API response uses the `{ success, message, data, meta }` envelope. No exceptions.
+- Wrap success and view-built errors in the `{ success, message, data, meta }` envelope. (Reality: auth **401s are not enveloped** — raw DRF `{detail}`. Known gap, see flags.)
 - Models + logic in `apps/`; transport in `api/v1/`. One editable `0001_initial` per app — never `0002_*`.
 - Roles are behaviors: gate by **object ownership in the view**, never by route or account flag.
 - Chat opens as a single global drawer; URL stays unchanged.
@@ -54,8 +54,9 @@ These are true *today*. They're not aspirational TODOs in disguise — they desc
 5. **Configured-but-unused infra.** `django-filter` installed, never used. `StandardPagination` is the configured paginator but views paginate manually. `python-dotenv` is a dependency but settings never call `load_dotenv()` (Django does not auto-load `.env`).
 6. **`apps.content_generator`** is an installed app with no models/views/tests — a stub.
 7. **No automated tests** (backend or frontend); no test runner on the frontend. Frontend ESLint disables `no-explicit-any`, `no-unused-vars`, all `react-hooks/*`. Backend lint (black/isort/flake8/pylint) is real; "Pylint 10/10" is a tuned target, not a proven/CI-verified fact. `.ruff_cache/` at repo root is incidental — ruff is not in the pipeline.
-8. **Auth warts.** `LoginSimple.tsx` stores `last_username`/`last_password` in plaintext `localStorage`. The 401-refresh interceptor uses bare `axios` and hard-redirects on failure. Login is custom (not SimpleJWT `TokenObtainPair`); only `TokenRefreshView` is wired.
-9. **Tooling drift.** Makefile `reset-db` calls a nonexistent `reset_database.py` — the working reset is `python manage.py chats`. Many frontend routes are commented out in `routes.config.ts` though their backends may exist.
-10. **Security defaults.** Default `SECRET_KEY` is an insecure placeholder; production CORS defaults to allow-all when unconfigured; `DevAuthentication` is a credential-free backdoor gated only by `DEV_USER_EMAIL` (development settings).
+8. **Envelope is not universal.** Authentication **401s bypass the envelope** and return raw DRF `{"detail": …}` (or SimpleJWT `{"detail","code","messages"}` for a bad token) — verified at runtime across multiple endpoints. View-built 400/404/403 are enveloped but with `error_code:"ERROR"` unless a custom code is set; `custom_exception_handler` rarely fires for common cases. Clients must key off HTTP status, not assume `success:false`. ([api.md](api.md) → "Error shapes")
+9. **Auth warts.** `LoginSimple.tsx` stores `last_username`/`last_password` in plaintext `localStorage`. The 401-refresh interceptor uses bare `axios` and hard-redirects on failure. Login is custom (not SimpleJWT `TokenObtainPair`); only `TokenRefreshView` is wired.
+10. **Tooling drift.** Makefile `reset-db` calls a nonexistent `reset_database.py` — the working reset is `python manage.py chats`. Many frontend routes are commented out in `routes.config.ts` though their backends may exist.
+11. **Security defaults.** Default `SECRET_KEY` is an insecure placeholder; production CORS defaults to allow-all when unconfigured; `DevAuthentication` is a credential-free backdoor gated only by `DEV_USER_EMAIL` (development settings).
 
 When in doubt, read the code and follow the neighbor. Cross-refs: [backend.md](backend.md), [frontend.md](frontend.md), [workflows.md](workflows.md).
